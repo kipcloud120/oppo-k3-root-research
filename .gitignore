@@ -15,6 +15,14 @@ scrcpy-win64-v3.3.4/
 *.elf
 !firmware_F16/README.md
 
+# ---- 本轮 Binder 审计拉取的厂商专有二进制：版权归 OPPO，不随公开仓库分发 ----
+# 保留审计脚本(*.py)、文本报告(*.md/*.txt)；读者可从自己设备 adb pull 后本地重跑
+artifacts_adb/binder_audit/jars/
+artifacts_adb/binder_audit/dex/
+artifacts_adb/binder_audit/atlas/*.apk
+artifacts_adb/binder_audit/atlas/*.so
+artifacts_adb/binder_audit/atlas/apk_dex/
+
 # ---- 第三方完整利用代码：不重新分发，只在文档中引用出处 ----
 src_ref/poc_ex.c
 src_ref/*.b64

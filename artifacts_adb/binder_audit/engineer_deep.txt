@@ -1,0 +1,385 @@
+==========================================================================================
+CLASS: Lcom/android/server/engineer/OplusEngineerService;
+
+--- <clinit> [DANGER] (6 insns) ---
+    v0, "persist.sys.remove.task"
+    v1, 0
+    v0, v1, Landroid/os/SystemProperties;->getBoolean(Ljava/lang/String; Z)Z
+    v0
+    v0, Lcom/android/server/engineer/OplusEngineerService;->sNeedCleanUpRecentTasks Z
+    
+
+--- <init> (24 insns) ---
+    v3, Ljava/lang/Object;-><init>()V
+    v0, 0
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordCmpName Landroid/content/ComponentName;
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordPkgName Ljava/lang/String;
+    v0, Ljava/lang/Object;
+    v0, Ljava/lang/Object;-><init>()V
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mLock Ljava/lang/Object;
+    v0, -1
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mPwkHardShutdownCount I
+    v0, 0
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mRetryCount I
+    v0, Lcom/android/server/engineer/OplusEngineerService$1;
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService$1;-><init>(Lcom/android/server/engineer/OplusEngineerService;)V
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mDeathRecipient Landroid/os/IBinder$DeathRecipient;
+    v0, Landroid/os/HandlerThread;
+    v1, "ENG_PWK_MONITOR"
+    v0, v1, Landroid/os/HandlerThread;-><init>(Ljava/lang/String;)V
+    v0, Landroid/os/HandlerThread;->start()V
+    v1, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    v0, Landroid/os/HandlerThread;->getLooper()Landroid/os/Looper;
+    v2
+    v1, v3, v2, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;-><init>(Lcom/android/server/engineer/OplusEngineerService; Landroid/os/Looper;)V
+    v1, v3, Lcom/android/server/engineer/OplusEngineerService;->mHandler Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    
+
+--- access$000 (2 insns) ---
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v0
+
+--- access$002 (2 insns) ---
+    v1, v0, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v1
+
+--- access$104 (4 insns) ---
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService;->mRetryCount I
+    v0, v0, 1
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService;->mRetryCount I
+    v0
+
+--- access$200 (2 insns) ---
+    v0, Lcom/android/server/engineer/OplusEngineerService;->initService()V
+    
+
+--- access$300 (2 insns) ---
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService;->mLock Ljava/lang/Object;
+    v0
+
+--- access$400 (2 insns) ---
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService;->mPwkHardShutdownCount I
+    v0
+
+--- access$402 (2 insns) ---
+    v1, v0, Lcom/android/server/engineer/OplusEngineerService;->mPwkHardShutdownCount I
+    v1
+
+--- getInstance (13 insns) ---
+    v0, Lcom/android/server/engineer/OplusEngineerService;
+    v0
+    v1, Lcom/android/server/engineer/OplusEngineerService;->sOplusEngineerService Lcom/android/server/engineer/OplusEngineerService;
+    v1, +009h
+    v1, Lcom/android/server/engineer/OplusEngineerService;
+    v1, Lcom/android/server/engineer/OplusEngineerService;-><init>()V
+    v1, Lcom/android/server/engineer/OplusEngineerService;->sOplusEngineerService Lcom/android/server/engineer/OplusEngineerService;
+    v0
+    v0, Lcom/android/server/engineer/OplusEngineerService;->sOplusEngineerService Lcom/android/server/engineer/OplusEngineerService;
+    v0
+    v1
+    v0
+    v1
+
+--- getUserImagesDir (6 insns) ---
+    v0, Ljava/io/File;
+    v4, Landroid/os/Environment;->getDataSystemCeDirectory(I)Ljava/io/File;
+    v1
+    v2, "recent_images"
+    v0, v1, v2, Ljava/io/File;-><init>(Ljava/io/File; Ljava/lang/String;)V
+    v0
+
+--- getUserTasksDir (6 insns) ---
+    v0, Ljava/io/File;
+    v4, Landroid/os/Environment;->getDataSystemCeDirectory(I)Ljava/io/File;
+    v1
+    v2, "recent_tasks"
+    v0, v1, v2, Ljava/io/File;-><init>(Ljava/io/File; Ljava/lang/String;)V
+    v0
+
+--- initService (22 insns) ---
+    
+    v0, "engineer"
+    v0, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+    v0
+    v0, Landroid/engineer/IOplusEngineerManager$Stub;->asInterface(Landroid/os/IBinder;)Landroid/engineer/IOplusEngineerManager;
+    v0
+    v0, v3, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v0, +018h
+    v0, Landroid/engineer/IOplusEngineerManager;->asBinder()Landroid/os/IBinder;
+    v0
+    v1, v3, Lcom/android/server/engineer/OplusEngineerService;->mDeathRecipient Landroid/os/IBinder$DeathRecipient;
+    v2, 0
+    v0, v1, v2, Landroid/os/IBinder;->linkToDeath(Landroid/os/IBinder$DeathRecipient; I)V
+    +ch
+    v0
+    v0, Landroid/os/RemoteException;->getMessage()Ljava/lang/String;
+    v1
+    v2, "OplusEngineerService"
+    v2, v1, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    +2h
+    
+    
+
+--- removeUserRecentTasksLocked [DANGER] (52 insns) ---
+    v0, Ljava/lang/StringBuilder;
+    v0, Ljava/lang/StringBuilder;-><init>()V
+    v1, "removeUserRecentTasksLocked userId = "
+    v0, v1, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v0, v11, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v0, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v0
+    v1, "OplusEngineerService"
+    v1, v0, Landroid/util/Slog;->i(Ljava/lang/String; Ljava/lang/String;)I
+    v10, v11, Lcom/android/server/engineer/OplusEngineerService;->getUserTasksDir(I)Ljava/io/File;
+    v0
+    v0, Ljava/io/File;->listFiles()[Ljava/io/File;
+    v2
+    v3, 0
+    v2, +019h
+    v4, v2
+    v4, +003h
+    +14h
+    v4, v2
+    v5, v3
+    v5, v4, +016h
+    v6, v2, v5
+    v6, Ljava/io/File;->delete()Z
+    +7h
+    v7
+    v8, "Fail to get or delete recent task xml file."
+    v1, v8, Landroid/util/Slog;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v5, v5, 1
+    -10h
+    v4, "No recent task record to remove."
+    v1, v4, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v10, v11, Lcom/android/server/engineer/OplusEngineerService;->getUserImagesDir(I)Ljava/io/File;
+    v4
+    v4, Ljava/io/File;->listFiles()[Ljava/io/File;
+    v5
+    v5, +018h
+    v6, v5
+    v6, +003h
+    +13h
+    v6, v5
+    v3, v6, +016h
+    v7, v5, v3
+    v7, Ljava/io/File;->delete()Z
+    +7h
+    v8
+    v9, "Fail to get or delete recent task image file."
+    v1, v9, Landroid/util/Slog;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, v3, 1
+    -10h
+    v3, "No recent task image to remove."
+    v1, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    
+
+--- init (11 insns) ---
+    v3, Lcom/android/server/engineer/OplusEngineerService;->initService()V
+    v0, Landroid/os/HandlerThread;
+    v1, "ENG_PWK_MONITOR"
+    v0, v1, Landroid/os/HandlerThread;-><init>(Ljava/lang/String;)V
+    v0, Landroid/os/HandlerThread;->start()V
+    v1, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    v0, Landroid/os/HandlerThread;->getLooper()Landroid/os/Looper;
+    v2
+    v1, v3, v2, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;-><init>(Lcom/android/server/engineer/OplusEngineerService; Landroid/os/Looper;)V
+    v1, v3, Lcom/android/server/engineer/OplusEngineerService;->mHandler Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    
+
+--- onAdbEnabled [DANGER] (27 insns) ---
+    v0, "sys.boot.atm"
+    v0, Landroid/os/SystemProperties;->get(Ljava/lang/String;)Ljava/lang/String;
+    v0
+    v1, "enable"
+    v1, v0, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v0
+    v0, +02ch
+    v4, +02ah
+    v0, 1
+    v1, "persist.sys.adb.engineermode"
+    v1, v0, Landroid/os/SystemProperties;->getInt(Ljava/lang/String; I)I
+    v0
+    v0, +021h
+    v0, "OplusEngineerService"
+    v2, "reset engineer mode adb property"
+    v0, v2, Landroid/util/Slog;->i(Ljava/lang/String; Ljava/lang/String;)I
+    v0, "persist.sys.allcommode"
+    v2, "false"
+    v0, v2, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    v0, "persist.sys.oppo.usbactive"
+    v0, v2, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    v0, "1"
+    v1, v0, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    v0, "vendor.oppo.engineer.usb.config"
+    v1, "midi"
+    v0, v1, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    
+
+--- onPwkPressed (10 insns) ---
+    v0, v4, Lcom/android/server/engineer/OplusEngineerService;->mHandler Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    v1, 100001
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;->obtainMessage(I)Landroid/os/Message;
+    v0
+    v1, 1
+    v0, v1, Landroid/os/Message;->setAsynchronous(Z)V
+    v1, v4, Lcom/android/server/engineer/OplusEngineerService;->mHandler Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    v2, 2000
+    v1, v0, v2, v3, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;->sendMessageDelayed(Landroid/os/Message; J)Z
+    
+
+--- onPwkReleased (4 insns) ---
+    v0, v2, Lcom/android/server/engineer/OplusEngineerService;->mHandler Lcom/android/server/engineer/OplusEngineerService$InternalHandler;
+    v1, 100002
+    v0, v1, Lcom/android/server/engineer/OplusEngineerService$InternalHandler;->sendEmptyMessage(I)Z
+    
+
+--- onUsageShutdown (13 insns) ---
+    v0, "usage"
+    v0, Landroid/os/ServiceManager;->getService(Ljava/lang/String;)Landroid/os/IBinder;
+    v0
+    v0, Landroid/os/IOplusUsageService$Stub;->asInterface(Landroid/os/IBinder;)Landroid/os/IOplusUsageService;
+    v1
+    v1, +005h
+    v1, Landroid/os/IOplusUsageService;->shutDown()V
+    +9h
+    v0
+    v1, "OplusEngineerService"
+    v2, "Shutting down OppoUsageService failed!"
+    v1, v2, v0, Landroid/util/Slog;->w(Ljava/lang/String; Ljava/lang/String; Ljava/lang/Throwable;)I
+    
+
+--- recordApkDeleteEvent (8 insns) ---
+    Landroid/os/OplusUsageManager;->getOplusUsageManager()Landroid/os/OplusUsageManager;
+    v0
+    v0, +007h
+    v0, v3, v4, v5, Landroid/os/OplusUsageManager;->recordApkDeleteEvent(Ljava/lang/String; Ljava/lang/String; Ljava/lang/String;)Z
+    v1
+    v1
+    v1, 0
+    v1
+
+--- resolveActivityForOtgTest (21 insns) ---
+    v0, Landroid/app/OplusActivityManager;
+    v0, Landroid/app/OplusActivityManager;-><init>()V
+    v1, 0
+    v0, Landroid/app/OplusActivityManager;->getTopActivityComponentName()Landroid/content/ComponentName;
+    v2
+    v1, v2
+    +ah
+    v2
+    v3, "OplusEngineerService"
+    v4, "getTopActivityComponentName exception"
+    v3, v4, Landroid/util/Slog;->w(Ljava/lang/String; Ljava/lang/String;)I
+    v1, 0
+    v1, +00dh
+    v1, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+    v2
+    v3, "com.oppo.engineermode"
+    v3, v2, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v2
+    v2
+    v2, 0
+    v2
+
+--- saveAppUsageHistoryRecord (33 insns) ---
+    Landroid/os/OplusUsageManager;->getOplusUsageManager()Landroid/os/OplusUsageManager;
+    v0
+    v0, +039h
+    v1, v5, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordCmpName Landroid/content/ComponentName;
+    v1, +008h
+    v1, v6, Landroid/content/ComponentName;->equals(Ljava/lang/Object;)Z
+    v1
+    v1, +02fh
+    v6, v5, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordCmpName Landroid/content/ComponentName;
+    v6, +007h
+    v6, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+    v1
+    +2h
+    v1, 0
+    v1, +023h
+    v2, v5, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordPkgName Ljava/lang/String;
+    v1, v2, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v2
+    v2, +01bh
+    v1, v5, Lcom/android/server/engineer/OplusEngineerService;->mLastRecordPkgName Ljava/lang/String;
+    v2, Landroid/text/format/Time;
+    v2, Landroid/text/format/Time;-><init>()V
+    Ljava/lang/System;->currentTimeMillis()J
+    v3
+    v2, v3, v4, Landroid/text/format/Time;->set(J)V
+    v3, "%Y-%m-%d %H:%M:%S"
+    v2, v3, Landroid/text/format/Time;->format(Ljava/lang/String;)Ljava/lang/String;
+    v3
+    v0, v1, v3, Landroid/os/OplusUsageManager;->writeAppUsageHistoryRecord(Ljava/lang/String; Ljava/lang/String;)Z
+    v3
+    v3
+    v1, 0
+    v1
+
+--- shouldPreventStartActivity (20 insns) ---
+    v0, v4, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v0, +020h
+    v5, +01eh
+    v5, Landroid/content/pm/ActivityInfo;->getComponentName()Landroid/content/ComponentName;
+    v0
+    v0, +018h
+    v1, v4, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v2, 1
+    v0, Landroid/content/ComponentName;->flattenToString()Ljava/lang/String;
+    v3
+    v1, v2, v3, Landroid/engineer/IOplusEngineerManager;->isEngineerItemInBlackList(I Ljava/lang/String;)Z
+    v1
+    v1
+    v1
+    v1, Landroid/os/RemoteException;->getMessage()Ljava/lang/String;
+    v2
+    v3, "OplusEngineerService"
+    v3, v2, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v0, 0
+    v0
+
+--- shouldPreventStartService (20 insns) ---
+    v0, v4, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v0, +020h
+    v5, +01eh
+    v5, Landroid/content/Intent;->getComponent()Landroid/content/ComponentName;
+    v0
+    v0, +018h
+    v1, v4, Lcom/android/server/engineer/OplusEngineerService;->mOppoEngineerManager Landroid/engineer/IOplusEngineerManager;
+    v2, 1
+    v0, Landroid/content/ComponentName;->flattenToString()Ljava/lang/String;
+    v3
+    v1, v2, v3, Landroid/engineer/IOplusEngineerManager;->isEngineerItemInBlackList(I Ljava/lang/String;)Z
+    v1
+    v1
+    v1
+    v1, Landroid/os/RemoteException;->getMessage()Ljava/lang/String;
+    v2
+    v3, "OplusEngineerService"
+    v3, v2, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v0, 0
+    v0
+
+--- tryRemoveAllUserRecentTasksLocked [DANGER] (21 insns) ---
+    v0, Lcom/android/server/engineer/OplusEngineerService;->sNeedCleanUpRecentTasks Z
+    v0, +025h
+    Lcom/android/server/pm/UserManagerService;->getInstance()Lcom/android/server/pm/UserManagerService;
+    v0
+    v0, Lcom/android/server/pm/UserManagerService;->getUserIds()[I
+    v0
+    v1, v0
+    v2, 0
+    v3, v2
+    v3, v1, +00ah
+    v4, v0, v3
+    v5, v4, Lcom/android/server/engineer/OplusEngineerService;->removeUserRecentTasksLocked(I)V
+    v3, v3, 1
+    -9h
+    v0, 999
+    v5, v0, Lcom/android/server/engineer/OplusEngineerService;->removeUserRecentTasksLocked(I)V
+    v0, "persist.sys.remove.task"
+    v1, ""
+    v0, v1, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    v2, Lcom/android/server/engineer/OplusEngineerService;->sNeedCleanUpRecentTasks Z
+    

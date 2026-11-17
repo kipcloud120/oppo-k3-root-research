@@ -1,0 +1,114 @@
+====================================================================================================
+审计 Stub.onTransact 方法数: 97
+====================================================================================================
+
+[!] 无权限校验 且 含高危操作 的 onTransact (3):
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceSecurityManager$Stub;  lines=351
+      DANGER: v7, v1, Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceSecurityManager$Stub;->grantAllRuntimePermission(Ljava/lang/String;)Z
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceStateManager$Stub;  lines=116
+      DANGER: v5, Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceStateManager$Stub;->getAppRuntimeExceptionInfo()Ljava/util/List;
+  [vendor.oplus.hardware.engineer-V1.0-java.dex] Lvendor/oplus/hardware/engineer/V1_0/IEngineer$Stub;  lines=759
+      DANGER: v10, v0, v1, Lvendor/oplus/hardware/engineer/V1_0/IEngineer$Stub;->setProperties(Ljava/lang/String; Ljava/lang/String;)Z
+
+[A] 无权限校验的 onTransact (97):
+  [OplusMdmInterface.dex] Landroid/os/IOplusUsageService$Stub;  lines=465 danger=0
+  [OplusMdmInterface.dex] Lcom/coloros/notification/INotificationCenter$Stub;  lines=186 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/IOplusCoreAppService$Stub;  lines=35 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceApplicationManager$Stub;  lines=345 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceConnectivityManager$Stub;  lines=767 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceContactManager$Stub;  lines=329 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceControlerManager$Stub;  lines=294 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceNetworkManager$Stub;  lines=335 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDevicePackageManager$Stub;  lines=270 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDevicePhoneManager$Stub;  lines=577 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceRestrictionManager$Stub;  lines=1924 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceSecurityManager$Stub;  lines=351 danger=1
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceSettingsManager$Stub;  lines=581 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceStateManager$Stub;  lines=116 danger=1
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/mdm/IDeviceVpnManager$Stub;  lines=187 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceApplicationManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceConnectivityManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceContactManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceControlerManager$Stub;  lines=16 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceNetworkManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDevicePackageManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDevicePhoneManager$Stub;  lines=46 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceRestrictionManager$Stub;  lines=14 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceSecurityManager$Stub;  lines=79 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceSettingsManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceStateManager$Stub;  lines=9 danger=0
+  [OplusMdmInterface.dex] Lcom/oplus/customize/coreapp/aidl/oplus/IOplusDeviceVpnManager$Stub;  lines=9 danger=0
+  [oplus-service-jobscheduler.dex] Lcom/coloros/thermalcontrol/IThermalStatusListener$Stub;  lines=28 danger=0
+  [oplus-telephony-common.dex] Landroid/hidl/base/V1_0/IBase$Stub;  lines=87 danger=0
+  [oplus-telephony-common.dex] Landroid/hidl/manager/V1_0/IServiceManager$Stub;  lines=177 danger=0
+  [oplus-telephony-common.dex] Landroid/hidl/manager/V1_0/IServiceNotification$Stub;  lines=98 danger=0
+  [oplus-telephony-common.dex] Lvendor/oplus/hardware/cryptoeng/V1_0/ICryptoeng$Stub;  lines=98 danger=0
+  [oplus-telephony-common.dex] Lvendor/oplus/hardware/esim/V1_0/IOplusEsim$Stub;  lines=133 danger=0
+  [oplus-telephony-common.dex] Lvendor/oplus/hardware/radio/V1_0/IOplusRadio$Stub;  lines=354 danger=0
+  [oplus-telephony-common.dex] Lvendor/oplus/hardware/radio/V1_0/IOplusRadioIndication$Stub;  lines=208 danger=0
+  [oplus-telephony-common.dex] Lvendor/oplus/hardware/radio/V1_0/IOplusRadioResponse$Stub;  lines=351 danger=0
+  [oppo-wifi-service.dex] Landroid/support/v4/app/INotificationSideChannel$Stub;  lines=46 danger=0
+  [oppo-wifi-service.dex] Landroid/support/v4/os/IResultReceiver$Stub;  lines=24 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hidl/base/V1_0/IBase$Stub;  lines=87 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/net/INetd$Stub;  lines=1226 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/net/INetdUnsolicitedEventListener$Stub;  lines=135 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifi$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiChip$Stub;  lines=309 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiChipEventCallback$Stub;  lines=131 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiEventCallback$Stub;  lines=106 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiIface$Stub;  lines=102 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiNanIfaceEventCallback$Stub;  lines=284 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiRttController$Stub;  lines=218 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiRttControllerEventCallback$Stub;  lines=96 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiStaIfaceEventCallback$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicant$Stub;  lines=158 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantCallback$Stub;  lines=107 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantIface$Stub;  lines=194 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantNetwork$Stub;  lines=110 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantP2pIfaceCallback$Stub;  lines=344 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantP2pNetworkCallback$Stub;  lines=87 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantStaIfaceCallback$Stub;  lines=251 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantStaNetworkCallback$Stub;  lines=109 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService$Stub;  lines=165 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicant$Stub;  lines=105 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantIface$Stub;  lines=95 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantNetwork$Stub;  lines=93 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantStaIfaceCallback$Stub;  lines=96 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiApIface$Stub;  lines=128 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiNanIface$Stub;  lines=270 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiP2pIface$Stub;  lines=102 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_0/IWifiStaIface$Stub;  lines=322 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_1/IWifi$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_1/IWifiChip$Stub;  lines=326 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifiChipEventCallback$Stub;  lines=137 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifiNanIfaceEventCallback$Stub;  lines=297 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiRttController$Stub;  lines=268 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiRttControllerEventCallback$Stub;  lines=107 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantP2pIface$Stub;  lines=627 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantP2pNetwork$Stub;  lines=186 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantStaIface$Stub;  lines=482 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/supplicant/V1_0/ISupplicantStaNetwork$Stub;  lines=628 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantP2pIface$Stub;  lines=177 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantStaIface$Stub;  lines=130 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/supplicant/V2_0/IOplusSupplicantStaNetwork$Stub;  lines=108 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifi$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifiChip$Stub;  lines=347 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifiNanIface$Stub;  lines=312 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_2/IWifiStaIface$Stub;  lines=342 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiApIface$Stub;  lines=145 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiChipEventCallback$Stub;  lines=143 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_3/IWifi$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_3/IWifiChip$Stub;  lines=368 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_3/IWifiStaIface$Stub;  lines=353 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiNanIface$Stub;  lines=343 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifi$Stub;  lines=134 danger=0
+  [oppo-wifi-service.dex] Lcom/android/wifi/x/android/hardware/wifi/V1_4/IWifiChip$Stub;  lines=390 danger=0
+  [oppo-wifi-service.dex] Lvendor/oplus/hardware/wifi/powersystem/V1_0/IOppoPowerSave$Stub;  lines=363 danger=0
+  [vendor.oplus.hardware.engineer-V1.0-java.dex] Landroid/hidl/base/V1_0/IBase$Stub;  lines=87 danger=0
+  [vendor.oplus.hardware.engineer-V1.0-java.dex] Lvendor/oplus/hardware/engineer/V1_0/IEngineer$Stub;  lines=759 danger=1
+  [vendor.oplus.hardware.orms-V1.0-java.dex] Landroid/hidl/base/V1_0/IBase$Stub;  lines=87 danger=0
+  [vendor.oplus.hardware.orms-V1.0-java.dex] Lvendor/oplus/hardware/orms/V1_0/IOrmsHalProxy$Stub;  lines=129 danger=0
+
+[B] 含权限校验的 onTransact (0):
+
+-> ontransact_matrix.txt

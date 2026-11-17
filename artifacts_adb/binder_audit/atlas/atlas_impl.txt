@@ -1,0 +1,230 @@
+--- enableAdspRamdump (54 insns) PERM=0 DANG=4 ---
+    v0, "get_listinfo_byname=control=adspRamdump"
+    v6, v6, Lcom/oppo/atlas/OppoAtlasService;->mOppoAtlasService Lcom/oppo/atlas/IOppoAtlasService$Stub;
+    v6, v0, Lcom/oppo/atlas/IOppoAtlasService;->getParameters(Ljava/lang/String;)Ljava/lang/String;
+    v6
+    v0, "persist.sys.enable_adsp_dump"
+    v1, "OppoAtlasService"
+    v2, "persist.vendor.ssr.enable_ramdumps"
+    v3, "0"
+    v6, +03fh
+    v4, "true"
+    v6, v4, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v4
+    v4, +037h
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "get adsp dump enable:"
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v6, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v6
+    v1, v6, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v6, "persist.sys.dump"
+    v1, ""
+    v6, v1, Landroid/os/SystemProperties;->get(Ljava/lang/String; Ljava/lang/String;)Ljava/lang/String;
+    v6
+    v6, v3, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v6
+    v6, +038h
+    v2, v3, Landroid/os/SystemProperties;->get(Ljava/lang/String; Ljava/lang/String;)Ljava/lang/String;
+    v6
+    v6, v3, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v6
+    v1, "1"
+    v6, +005h
+    v2, v1, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    v0, v1, Landroid/os/SystemProperties;->set(Ljava/lang/String; Ljava/lang/String;)V
+    +24h
+    v6, "get adsp dump enable false"
+    v1, v6, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v6, "persist.sys.enable_modem_dump"
+--- enableGpuRamdump (26 insns) PERM=0 DANG=2 ---
+    v0, "OppoAtlasService"
+    v1, "get_listinfo_byname=control=gpuRamdump"
+    v2, v4, Lcom/oppo/atlas/OppoAtlasService;->mOppoAtlasService Lcom/oppo/atlas/IOppoAtlasService$Stub;
+    v2, v1, Lcom/oppo/atlas/IOppoAtlasService;->getParameters(Ljava/lang/String;)Ljava/lang/String;
+    v1
+    v2, "/sys/class/kgsl/kgsl-3d0/snapshot/snapshot_control"
+    v1, +014h
+    v3, "true"
+    v1, v3, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+    v1
+    v1, +00ch
+    v1, "get gpu dump enable true"
+    v0, v1, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v1, 0
+    v4, v2, v1, Lcom/oppo/atlas/OppoAtlasService;->writeFileNodeValue(Ljava/lang/String; I)V
+    +14h
+    v1, "get gpu dump enable false"
+    v0, v1, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v1, 1
+    v4, v2, v1, Lcom/oppo/atlas/OppoAtlasService;->writeFileNodeValue(Ljava/lang/String; I)V
+    +ah
+    v4
+    v1, "enableGpuRamdump error"
+    v0, v1, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v4, Landroid/os/RemoteException;->printStackTrace()V
+    
+--- killProcess (22 insns) PERM=0 DANG=0 ---
+    v0, Landroid/content/Intent;
+    v1, "oppo.intent.action.REQUEST_CLEAR_SPEC_APP"
+    v0, v1, Landroid/content/Intent;-><init>(Ljava/lang/String;)V
+    v1, "com.coloros.athena"
+    v0, v1, Landroid/content/Intent;->setPackage(Ljava/lang/String;)Landroid/content/Intent;
+    v1, "pid"
+    v0, v1, v3, Landroid/content/Intent;->putExtra(Ljava/lang/String; I)Landroid/content/Intent;
+    v3, "p_name"
+    v0, v3, v4, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+    v3, "caller_package"
+    v2, Landroid/content/Context;->getPackageName()Ljava/lang/String;
+    v4
+    v0, v3, v4, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+    v3, "type"
+    v4, 12
+    v0, v3, v4, Landroid/content/Intent;->putExtra(Ljava/lang/String; I)Landroid/content/Intent;
+    v3, Landroid/os/UserHandle;->CURRENT Landroid/os/UserHandle;
+    v2, v0, v3, Landroid/content/Context;->startServiceAsUser(Landroid/content/Intent; Landroid/os/UserHandle;)Landroid/content/ComponentName;
+    +5h
+    v2
+    v2, Ljava/lang/Exception;->printStackTrace()V
+    
+--- onBind (2 insns) PERM=0 DANG=0 ---
+    v0, v0, Lcom/oppo/atlas/OppoAtlasService;->mOppoAtlasService Lcom/oppo/atlas/IOppoAtlasService$Stub;
+    v0
+--- sendMsg (36 insns) PERM=0 DANG=0 ---
+    v4, v4, Lcom/oppo/atlas/OppoAtlasService;->mAtlasServeceHandleLock Ljava/lang/Object;
+    v4
+    v7, +008h
+    v5, v6, Landroid/os/Handler;->removeMessages(I)V
+    +29h
+    v5
+    +36h
+    v0, 1
+    v7, v0, +025h
+    v5, v6, Landroid/os/Handler;->hasMessages(I)Z
+    v7
+    v7, +01fh
+    v5, "OppoAtlasService"
+    v7, Ljava/lang/StringBuilder;
+    v7, Ljava/lang/StringBuilder;-><init>()V
+    v8, "sendMsg: Msg "
+    v7, v8, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v7, v6, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v6, " existed!"
+    v7, v6, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v7, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v6
+    v5, v6, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v4
+    
+    Landroid/os/SystemClock;->uptimeMillis()J
+    v0
+    v2, v11
+    v0, v2
+    v5, v6, v8, v9, v10, Landroid/os/Handler;->obtainMessage(I I I Ljava/lang/Object;)Landroid/os/Message;
+    v6
+    v5, v6, v0, v1, Landroid/os/Handler;->sendMessageAtTime(Landroid/os/Message; J)Z
+    v4
+    
+    v4
+    v5
+--- setEventInfo (131 insns) PERM=0 DANG=0 ---
+    v1, Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;-><init>()V
+    v3, "setEventInfo event = "
+    v1, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, v9, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v3, " info = "
+    v1, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, v10, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v1
+    v3, "OppoAtlasService"
+    v3, v1, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v1, v8, Lcom/oppo/atlas/OppoAtlasService;->mIsInitAtlasService Ljava/lang/Boolean;
+    v1, Ljava/lang/Boolean;->booleanValue()Z
+    v1
+    v1, +008h
+    v0, "AtlasService has not init!"
+    v3, v0, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    
+    v1, 1
+    v9, v1, +09dh
+    v1, 13
+    v9, v1, +082h
+    v1, 25
+    v9, v1, +06eh
+    v1, 33
+    v9, v1, +05bh
+    v1, 41
+    v9, v1, +048h
+    v1, 1027
+    v9, v1, +033h
+    v9, +0000095h
+    v1, v8, Lcom/oppo/atlas/OppoAtlasService;->mAtlasMainHandler Lcom/oppo/atlas/OppoAtlasService$AtlasMainHandler;
+    v3, 2
+    v4, 0
+    v5, 0
+    v7, 0
+    v0, v8
+    v2, v9
+    v6, v10
+--- setEventToNative (16 insns) PERM=0 DANG=0 ---
+    v0, Ljava/lang/StringBuilder;
+    v0, Ljava/lang/StringBuilder;-><init>()V
+    v1, "setEventToNative event :"
+    v0, v1, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v0, v3, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v1, " value:"
+    v0, v1, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v0, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v0, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v0
+    v1, "OppoAtlasService"
+    v1, v0, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v2, v2, Lcom/oppo/atlas/OppoAtlasService;->mOppoAtlas Lcom/oppo/atlas/OppoAtlas;
+    v2, +005h
+    v2, v3, v4, Lcom/oppo/atlas/OppoAtlas;->setEvent(I Ljava/lang/String;)V
+    
+--- writeFileNodeValue (40 insns) PERM=0 DANG=1 ---
+    v4, "writeFileNodeValue io stream close wrong"
+    v0, "OppoAtlasService"
+    v1, 0
+    v2, Ljava/io/File;
+    v2, v5, Ljava/io/File;-><init>(Ljava/lang/String;)V
+    v3, Ljava/io/FileWriter;
+    v3, v2, Ljava/io/FileWriter;-><init>(Ljava/io/File;)V
+    v6, Ljava/lang/String;->valueOf(I)Ljava/lang/String;
+    v6
+    v3, v6, Ljava/io/FileWriter;->write(Ljava/lang/String;)V
+    v3, Ljava/io/FileWriter;->close()V
+    +2ah
+    v0, v4, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    +26h
+    v5
+    v1, v3
+    +24h
+    v6
+    v1, v3
+    +4h
+    v5
+    +1fh
+    v6
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "write wrong, file="
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v5
+    v0, v5, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v6, Ljava/lang/Exception;->printStackTrace()V
+    v1, +005h
+    v1, Ljava/io/FileWriter;->close()V
+    
+    v1, +009h
+    v1, Ljava/io/FileWriter;->close()V
+    +4h
+    v0, v4, Lcom/oppo/atlas/DebugLog;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v5

@@ -1,0 +1,137 @@
+loaded 17 dex, 35444 unique classes
+
+==========================================================================================
+接口覆盖度核对（35 个私有服务）
+==========================================================================================
+  [IFACE+STUB] 2                            android.os.IOplusService
+  [IFACE+STUB] 3                            android.os.IOplusExService
+  [IFACE     ] 4                            com.oplus.orms.OplusResourceManagerService
+  [MISSING   ] 17                           com.oplus.exsystemservice.antirootdialog.IAntiRootDialog
+  [IFACE+STUB] 39                           com.oplus.app.IOplusAccessControlManager
+  [IFACE+STUB] 41                           com.oplus.screenshot.IOplusScreenshotManager
+  [IFACE+STUB] 66                           com.oplus.filter.IDynamicFilterService
+  [IFACE+STUB] 69                           android.engineer.IOplusEngineerManager
+  [IFACE+STUB] 71                           com.oplus.deepthinker.sdk.app.aidl.eventfountain.IEventHandleService
+  [IFACE+STUB] 80                           android.os.IOppoGuardElfThermalControl
+  [IFACE+STUB] 82                           com.oplus.heimdall.IHeimdallService
+  [MISSING   ] 83                           com.oppo.hephaestus.IHephaestus
+  [MISSING   ] 84                           com.oppo.horae.IHoraeService
+  [IFACE+STUB] 121                          com.oppo.atlas.IOppoMMAtlasService
+  [IFACE+STUB] 131                          android.net.IOplusNetworkingControlManager
+  [IFACE+STUB] 132                          com.oplus.neuron.INeuronSystemService
+  [IFACE+STUB] 135                          android.nwpower.IOppoNwPower
+  [MISSING   ] 138                          com.oppo.oiface.IOIfaceService
+  [IFACE+STUB] 139                          android.os.IOplusTraceService
+  [IFACE+STUB] 140                          android.operator.IOplusOperatorManager
+  [IFACE+STUB] 141                          com.oplus.nec.IOplusNecService
+  [IFACE+STUB] 142                          com.android.internal.telephony.IOplusTelephonyExt
+  [IFACE+STUB] 143                          com.oplus.customize.coreapp.aidl.IOplusCoreAppService
+  [IFACE+STUB] 144                          android.os.customize.IOplusCustomizeService
+  [IFACE+STUB] 145                          com.oplus.network.IOplusDataLimit
+  [IFACE+STUB] 146                          android.os.oplusdevicepolicy.IOplusDevicePolicyManagerService
+  [IFACE+STUB] 147                          com.oplus.network.IOplusNetworkStack
+  [IFACE+STUB] 148                          android.net.IOplusNetworkStatsService
+  [IFACE+STUB] 149                          android.os.storage.IOplusStorageManagerService
+  [IFACE+STUB] 150                          com.oplus.network.IOplusUidPurStats
+  [MISSING   ] 151                          oppo.hans.IHansComunication
+  [MISSING   ] 152                          com.coloros.exsystemservice.appdata.IOppoAppDataService
+  [IFACE+STUB] 153                          com.oplus.screenmode.IOplusScreenMode
+  [IFACE+STUB] 166                          com.oplus.os.IOplusPowerMonitor
+  [IFACE+STUB] 219                          android.os.IOplusUsageService
+
+覆盖: 28/35 服务有 Stub 定义
+
+==========================================================================================
+已覆盖服务的 Stub.onTransact 字节码审计
+==========================================================================================
+
+--- Landroid/os/IOplusService$Stub;  (classes2.dex, 138 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/IOplusExService$Stub;  (classes2.dex, 96 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/app/IOplusAccessControlManager$Stub;  (classes4.dex, 124 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/screenshot/IOplusScreenshotManager$Stub;  (classes4.dex, 120 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/filter/IDynamicFilterService$Stub;  (classes4.dex, 62 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/engineer/IOplusEngineerManager$Stub;  (classes.dex, 665 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/eventhub/sdk/aidl/IEventHandleService$Stub;  (classes4.dex, 123 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/IOppoGuardElfThermalControl$Stub;  (classes2.dex, 18 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/heimdall/IHeimdallService$Stub;  (classes4.dex, 42 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oppo/atlas/IOppoMMAtlasService$Stub;  (classes4.dex, 65 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/net/IOplusNetworkingControlManager$Stub;  (classes2.dex, 52 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/neuron/INeuronSystemService$Stub;  (classes4.dex, 59 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/nwpower/IOppoNwPower$Stub;  (classes2.dex, 89 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/IOplusTraceService$Stub;  (classes2.dex, 124 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/operator/IOplusOperatorManager$Stub;  (classes2.dex, 70 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/nec/IOplusNecService$Stub;  (classes4.dex, 178 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/android/internal/telephony/IOplusTelephonyExt$Stub;  (classes4.dex, 366 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/android/internal/telephony/IOplusTelephonyExtCallback$Stub;  (classes4.dex, 27 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/customize/coreapp/aidl/IOplusCoreAppService$Stub;  (classes4.dex, 35 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/customize/IOplusCustomizeService$Stub;  (classes2.dex, 34 insns)
+    perm_calls=1  danger_calls=0
+      PERM: v4, Landroid/os/customize/IOplusCustomizeService$Stub;->checkPermission()V
+
+--- Lcom/oplus/network/IOplusDataLimit$Stub;  (classes4.dex, 55 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/oplusdevicepolicy/IOplusDevicePolicyManagerService$Stub;  (classes2.dex, 149 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/network/IOplusNetworkStack$Stub;  (classes4.dex, 138 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/net/IOplusNetworkStatsService$Stub;  (classes2.dex, 170 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/storage/IOplusStorageManagerService$Stub;  (classes2.dex, 16 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/network/IOplusUidPurStats$Stub;  (classes4.dex, 59 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/screenmode/IOplusScreenMode$Stub;  (classes4.dex, 158 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/screenmode/IOplusScreenModeCallback$Stub;  (classes4.dex, 17 insns)
+    perm_calls=0  danger_calls=0
+
+--- Lcom/oplus/os/IOplusPowerMonitor$Stub;  (classes4.dex, 101 insns)
+    perm_calls=0  danger_calls=0
+
+--- Landroid/os/IOplusUsageService$Stub;  (classes2.dex, 465 insns)
+    perm_calls=0  danger_calls=0

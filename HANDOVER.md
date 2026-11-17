@@ -2,11 +2,12 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2（结项版）**，2026-11-17 重写，替代 v1 的 13 轮增补式长文 |
-| 状态 | **已结项（no-go）**：四类组件、五个候选面全部判定完毕，均无法达成临时 ROOT |
+| 版本 | **v2.1（结项版 + Binder 面审计增补）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文，§14 为同日新增的 Binder 面审计 |
+| 状态 | **已结项（no-go）**：四类组件、五个候选面全部判定完毕；§14 追加审计的 Binder 服务面亦基本否证，结论不变 |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
-| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空 |
+| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 全程只读 |
+| Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（四轮结论）；**厂商二进制不入库**，脚本与报告已提交 |
 
 ---
 
@@ -20,6 +21,7 @@
 | 接手继续做 | §1 → §2（基线）→ §5（逐面）→ §7（重开条件）→ §8（关键常数） |
 | 复核某个判断 | §5 对应小节 + §6 负知识清单 + `artifacts_adb/` 原始日志 |
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
+| Binder 服务面（§4 唯一未闭合面）| **§14**（四轮审计：28/35 覆盖、atlas 线索从发现到否证、结论仍 no-go）|
 
 **三条硬规则**
 
@@ -156,7 +158,7 @@ $ADB pull /data/local/tmp/<name>.log artifacts_adb/g_logs/
 | `/dev`（198 个节点） | 可读 12 个；白名单内**可写仅 4 个**：`binder`、`hwbinder`、`ashmem<uuid>`、`kgsl-3d0`（均 0666） |
 | `/proc/sys` + `/sys/module/*/parameters/*` + 16 个高危节点（764 项） | **可写仅 1 个**：`/sys/kernel/tracing/trace`（正常设计） |
 | SUID / `run-as` / debuggable | 四分区 `-perm -4000` 命中 **0**；`run-as` SUID 已移除（0750）；`ro.debuggable=0`、无 `su` |
-| binder 服务 | **236 个**（229 个可 `dumpsys`），含 10+ 个 OPPO/ColorOS 私有服务与已开启的工程模式 —— **从未审计**，是本机唯一未闭合的未知面 |
+| binder 服务 | **236 个**（229 个可 `dumpsys`），含 10+ 个 OPPO/ColorOS 私有服务与已开启的工程模式 —— 本文件 v2 时"从未审计、唯一未闭合的未知面"；**已于 2026-11-17 审计，见 §14：35 个私有服务覆盖 28 个，atlas 线索否证，结论 no-go** |
 
 **两条对早期记录的修正**
 
@@ -446,7 +448,7 @@ ENOTTY（未实现）3833
 3. 设备 **SPL 或内核构建发生变化** ⇒ 帧几何、binder 形态、全部符号偏移同时改变，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 中任一个 ⇒ 可定位 GhostLock panic 的精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线（例如改用 `sched_setattr` 之外的链遍历入口）。
-6. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。
+6. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
 
 ---
 
@@ -595,3 +597,61 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 > binder 停在"ticket spinlock 只给 +0x00010001"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"。
 > 这不是"没试够"，是本机权限模型与代码形态共同决定的 no-go。
 > 若将来要重开，**不要重复同样的构造**，只看 §7 的六条触发条件。
+
+---
+
+## 14. 增补：Binder 服务面审计（2026-11-17，§7 第 6 条触发）
+
+> 本节执行并闭合了 §4 标注的"唯一未闭合未知面"。完整过程、字节码证据与四轮报告见
+> `artifacts_adb/binder_audit/AUDIT_REPORT.md`（脚本与文本报告入库；**厂商 jar/apk/so/dex 不入库**，
+> 读者从自己设备 `adb pull` 后用同目录脚本本地重跑）。
+
+**触发**：`docs_archive/审核意见CHATGPT.txt` 主张把"OPPO 私有 Binder 服务审计"提升 P0，
+以 CVE-2026-70386（OnePlus atlasservice 未授权 → root 命令执行）等为历史证据。
+外部核验：审核意见引用的 5 个 CVE **全部属实**，但均为跨设备/跨版本案例，无一直接指向 K3。
+
+### 14.1 结论
+
+**Binder 服务面亦判定 no-go；§7 第 6 条从"未执行"变为"已执行且未命中"。** 项目维持整体结项。
+
+| 轮 | 动作 | 结果 |
+|---|---|---|
+| 1 | 从设备只读拉 9 个 jar（`adb pull`，`/system/framework` 全可读） | 接口覆盖仅 **2/35**，材料不足 |
+| 2 | 补拉 `framework.jar`/`services.jar`/atlas apk + 多 dex | 覆盖升至 **28/35**；发现 atlasservice 结构同构线索 |
+| 3 | avc oracle 验证可达性（只读 `dumpsys` 探针） | **shell → root atlasservice binder 可达** |
+| 4 | 对可读 `libatlasservice.so` 做符号级反汇编 | **命令注入模式否证**，线索闭合 |
+
+### 14.2 决定性证据链：atlasservice 从发现到否证
+
+本机结构与 CVE-2026-70386 四环同构，但第五环（注入）经反汇编否定：
+
+| 环节 | CVE-2026-70386 | K3 F.16 实测 | 判定 |
+|---|---|---|---|
+| 入口 | `atlasservice.setEvent(String8,String8)` | `IOppoMMAtlasService`/`IOppoAtlasService` 的 `setEvent(int,String)`，方法集一致 | 同族 |
+| 鉴权 | 缺失 | `Stub.onTransact` 仅 `enforceInterface`，0 处 `getCallingUid` | 同样缺失 |
+| 可达性 | 任意本地应用 | avc `denied { use } pipe, scontext=u:r:atlasservice:s0 ← u:r:shell:s0` 证明调用到达 root 域 | 可达 |
+| root 服务 | `audiodumpinfo`, `u:r:dumpstate:s0` | `atlasservice`, `user root`, `u:r:atlasservice:s0`, init rc | 存在 |
+| **命令注入** | `system(未转义参数)` | `system()` 确实 3 处，但模板硬编码 `dmesg > %s%s%s` / `chmod 0777 %s`；value 只进路径构造与 `kill` pid | **本质差异，否证** |
+
+反汇编还原的调用链：`setEvent(int,String8)` → `OplusAtlasLogWriter::caputureLogs` →
+`OplusAtlasLogThread::threadLoop` → `doLogCaputure`/`checkPath` → `system()`（命令模板在 rodata 硬编码）。
+
+### 14.3 方法论产出（复用价值）
+
+1. **AIDL/HIDL `Stub.onTransact` 的 `enforceInterface` 不是鉴权**。28 个服务里 27 个 perm_calls=0 是结构正常现象，
+   唯一例外 `IOplusCustomizeService` 才在 Stub 层 `checkPermission()`。鉴权在服务实现方法或 SELinux 层，
+   不可据 Stub 无鉴权就判漏洞——与 §10 的"补丁形态比对优于猜寄存器"同类教训。
+2. **avc oracle 测可达性**：只读 `dumpsys <service>`（DUMP_TRANSACTION 固定事务号，非业务事务）
+   前后的 avc 增量可判断 shell 能否触达某服务，对照组 `dumpsys commondcs` → "Can't find service"。零副作用。
+3. **工具可用性必须先自证**（§10 新增强调）：本机 Git Bash 无 `strings` 命令，
+   其"返回空"曾被误读为"so 无 system() 字符串"，改用 Python 正则后结论反转。**已作为负知识登记。**
+
+### 14.4 覆盖度缺口与不重开判据
+
+- 35 个私有服务覆盖 28 个；7 个 MISSING（`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/
+  `IHansComunication`/`IOppoAppDataService`/`OplusResourceManagerService`）实现在独立 apk/服务，未纳入。
+- 唯一还能改变结论的动作：**从 OTA 整包解出 root 二进制 `/system_ext/bin/atlasservice` 静态分析**
+  （约 3.35 GB，root 二进制对 shell/adbd 均 Permission denied）——需用户授权下载成本。
+- **路径 B（受控 setEvent 探针）不建议**：净执行 0.5–1 h，但命令模板硬编码、无输出 oracle
+  （dmesg/kmsg/pstore 全不可读），且违反 §7"不盲试事务号"约定；成本不是时间，是无效性。
+- 全程只读：未推送二进制到设备、未调用业务事务号、未改分区；设备终态同 §11。

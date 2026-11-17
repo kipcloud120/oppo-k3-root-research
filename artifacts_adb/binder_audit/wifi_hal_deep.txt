@@ -1,0 +1,669 @@
+==========================================================================================
+CLASS: Lcom/oplus/server/wifi/OplusWifiHalService;
+
+--- <clinit> (5 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;
+    v0, Ljava/lang/Class;->getSimpleName()Ljava/lang/String;
+    v0
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    
+
+--- <init> (11 insns) ---
+    v1, Ljava/lang/Object;-><init>()V
+    v0, Ljava/lang/Object;
+    v0, Ljava/lang/Object;-><init>()V
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$CDv2dPR0bqORnEySlD-k68qe19E;
+    v0, v1, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$CDv2dPR0bqORnEySlD-k68qe19E;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService;)V
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->mOplusWifiServiceDeathRecipient Landroid/os/IHwBinder$DeathRecipient;
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService$1;
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService$1;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService;)V
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceNotificationCallback Lcom/android/wifi/x/android/hidl/manager/V1_0/IServiceNotification;
+    
+
+--- <init> (2 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;-><init>()V
+    
+
+--- access$200 (2 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v0
+
+--- access$300 (2 insns) ---
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+
+--- access$400 (2 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->initializeInternal()V
+    
+
+--- access$502 (2 insns) ---
+    v1, v0, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v1
+
+--- access$700 (2 insns) ---
+    v0, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->logCompletion(Ljava/lang/String; I)V
+    
+
+--- checkIOplusWifiServiceAndLogFailure (24 insns) ---
+    v0, v4, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, v4, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, +020h
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "Can't call "
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ": mIOplusWifiService is null"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v1, 0
+    v0
+    v1
+    v0
+    v0, 1
+    v0
+    v1
+    v0
+    v1
+
+--- getInstance (3 insns) ---
+    Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiHalServiceInstance;->access$000()Lcom/oplus/server/wifi/OplusWifiHalService;
+    v0
+    v0
+
+--- initializeInternal (25 insns) ---
+    v0, v5, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->getService()Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1
+    v1, v5, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v5, Lcom/oplus/server/wifi/OplusWifiHalService;->linkToOplusWifiHalServiceDeath()Z
+    +1dh
+    v1
+    +1dh
+    v1
+    v2, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v3, Ljava/lang/StringBuilder;
+    v3, Ljava/lang/StringBuilder;-><init>()V
+    v4, "Exception while trying to register a listener for IOplusWifiService service: "
+    v3, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, v1, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v3, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v3
+    v2, v3, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v2, 0
+    v2, v5, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v0
+    
+    v0
+    v1
+
+--- lambda$executeDriverCommand$1 (2 insns) ---
+    v0, v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I Ljava/lang/String;)V
+    
+
+--- lambda$getIniVersion$3 (2 insns) ---
+    v0, v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I Ljava/lang/String;)V
+    
+
+--- lambda$sendIniContent$2 (2 insns) ---
+    v0, v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I Ljava/lang/String;)V
+    
+
+--- linkToOplusWifiHalServiceDeath (33 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, 0
+    v1, +004h
+    v0
+    v2
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mOplusWifiServiceDeathRecipient Landroid/os/IHwBinder$DeathRecipient;
+    v4, 0
+    v1, v3, v4, v5, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->linkToDeath(Landroid/os/IHwBinder$DeathRecipient; J)Z
+    v1
+    v1, +00eh
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v3, "Error on linkToDeath on IOplusWifiService"
+    v1, v3, Landroid/util/Log;->wtf(Ljava/lang/String; Ljava/lang/String;)I
+    v1, 0
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v0
+    v2
+    
+    v0
+    v0, 1
+    v0
+    v1
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, "IOplusWifiService.linkToDeath exception"
+    v3, v4, v1, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String; Ljava/lang/Throwable;)I
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- logCompletion (22 insns) ---
+    v4, +019h
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v1, Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;-><init>()V
+    v1, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, " completed successfully."
+    v1, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v1
+    v0, v1, Landroid/util/Log;->d(Ljava/lang/String; Ljava/lang/String;)I
+    +1ah
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v1, Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;-><init>()V
+    v1, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, " failed: "
+    v1, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, v4, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v1
+    v0, v1, Landroid/util/Log;->w(Ljava/lang/String; Ljava/lang/String;)I
+    
+
+--- catchSnifferLog (47 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "catchSnifferLog"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "catchSnifferLog("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v3, ", "
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v8, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, v7, v8, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->catchSnifferLog(I I)I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- changeConnectionMode (44 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "changeConnectionMode"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "changeConnectionMode("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, v7, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->changeConnectionMode(I)I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- earlyInit (69 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v1, "earlyInit Oplus hal service"
+    v0, v1, Landroid/util/Log;->d(Ljava/lang/String; Ljava/lang/String;)I
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v1, +004h
+    v0
+    
+    v1, 0
+    Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;->getService()Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v2
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v2, +00bh
+    v2, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v3, "Failed to get IServiceManager instance"
+    v2, v3, Landroid/util/Log;->wtf(Ljava/lang/String; Ljava/lang/String;)I
+    v0
+    
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService$ServiceManagerDeathRecipient;
+    v3, v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService$ServiceManagerDeathRecipient;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService; Lcom/oplus/server/wifi/OplusWifiHalService$1;)V
+    v4, 0
+    v2, v3, v4, v5, Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;->linkToDeath(Landroid/os/IHwBinder$DeathRecipient; J)Z
+    v2
+    v2, +00dh
+    v2, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v3, "Error on linkToDeath on IServiceManager"
+    v2, v3, Landroid/util/Log;->wtf(Ljava/lang/String; Ljava/lang/String;)I
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v0
+    
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v3, "vendor.oplus.hardware.wifi@1.1::IOppoWifiService"
+    v4, ""
+    v5, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceNotificationCallback Lcom/android/wifi/x/android/hidl/manager/V1_0/IServiceNotification;
+    v2, v3, v4, v5, Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;->registerForNotifications(Ljava/lang/String; Ljava/lang/String; Lcom/android/wifi/x/android/hidl/manager/V1_0/IServiceNotification;)Z
+    v2
+    v2, +00dh
+    v2, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v3, "Failed to register a listener for Oplus wifi service"
+    v2, v3, Landroid/util/Log;->wtf(Ljava/lang/String; Ljava/lang/String;)I
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v0
+    
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v3, "vendor.oplus.hardware.wifi@1.1::IOppoWifiService"
+    v2, v3, Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;->listManifestByInterface(Ljava/lang/String;)Ljava/util/ArrayList;
+    v2
+    v2, Ljava/util/List;->isEmpty()Z
+    v3
+    v3, +005h
+    v6, Lcom/oplus/server/wifi/OplusWifiHalService;->initializeInternal()V
+    +1ah
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "Exception while operating on IServiceManager: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->wtf(Ljava/lang/String; Ljava/lang/String;)I
+    v1, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mServiceManager Lcom/android/wifi/x/android/hidl/manager/V1_2/IServiceManager;
+    v0
+    
+    v1
+    v0
+    v1
+
+--- executeDriverCommand (44 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "executeDriverCommand"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "executeDriverCommand("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v3, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$uD6hk53bOimZNTzE924fVOYf3t8;
+    v3, v1, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$uD6hk53bOimZNTzE924fVOYf3t8;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;)V
+    v2, v7, v3, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->executeDriverCommand(Ljava/lang/String; Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService$executeDriverCommandCallback;)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- getIniVersion (43 insns) ---
+    v0, v7, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "getIniVersion"
+    v7, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v2, 0
+    v1, +004h
+    v0
+    v2
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v3, Ljava/lang/StringBuilder;
+    v3, Ljava/lang/StringBuilder;-><init>()V
+    v4, "getIniVersion("
+    v3, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, v8, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, ")"
+    v3, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v3
+    v1, v3, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v3, v7, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v4, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$0VlX14kt7KmHskAPKq8ZNHLVS6E;
+    v4, v1, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$0VlX14kt7KmHskAPKq8ZNHLVS6E;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;)V
+    v3, v8, v4, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->getIniVersion(Ljava/lang/String; Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService$getIniVersionCallback;)V
+    +1ah
+    v3
+    v4, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v5, Ljava/lang/StringBuilder;
+    v5, Ljava/lang/StringBuilder;-><init>()V
+    v6, "IOplusWifiService exception: "
+    v5, v6, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v5, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v5, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v5
+    v4, v5, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v2, v7, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->getResult()Ljava/lang/String;
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- lambda$new$0$OplusWifiHalService (18 insns) ---
+    v0, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v1, Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;-><init>()V
+    v2, "IOplusWifiService died: cookie="
+    v1, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v1, v4, v5, Ljava/lang/StringBuilder;->append(J)Ljava/lang/StringBuilder;
+    v1, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v1
+    v0, v1, Landroid/util/Log;->w(Ljava/lang/String; Ljava/lang/String;)I
+    v0, v3, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, 0
+    v1, v3, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v0
+    
+    v1
+    v0
+    v1
+
+--- resetConnectionMode (36 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "resetConnectionMode"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, "resetConnectionMode"
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->resetConnectionMode()I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- runWiFiScript (47 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "runWiFiScript"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "runWiFiScript("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ","
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v8, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, v7, v8, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->runWiFiScript(Ljava/lang/String; Ljava/lang/String;)I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- sendIniContent (44 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "sendIniContent"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "sendIniContent("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v3, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$GpiOrwCnXXk4VET6FHtr5MH5I9Y;
+    v3, v1, Lcom/oplus/server/wifi/-$$Lambda$OplusWifiHalService$GpiOrwCnXXk4VET6FHtr5MH5I9Y;-><init>(Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;)V
+    v2, v7, v3, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->sendIniContent(Ljava/lang/String; Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService$sendIniContentCallback;)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- sendSupplicantCommand (44 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "sendSupplicantCommand"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;-><init>()V
+    v3, "sendSupplicantCommand("
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v3, ")"
+    v2, v3, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v2, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, v7, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->sendSupplicantCommand(Ljava/lang/String;)I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
+
+--- setupFTMdaemon (36 insns) ---
+    v0, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mLock Ljava/lang/Object;
+    v0
+    v1, "setupFTMdaemon"
+    v6, v1, Lcom/oplus/server/wifi/OplusWifiHalService;->checkIOplusWifiServiceAndLogFailure(Ljava/lang/String;)Z
+    v1
+    v1, +005h
+    v1, 0
+    v0
+    v1
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;
+    v2, "setupFTMdaemon()"
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;-><init>(Ljava/lang/String;)V
+    v2, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v2, Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;->setupFTMdaemon()I
+    v2
+    v1, v2, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->setResult(I)V
+    +1bh
+    v2
+    v3, Lcom/oplus/server/wifi/OplusWifiHalService;->TAG Ljava/lang/String;
+    v4, Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;-><init>()V
+    v5, "IOppoWifiService exception: "
+    v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+    v4, v2, Ljava/lang/StringBuilder;->append(Ljava/lang/Object;)Ljava/lang/StringBuilder;
+    v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+    v4
+    v3, v4, Landroid/util/Log;->e(Ljava/lang/String; Ljava/lang/String;)I
+    v3, 0
+    v3, v6, Lcom/oplus/server/wifi/OplusWifiHalService;->mIOppoWifiService Lvendor/oplus/hardware/wifi/V1_1/IOppoWifiService;
+    v1, Lcom/oplus/server/wifi/OplusWifiHalService$OplusWifiServiceResult;->isSuccess()Z
+    v2
+    v0
+    v2
+    v1
+    v0
+    v1
