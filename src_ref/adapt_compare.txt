@@ -1,0 +1,123 @@
+# CVE-2023-33107 → 4.9.227 适配对照表
+# 生成: python tools/f16_adapt_compare.py
+# PoC : src_ref/poc_ex.c (keto0422/CVE-2023-33107@main, 88,079 B)
+# UAPI: src_ref/kgsl_4.9/msm_kgsl.h (realme 官方 4.9, 50,115 B)
+
+## 1. ioctl 编号对照
+| ioctl | PoC (nr, struct) | 4.9 UAPI (nr, struct) | 判定 |
+|---|---|---|---|
+| `IOCTL_KGSL_CFF_SYNCMEM` | — | 0x30 / struct kgsl_cff_syncmem | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CFF_SYNC_GPUOBJ` | — | 0x44 / struct kgsl_cff_sync_gpuobj | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CFF_USER_EVENT` | — | 0x31 / struct kgsl_cff_user_event | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDSTREAM_FREEMEMONTIMESTAMP` | — | 0x12 / struct kgsl_cmdstream_freememontimestamp | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDSTREAM_FREEMEMONTIMESTAMP_CTXTID` | — | 0x17 / struct kgsl_cmdstream_freememontimestamp_ctxtid | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDSTREAM_FREEMEMONTIMESTAMP_OLD` | — | 0x12 / struct kgsl_cmdstream_freememontimestamp | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDSTREAM_READTIMESTAMP` | — | 0x11 / struct kgsl_cmdstream_readtimestamp | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDSTREAM_READTIMESTAMP_CTXTID` | 0x16 / struct kgsl_cmdstream_readtimestamp_ctxtid | 0x16 / struct kgsl_cmdstream_readtimestamp_ctxtid | 一致 |
+| `IOCTL_KGSL_CMDSTREAM_READTIMESTAMP_OLD` | — | 0x11 / struct kgsl_cmdstream_readtimestamp | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_CMDWINDOW_WRITE` | — | 0x2e / struct kgsl_cmdwindow_write | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DEVICE_GETPROPERTY` | — | 0x02 / struct kgsl_device_getproperty | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DEVICE_WAITTIMESTAMP` | — | 0x06 / struct kgsl_device_waittimestamp | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DEVICE_WAITTIMESTAMP_CTXTID` | — | 0x07 / struct kgsl_device_waittimestamp_ctxtid | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DRAWCTXT_BIND_GMEM_SHADOW` | — | 0x22 / struct kgsl_bind_gmem_shadow | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DRAWCTXT_CREATE` | 0x13 / struct kgsl_drawctxt_create | 0x13 / struct kgsl_drawctxt_create | 一致 |
+| `IOCTL_KGSL_DRAWCTXT_DESTROY` | — | 0x14 / struct kgsl_drawctxt_destroy | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_DRAWCTXT_SET_BIN_BASE_OFFSET` | — | 0x25 / struct kgsl_drawctxt_set_bin_base_offset | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_ALLOC` | — | 0x2f / struct kgsl_gpumem_alloc | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_ALLOC_ID` | — | 0x34 / struct kgsl_gpumem_alloc_id | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_FREE_ID` | — | 0x35 / struct kgsl_gpumem_free_id | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_GET_INFO` | — | 0x36 / struct kgsl_gpumem_get_info | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_SYNC_CACHE` | — | 0x37 / struct kgsl_gpumem_sync_cache | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUMEM_SYNC_CACHE_BULK` | — | 0x3c / struct kgsl_gpumem_sync_cache_bulk | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUOBJ_ALLOC` | 0x45 / struct kgsl_gpuobj_alloc | 0x45 / struct kgsl_gpuobj_alloc | 一致 |
+| `IOCTL_KGSL_GPUOBJ_FREE` | 0x46 / struct kgsl_gpuobj_free | 0x46 / struct kgsl_gpuobj_free | 一致 |
+| `IOCTL_KGSL_GPUOBJ_IMPORT` | — | 0x48 / struct kgsl_gpuobj_import | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUOBJ_INFO` | 0x47 / struct kgsl_gpuobj_info | 0x47 / struct kgsl_gpuobj_info | 一致 |
+| `IOCTL_KGSL_GPUOBJ_SET_INFO` | — | 0x4c / struct kgsl_gpuobj_set_info | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPUOBJ_SYNC` | — | 0x49 / struct kgsl_gpuobj_sync | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_GPU_COMMAND` | 0x4a / struct kgsl_gpu_command | 0x4a / struct kgsl_gpu_command | 一致 |
+| `IOCTL_KGSL_GPU_SPARSE_COMMAND` | — | 0x55 / struct kgsl_gpu_sparse_command | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_MAP_USER_MEM` | 0x15 / struct kgsl_map_user_mem | 0x15 / struct kgsl_map_user_mem | 一致 |
+| `IOCTL_KGSL_PERFCOUNTER_GET` | — | 0x38 / struct kgsl_perfcounter_get | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_PERFCOUNTER_PUT` | — | 0x39 / struct kgsl_perfcounter_put | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_PERFCOUNTER_QUERY` | — | 0x3a / struct kgsl_perfcounter_query | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_PERFCOUNTER_READ` | — | 0x3b / struct kgsl_perfcounter_read | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_PREEMPTIONCOUNTER_QUERY` | — | 0x4b / struct kgsl_preemption_counters_query | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_RINGBUFFER_ISSUEIBCMDS` | — | 0x10 / struct kgsl_ringbuffer_issueibcmds | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SETPROPERTY` | — | 0x32 / struct kgsl_device_getproperty | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SHAREDMEM_FLUSH_CACHE` | — | 0x24 / struct kgsl_sharedmem_free | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SHAREDMEM_FREE` | — | 0x21 / struct kgsl_sharedmem_free | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SHAREDMEM_FROM_PMEM` | — | 0x20 / struct kgsl_sharedmem_from_pmem | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SHAREDMEM_FROM_VMALLOC` | — | 0x23 / struct kgsl_sharedmem_from_vmalloc | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SPARSE_BIND` | — | 0x54 / struct kgsl_sparse_bind | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SPARSE_PHYS_ALLOC` | — | 0x50 / struct kgsl_sparse_phys_alloc | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SPARSE_PHYS_FREE` | — | 0x51 / struct kgsl_sparse_phys_free | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SPARSE_VIRT_ALLOC` | — | 0x52 / struct kgsl_sparse_virt_alloc | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SPARSE_VIRT_FREE` | — | 0x53 / struct kgsl_sparse_virt_free | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SUBMIT_COMMANDS` | — | 0x3d / struct kgsl_submit_commands | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SYNCSOURCE_CREATE` | — | 0x40 / struct kgsl_syncsource_create | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SYNCSOURCE_CREATE_FENCE` | — | 0x42 / struct kgsl_syncsource_create_fence | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SYNCSOURCE_DESTROY` | — | 0x41 / struct kgsl_syncsource_destroy | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_SYNCSOURCE_SIGNAL_FENCE` | — | 0x43 / struct kgsl_syncsource_signal_fence | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_TIMESTAMP_EVENT` | — | 0x33 / struct kgsl_timestamp_event | 4.9 有、PoC 未用 |
+| `IOCTL_KGSL_TIMESTAMP_EVENT_OLD` | — | 0x31 / struct kgsl_timestamp_event | 4.9 有、PoC 未用 |
+
+## 2. 关键结构体字段对照
+- `struct kgsl_cmdstream_readtimestamp_ctxtid`: PoC 3 字段 / 4.9 3 字段；一致
+- `struct kgsl_command_object`: PoC 5 字段 / 4.9 5 字段；一致
+- `struct kgsl_drawctxt_create`: PoC 2 字段 / 4.9 2 字段；一致
+- `struct kgsl_gpu_command`: PoC 12 字段 / 4.9 12 字段；一致
+- `struct kgsl_gpuobj_alloc`: PoC 7 字段 / 4.9 7 字段；一致
+- `struct kgsl_gpuobj_free`: PoC 5 字段 / 4.9 5 字段；一致
+- `struct kgsl_gpuobj_info`: PoC 6 字段 / 4.9 6 字段；一致
+- `struct kgsl_map_user_mem`: PoC 7 字段 / 4.9 7 字段；一致
+
+仅 PoC 定义: 
+仅 4.9 定义: `kgsl_bind_gmem_shadow`, `kgsl_buffer_desc`, `kgsl_cff_sync_gpuobj`, `kgsl_cff_syncmem`, `kgsl_cff_user_event`, `kgsl_cmd_syncpoint`, `kgsl_cmd_syncpoint_fence`, `kgsl_cmd_syncpoint_timestamp`, `kgsl_cmdbatch_profiling_buffer`, `kgsl_cmdstream_freememontimestamp`, `kgsl_cmdstream_freememontimestamp_ctxtid`, `kgsl_cmdstream_readtimestamp`, `kgsl_cmdwindow_write`, `kgsl_command_syncpoint`, `kgsl_device_constraint`, `kgsl_device_constraint_pwrlevel`, `kgsl_device_getproperty`, `kgsl_device_waittimestamp`, `kgsl_device_waittimestamp_ctxtid`, `kgsl_devinfo`, `kgsl_devmemstore`, `kgsl_drawctxt_destroy`, `kgsl_drawctxt_set_bin_base_offset`, `kgsl_gmem_desc`, `kgsl_gpmu_version`, `kgsl_gpu_event_fence`, `kgsl_gpu_event_timestamp`, `kgsl_gpu_sparse_command`, `kgsl_gpumem_alloc`, `kgsl_gpumem_alloc_id`, `kgsl_gpumem_free_id`, `kgsl_gpumem_get_info`, `kgsl_gpumem_sync_cache`, `kgsl_gpumem_sync_cache_bulk`, `kgsl_gpuobj_import`, `kgsl_gpuobj_import_dma_buf`, `kgsl_gpuobj_import_useraddr`, `kgsl_gpuobj_set_info`, `kgsl_gpuobj_sync`, `kgsl_gpuobj_sync_obj`, `kgsl_ibdesc`, `kgsl_perfcounter_get`, `kgsl_perfcounter_put`, `kgsl_perfcounter_query`, `kgsl_perfcounter_read`, `kgsl_perfcounter_read_group`, `kgsl_preemption_counters_query`, `kgsl_qdss_stm_prop`, `kgsl_qtimer_prop`, `kgsl_ringbuffer_issueibcmds`, `kgsl_shadowprop`, `kgsl_sharedmem_free`, `kgsl_sharedmem_from_pmem`, `kgsl_sharedmem_from_vmalloc`, `kgsl_sp_generic_mem`, `kgsl_sparse_bind`, `kgsl_sparse_binding_object`, `kgsl_sparse_phys_alloc`, `kgsl_sparse_phys_free`, `kgsl_sparse_virt_alloc`, `kgsl_sparse_virt_free`, `kgsl_submit_commands`, `kgsl_syncsource_create`, `kgsl_syncsource_create_fence`, `kgsl_syncsource_destroy`, `kgsl_syncsource_signal_fence`, `kgsl_timestamp_event`, `kgsl_timestamp_event_fence`, `kgsl_timestamp_event_genlock`, `kgsl_ucode_version`, `kgsl_version`
+
+## 3. F.16 符号表中相关函数存在性（仅存在性，偏移不可用 → §12）
+- `kgsl_ioctl_gpuobj_alloc`: 存在
+- `kgsl_ioctl_gpuobj_free`: 存在
+- `kgsl_ioctl_gpuobj_import`: 存在
+- `kgsl_ioctl_gpuobj_info`: 存在
+- `kgsl_ioctl_map_user_mem`: 存在
+- `kgsl_ioctl_gpu_command`: 存在
+- `kgsl_ioctl_drawctxt_create`: 存在
+- `kgsl_mmu_set_svm_region`: 存在
+- `kgsl_mmu_find_svm_region`: 存在
+- `kgsl_iommu_map`: 存在
+- `kgsl_iommu_unmap`: 存在
+- `kgsl_iommu_set_svm_region`: 存在
+- `arm_lpae_map_sg`: 存在
+- `arm_lpae_init_pte`: 存在
+- `arm_lpae_unmap`: 存在
+- `kgsl_mem_entry_detach_process`: 存在
+- `kgsl_mem_entry_destroy_deferred`: **不存在**
+- `kgsl_mmu_put_gpuaddr`: 存在
+- `kgsl_shrinker`: **不存在**
+- `kgsl_mem_entry_put_deferred`: **不存在**
+
+## 4. PoC 硬编码常量（4.9.227 / SDM710 上必须重新标定）
+- `MAX_FOUND_PAGES` = 1  (line 22)
+- `SECOND_CHILD_START` = 0x900  (line 23)
+- `SEND_ADDR` = 3  (line 26)
+- `GOT_ADDR` = 4  (line 27)
+- `TASK_SPRAY_CLEAR` = 0x901  (line 32)
+- `TARGET_PIDPID` = 0x40  (line 33)
+- `SPRAY_COUNT` = 4000  (line 52)
+- `SPRAY_COUNT_STEP` = 2000  (line 53)
+- `SPRAY_COUNT_MAX` = 20000  (line 54)
+- `KGSL_USER_MEM_TYPE_ADDR` = 0x00000002U  (line 56)
+- `PAGE_SIZE` = 4096  (line 97)
+- `UAF_START` = 0x00000007001ff000ULL  (line 99)
+- `UAF_SIZE` = 0x0000000010004000ULL  (line 100)
+- `OVERLAP_START` = 0x00000007001fe000ULL  (line 102)
+- `OVERLAP_SIZE` = 0x0000000000007000ULL  (line 103)
+- `PLACEH_START` = 0x0000000710204000ULL  (line 105)
+- `PLACEH_SIZE` = 0x0000000000010000ULL  (line 106)
+- `BOGUS_START` = 0x0000000700204000ULL  (line 108)
+- `WRAP_SIZE` = 0xffffffffffefd000ULL  (line 109)
+- `MMAP_SPRAY_COUNT` = 12000  (line 167)
+- `MMAP_SPRAY_STRIDE` = 0x200000ULL  (line 168)
+- `MMAP_SPRAY_BASE` = 0x0000000200000000ULL  (line 169)
+- `PTE_SAVE_BASE` = 0xf00  (line 197)

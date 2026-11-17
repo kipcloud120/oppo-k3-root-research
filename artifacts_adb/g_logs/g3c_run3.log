@@ -1,0 +1,11 @@
+[ 358537.0ms] ===== G3C-STEER start pid=12097 =====
+[ 358644.3ms] [5] CMP_REQUEUE_PI(A→C,1)  (top_task=W, owner(B_ring)=W ⇒ 应在 B_ring 早退)
+[ 358650.3ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[ 358945.7ms] [6] W frame1 返回 -1 errno=110 (Operation timed out) → 悬垂指针 lock=C，帧 1 已死
+[ 358951.4ms] [6] W 中间 UNLOCK_PI(B_ring) 返回 0
+[ 359054.3ms] [10p] 探测 FUTEX_WAKE(A2,1) → -1 errno=22 (Invalid argument)  (EINVAL=确有 requeue_pi waiter)
+[ 359060.3ms] [10p] 字值: A2=0 A=0 C=2147495747 C2=2147495748 | W.tid=12098 O.tid=12099 O2.tid=12100
+[ 359063.8ms] [10] CMP_REQUEUE_PI(A2→C2,1)  (owner(B3)=W ⇒ 应在 B3 早退；同时写 waiter->lock=C2)
+[ 359067.1ms] [10] → -1 errno=35 (Resource deadlock would occur)
+[ 361045.0ms] [10b] W frame2 返回 -1 errno=110 (Operation timed out) → 槽内 lock=C2，帧 2 已死
+[ 361159.2ms] [12] CMP_REQUEUE_PI(A3→C2,1)  (top_task=W3≠W ⇒ 走查应抵达 W 的槽)

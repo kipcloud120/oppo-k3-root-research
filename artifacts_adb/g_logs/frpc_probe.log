@@ -1,0 +1,60 @@
+# FastRPC 面可达性实测（2026-11-17，设备 <redacted>，uid=2000 shell）
+# 全部为零风险探测：不向 DSP 发送任何请求
+
+============================================================
+run1  tools/frpc_probe.c —— 打开模式与 LSM 闸门
+============================================================
+===== FRPC-PROBE start uid=2000 =====
+== /dev/adsprpc-smd ==
+  open(O_RDONLY)      -> 3  OK
+  ioctl(fd, 0)        -> ENOTTY(25) 已到驱动但无该命令
+  >> 结论：ioctl 已穿过 SELinux 闸门（驱动收到未实现命令）
+  open(O_RDWR)        -> -1 EACCES(13) SELinux/权限
+== /dev/adsprpc-smd-secure ==
+  open(O_RDONLY)      -> -1 EACCES(13)
+  open(O_RDWR)        -> -1 EACCES(13)
+===== done（未向 DSP 发送任何请求） =====
+设备：uptime 连续（567.80 → 604.56 s）
+
+============================================================
+run2  tools/frpc_ioctl_probe.c —— ioctl 表枚举 + FMODE 门槛
+（只读 fd；arg=NULL；跳过 nr=5/6 与所有 _IO 无参命令）
+============================================================
+===== FRPC-IOCTL-PROBE uid=2000 =====
+open(/dev/adsprpc-smd, O_RDONLY) = fd 3（只读 fd，不加 O_RDWR）
+
+  命中: nr=1 dir=3 size= 16 cmd=0xc0105201 -> EPERM(1)    ← 能力/策略拒绝
+  命中: nr=2 dir=3 size= 32 cmd=0xc0205202 -> EPERM(1)
+  命中: nr=3 dir=3 size= 16 cmd=0xc0105203 -> EPERM(1)
+  命中: nr=4 dir=3 size= 24 cmd=0xc0185204 -> EPERM(1)
+  命中: nr=7 dir=3 size= 32 cmd=0xc0205207 -> EPERM(1)
+  命中: nr=8 dir=3 size=  4 cmd=0xc0045208 -> EPERM(1)
+  命中: nr=9 dir=3 size= 24 cmd=0xc0185209 -> EPERM(1)
+
+---- 汇总 ----
+  ENOTTY（未实现）: 3833
+  命中（非 ENOTTY）: 7   其中非 EFAULT/EINVAL: 7
+===== done（未向 DSP 发送任何请求） =====
+设备：uptime 连续（741.08 → 未重启）
+
+============================================================
+判读
+============================================================
+1. 命中 7 条，cmd 字的 size 位给出各结构体的**实际尺寸**（厂商构建与主线宏不同）：
+     nr=1 INVOKE   size=16
+     nr=2 INIT     size=32
+     nr=3 MMAP     size=16
+     nr=4 MUNMAP   size=24
+     nr=7 SETMODE  size=32   （主线为 _IOW('R',7,int)=4，本机已改）
+     nr=8 GETPERF  size=4
+     nr=9 CTRLINIT size=24
+   ⇒ 驱动确实按 switch(cmd) 精确匹配，枚举法有效。
+
+2. 七条**全部** EPERM，且发生在 NULL 参数解引用之前。
+   排除 SELinux 的可能：`ioctl(fd, 0)` 在同一 fd 上返回 ENOTTY（=穿过 LSM），
+   而 SELinux 无法按 cmd 区分放行 ⇒ EPERM 来自驱动自身（fd 模式位或能力检查）。
+
+3. 于是本面对 shell 是**双重封闭**：
+     O_RDWR  → SELinux EACCES（打不开写通道）
+     已实现 ioctl 在只读 fd 上 → 驱动 EPERM（进不了 handler）
+   ⇒ 无可行组合。

@@ -1,0 +1,148 @@
+=== a) 源码 printk 字符串在本镜像的存在性 ===
+    b'Cannot accommodate DMA offset for IOMMU page tab' : 1 处 0x161c400
+    b'Cannot accommodate DMA offset'                    : 1 处 0x161c400
+    b'io-pgtable-arm'                                   : 1 处 0x15d1747
+    b'IOMMU page tables'                                : 2 处 0x161c422 0x161c45c
+    b'arm_lpae'                                         : 0 处 
+    b'pgtable_dma_sync'                                 : 0 处 
+
+=== b) 邻域内 vtable 赋值点（>=6 个函数地址） ===
+    邻域 adrp 站点 32136
+    命中窗口 73 个（去重后），前 15：
+    0x50955c: 0x509c48 0x509d00 0x509d48 0x509e28 0x509e88 0x509ed8 0x509f10
+    0x509624: 0x509c48 0x509d00 0x509d48 0x509e28 0x509e88 0x509ed8 0x509f10
+    0x587570: 0x587908 0x5879f8 0x587a40 0x587a80 0x587af8 0x587b30 0x587b98
+    0x5875f8: 0x587908 0x5879f8 0x587a40 0x587a80 0x587af8 0x587b30 0x587b98
+    0x59b240: 0x59b438 0x59b6d0 0x59c0b0 0x59c2d0 0x59cf50 0x59d090 0x59d348
+    0x59b2cc: 0x59b438 0x59b6d0 0x59b820 0x59bd18 0x59c0b0 0x59c2d0 0x59c4b0 0x59c718
+    0x59b350: 0x59b820 0x59bd18 0x59c0b0 0x59c2d0 0x59c4b0 0x59c718 0x59cc20 0x59d090
+    0x605de8: 0x605f98 0x606298 0x6064e8 0x606678 0x6066c8 0x6068e0
+    0x605e6c: 0x605f98 0x606298 0x6064e8 0x606678 0x6066c8 0x6068e0
+    0x605f1c: 0x605f98 0x606298 0x6064e8 0x606678 0x6066c8 0x6068e0
+    0x60b208: 0x60b3e0 0x60b528 0x60b5d0 0x60b628 0x60b6c8 0x60b700
+    0x60b294: 0x60b3e0 0x60b528 0x60b5d0 0x60b628 0x60b6c8 0x60b700 0x60b758 0x60b790
+    0x60b318: 0x60b3e0 0x60b528 0x60b5d0 0x60b628 0x60b6c8 0x60b700 0x60b758 0x60b790
+    0x60beac: 0x60c0e8 0x60c208 0x60c290 0x60c3d8 0x60c6e8 0x60cc70
+    0x60bfa0: 0x60c0e8 0x60c208 0x60c290 0x60c3d8 0x60c6e8 0x60c730 0x60c800 0x60c9c8
+
+=== c) 邻域内 bl 后未检查 w0 且自增 wN 的位置 ===
+    命中 156 处：
+    0x500c10 bl->0xac270=in_lock_functions | ldr w0, [x25, #0x9a0] b #0x500c28 add x8, x26, x0, lsl #6 mov w9, #1 str w9, [x8, #0x3c] add w8, w0, #1 mov w21, wzr
+    0x5057ec bl->0xac270=in_lock_functions | ldr w0, [x20, #0xd40] mov w1, wzr bl #0x4d9808 b #0x50580c ldr w8, [x21, #0xd44] add w8, w8, #1 str w8, [x21, #0xd44]
+    0x5057f8 bl->0x4d9808=tx_cmd_ch_open | b #0x50580c ldr w8, [x21, #0xd44] add w8, w8, #1 str w8, [x21, #0xd44] adrp x0, #0x1e25000 add x0, x0, #0x138 bl #0x10a1aa8
+    0x50ae48 bl->0x10a17e8=is_game_rtt_skb | ldr w8, [x19, #0x490] cbz w8, #0x50ae68 add w8, w8, #1 mov x0, x20 str w8, [x19, #0x490] bl #0x10a1aa8 b #0x50ae00
+    0x511518 bl->0xac270=in_lock_functions | ldr w8, [x22, #0x15c] b #0x511534 dmb ishst ldr w8, [x22, #0x15c] add w8, w8, #1 str w8, [x22, #0x15c] ldr w9, [x22, #0x158]
+    0x513ad4 bl->0x734738=uevent_store | cbz x0, #0x513c6c ldr w8, [x0, #8] ldr w9, [x0] sub w8, w8, w9 add w8, w8, #1 str w8, [x19, #8] ldp x1, x8, [x0]
+    0x513b1c bl->0x734738=uevent_store | cbz x0, #0x513c6c ldr w8, [x0, #8] ldr w9, [x0] sub w8, w8, w9 add w8, w8, #1 str w8, [x19, #0x50] ldp x1, x8, [x0]
+    0x516268 bl->0x40a1b8=kset_create_and_add | ldp w9, w8, [x26, #8] add w27, w0, w27 add w28, w28, #1 add w8, w8, #1 cmp w28, w9 str w8, [x26, #0xc] b.hs #0x516404
+    0x516950 bl->0x40a1b8=kset_create_and_add | ldp w9, w8, [sp, #0x68] add w26, w0, w26 add w27, w27, #1 add w8, w8, #1 cmp w27, w9 str w8, [sp, #0x6c] b.hs #0x516ad4
+    0x516c2c bl->0x40a1b8=kset_create_and_add | ldp w9, w8, [sp, #0x28] mov w22, w0 add w8, w8, #1 cmp w9, #2 str w8, [sp, #0x2c] b.lo #0x516cc0 mov w28, #0xf800
+    0x516ca0 bl->0x40a1b8=kset_create_and_add | ldp w9, w8, [sp, #0x28] add w22, w0, w22 add w19, w19, #1 add w8, w8, #1 cmp w19, w9 str w8, [sp, #0x2c] b.lo #0x516c60
+    0x51e0c4 bl->0xac270=in_lock_functions | mov x0, x19 bl #0x6b800 ldr w8, [x24, #0x1e0] add w8, w8, #1 str w8, [x24, #0x1e0] bl #0xdbe40 ldr w8, [x24, #0x1e0]
+    0x51e0cc bl->0x6b800=trace_event_raw_event_sched_boost_task | ldr w8, [x24, #0x1e0] add w8, w8, #1 str w8, [x24, #0x1e0] bl #0xdbe40 ldr w8, [x24, #0x1e0] mov x22, x0 adrp x25, #0x20bc000
+    0x51e464 bl->0x3fc200=cfqg_print_stat_sectors | ldr w8, [x22, #0xdf8] add w8, w8, #1 str w8, [x22, #0xdf8] b #0x51e47c strb wzr, [x23, #0xdfc] adrp x0, #0x1e26000 add x0, x0, #0x
+    0x5240cc bl->0x3fc200=cfqg_print_stat_sectors | ldrsw x8, [x19, #0xd98] madd x9, x8, x21, x19 add w8, w8, #1 str w8, [x19, #0xd98] ldr w10, [x9, #0x484] add w10, w10, #1 str w10,
+    0x52c2b4 bl->0x5311c8=active_max_store | cbz x0, #0x52c328 ldr w8, [x23, #0x10] mov x19, x0 add w8, w8, #1 str w8, [x23, #0x10] tbz w20, #0, #0x52c370 ldr x8, [x23, #0x440
+    0x52c948 bl->0x59a88=kthread_data | b #0x52c954 tbnz w22, #0x1f, #0x52c9b8 ldr w8, [x19, #0xc] mov x0, x20 add w8, w8, #1 str w8, [x19, #0xc] ldr w8, [x21, #0x28]
+    0x52cd50 bl->0x10a17e8=is_game_rtt_skb | ldr w8, [x23, #0x428] adrp x9, #0x1d8e000 mov w0, w19 add x22, x23, #0x3c0 ldr x21, [x9, #0x10] add w8, w8, #1 str w8, [x23, #0x42
+    0x530534 bl->0x5311c8=active_max_store | str x0, [x19, #0x3a8] cbz x0, #0x5305c4 ldr w8, [x20, #0x10] mov w21, wzr str wzr, [sp, #4] add w8, w8, #1 str w8, [x20, #0x10]
+    0x53175c bl->0x450440=pmic_gpio_remove | ldr w8, [x21, #0x18] add w8, w8, #1 str w8, [x21, #0x18] ldrb w8, [x19, #0x448] orr w8, w8, #1 strb w8, [x19, #0x448] b #0x5317a8
+    0x53a478 bl->0xcb9f8=profile_event_register | b #0x53a48c ldr w8, [x20, #0x440] add w8, w8, #1 str w8, [x20, #0x440] adrp x8, #0x1d8d000 add x2, x20, #0x398 mov w3, #0x19
+    0x540128 bl->0xac270=in_lock_functions | mov w8, #1 strb w8, [x20, #0xb4] b #0x54017c add w8, w2, #1 str w8, [x20, #0xb8] bl #0xd1f60 str x0, [x20, #0xc0]
+    0x543ba8 bl->0x3fbe40=cfqg_print_weight_device | ldr w8, [x19, #0x178] adrp x9, #0x20c1000 ldrb w9, [x9, #0xec0] add w3, w8, #1 str w3, [x19, #0x178] tbz w9, #5, #0x543bfc mov x8,
+    0x544c8c bl->0xac270=in_lock_functions | b #0x544ca8 ldr w8, [x20, #0x190] ldrb w9, [sp, #4] add w8, w8, #1 str w8, [x20, #0x190] strb w9, [x19] adrp x9, #0x1d8d000
+    0x5463c8 bl->0xc043c8=uhid_char_poll | cbnz x0, #0x5463a4 ldr w8, [x19, #0xa8] add w8, w8, #1 str w8, [x19, #0xa8] b #0x5463a4 ldrsw x8, [x19, #0xa8] cbz w8, #0x546400
+    0x546448 bl->0xc04da0=apple_report_fixup | cbz x0, #0x546508 adrp x27, #0x17b3000 mov x26, x0 add x27, x27, #0x161 str wzr, [sp, #0x38] b #0x54648c add w27, w27, #1
+    0x54a16c bl->0x552ab0=regulator_stub_set_mode | str w0, [x19, #0x188] add x8, x20, #4 prfm pstl1strm, [x8] ldxr w9, [x8] add w9, w9, #1 stlxr w10, w9, [x8] cbnz w10, #0x54a17c
+    0x54a344 bl->0x552ab0=regulator_stub_set_mode | str w0, [x19, #0x188] add x8, x21, #4 prfm pstl1strm, [x8] ldxr w9, [x8] add w9, w9, #1 stlxr w10, w9, [x8] cbnz w10, #0x54a354
+    0x54dff4 bl->0x554698=devm_reset_control_release | cbz x0, #0x54e01c bl #0x554718 ldr w8, [x19, #0x218] mov w20, wzr add w8, w8, #1 str w8, [x19, #0x218] b #0x54e048
+    0x54dffc bl->0x554718=tty_alloc_file | ldr w8, [x19, #0x218] mov w20, wzr add w8, w8, #1 str w8, [x19, #0x218] b #0x54e048 mov w20, #-0xb b #0x54e048
+
+=== d) 对命中处反汇编上下文（前 3 个） ===
+  --- 0x500be0 ---
+    0x500be0: str      x19, [x9, x0, lsl #3]
+    0x500be4: cbnz     w8, #0x500c28
+    0x500be8: bl       #0x5002e8
+    0x500bec: mov      w8, w0
+    0x500bf0: ldr      w0, [x25, #0x9a0]
+    0x500bf4: cbz      w8, #0x500c1c
+    0x500bf8: lsl      x8, x0, #6
+    0x500bfc: adrp     x0, #0x15fc000
+    0x500c00: adrp     x1, #0x15fc000
+    0x500c04: add      x0, x0, #0x9f1
+    0x500c08: ldr      w2, [x26, x8]
+    0x500c0c: add      x1, x1, #0x8df
+    0x500c10: bl       #0xac270
+    0x500c14: ldr      w0, [x25, #0x9a0]
+    0x500c18: b        #0x500c28
+    0x500c1c: add      x8, x26, x0, lsl #6
+    0x500c20: mov      w9, #1
+    0x500c24: str      w9, [x8, #0x3c]
+    0x500c28: add      w8, w0, #1
+    0x500c2c: mov      w21, wzr
+    0x500c30: str      w8, [x25, #0x9a0]
+    0x500c34: b        #0x5009b4
+    0x500c38: bl       #0x2efc0
+    0x500c3c: nop      
+    0x500c40: mov      w0, wzr
+    0x500c44: ret      
+    0x500c48: sub      sp, sp, #0x90
+    0x500c4c: stp      x29, x30, [sp, #0x40]
+  --- 0x5057bc ---
+    0x5057bc: mov      w19, wzr
+    0x5057c0: b        #0x50580c
+    0x5057c4: mov      w19, #-0x16
+    0x5057c8: b        #0x505818
+    0x5057cc: ldr      w0, [x20, #0xd40]
+    0x5057d0: mov      w1, #1
+    0x5057d4: bl       #0x4d9808
+    0x5057d8: mov      w19, w0
+    0x5057dc: cbz      w0, #0x505800
+    0x5057e0: adrp     x0, #0x15fd000
+    0x5057e4: mov      w1, w19
+    0x5057e8: add      x0, x0, #0x898
+    0x5057ec: bl       #0xac270
+    0x5057f0: ldr      w0, [x20, #0xd40]
+    0x5057f4: mov      w1, wzr
+    0x5057f8: bl       #0x4d9808
+    0x5057fc: b        #0x50580c
+    0x505800: ldr      w8, [x21, #0xd44]
+    0x505804: add      w8, w8, #1
+    0x505808: str      w8, [x21, #0xd44]
+    0x50580c: adrp     x0, #0x1e25000
+    0x505810: add      x0, x0, #0x138
+    0x505814: bl       #0x10a1aa8
+    0x505818: mov      w0, w19
+    0x50581c: ldr      x21, [sp, #0x10]
+    0x505820: ldp      x20, x19, [sp, #0x20]
+    0x505824: ldp      x29, x30, [sp], #0x30
+    0x505828: ret      
+  --- 0x5057c8 ---
+    0x5057c8: b        #0x505818
+    0x5057cc: ldr      w0, [x20, #0xd40]
+    0x5057d0: mov      w1, #1
+    0x5057d4: bl       #0x4d9808
+    0x5057d8: mov      w19, w0
+    0x5057dc: cbz      w0, #0x505800
+    0x5057e0: adrp     x0, #0x15fd000
+    0x5057e4: mov      w1, w19
+    0x5057e8: add      x0, x0, #0x898
+    0x5057ec: bl       #0xac270
+    0x5057f0: ldr      w0, [x20, #0xd40]
+    0x5057f4: mov      w1, wzr
+    0x5057f8: bl       #0x4d9808
+    0x5057fc: b        #0x50580c
+    0x505800: ldr      w8, [x21, #0xd44]
+    0x505804: add      w8, w8, #1
+    0x505808: str      w8, [x21, #0xd44]
+    0x50580c: adrp     x0, #0x1e25000
+    0x505810: add      x0, x0, #0x138
+    0x505814: bl       #0x10a1aa8
+    0x505818: mov      w0, w19
+    0x50581c: ldr      x21, [sp, #0x10]
+    0x505820: ldp      x20, x19, [sp, #0x20]
+    0x505824: ldp      x29, x30, [sp], #0x30
+    0x505828: ret      
+    0x50582c: nop      
+    0x505830: stp      x29, x30, [sp, #-0x50]!
+    0x505834: stp      x26, x25, [sp, #0x10]

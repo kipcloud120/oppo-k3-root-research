@@ -1,0 +1,14 @@
+[680619.1ms] ===== G-2c start pid=11320 =====
+[680625.7ms] O: LOCK_PI(C) → 0
+[680625.6ms] W: LOCK_PI(B) → 0
+[680625.8ms] O: LOCK_PI(B)（预期阻塞，形成环）
+[680625.8ms] W: WAIT_REQUEUE_PI(A→C)（rt_waiter 在 W 栈上）
+[680727.4ms] [1] CMP_REQUEUE_PI(A→C, 1)
+[680734.5ms] [1] 返回 -1 errno=35 (Resource deadlock would occur)
+[680737.9ms] [1] 达成：W 仍阻塞于 A，W->pi_blocked_on 应悬垂（lock 字段 = C）
+[680741.3ms] W2: WAIT_REQUEUE_PI(A2→C)
+[680896.6ms] [2] CMP_REQUEUE_PI(A2→C, 1) —— 若悬垂指针有效，则 C == orig_lock 命中死锁
+[680902.4ms] [2] 返回 -1 errno=35 (Resource deadlock would occur)
+[680905.9ms] ---- 判定 ----
+[680906.3ms] verdict: 悬垂 pi_blocked_on 被真实解引用（链走查经 W 回到 orig_lock=C）
+[680909.6ms] 结束

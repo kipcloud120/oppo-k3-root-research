@@ -1,0 +1,83 @@
+=== A. 入口跳转目标 & stext 符号 ===
+  0x00000040: udf #0 | udf #0 | udf #0 | udf #0   [?]
+  0x00000100: udf #0 | udf #0 | udf #0 | udf #0   [?]
+  0x01980000: bl #0x1980020 | bl #0x10a7010 | adrp x23, #0xfffffffffff80000 | and x23, x23, #0x1fffff   [__param_boot_enable/__param_event_abort_enable]
+  0x00005bb8: stp x29, x30, [sp, #-0x10]! | mov x29, sp | bl #0x12240 | ldp x29, x30, [sp], #0x10   [_stext]
+    kallsyms _stext = 0x5bb8
+    kallsyms _text = 0x5b88
+    kallsyms _head = 0x5a10
+    kallsyms stext = 0x1988b40
+    kallsyms __entry_text_start = 0x6630
+    kallsyms vectors = 0x6720
+    kallsyms __sched_text_start = 0x10a6854
+    kallsyms tramp_vectors = 0x1189270
+
+=== B. kgsl 符号中含 align / memdesc 的全部 ===
+  含 'align': 0 个
+  含 'memdesc_get': 0 个
+  含 'get_align': 0 个
+
+=== C. io_pgtable 静态 vtable（4 个连续绝对 vaddr 函数指针） ===
+  候选 0 组（前 25）：
+
+=== D. 0x5b0000..0x5c2000 的函数序言 + 字符串引用（找 iommu 簇） ===
+  共 172 个函数起点；含字符串引用的：
+    0x5b0588 [fastrpc_buf_free]  ['devices', 'devices']
+    0x5b0628 [fastrpc_cached_buf_list_free]  ['devices']
+    0x5b1af8 [fastrpc_munmap_on_dsp_rh]  ['&meta->lock', 'msm_iommu_meta_add', 'msm_dma_map_sg_attrs', 'msm_iommu_meta_destroy', 'msm_iommu_meta_destroy']
+    0x5b2250 [fastrpc_mmap_remove_ssr]  ['msm_dma_unmap_sg', 'msm_dma_unmap_sg', 'msm_dma_unmap_sg', 'msm_iommu_meta_destroy']
+    0x5b26c0 [fastrpc_glink_notify_rx]  ['msm_dma_buf_freed', 'msm_iommu_meta_destroy']
+    0x5b2b38 [compat_fastrpc_device_ioctl]  ['io-pgtable']
+    0x5b49b0 [bus_set_iommu]  ['iommu_iova']
+    0x5b68c8 [report_iommu_fault]  ['bmap: ', 'Unhandled notifier action']
+    0x5b7c00 [trace_event_raw_event_iommu_group_event]  ['%sdma-window', '%s#dma-address-cells', '%s#dma-size-cells', '#address-cells', '#address-cells']
+    0x5b7c1c [?]  ['%sdma-window', '%s#dma-address-cells', '%s#dma-size-cells', '#address-cells', '#address-cells']
+    0x5b8028 [perf_trace_iommu_device_event]  ['iommus', '#iommu-cells', 'iommus', '#iommu-cells', 'iommu-map']
+    0x5b83f8 [perf_trace_unmap]  ['iommu_debug_init_tests']
+    0x5b84c0 [perf_trace_map_sg]  ['iommus', 'iommu-debug-test', '&ddev->clk_lock', 'nr_iters', 'test_virt_addr']
+    0x5b8b08 [perf_trace_iommu_tlbi]  ['iommu_debug_test_virt_addr_read']
+    0x5b8d00 [trace_raw_output_iommu_group_event]  ['Domain attributes: [ ', 'Unknown attr!', '%s=%d%s', 'iommu_map', 'iommu_unmap']
+    0x5b9670 [trace_raw_output_iommu_tlbi]  ['%13s %24s (ns): [', 'dma_map_single_attrs', '%5llu%s', '%13s %24s (ns): [', 'dma_unmap_single_attrs']
+    0x5b9dc8 [iommu_device_destroy]  ['SUCCESS']
+    0x5b9f80 [iommu_device_link]  ['Allocating coherent buffer', 'Using coherent buffer']
+    0x5ba228 [iommu_device_unlink]  ['Basic DMA API test']
+    0x5ba5d0 [iommu_release_device]  ['Full VA sweep @%s %d', 'unknown size, please add to _size_to_string', 'unknown size, please add to _size_to_string', 'unknown size, please add to _size_to_string', 'unknown size, please add to _size_to_string']
+    0x5bb4b0 [iommu_dma_init]  ['__full_va_sweep', '__full_va_sweep', 'unknown size, please add to _size_to_string']
+    0x5bb8b8 [iommu_get_dma_cookie]  ["hard/soft iova_to_phys fns don't agree...", '__check_mapping']
+    0x5bb9d8 [iommu_dma_init_domain]  ['SUCCESS']
+    0x5bbb08 [dma_direction_to_prot]  ['iommu_debug_dma_attach_read']
+    0x5bbc18 [iommu_dma_free]  ['__iommu_debug_dma_attach_write', '__iommu_debug_dma_attach_write', '__iommu_debug_dma_attach_write']
+    0x5bbd88 [iommu_dma_alloc]  ['iommu_debug_attach_read']
+    0x5bbea8 [iommu_dma_mmap]  ['__iommu_debug_attach_write', '__iommu_debug_attach_write', '__iommu_debug_attach_write', 'iommu_debug_attach_do_attach', 'iommu_debug_attach_do_attach']
+    0x5bc088 [__iommu_dma_map]  ['iommu_debug_atos_read', 'iommu_debug_atos_read', 'iommu_debug_atos_read']
+    0x5bc250 [iommu_dma_unmap_page]  ['iommu_debug_atos_write', 'iommu_debug_atos_write']
+    0x5bc2f8 [iommu_dma_map_sg]  ['iommu_debug_dma_atos_read', 'iommu_debug_dma_atos_read', 'iommu_debug_dma_atos_read']
+    0x5bc4b0 [iommu_dma_unmap_sg]  ['iommu_debug_map_write', 'iommu_debug_map_write', 'iommu_debug_map_write', 'iommu_debug_map_write']
+    0x5bc6f8 [iommu_dma_map_resource]  ['iommu_debug_dma_map_read', 'iommu_debug_dma_map_read']
+    0x5bc860 [iommu_dma_unmap_resource]  ['iommu_debug_dma_map_write', 'iommu_debug_dma_map_write', 'iommu_debug_dma_map_write']
+    0x5bcb60 [iommu_dma_supported]  ['iommu_debug_unmap_write', 'iommu_debug_unmap_write', 'iommu_debug_unmap_write', 'iommu_debug_unmap_write']
+    0x5bcd28 [iommu_dma_mapping_error]  ['iommu_debug_dma_unmap_write', 'iommu_debug_dma_unmap_write', 'iommu_debug_dma_unmap_write', 'iommu_debug_dma_unmap_write']
+    0x5bcf70 [iommu_dma_map_msi_msg]  ['iommu_debug_pte_read', 'iommu_debug_pte_read', 'iommu_debug_pte_read']
+    0x5bd120 [msm_dma_map_sg_attrs]  ['iommu_debug_pte_write', 'iommu_debug_pte_write']
+    0x5bd398 [msm_dma_unmap_all_for_dev]  ['iommu_debug_trigger_fault_write', 'iommu_debug_trigger_fault_write']
+    0x5bd458 [alloc_io_pgtable_ops]  ['scm_io_write fail. SMMU might not be resumed']
+    0x5bd540 [free_io_pgtable_ops]  ['scm_io_write fail. SMMU might not be halted', 'scm_io_write fail. SMMU might not be resumed']
+    0x5bd720 [io_pgtable_alloc_pages_exact]  ['tcu-base', 'qcom,mmu500-errata-1', 'qcom,mmu500-errata-1', 'qcom,actlr', 'qcom,actlr']
+    0x5bd9b0 [io_pgtable_free_pages_exact]  ['qsmmuv500_iova_to_phys', '%s: bad tbu->halt_count']
+    0x5be048 [arm_64_lpae_alloc_pgtable_s1]  ['scm_io_write fail. SMMU might not be halted']
+    0x5be720 [__arm_lpae_alloc_pages]  ['mmu-masters', '&smmu->idr_mutex', '#global-interrupts']
+    0x5bf650 [arm_lpae_map_sg]  ['&pwr->power_lock', 'clock-names', 'clock-names', 'qcom,regulator-names', 'qcom,deferred-regulator-disable-delay']
+    0x5bf938 [arm_lpae_unmap]  ['arm_smmu_global_fault', 'arm_smmu_global_fault']
+    0x5bfa40 [arm_lpae_iova_to_phys]  ['__arm_smmu_tlb_sync']
+    0x5bfd48 [arm_lpae_init_pte]  ['&smmu_domain->init_mutex', '&smmu_domain->assign_lock']
+    0x5c1278 [find_iova]  ['#stream-id-cells']
+    0x5c1ef8 [free_cpu_cached_iovas]  ['secure vmid already set!']
+  前 40 个函数起点（无字符串）：
+    0x5b0098=diag_pcie_write, 0x5b0108=diag_pcie_client_cb, 0x5b0178=diag_pcie_open_work_fn, 0x5b01f0=diag_pcie_connect_all, 0x5b0268=diag_pcie_disconnect_all, 0x5b02e0=diag_pcie_close_work_fn, 0x5b0360=diag_pcie_register, 0x5b03d0=diag_pcie_event_notifier, 0x5b0438=fastrpc_deinit, 0x5b0574=?, 0x5b0680=fastrpc_mmap_free, 0x5b0698=fastrpc_internal_invoke, 0x5b06b0=context_free, 0x5b0720=overlap_ptr_cmp, 0x5b07b8=fastrpc_mmap_create, 0x5b0a30=fastrpc_mmap_find, 0x5b0b58=fastrpc_pdr_notifier_cb, 0x5b0f28=fastrpc_restart_notifier_cb, 0x5b1050=fastrpc_probe, 0x5b10e8=fastrpc_get_adsp_session, 0x5b1120=fastrpc_get_service_location_notify, 0x5b1248=fastrpc_debugfs_read, 0x5b1320=fastrpc_debugfs_open, 0x5b1698=fastrpc_device_ioctl, 0x5b17c8=fastrpc_device_open, 0x5b17f8=fastrpc_device_release, 0x5b18e8=fastrpc_mmap_on_dsp, 0x5b24e8=fastrpc_link_state_handler, 0x5b2918=fastrpc_glink_notify_tx_done, 0x5b29cc=?, 0x5b2a20=fastrpc_glink_notify_rx_intent_req, 0x5b2ab0=fastrpc_notify_drivers, 0x5b2ba8=iommu_group_alloc, 0x5b2bc8=iommu_group_get_by_id
+
+=== E. io_pgtable_arm_*_init_fns 数据符号附近 ===
+Traceback (most recent call last):
+  File "D:\AI_tools\AI_Workspace\WBK_OPK_RT_CRA\tools\f16_probe.py", line 126, in <module>
+    print(f"    {n} @0x{v:x}  值: " + " ".join(hex(u64(v + 8*k)) for k in range(4)))
+                 ^
+NameError: name 'n' is not defined. Did you mean: 'N'?

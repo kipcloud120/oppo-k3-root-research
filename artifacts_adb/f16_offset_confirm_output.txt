@@ -1,0 +1,83 @@
+=== 1) 0xae780..0xaea40 区间的 kallsyms 符号 ===
+    0x000ae870  rt_mutex_start_proxy_lock
+    0x000ae8d8  try_to_take_rt_mutex
+    0x000ae960  task_blocks_on_rt_mutex
+    0x000ae9c8  remove_waiter
+    0x000ae9e0  rt_mutex_next_owner
+
+=== 2) 候选指令所在函数与上下文（0xae7d0..0xae860）===
+    0xae7d0: add      w8, w8, w10
+    0xae7d4: b        #0xae7dc
+    0xae7d8: ldrh     w8, [x9]
+    0xae7dc: ldr      x9, [x25, #0xb60]
+    0xae7e0: mov      x0, x19
+    0xae7e4: str      w8, [x24, #0xb68]
+    0xae7e8: add      x9, x9, #1
+    0xae7ec: str      x9, [x25, #0xb60]
+    0xae7f0: bl       #0x10a57a8
+    0xae7f4: adrp     x0, #0x1fc8000
+    0xae7f8: mov      x1, x28
+    0xae7fc: add      x0, x0, #0x751
+    0xae800: mov      x2, x27
+    0xae804: bl       #0xaee78
+    0xae808: msr      daif, x21
+    0xae80c: adrp     x28, #0x1fc8000
+    0xae810: b        #0xae4f4
+    0xae814: adrp     x8, #0x1fca000
+    0xae818: str      xzr, [x8, #0xb70]  <== 候选偏移访问
+    0xae81c: b        #0xae668
+    0xae820: adrp     x8, #0x1fc8000
+    0xae824: strb     wzr, [x8, #0x750]
+    0xae828: adrp     x0, #0x1db8000
+    0xae82c: add      x0, x0, #0xab0
+    0xae830: bl       #0xa4c08
+    0xae834: ldp      x20, x19, [sp, #0x70]
+    0xae838: ldp      x22, x21, [sp, #0x60]
+    0xae83c: ldp      x24, x23, [sp, #0x50]
+    0xae840: ldp      x26, x25, [sp, #0x40]
+    0xae844: ldp      x28, x27, [sp, #0x30]
+    0xae848: ldp      x29, x30, [sp, #0x20]
+    0xae84c: add      sp, sp, #0x80
+    0xae850: ret      
+    0xae854: adrp     x0, #0x1db8000
+    0xae858: add      x0, x0, #0xab0
+    0xae85c: bl       #0xa4c08
+    0xae860: ldur     w8, [x29, #-0xc]
+    0xae864: tbz      w8, #0, #0xae834
+    0xae868: bl       #0xaf048
+    0xae86c: b        #0xae834
+
+=== 3) 各候选偏移的全部访问点（rtmutex 簇）===
+  --- 0x0b58 ---
+      0xae508: ldr    x9, [x8, #0xb58]                 in 0xae290(rt_mutex_proxy_unlock)
+      0xae524: str    x8, [x9, #0xb58]                 in 0xae290(rt_mutex_proxy_unlock)
+  --- 0x0b60 ---
+      0xae394: ldr    x10, [x25, #0xb60]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae528: ldr    x9, [x25, #0xb60]                in 0xae290(rt_mutex_proxy_unlock)
+      0xae564: str    x9, [x25, #0xb60]                in 0xae290(rt_mutex_proxy_unlock)
+      0xae5b8: str    x13, [x25, #0xb60]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae614: str    x12, [x25, #0xb60]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae68c: ldr    x23, [x25, #0xb60]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae74c: ldr    x4, [x25, #0xb60]                in 0xae290(rt_mutex_proxy_unlock)
+      0xae7dc: ldr    x9, [x25, #0xb60]                in 0xae290(rt_mutex_proxy_unlock)
+  --- 0x0b68 ---
+      （无 64 位访问）
+  --- 0x0b70 ---
+      0xae65c: ldr    x8, [x8, #0xb70]                 in 0xae290(rt_mutex_proxy_unlock)
+      0xae818: str    xzr, [x8, #0xb70]                in 0xae290(rt_mutex_proxy_unlock)
+      0xaefb4: ldr    x8, [x27, #0xb70]                in 0xaee78(rwsem_downgrade_wake)
+  --- 0x0a80 ---
+      0xadd3c: ldr    x11, [x8, #0xa80]                in 0xad9c0(rt_mutex_destroy)
+      0xadd4c: ldr    x11, [x8, #0xa80]                in 0xad9c0(rt_mutex_destroy)
+      0xadd5c: ldr    x8, [x8, #0xa80]                 in 0xad9c0(rt_mutex_destroy)
+  --- 0x03e0 ---
+      0xadb4c: ldr    x7, [x27, #0x3e0]                in 0xad9c0(rt_mutex_destroy)
+      0xadb94: ldr    x7, [x27, #0x3e0]                in 0xad9c0(rt_mutex_destroy)
+      0xadc00: str    xzr, [x27, #0x3e0]               in 0xad9c0(rt_mutex_destroy)
+      0xae330: ldr    x8, [x23, #0x3e0]                in 0xae290(rt_mutex_proxy_unlock)
+      0xae368: str    xzr, [x23, #0x3e0]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae418: ldr    x8, [x8, #0x3e0]                 in 0xae290(rt_mutex_proxy_unlock)
+      0xae448: str    xzr, [x23, #0x3e0]               in 0xae290(rt_mutex_proxy_unlock)
+      0xae4c8: ldr    x8, [x23, #0x3e0]                in 0xae290(rt_mutex_proxy_unlock)
+
+=== 4) commit_creds 中 current 寄存器访问（找 real_cred/cred 偏移）===

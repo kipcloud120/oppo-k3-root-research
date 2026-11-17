@@ -1,0 +1,439 @@
+# K3 (PCGM00 / C.17) ADB information collection
+# Collected at: 2026-11-13 09:55:57 +0800
+# Method: adb shell (uid 2000); output redirected on HOST; NO file written on device
+# Ref: ADB_K3_信息采集清单.md section 2
+# Device: <redacted>               device product:PCGM00 model:PCGM00 device:OP4679 transport_id:1
+
+########## ID ##########
+uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid) context=u:r:shell:s0
+
+########## UNAME ##########
+Linux localhost 4.9.227-perf+ #1 SMP PREEMPT Wed Mar 26 16:32:43 CST 2025 aarch64
+
+########## /proc/version ##########
+Linux version 4.9.227-perf+ (root@dg02-pool07-kvm49) (clang version 10.0.7 for Android NDK) #1 SMP PREEMPT Wed Mar 26 16:32:43 CST 2025
+
+########## /proc/cmdline ##########
+cat: /proc/cmdline: Permission denied
+
+########## cpuinfo(head) ##########
+Processor	: AArch64 Processor rev 12 (aarch64)
+processor	: 0
+BogoMIPS	: 38.40
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp
+CPU implementer	: 0x51
+CPU architecture: 8
+CPU variant	: 0x7
+CPU part	: 0x803
+CPU revision	: 12
+
+processor	: 1
+BogoMIPS	: 38.40
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp
+CPU implementer	: 0x51
+CPU architecture: 8
+CPU variant	: 0x7
+CPU part	: 0x803
+CPU revision	: 12
+
+processor	: 2
+BogoMIPS	: 38.40
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp
+CPU implementer	: 0x51
+CPU architecture: 8
+CPU variant	: 0x7
+CPU part	: 0x803
+CPU revision	: 12
+
+processor	: 3
+BogoMIPS	: 38.40
+
+########## SELINUX ##########
+Enforcing
+
+########## getprop(K3关键项) ##########
+ro.product.model = PCGM00
+ro.product.device = OP4679
+ro.product.board = sdm710
+ro.build.display.id = PCGM00_11_F.16
+ro.build.version.release = 11
+ro.build.version.security_patch = 2022-04-05
+ro.build.fingerprint = OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys
+ro.build.type = user
+ro.debuggable = 0
+ro.secure = 1
+ro.boot.verifiedbootstate = green
+ro.boot.flash.locked = 1
+ro.boot.veritymode = enforcing
+ro.boot.slot_suffix = 
+ro.boot.hardware = qcom
+ro.boot.bootloader = 
+ro.boot.baseband = msm
+
+########## /proc/mounts(verity/dm) ##########
+/dev/block/dm-0 / ext4 ro,seclabel,relatime 0 0
+/dev/block/by-name/opporeserve2 /mnt/vendor/opporeserve ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/dm-1 /vendor ext4 ro,seclabel,relatime 0 0
+/dev/block/bootdevice/by-name/modem /vendor/firmware_mnt vfat ro,context=u:object_r:firmware_file:s0,relatime,uid=1000,gid=1000,fmask=0333,dmask=0222,codepage=437,iocharset=iso8859-1,shortname=lower,errors=remount-ro 0 0
+/dev/block/bootdevice/by-name/dsp /vendor/dsp ext4 ro,seclabel,nosuid,nodev,relatime,data=ordered 0 0
+/dev/block/bootdevice/by-name/persist /mnt/vendor/persist ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/bootdevice/by-name/bluetooth /vendor/bt_firmware vfat ro,context=u:object_r:bt_firmware_file:s0,relatime,uid=1002,gid=3002,fmask=0333,dmask=0222,codepage=437,iocharset=iso8859-1,shortname=lower,errors=remount-ro 0 0
+/dev/block/bootdevice/by-name/userdata /data ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+/dev/block/bootdevice/by-name/userdata /data/user/0 ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+tmpfs /data_mirror tmpfs rw,seclabel,nosuid,nodev,noexec,relatime,size=2858088k,nr_inodes=714522,mode=700,gid=1000 0 0
+/dev/block/bootdevice/by-name/userdata /data_mirror/data_ce/null ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+/dev/block/bootdevice/by-name/userdata /data_mirror/data_ce/null/0 ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+/dev/block/bootdevice/by-name/userdata /data_mirror/data_de/null ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+/dev/block/bootdevice/by-name/userdata /data_mirror/cur_profiles ext4 rw,lazytime,seclabel,nosuid,nodev,noatime,async_discard,noauto_da_alloc,resgid=1065,errors=panic,data=ordered 0 0
+/dev/block/by-name/opporeserve2 /data/oppo/log/stamp ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/by-name/opporeserve2 /data/oppo/log/opporeserve/media/log/shutdown ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/by-name/opporeserve2 /data/oppo/log/opporeserve/media/log/hang_oppo ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/by-name/opporeserve2 /data/oppo/log/criticallog ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/dev/block/by-name/opporeserve2 /data/oppo/log/opporeserve/media/log/minidumpbackup ext4 rw,seclabel,nosuid,nodev,noatime,data=ordered 0 0
+/data/media /mnt/runtime/default/emulated sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/runtime/read/emulated sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=23,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/runtime/write/emulated sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/runtime/full/emulated sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/pass_through/0/emulated sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/androidwritable/0/emulated/0/Android/data sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/installer/0/emulated/0/Android/data sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /storage/emulated/0/Android/data sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/user/0/emulated/0/Android/data sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/androidwritable/0/emulated/0/Android/obb sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /storage/emulated/0/Android/obb sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/user/0/emulated/0/Android/obb sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=1015,multiuser,mask=6,derive_gid,default_normal,reserved=200MB 0 0
+/data/media /mnt/installer/0/emulated/0/Android/obb sdcardfs rw,nosuid,nodev,noexec,noatime,fsuid=1023,fsgid=1023,gid=9997,multiuser,mask=7,derive_gid,default_normal,reserved=200MB 0 0
+
+########## kallsyms readability ##########
+head: /proc/kallsyms: Permission denied
+
+########## kptr ##########
+cat: /proc/sys/kernel/kptr_restrict: Permission denied
+
+########## slabinfo readability ##########
+slabinfo - version: 2.1
+# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+zs_handle         379881 644608      8  512    1 : tunables    0    0    0 : slabdata   1259   1259      0
+tfa98xx_cache          0      8   4096    8    8 : tunables    0    0    0 : slabdata      1      1      0
+ext4_groupinfo_4k    543    700    160   25    1 : tunables    0    0    0 : slabdata     28     28      0
+
+########## dmesg readability ##########
+dmesg: klogctl: Permission denied
+
+########## deeptesting package ##########
+package:com.coloros.deepthinker
+
+########## /proc/config.gz ##########
+-r--r--r-- 1 root root 33655 2026-11-13 09:56 /proc/config.gz
+
+########## block by-name(A-only?) ##########
+total 0
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 ALIGN_TO_128K_1 -> /dev/block/sdd1
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 ALIGN_TO_128K_2 -> /dev/block/sdf1
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 DRIVER -> /dev/block/sdf10
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 abl -> /dev/block/sde7
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 aop -> /dev/block/sde1
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 apdp -> /dev/block/sde24
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 bluetooth -> /dev/block/sde6
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 boot -> /dev/block/sde10
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 cache -> /dev/block/sda10
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 carrier -> /dev/block/sdf9
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 cdt -> /dev/block/sdd2
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 cmnlib -> /dev/block/sde11
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 cmnlib64 -> /dev/block/sde12
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 ddr -> /dev/block/sdd3
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 devcfg -> /dev/block/sde13
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 devinfo -> /dev/block/sde22
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 dip -> /dev/block/sde23
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 dpo -> /dev/block/sde27
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 dsp -> /dev/block/sde8
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 dtbo -> /dev/block/sde18
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 frp -> /dev/block/sda5
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 fsc -> /dev/block/sdf12
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 fsg -> /dev/block/sdf11
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 hyp -> /dev/block/sde3
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 hypbak -> /dev/block/sde4
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 keymaster -> /dev/block/sde9
+lrwxrwxrwx 1 root root 15 1977-01-21 12:34 keystore -> /dev/block/sda4
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 limits -> /dev/block/sde29
+lrwxrwxrwx 1 root root 16 1977-01-21 12:34 logdump -> /dev/block/sde34
+
+########## adb root (留证 / expected to FAIL) ##########
+adbd cannot run as root in production builds
+
+########## post-check: adb devices ##########
+List of devices attached
+<redacted>	device
+
+
+########## SUPPLEMENT: deeptesting exact check ##########
+pm path com.coloros.deeptesting: packages matching "deeptest": (none)
+
+########## SUPPLEMENT: /proc/bootconfig (cmdline substitute) ##########
+cat: /proc/bootconfig: No such file or directory
+
+########## SUPPLEMENT: getprop boot / kernel / build extras ##########
+[ro.boot.avb_version]: [1.1]
+[ro.boot.baseband]: [msm]
+[ro.boot.boot_devices]: [soc/1d84000.ufshc]
+[ro.boot.bootdevice]: [1d84000.ufshc]
+[ro.boot.bootreason]: [reboot]
+[ro.boot.configfs]: [true]
+[ro.boot.console]: [ttyMSM0]
+[ro.boot.dtb_idx]: [0]
+[ro.boot.dtbo_idx]: [0]
+[ro.boot.flash.locked]: [1]
+[ro.boot.fstab_suffix]: [default]
+[ro.boot.hardware]: [qcom]
+[ro.boot.keymaster]: [1]
+[ro.boot.mode]: [reboot]
+[ro.boot.prjname]: [18041]
+[ro.boot.realme.lockstate]: [1]
+[ro.boot.realmebootstate]: [green]
+[ro.boot.recovery.updated]: [true]
+[ro.boot.serialno]: [<redacted>]
+[ro.boot.startupmode]: [pwrkey]
+[ro.boot.usbcontroller]: [a600000.dwc3]
+[ro.boot.vbmeta.avb_version]: [1.0]
+[ro.boot.vbmeta.device_state]: [locked]
+[ro.boot.vbmeta.digest]: [eb2b40185aba0694ae9be42be86f17183f4b3bb636646b8a74b671a7593172d1]
+[ro.boot.vbmeta.hash_alg]: [sha256]
+[ro.boot.vbmeta.invalidate_on_error]: [yes]
+[ro.boot.vbmeta.size]: [15808]
+[ro.boot.verifiedbootstate]: [green]
+[ro.boot.veritymode]: [enforcing]
+[ro.bootimage.build.date]: [Wed Mar 26 16:38:58 CST 2025]
+[ro.bootimage.build.date.utc]: [1742978338]
+[ro.bootimage.build.fingerprint]: [OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys]
+[ro.bootimage.build.version.incremental]: [1704167642389]
+[ro.build.characteristics]: [nosdcard]
+[ro.build.date]: [Wed Mar 26 15:49:07 CST 2025]
+[ro.build.date.Ymd]: [250326]
+[ro.build.date.YmdHM]: [202503261521]
+[ro.build.date.utc]: [1742975347]
+[ro.build.date.ymd]: [250326]
+[ro.build.description]: [PCGM00-user 11 RKQ1.201217.002 1704167642389 release-keys]
+[ro.build.device_family]: [OPSDM710]
+[ro.build.display.full_id]: [PCGM00_11_F.16_2025032621191106]
+[ro.build.display.id]: [PCGM00_11_F.16]
+[ro.build.display.ota]: [PCGM00_11_F.16]
+[ro.build.fingerprint]: [OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys]
+[ro.build.flavor]: [qssi-user]
+[ro.build.host]: [dg02-pool07-kvm49]
+[ro.build.id]: [RKQ1.201217.002]
+[ro.build.kernel.id]: [4.9.227]
+[ro.build.keys]: [release-keys]
+[ro.build.keystore.path]: [/sdcard/.lii/]
+[ro.build.master.date]: [202503261521]
+[ro.build.migratedata]: [read]
+[ro.build.oplus_ext_partitions]: [my_product my_engineering my_stock my_heytap my_region my_carrier my_preload my_company]
+[ro.build.oplus_nv_id]: [10010111]
+[ro.build.product]: [PCGM00]
+[ro.build.release_type]: [true]
+[ro.build.system_root_image]: [true]
+[ro.build.tags]: [release-keys]
+[ro.build.type]: [user]
+[ro.build.user]: [root]
+[ro.build.version.all_codenames]: [REL]
+[ro.build.version.base_os]: []
+[ro.build.version.codename]: [REL]
+[ro.build.version.developer_preview_hint]: [0]
+[ro.build.version.google_patch]: [20220405]
+[ro.build.version.incremental]: [1704167642389]
+[ro.build.version.min_supported_target_sdk]: [23]
+[ro.build.version.opporom]: [V11.1]
+[ro.build.version.ota]: [PCGM00_11.F.16_3160_202503262119]
+[ro.build.version.preview_sdk]: [0]
+[ro.build.version.preview_sdk_fingerprint]: [REL]
+[ro.build.version.release]: [11]
+[ro.build.version.release_or_codename]: [11]
+[ro.build.version.sdk]: [30]
+[ro.build.version.security_patch]: [2022-04-05]
+[ro.kernel.qemu.gles]: [0]
+[ro.vendor.build.date]: [Wed Mar 26 16:38:58 CST 2025]
+[ro.vendor.build.date.utc]: [1742978338]
+[ro.vendor.build.fingerprint]: [OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys]
+
+########## SUPPLEMENT: full by-name list (A/B slot check) ##########
+ALIGN_TO_128K_1
+ALIGN_TO_128K_2
+DRIVER
+abl
+aop
+apdp
+bluetooth
+boot
+cache
+carrier
+cdt
+cmnlib
+cmnlib64
+ddr
+devcfg
+devinfo
+dip
+dpo
+dsp
+dtbo
+frp
+fsc
+fsg
+hyp
+hypbak
+keymaster
+keystore
+limits
+logdump
+logfs
+misc
+modem
+modemst1
+modemst2
+msadp
+odm
+oppo_sec
+oppodycnvbk
+opporeserve1
+opporeserve2
+opporeserve3
+oppostanvbk
+persist
+qupfw
+rawdump
+recovery
+sda
+sdb
+sdc
+sdd
+sde
+sdf
+sec
+splash
+spunvm
+ssd
+sti
+storsec
+system
+toolsfv
+tz
+userdata
+vbmeta
+vendor
+vm-data
+vm-kystore
+vm-linux
+vm-system
+xbl
+xbl_config
+
+[slot-suffixed partitions] (none -> A-only)
+
+########## SUPPLEMENT: full /proc/slabinfo (READABLE on this device) ##########
+slabinfo - version: 2.1
+# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> : tunables <limit> <batchcount> <sharedfactor> : slabdata <active_slabs> <num_slabs> <sharedavail>
+zs_handle         376871 644608      8  512    1 : tunables    0    0    0 : slabdata   1259   1259      0
+tfa98xx_cache          0      8   4096    8    8 : tunables    0    0    0 : slabdata      1      1      0
+ext4_groupinfo_4k    543    700    160   25    1 : tunables    0    0    0 : slabdata     28     28      0
+SCTPv6                10     10   1536   10    4 : tunables    0    0    0 : slabdata      1      1      0
+SCTP                   0      0   1344   12    4 : tunables    0    0    0 : slabdata      0      0      0
+ip6-frags              0     20    200   20    1 : tunables    0    0    0 : slabdata      1      1      0
+UDPv6                182    182   1152   14    4 : tunables    0    0    0 : slabdata     13     13      0
+tw_sock_TCPv6        182    224    288   14    1 : tunables    0    0    0 : slabdata     16     16      0
+request_sock_TCPv6      0      0    352   11    1 : tunables    0    0    0 : slabdata      0      0      0
+TCPv6                181    181   2112   15    8 : tunables    0    0    0 : slabdata     13     13      0
+nf_conntrack        1027   1224    448   18    2 : tunables    0    0    0 : slabdata     68     68      0
+kcopyd_job             0      0   3384    9    8 : tunables    0    0    0 : slabdata      0      0      0
+dm_uevent              0      0   5448    6    8 : tunables    0    0    0 : slabdata      0      0      0
+crm_timer              0      8    512   16    2 : tunables    0    0    0 : slabdata      1      1      0
+scsi_cmd_cache       360    360    384   10    1 : tunables    0    0    0 : slabdata     36     36      0
+cfq_queue           2567   2737    240   17    1 : tunables    0    0    0 : slabdata    161    161      0
+bsg_cmd              352    390    312   13    1 : tunables    0    0    0 : slabdata     30     30      0
+exfat_inode_cache      0      0    832   19    4 : tunables    0    0    0 : slabdata      0      0      0
+f2fs_extent_tree       0      0     72   56    1 : tunables    0    0    0 : slabdata      0      0      0
+discard_cmd            0      0    112   36    1 : tunables    0    0    0 : slabdata      0      0      0
+discard_entry          0      0     88   46    1 : tunables    0    0    0 : slabdata      0      0      0
+f2fs_inode_cache       0      0   1232   13    4 : tunables    0    0    0 : slabdata      0      0      0
+fuse_request         396    396    432   18    2 : tunables    0    0    0 : slabdata     22     22      0
+fuse_inode          5934   6156    832   19    4 : tunables    0    0    0 : slabdata    324    324      0
+sdcardfs_inode_data_cache   9525  13600     24  170    1 : tunables    0    0    0 : slabdata     80     80      0
+sdcardfs_inode_cache   8337   9120    648   12    2 : tunables    0    0    0 : slabdata    760    760      0
+ecryptfs_inode_cache      0      0   1088   15    4 : tunables    0    0    0 : slabdata      0      0      0
+ecryptfs_auth_tok_list_item      0      0    832   19    4 : tunables    0    0    0 : slabdata      0      0      0
+fat_inode_cache       47    110    768   10    2 : tunables    0    0    0 : slabdata     11     11      0
+fat_cache            103    510     40  102    1 : tunables    0    0    0 : slabdata      5      5      0
+jbd2_journal_handle    680    680     48   85    1 : tunables    0    0    0 : slabdata      8      8      0
+jbd2_journal_head   1122   1122    120   34    1 : tunables    0    0    0 : slabdata     33     33      0
+jbd2_revoke_table_s    264    768     16  256    1 : tunables    0    0    0 : slabdata      3      3      0
+jbd2_revoke_record_s   1664   1664     32  128    1 : tunables    0    0    0 : slabdata     13     13      0
+ext4_inode_cache   33708  33708   1160   14    4 : tunables    0    0    0 : slabdata   2414   2414      0
+ext4_system_zone    5320   7854     40  102    1 : tunables    0    0    0 : slabdata     77     77      0
+ext4_io_end          704    704     64   64    1 : tunables    0    0    0 : slabdata     11     11      0
+ext4_extent_status  18753  21420     40  102    1 : tunables    0    0    0 : slabdata    210    210      0
+fscrypt_info        9681  13760    128   32    1 : tunables    0    0    0 : slabdata    430    430      0
+fscrypt_ctx         1250   1314     56   73    1 : tunables    0    0    0 : slabdata     18     18      0
+dio                  480    480    640   12    2 : tunables    0    0    0 : slabdata     43     43      0
+UNIX                 740    816   1280   12    4 : tunables    0    0    0 : slabdata     68     68      0
+RAW                  102    119    960   17    4 : tunables    0    0    0 : slabdata      7      7      0
+tw_sock_TCP           56    112    288   14    1 : tunables    0    0    0 : slabdata      8      8      0
+request_sock_TCP      11     66    352   11    1 : tunables    0    0    0 : slabdata      6      6      0
+TCP                  117    192   1984   16    8 : tunables    0    0    0 : slabdata     12     12      0
+dquot               1511   1536    256   16    1 : tunables    0    0    0 : slabdata     96     96      0
+IPA_TX_PKT_WRAPPER     28    168    144   28    1 : tunables    0    0    0 : slabdata      6      6      0
+IPA_RT_TBL           127    144    224   18    1 : tunables    0    0    0 : slabdata      8      8      0
+IPA_HDR_PROC_CTX       0      0     80   51    1 : tunables    0    0    0 : slabdata      0      0      0
+IPA_HDR               48    144    168   24    1 : tunables    0    0    0 : slabdata      6      6      0
+IPA_RT                34    126    216   18    1 : tunables    0    0    0 : slabdata      7      7      0
+IPA_FLT               15     30    400   10    1 : tunables    0    0    0 : slabdata      3      3      0
+scsi_data_buffer   58453  58480     24  170    1 : tunables    0    0    0 : slabdata    344    344      0
+request_queue         76     84   1360   12    4 : tunables    0    0    0 : slabdata      7      7      0
+blkdev_requests      370    440    408   10    1 : tunables    0    0    0 : slabdata     44     44      0
+blkdev_ioc          2462   2880    112   36    1 : tunables    0    0    0 : slabdata     80     80      0
+sock_inode_cache    1385   1479    704   11    2 : tunables    0    0    0 : slabdata    135    135      0
+skbuff_fclone_cache    112    112    576   14    2 : tunables    0    0    0 : slabdata      8      8      0
+file_lock_cache      418    418    208   19    1 : tunables    0    0    0 : slabdata     22     22      0
+net_namespace          0      0   7168    4    8 : tunables    0    0    0 : slabdata      0      0      0
+shmem_inode_cache   2423   2497    704   11    2 : tunables    0    0    0 : slabdata    227    227      0
+taskstats            276    276    344   23    2 : tunables    0    0    0 : slabdata     12     12      0
+proc_inode_cache   10146  10971    688   23    4 : tunables    0    0    0 : slabdata    477    477      0
+sigqueue             200    200    160   25    1 : tunables    0    0    0 : slabdata      8      8      0
+bdev_cache            89    180    896   18    4 : tunables    0    0    0 : slabdata     10     10      0
+kernfs_node_cache  89935  90134    120   34    1 : tunables    0    0    0 : slabdata   2651   2651      0
+mnt_cache          12425  12897    448   18    2 : tunables    0    0    0 : slabdata    732    732      0
+filp               25551  26928    320   12    1 : tunables    0    0    0 : slabdata   2244   2244      0
+inode_cache        28889  30615    616   13    2 : tunables    0    0    0 : slabdata   2355   2355      0
+dentry             90487  94059    192   21    1 : tunables    0    0    0 : slabdata   4479   4479      0
+iint_cache             0      0    136   30    1 : tunables    0    0    0 : slabdata      0      0      0
+avc_xperms_data     1024   1024     32  128    1 : tunables    0    0    0 : slabdata      8      8      0
+avc_node            5511   6888     72   56    1 : tunables    0    0    0 : slabdata    123    123      0
+selinux_file_security  26685  32512     16  256    1 : tunables    0    0    0 : slabdata    127    127      0
+selinux_inode_security  91153  92988     96   42    1 : tunables    0    0    0 : slabdata   2214   2214      0
+buffer_head        34668  47073    104   39    1 : tunables    0    0    0 : slabdata   1207   1207      0
+nsproxy             4194   8103     56   73    1 : tunables    0    0    0 : slabdata    111    111      0
+vm_area_struct    261246 280654    184   22    1 : tunables    0    0    0 : slabdata  12757  12757      0
+mm_struct            336    378    896   18    4 : tunables    0    0    0 : slabdata     21     21      0
+files_cache          565    580    768   10    2 : tunables    0    0    0 : slabdata     58     58      0
+sighand_cache        909    960   2112   15    8 : tunables    0    0    0 : slabdata     64     64      0
+task_struct         5671   6054   3840    8    8 : tunables    0    0    0 : slabdata    762    762      0
+cred_jar            2340   2688    192   21    1 : tunables    0    0    0 : slabdata    128    128      0
+anon_vma_chain    160273 172096     64   64    1 : tunables    0    0    0 : slabdata   2689   2689      0
+anon_vma           88162  94164     96   42    1 : tunables    0    0    0 : slabdata   2242   2242      0
+radix_tree_node    45071  53830    584   14    2 : tunables    0    0    0 : slabdata   3845   3845      0
+trace_event_file    4042   4232     88   46    1 : tunables    0    0    0 : slabdata     92     92      0
+ftrace_event_field  59238 113985     48   85    1 : tunables    0    0    0 : slabdata   1341   1341      0
+idr_layer_cache      767    885   2096   15    8 : tunables    0    0    0 : slabdata     59     59      0
+dma-kmalloc-8192       0      0   8192    4    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-4096       0      0   4096    8    8 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-2048       1     16   2048   16    8 : tunables    0    0    0 : slabdata      1      1      0
+dma-kmalloc-1024       0      0   1024   16    4 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-512        0      0    512   16    2 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-256        0      0    256   16    1 : tunables    0    0    0 : slabdata      0      0      0
+dma-kmalloc-128        0      0    128   32    1 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-8192         924    928   8192    4    8 : tunables    0    0    0 : slabdata    232    232      0
+kmalloc-4096        4288   4417   4096    8    8 : tunables    0    0    0 : slabdata    553    553      0
+kmalloc-2048        2414   2496   2048   16    8 : tunables    0    0    0 : slabdata    156    156      0
+kmalloc-1024       10540  13156   1024   16    4 : tunables    0    0    0 : slabdata    823    823      0
+kmalloc-512        22210  26880    512   16    2 : tunables    0    0    0 : slabdata   1691   1691      0
+kmalloc-256        42462  50000    256   16    1 : tunables    0    0    0 : slabdata   3125   3125      0
+kmalloc-128       242077 249056    128   32    1 : tunables    0    0    0 : slabdata   7783   7783      0
+kmem_cache_node      118    256    128   32    1 : tunables    0    0    0 : slabdata      8      8      0
+kmem_cache           118    176    256   16    1 : tunables    0    0    0 : slabdata     11     11      0

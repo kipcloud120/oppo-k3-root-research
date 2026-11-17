@@ -1,0 +1,30 @@
+k3_geom_full | pid=27552 uid=2000
+  [before] MemFree:          302000 kB | MemAvailable:    2429852 kB | SwapFree:        1470612 kB | 
+
+[1] UAF alloc 0x10004000
+  ALLOC(0x10004000) OK id=1 mmapsize=0x10004000
+
+[2] OVERLAP alloc 0x7000（先不 mmap）
+  ALLOC(0x7000) OK id=2 mmapsize=0x7000
+
+[3] UAF mmap FIXED
+  mmap(UAF @0x7001ff000 len=0x10004000) OK
+  touch 抽样完成（含首末页）
+  [after UAF touch] MemFree:          108604 kB | MemAvailable:    2233984 kB | SwapFree:        1469476 kB | 
+
+[4] UAF munmap（PTE 与 rbtree 条目预期残留）
+
+[5] BOGUS 匿名 VMA（3 页，不调用 MAP_USER_MEM）
+  BOGUS VMA OK @0x700204000
+
+[6] PLACEHOLDER alloc + mmap FIXED
+  ALLOC(0x10000) OK id=3 mmapsize=0x10000
+  mmap(PLACEHOLDER @0x710204000 len=0x10000) OK
+
+[7] OVERLAP mmap FIXED（未竞速基线，预期 ENOMEM=12）
+  mmap(OVERLAP @0x7001fe000 len=0x7000) FAIL errno=12 (Out of memory)
+
+[8] 清理
+  [after cleanup] MemFree:          135868 kB | MemAvailable:    2237688 kB | SwapFree:        1464396 kB | 
+
+done

@@ -1,0 +1,8 @@
+[ 272457.7ms] ===== G3C-STEER start pid=10598 mode=probe =====
+[ 272565.3ms] [5] CMP_REQUEUE_PI(A→C,1)  (top_task=W, owner(B_ring)=W ⇒ 应在 B_ring 早退)
+[ 272569.6ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[ 272865.5ms] [6] W frame1 返回 -1 errno=110 (Operation timed out) → 悬垂指针 lock=C，帧 1 已死
+[ 272873.1ms] [6] W 中间 UNLOCK_PI(B_ring) 返回 0
+[ 272875.2ms] [P] 探针模式：让 W 释放 B_ring ⇒ O 停放 ⇒ 链条在 O 终止
+[ 273080.9ms] [P] 空链条 CMP_REQUEUE_PI(A2→C) → 1 errno=0 (No error information)
+[ 273085.7ms] [P] verdict: **返回 1 ⇒ 内核侧 owner(C)==NULL ⇒ [5] 的 -EDEADLK 释放了 C 的 pi_state**（根因确认）

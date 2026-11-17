@@ -1,0 +1,122 @@
+=== A) 4.9 结构体字段偏移推导（LP64 / arm64，DEBUG_* 全关）===
+  struct rt_mutex_waiter  size=0x50 (80 B)
+    0x00  tree_entry         rb_node          (24 B)
+    0x18  pi_tree_entry      rb_node          (24 B)
+    0x30  task               ptr              (8 B)
+    0x38  lock               ptr              (8 B)
+    0x40  prio               int              (4 B)
+    0x48  deadline           u64              (8 B)
+  struct rt_mutex  size=0x20 (32 B)
+    0x00  wait_lock          raw_spinlock_t   (4 B)
+    0x08  waiters            rb_root          (8 B)
+    0x10  waiters_leftmost   ptr              (8 B)
+    0x18  owner              ptr              (8 B)
+  struct futex_pi_state  size=0x58 (88 B)
+    0x00  list               list_head        (16 B)
+    0x10  pi_mutex           rt_mutex         (32 B)
+    0x30  owner              ptr              (8 B)
+    0x38  refcount           atomic_t         (4 B)
+    0x40  key                futex_key        (24 B)
+  struct futex_q  size=0x70 (112 B)
+    0x00  list               plist_node       (40 B)
+    0x28  task               ptr              (8 B)
+    0x30  lock_ptr           ptr              (8 B)
+    0x38  key                futex_key        (24 B)
+    0x50  pi_state           ptr              (8 B)
+    0x58  rt_waiter          ptr              (8 B)
+    0x60  requeue_pi_key     ptr              (8 B)
+    0x68  bitset             u32              (4 B)
+
+=== B) 4.9 futex/rtmutex 源码字符串在 F.16 镜像中的命中 ===
+    源码字符串(>=14字符, 去重) = 10；逐字命中 = 5  命中率 = 50.0%
+    命中样例：
+      'Maximum lock depth %d reached'  @0x15a1007
+      'fixup_owner: ret = %d pi-mutex: %p'  @0x15a4680
+      'locking/rtmutex_common.h'  @0x159ac94
+      'refusing to wake PI futex'  @0x15a460d
+      'rtmutex_common.h'  @0x159ac9c
+
+=== C) 关键 kallsyms 值被 bl 指令引用的次数 ===
+    remove_waiter                      0x000ae9c8  bl 引用    1 次  <- 值是真实函数地址
+    rt_mutex_adjust_prio_chain         0x000ad630  bl 引用    7 次  <- 值是真实函数地址
+    rt_mutex_start_proxy_lock          0x000ae870  bl 引用    4 次  <- 值是真实函数地址
+    task_blocks_on_rt_mutex            0x000ae960  bl 引用    0 次  <- 未被引用，配对存疑
+    rt_mutex_proxy_unlock              0x000ae290  bl 引用   92 次  <- 值是真实函数地址
+    try_to_take_rt_mutex               0x000ae8d8  bl 引用    1 次  <- 值是真实函数地址
+    futex_requeue                      0x000e7ac0  bl 引用    1 次  <- 值是真实函数地址
+    futex_lock_pi                      0x000e7c00  bl 引用    1 次  <- 值是真实函数地址
+    do_futex                           0x000e77f8  bl 引用    3 次  <- 值是真实函数地址
+    SyS_futex                          0x000e7da0  bl 引用    1 次  <- 值是真实函数地址
+    rt_mutex_cleanup_proxy_lock        0x000aec80  bl 引用   73 次  <- 值是真实函数地址
+    rt_mutex_wait_proxy_lock           0x000aec20  bl 引用    1 次  <- 值是真实函数地址
+
+=== D) remove_waiter 声称偏移处的反汇编形态 ===
+  --- remove_waiter @0xae9c8 ---
+    0xae9c8: stp      x29, x30, [sp, #-0x10]!
+    0xae9cc: mov      x29, sp
+    0xae9d0: mov      x3, xzr
+    0xae9d4: bl       #0xae9e0
+    0xae9d8: ldp      x29, x30, [sp], #0x10
+    0xae9dc: ret      
+    0xae9e0: stp      x29, x30, [sp, #-0x40]!
+    0xae9e4: str      x23, [sp, #0x10]
+    0xae9e8: mov      x29, sp
+    0xae9ec: stp      x22, x21, [sp, #0x20]
+    0xae9f0: stp      x20, x19, [sp, #0x30]
+    0xae9f4: adrp     x23, #0x1fca000
+    0xae9f8: mov      x19, x3
+    0xae9fc: add      x23, x23, #0xb78
+    0xaea00: mov      x21, x2
+    0xaea04: mov      w20, w1
+    0xaea08: mov      x22, x0
+    0xaea0c: ldrb     w8, [x23]
+    0xaea10: cbz      w8, #0xaebe0
+    0xaea14: mov      x0, x23
+  --- rt_mutex_start_proxy_lock @0xae870 ---
+    0xae870: sub      sp, sp, #0x40
+    0xae874: stp      x29, x30, [sp, #0x30]
+    0xae878: add      x29, sp, #0x30
+    0xae87c: adrp     x8, #0x1d8d000
+    0xae880: mov      x4, x0
+    0xae884: add      x5, sp, #8
+    0xae888: mov      w0, wzr
+    0xae88c: mov      x2, xzr
+    0xae890: mov      x3, xzr
+    0xae894: ldr      x8, [x8, #0xf88]
+    0xae898: stur     x8, [x29, #-8]
+    0xae89c: ldp      x8, x9, [x1]
+    0xae8a0: ldp      x10, x11, [x1, #0x10]
+    0xae8a4: mov      w1, #-1
+    0xae8a8: stp      x8, x9, [sp, #8]
+    0xae8ac: stp      x10, x11, [sp, #0x18]
+    0xae8b0: bl       #0xad9c0
+    0xae8b4: adrp     x9, #0x1d8d000
+    0xae8b8: ldur     x8, [x29, #-8]
+    0xae8bc: ldr      x9, [x9, #0xf88]
+  --- task_blocks_on_rt_mutex @0xae960 ---
+    0xae960: sub      sp, sp, #0x40
+    0xae964: stp      x29, x30, [sp, #0x30]
+    0xae968: add      x29, sp, #0x30
+    0xae96c: adrp     x8, #0x1d8d000
+    0xae970: mov      x4, x0
+    0xae974: add      x5, sp, #8
+    0xae978: mov      w0, wzr
+    0xae97c: mov      x2, xzr
+    0xae980: mov      x3, xzr
+    0xae984: ldr      x8, [x8, #0xf88]
+    0xae988: stur     x8, [x29, #-8]
+    0xae98c: ldp      x8, x9, [x1]
+    0xae990: ldp      x10, x11, [x1, #0x10]
+    0xae994: mov      w1, #-1
+    0xae998: stp      x8, x9, [sp, #8]
+    0xae99c: stp      x10, x11, [sp, #0x18]
+    0xae9a0: bl       #0xad9c0
+    0xae9a4: adrp     x9, #0x1d8d000
+    0xae9a8: ldur     x8, [x29, #-8]
+    0xae9ac: ldr      x9, [x9, #0xf88]
+
+=== 说明 ===
+    A 为按源码 + 本机 config 的推导值，需 vmlinux/pahole 或反汇编立即数复核；
+    task_struct->pi_blocked_on 偏移无法由本工具推导（结构体过大且 config 相关），
+    需从 remove_waiter 中 'str xzr,[xN,#imm]' 的立即数或 vmlinux DWARF 提取。
+    C 的 bl 引用计数不依赖符号名：命中说明该值确为镜像内被调用的函数地址。

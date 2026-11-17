@@ -1,0 +1,8 @@
+[8735435.6ms] ===== G3C-STEER start pid=30895 =====
+[8735543.9ms] [5] CMP_REQUEUE_PI(A→C,1)  (top_task=W, owner(B_ring)=W ⇒ 应在 B_ring 早退)
+[8735548.3ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[8735843.9ms] [6] W frame1 返回 -1 errno=110 (Operation timed out) → 悬垂指针 lock=C，帧 1 已死
+[8735949.5ms] [10] CMP_REQUEUE_PI(A2→C2,1)  (owner(B3)=W ⇒ 应在 B3 早退；同时写 waiter->lock=C2)
+[8735954.3ms] [10] → -1 errno=35 (Resource deadlock would occur)
+[8736944.0ms] [10b] W frame2 返回 -1 errno=110 (Operation timed out) → 槽内 lock=C2，帧 2 已死
+[8740463.3ms] [12] W3 未进入等待，终止

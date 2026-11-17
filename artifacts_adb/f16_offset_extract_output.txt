@@ -1,0 +1,65 @@
+=== A) rtmutex 簇：mrs sp_el0 -> [xCur,#imm] 的 64 位访问 ===
+    current 寄存器访问的大偏移（>0x100）频次 Top 20：
+      0x0a80    3 次  样例 0xadd3c:ldr x11, [x8, #0xa80] | 0xadd4c:ldr x11, [x8, #0xa80]
+      0x0320    2 次  样例 0xadd2c:ldr w8, [x8, #0x320] | 0xae6d8:ldr w8, [x8, #0x320]
+      0x0b70    2 次  样例 0xae65c:ldr x8, [x8, #0xb70] | 0xae818:str xzr, [x8, #0xb70]
+      0x0aa4    1 次  样例 0xadc64:str w8, [x9, #0xaa4]
+      0x0334    1 次  样例 0xadd7c:str wzr, [x8, #0x334]
+      0x0678    1 次  样例 0xade6c:ldr w4, [x8, #0x678]
+      0x0328    1 次  样例 0xae374:ldr x8, [x8, #0x328]
+      0x03e0    1 次  样例 0xae418:ldr x8, [x8, #0x3e0]
+      0x0b58    1 次  样例 0xae508:ldr x9, [x8, #0xb58]
+      0x0358    1 次  样例 0xae55c:ldr w10, [x8, #0x358]
+      0x0b6c    1 次  样例 0xae720:ldr w8, [x8, #0xb6c]
+      0x0a90    1 次  样例 0xae7bc:ldr x9, [x8, #0xa90]
+
+=== B) rtmutex 簇：str xzr,[x?,#imm]（指针字段清零）大偏移 ===
+      0x03e0    3 次  位置 0xadc00 0xae368 0xae448
+      0x0360    1 次  位置 0xad128
+      0x0b70    1 次  位置 0xae818
+
+=== C) cred / real_cred 偏移线索 ===
+    commit_creds             : 0x00061660
+    prepare_creds            : 0x000613b8
+    override_creds           : 0x00061738
+    get_current_cred         : 不存在
+    put_cred                 : 不存在
+    prepare_kernel_cred      : 0x00061948
+    revert_creds             : 0x00061830
+    cred_init                : 0x01994298
+    __task_cred              : 不存在
+    --- commit_creds @0x61660 前 60 条 ---
+      0x61690: ldr    x8, [x8, #0xf88]
+      0x61698: ldr    x8, [x0, #0x78]
+      0x616a0: ldr    x10, [x0, #0x80]
+      0x616c8: ldr    x9, [sp, #0x10]
+      0x616e8: str    x29, [x9, #0xe8]
+      0x616f0: ldr    w2, [sp, #0xc]
+      0x616f4: ldr    x5, [sp, #0x10]
+      0x616f8: str    x10, [x9, #0x108]
+      0x61700: str    w20, [x0, #0x10]
+      0x61710: ldr    x9, [x9, #0xf88]
+      0x61744: str    x27, [sp, #0x50]
+    --- override_creds @0x61738 前 60 条 ---
+      0x61744: str    x27, [sp, #0x50]
+      0x61770: ldr    x8, [x8, #0xf88]
+      0x61784: ldr    x27, [x0, #0x48]
+      0x617c8: ldr    w8, [x29, #0x68]
+      0x617d0: ldr    w9, [x29, #0x60]
+      0x617d8: str    w23, [x0, #0x10]
+      0x617dc: str    x22, [x0, #0x18]
+      0x617e0: str    w21, [x0, #0x20]
+      0x617e4: str    x20, [x0, #0x28]
+      0x617ec: str    w8, [x0, #0x38]
+      0x61800: ldr    x9, [x9, #0xf88]
+      0x61810: ldr    x27, [sp, #0x50]
+
+=== D) 静态链接基址 ===
+    KIMAGE_VADDR + TEXT_OFFSET = 0xffffff8008080000
+    验证：镜像内 0xffffff8009614c00 - 0xffffff8008080000 = 0x1594c00（= kallsyms token_table 文件偏移 0x1594c00）
+    运行时 KASLR slide 未知，必须运行时泄露；静态只能给出链接基址。
+
+=== 判定提示 ===
+    A/B 的众数偏移中，同时满足「64 位 str/ldr」「在 remove_waiter /
+    task_blocks_on_rt_mutex / rt_mutex_adjust_prio_chain 附近」「源码多处访问」
+    的候选最可能是 task_struct->pi_blocked_on。需结合 §15.3 源码偏移交叉验证。

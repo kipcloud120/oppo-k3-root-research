@@ -1,0 +1,26 @@
+===== SURFACE-PROBE uid=2000 =====
+[A] /dev 扫描（白名单子系统额外测写）
+  uhid                         r--  0660
+  ion                          r--  0664
+  zero                         r--  0666
+  adsprpc-smd                  r--  0664
+  uinput                       r--  0660
+  hwbinder                     rwR  0666
+  binder                       rwR  0666
+  ashmem27520eec-0945-44db-930d-0c0fd61c1eeb rwR  0666
+  kgsl-3d0                     rwR  0666
+  null                         r--  0666
+  urandom                      r--  0666
+  random                       r--  0666
+
+[B] /proc/sys 递归（深度<=3）：仅列出可写项
+
+[C] /sys/module/*/parameters/*：仅列出可写项
+
+[D] 精选 /sys 与高危 /proc 节点
+  WRITABLE /sys/kernel/tracing/trace
+
+---- 汇总 ----
+  /dev 设备节点（跳过危险项后）: 198，只读可开: 12，白名单内可写: 4
+  检查的 sysfs/procfs 项: 764
+===== done（全程只 open，未 write 任何字节） =====

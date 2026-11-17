@@ -1,0 +1,26 @@
+# g3c_v6 run1（2026-11-17 12:16 左右，设备 <redacted>）
+# 采集：宿主机侧 adb shell stdout（设备侧日志因 panic 丢失未 fsync 的尾部）
+# 结果：帧 2 死后走查 [12] 未返回，设备 panic 重启（uptime 3921s → 115s）
+# 判据命中：§21.28.3 登记表第 4 行「不返回 / 重启」
+
+[3924035.027ms] ===== G3C-V6 start pid=18120 (§21.28 亚毫秒窗口) =====
+[3924062.370ms] [5] CMP_REQUEUE_PI(A→C,1)  (top_task=W, owner(B_ring)=W ⇒ 在 B_ring 早退)
+[3924067.635ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[3924442.579ms] [6] W frame1 返回 -1 errno=110 (Operation timed out)；UNLOCK_PI(B_ring)=0；帧 1 已死
+[3924453.205ms] [9b] W3 已预置在 A3 上等待（C2 目标）
+[3924456.120ms] [10p] FUTEX_WAKE(A2,1) → -1 errno=22 (Invalid argument) (EINVAL=确有 waiter)
+[3924459.444ms] [11d] 字值: A=0 A2=0 A3=0 C=2147501770 C2=2147501771 B3=2147501769 Bring=2147501770 | W=18121 O=18122 O2=18123
+[3924462.815ms] [10] CMP_REQUEUE_PI(A2→C2,1)  (owner(B3)=W ⇒ 在 B3 早退；同时写 waiter->lock=C2)
+[3924465.086ms] [10] → -1 errno=35 (Resource deadlock would occur)
+[3926542.457ms] [10b] 检测到 frame2 返回 -1 errno=110；窗口起点 t0
+（此后无任何输出：程序未返回，adb 连接断开，设备重启）
+
+# 关键量测
+#   [10] → [10b] 间隔 = 2077.4 ms（frame2 绝对超时 2500 ms，符合设计）
+#   [10b] → 发 [12] 间隔 ≈ 0.05 ms（仅一次不 fsync 的 write）
+#   即：窗口已压到 0.05 ms 量级，比 v5 的 114 ms 低 3 个数量级，仍 panic。
+
+[c:\> adb shell "grep -c '\[12\]' /data/local/tmp/g3c6.log"] → 0
+# ⇒ 设备侧日志同样不含 [10b]（该行是 lgn 不 fsync 写入）
+# ⇒ panic 发生在 [10b] 之后数毫秒内，页缓存未回写
+# ⇒ 是即时 oops/panic，不是 rtmutex.c:627 的无界自旋 + watchdog（后者需 20 s 量级）

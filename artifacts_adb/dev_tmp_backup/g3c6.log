@@ -1,0 +1,9 @@
+[3924035.027ms] ===== G3C-V6 start pid=18120 (§21.28 亚毫秒窗口) =====
+[3924062.370ms] [5] CMP_REQUEUE_PI(A→C,1)  (top_task=W, owner(B_ring)=W ⇒ 在 B_ring 早退)
+[3924067.635ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[3924442.579ms] [6] W frame1 返回 -1 errno=110 (Operation timed out)；UNLOCK_PI(B_ring)=0；帧 1 已死
+[3924453.205ms] [9b] W3 已预置在 A3 上等待（C2 目标）
+[3924456.120ms] [10p] FUTEX_WAKE(A2,1) → -1 errno=22 (Invalid argument) (EINVAL=确有 waiter)
+[3924459.444ms] [11d] 字值: A=0 A2=0 A3=0 C=2147501770 C2=2147501771 B3=2147501769 Bring=2147501770 | W=18121 O=18122 O2=18123
+[3924462.815ms] [10] CMP_REQUEUE_PI(A2→C2,1)  (owner(B3)=W ⇒ 在 B3 早退；同时写 waiter->lock=C2)
+[3924465.086ms] [10] → -1 errno=35 (Resource deadlock would occur)

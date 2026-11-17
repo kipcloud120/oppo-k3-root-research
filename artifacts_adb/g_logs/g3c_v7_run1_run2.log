@@ -1,0 +1,41 @@
+# g3c_v7 运行日志（2026-11-17，设备 <redacted>）
+# run1: 自适应模式（探针优先） —— 分支 A，零风险收工
+# run2: A′ 对照（不等 frame2 死亡，走查读到活 rt_waiter） —— 成功，零风险
+
+================================================================
+run1  /data/local/tmp/g3c_v7          uptime 343.84 → 347.72 s（未重启）
+================================================================
+[346136.116ms] ===== G3C-V7 start pid=11093 (自适应：探针优先) =====
+[346164.133ms] [5] CMP_REQUEUE_PI(A→C,1)
+[346167.788ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[346545.013ms] [6] W frame1 返回 -1 errno=110 (Operation timed out)；UNLOCK_PI(B_ring)=0；帧 1 已死
+[346554.496ms] [P2] 探针 C2：EINVAL ⇒ 有已入队 PI waiter (raw errno=22) 经过 1 轮 → pi_state 的 refcount 已受保护
+[346557.772ms] [P1] 探针 C ：EINVAL ⇒ 有已入队 PI waiter (raw errno=22)  —— 交叉对照 X 是否入队
+[346563.996ms] branch: A —— X2 已入队 ⇒ [10] 的 put_pi_state 不可能归零 ⇒ pi_state 未被释放
+[346568.025ms] verdict: W1 模型的前提不成立；v6 的 panic 需另一解释。按 §21.28.8 判据：本分支不动悬垂槽，收工。
+[346572.674ms] ---- 请外部脚本核对 uptime 连续性 ----
+
+================================================================
+run2  /data/local/tmp/g3c_v7 a        uptime 462.01 → 463.88 s（未重启）
+================================================================
+[462284.695ms] ===== G3C-V7 start pid=11177 mode=A' (live frame) =====
+[462313.554ms] [5] CMP_REQUEUE_PI(A→C,1)
+[462317.476ms] [5] → -1 errno=35 (Resource deadlock would occur)
+[462694.959ms] [6] W frame1 返回 -1 errno=110 (Operation timed out)；UNLOCK_PI(B_ring)=0；帧 1 已死
+[462705.189ms] [P2] 探针 C2：EINVAL ⇒ 有已入队 PI waiter (raw errno=22) 经过 1 轮 → pi_state 的 refcount 已受保护
+[462708.821ms] [P1] 探针 C ：EINVAL ⇒ 有已入队 PI waiter (raw errno=22)  —— 交叉对照
+[462712.342ms] branch: A —— X2 已入队 ⇒ [10] 的 put_pi_state 不可能归零 ⇒ pi_state 未被释放
+[462714.882ms] A′：仍执行 [10]，但**不等 frame2 死亡**就发 [12] —— 走查将读到**活的** rt_waiter
+[462717.344ms] [11d] 字值: A=0 A2=0 A3=0 C=2147494827 C2=2147494828 B3=2147494826 Bring=2147494827 | W=11178 O=11179 O2=11180
+[462720.656ms] [10] CMP_REQUEUE_PI(A2→C2,1)
+[462722.801ms] [10] → -1 errno=35 (Resource deadlock would occur)
+[462724.328ms] [A'] frame2 仍存活（w2_returned=0），立刻 [12]
+[462724.448ms] [12] → -1 errno=35 (Resource deadlock would occur)   窗口 = 0.116 ms（帧存活）
+[462725.986ms] verdict(A'): **走查形态本身无问题** —— 读到活 rt_waiter 时 lock==C2==orig_lock，正常返回 -EDEADLK
+
+# 关键量测
+#   [10] → [12] 间隔 = 1.647 ms（含一次 lg 的 fsync），帧存活
+#   [12] 自身耗时 0.12 ms
+#   同一构造、同一参数，唯一差别是"帧是否已死"：
+#       帧存活 → -EDEADLK（安全，run2）
+#       帧已死 → panic（v6 run1 / run3 / run4）

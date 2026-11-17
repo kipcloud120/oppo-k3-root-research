@@ -1,0 +1,39 @@
+======================================================================
+ 4.9 task_struct 布局推导（递归 / 纯 Python / LP64）
+======================================================================
+ config 条目数        : 4598
+ 已解析 struct/union  : 95
+ 已解析 typedef/enum  : 64 / 6
+ sizeof(task_struct)  : 3456  (0xd80)
+ 校准目标 slab 大小    : 3840  (0xf00)
+ 偏差                 : -384 字节 (90.0% of target)
+----------------------------------------------------------------------
+ 目标偏移：
+   offsetof(real_cred           ) = 0x0728  (1832)
+   offsetof(cred                ) = 0x0730  (1840)
+   offsetof(ptracer_cred        ) = 0x0720  (1824)
+   offsetof(pi_blocked_on       ) = 0x0818  (2072)
+   offsetof(pi_waiters          ) = 0x0808  (2056)
+   offsetof(pi_waiters_leftmost ) = 0x0810  (2064)
+   offsetof(seccomp             ) = 0x07e0  (2016)
+   offsetof(comm                ) = 0x0738  (1848)
+   offsetof(thread_info         ) = 0x0000  (0)
+   offsetof(restart_block       ) = 0x0570  (1392)
+   offsetof(thread              ) = 0x09bc  (2492)
+----------------------------------------------------------------------
+ 未解析类型：无
+----------------------------------------------------------------------
+ slab 标定校验（来自 /proc/slabinfo，计算 vs 真实）：
+   task_struct        计算  3456  真实  3840  [差 -384]
+   cred               计算   168  真实   192  [差 -24]
+   sighand_struct     计算  1552  真实  2112  [差 -560]
+   mm_struct          <未解析>
+   files_struct       <未解析>
+   nsproxy            <未解析>
+----------------------------------------------------------------------
+ 已知结构自检（list_head/rb_node/hlist_head/llist_node/plist_node）：
+   sizeof(list_head     ) =  16  期望  16  [OK]
+   sizeof(rb_node       ) =  24  期望  24  [OK]
+   sizeof(hlist_head    ) =   8  期望   8  [OK]
+   sizeof(llist_node    ) =   8  期望   8  [OK]
+   sizeof(plist_node    ) =  40  期望  40  [OK]

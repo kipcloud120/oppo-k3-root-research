@@ -1,0 +1,6 @@
+[      0.0ms] ===== G3D-D2 start pid=11343 =====
+[    119.6ms] [2] CMP_REQUEUE_PI(A→C,1) → -1 errno=35 (Resource deadlock would occur)
+[    611.9ms] [3] W 返回 -1 errno=110 → 悬垂指针留存（lock=旧 C 地址）
+[    618.5ms] [3] C 字值=2147494993 (O.tid 假象) ; 内核 owner 已被 proxy_unlock
+[   1014.6ms] [4] 已喷 24 组竞争 PI futex（每组 1 个 pi_state，同 cache）
+[   1222.5ms] [5] CMP_REQUEUE_PI(A2→C,1)：链条 C→O→B(owner W)→W→槽(lock=旧C)

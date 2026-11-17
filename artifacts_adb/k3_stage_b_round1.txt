@@ -1,0 +1,35 @@
+k3_stage_b | pid=27522 uid=2000
+  open /dev/kgsl-3d0                 OK   
+
+== 1  DRAWCTXT_CREATE (需要 PREAMBLE|NO_GMEM_ALLOC) ==
+  DRAWCTXT_CREATE(0x12)              OK   flags=0x12 id=27
+
+== 2  SVM 区间边界（MAP_USER_MEM + USE_CPU_MAP，逐个 4KB） ==
+  addr               note                   result
+  0x006fffff000  SVM64 base - 4K        REJECT errno=12 (Out of memory)
+  0x00700000000  SVM64 base             ACCEPT gpuaddr=0x700000000
+  0x00700001000  SVM64 base + 4K        ACCEPT gpuaddr=0x700001000
+  0x007fffff000  SVM64 end - 4K         ACCEPT gpuaddr=0x7fffff000
+  0x00800000000  SVM64 end              REJECT errno=12 (Out of memory)
+  0x00500000000  GLOBAL VA base (应拒) REJECT errno=12 (Out of memory)
+  0x00010000000  非任何区间 (应拒) ACCEPT gpuaddr=0x10000000
+  0x00000300000  SVM32 base             ACCEPT gpuaddr=0x300000
+  0x000bef00000  SVM32 end - 4M         ACCEPT gpuaddr=0xbef00000
+
+== 3  四段 range 的地址空间可达性（仅匿名 VMA，不分配 GPU 内存） ==
+  OVERLAP 0x7000                     OK   vma ok
+  UAF 0x10004000                     OK   vma ok
+  BOGUS 3 pages                      OK   vma ok
+  PLACEHOLDER 0x10000                OK   vma ok
+
+== 4  gpuobj 几何流程（UAF 用 32MB 缩放版） ==
+  GPUOBJ_ALLOC(UAF 32MB)             OK   id=8 mmapsize=0x2000000
+  GPUOBJ_ALLOC(OVERLAP)              OK   id=9 mmapsize=0x7000
+  mmap(UAF @0x7001ff000)             OK   fixed ok
+  GPUOBJ_INFO(UAF after mmap)        gpuaddr=0x7001ff000 va_addr=0x0 size=0x2000000 va_len=0x2000000
+  touch UAF first/last page          OK   ok
+  munmap(UAF)                        OK   rbtree/PTE 保留（预期）
+  mmap(OVERLAP @0x7001fe000)         FAIL errno=12 (Out of memory)
+  mmap(PLACEHOLDER @0x710204000)     OK   fixed ok
+
+summary: failures=1

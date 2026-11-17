@@ -1,0 +1,20 @@
+[489888.550] ===== poison_test start pid=15048 =====
+[489903.101] open OK fd=4
+[489905.759] control-before: 进入 MAP_USER_MEM(0x700900000)
+[489907.535] control-before: 返回 ret=0 errno=0 (No error information) gpuaddr=0x700900000
+[490003.033] UAF alloc OK id=2 mmapsize=0x10004000
+[490006.514] UAF mmap FAIL errno=12
+[515231.815] ===== poison_test start pid=15082 =====
+[515235.973] open OK fd=4
+[515238.288] control-before: 进入 MAP_USER_MEM(0x7f0000000)
+[515239.818] control-before: 返回 ret=0 errno=0 (No error information) gpuaddr=0x7f0000000
+[515288.588] UAF alloc OK id=2 mmapsize=0x10004000
+[515294.465] UAF mmap+touch OK
+[515297.827] UAF munmap OK
+[515299.633] BOGUS VMA OK
+[515301.963] racer: 进入 MAP_USER_MEM(hostptr=0x700204000, len=0xffffffffffefd000)
+[515303.982] racer: 返回 ret=-1 errno=12 (Out of memory)
+[515305.323] probe-after: 进入 MAP_USER_MEM(0x7e0000000)
+[515306.728] probe-after: 返回 ret=0 errno=0 (No error information) gpuaddr=0x7e0000000
+[515308.378] about to exit（若此后设备离线，则崩溃在退出/pagetable 销毁）
+[515311.063] ===== end =====

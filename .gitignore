@@ -1,0 +1,31 @@
+# ---- 厂商固件与内核二进制：体积大、版权归厂商，不随仓库分发 ----
+# 需要的读者请从自己的设备转储后本地重建，见 firmware_F16/README.md
+firmware_F16/*
+!firmware_F16/README.md
+
+# ---- 厂商 Windows 工具包（含 OPPO 官方 exe/dll、授权组件）----
+REF/
+
+# ---- 屏幕镜像工具（第三方发行版）----
+scrcpy-win64-v3.3.4/
+
+# ---- 构建产物与工具链（Zig 79 MB、交叉编译输出）----
+.build/
+*.o
+*.elf
+!firmware_F16/README.md
+
+# ---- 第三方完整利用代码：不重新分发，只在文档中引用出处 ----
+src_ref/poc_ex.c
+src_ref/*.b64
+
+# ---- 会话/编辑器临时文件 ----
+.workbuddy/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log.tmp
+
+# Python 缓存
+__pycache__/
+*.pyc

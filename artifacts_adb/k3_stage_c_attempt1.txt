@@ -1,0 +1,3 @@
+k3_stage_c | pid=27666 uid=2000 attempts=1 delay_us=200
+
+--- attempt 1/1 ---

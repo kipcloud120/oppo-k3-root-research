@@ -1,0 +1,8 @@
+[     0.02ms] ===== G3D-D2'' start pid=11327 mode=msg-spray =====
+[   716.82ms] [1] 环就绪；喷堆 holder 已持锁 48/48（waiter 停在 futex 门控上）
+[   721.18ms] [2] 发 CMP_REQUEUE_PI(A→C,1)  —— 之后立即放行喷堆，中间不写日志
+[   723.22ms] [2] CMP_REQUEUE_PI(A→C)  → -1 errno=35 (Resource deadlock would occur)
+[   724.83ms] [3m] msgsnd 成功 0 条（目标 2000）；free→walk 间隔 = 0.074 ms
+[   726.58ms] [5] CMP_REQUEUE_PI(A2→C) → -1 errno=35 (Resource deadlock would occur)
+[   727.93ms] verdict: 仍 -EDEADLK ⇒ 2000 次同 cache 分配都没拿到 ⇒ **对象没有被释放**
+[   729.19ms] 结束

@@ -1,0 +1,14 @@
+[*] config entries=4598  preprocessed field decls=157
+[*] 未解析 decl 1 条: unsigned :0
+[*] parsed fields=166  nested types=66
+[*] unknown/placeholder types: ['mutex', 'pid_link', 'rcu_special', 'sched_info', 'sigpending', 'wake_q_node']
+
+[*] sizeof(struct task_struct) = 2032  (target slab size 3840 / 0xF00)
+    offsetof(cred                ) = 0x508 (1288)
+    offsetof(real_cred           ) = 0x500 (1280)
+    offsetof(ptracer_cred        ) = 0x4f8 (1272)
+    offsetof(pi_blocked_on       ) = 0x5d0 (1488)
+    offsetof(pi_waiters          ) = 0x5c0 (1472)
+    offsetof(pi_waiters_leftmost ) = 0x5c8 (1480)
+    offsetof(comm                ) = 0x510 (1296)
+    offsetof(thread              ) = 0x750 (1872)

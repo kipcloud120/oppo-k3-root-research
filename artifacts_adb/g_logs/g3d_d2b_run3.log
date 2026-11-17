@@ -1,0 +1,7 @@
+[     0.02ms] ===== G3D-D2'' start pid=11000 mode=spray =====
+[   431.67ms] [1] 环就绪；喷堆 holder 已持锁 48/48（waiter 停在 futex 门控上）
+[   435.55ms] [2] 发 CMP_REQUEUE_PI(A→C,1)  —— 之后立即放行喷堆，中间不写日志
+[   445.49ms] [2] CMP_REQUEUE_PI(A→C)  → -1 errno=35 (Resource deadlock would occur)
+[   448.50ms] [3] free→walk 间隔 = 8.511 ms
+[   450.24ms] [5] CMP_REQUEUE_PI(A2→C) → -1 errno=35 (Resource deadlock would occur)
+[   451.99ms] verdict: 返回错误 errno=35，未回收但未崩溃（按 §21.23 转备选①）

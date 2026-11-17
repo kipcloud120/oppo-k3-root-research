@@ -1,0 +1,21 @@
+[*] src_ref/realmeX_master_io-pgtable-arm.c
+[*] 字符串字面量(>=10字符, 去重) = 10
+[*] 镜像中逐字命中 = 2  命中率 = 20.0%
+
+--- 命中（同源证据）---
+    'Cannot accommodate DMA offset for IOMMU page tables'  @ 0x161c400
+    'Cannot accommodate DMA translation for IOMMU page tables'  @ 0x161c435
+
+--- 未命中 ---
+    'arm-lpae io-pgtable:'
+    'cfg: pgsize_bitmap 0x%lx, ias %u-bit'
+    'data: %d levels, 0x%zx pgd_size, %lu pg_shift, %lu bits_per_level, pgd @ %p'
+    'io-pgtable.h'
+    'selftest: completed with %d PASS %d FAIL'
+    'selftest: failed to allocate io pgtable ops'
+    'selftest: pgsize_bitmap 0x%08lx, IAS %u'
+    'selftest: test failed for fmt idx %d'
+
+--- 关键标识 ---
+    b'io-pgtable-arm': count=1 first=0x15d1747
+    b'Cannot accommodate DMA offset for IOMMU page table': count=1 first=0x161c400

@@ -1,0 +1,48 @@
+== policyvers ==
+30== debugfs listing ==
+ls: /sys/kernel/debug: Permission denied
+== tracing listing ==
+total 0
+-?????????  ? ?    ?    ?                ? README
+-?????????  ? ?    ?    ?                ? available_events
+-?????????  ? ?    ?    ?                ? available_tracers
+-rw-rw-rw-  1 root root 0 1970-01-01 08:00 buffer_size_kb
+-?????????  ? ?    ?    ?                ? buffer_total_size_kb
+-?????????  ? ?    ?    ?                ? cpu_freq_switch_profile_enabled
+-?????????  ? ?    ?    ?                ? current_tracer
+drwxr-xr-x 93 root root 0 1970-01-01 08:00 events
+-?????????  ? ?    ?    ?                ? free_buffer
+drwxr-xr-x  3 root root 0 1970-01-01 08:00 instances
+drwxr-xr-x  2 root root 0 1970-01-01 08:00 options
+drwxr-xr-x 10 root root 0 1970-01-01 08:00 per_cpu
+-?????????  ? ?    ?    ?                ? printk_formats
+-?????????  ? ?    ?    ?                ? saved_cmdlines
+-rw-rw-rw-  1 root root 0 1970-01-01 08:00 saved_cmdlines_size
+-?????????  ? ?    ?    ?                ? saved_tgids
+-?????????  ? ?    ?    ?                ? set_event
+-?????????  ? ?    ?    ?                ? set_event_pid
+-rw-rw-rw-  1 root root 0 1970-01-01 08:00 trace
+-rw-rw-rw-  1 root root 0 1970-01-01 08:00 trace_clock
+--w--w--w-  1 root root 0 1970-01-01 08:00 trace_marker
+-rw-r--r--  1 root root 0 1970-01-01 08:00 trace_options
+-r--r--r--  1 root root 0 1970-01-01 08:00 trace_pipe
+-?????????  ? ?    ?    ?                ? tracing_cpumask
+-rw-rw-rw-  1 root root 0 2026-09-22 13:53 tracing_on
+-?????????  ? ?    ?    ?                ? tracing_thresh
+== available_tracers ==
+cat: /sys/kernel/tracing/available_tracers: Permission denied
+== current_tracer ==
+cat: /sys/kernel/tracing/current_tracer: Permission denied
+== sde* sizes(sectors x512) ==
+sde= sde1= sde10= sde11= sde12= sde13= sde14= sde15= sde16= sde17= sde18= sde19= sde2= sde20= sde21= sde22= sde23= sde24= sde25= sde26= sde27= sde28= sde29= sde3= sde30= sde31= sde32= sde33= sde34= sde4= sde5= sde6= sde7= sde8= sde9= 
+== key part sizes ==
+boot -> sde10 size_sectors=
+recovery -> sde17 size_sectors=
+vbmeta -> sde16 size_sectors=
+dtbo -> sde18 size_sectors=
+system -> sda11 size_sectors=
+vendor -> sde15 size_sectors=
+== debugfs kgsl? ==
+ls: /sys/kernel/debug: Permission denied
+== /dev/kgsl open(r) test ==
+kgsl open OK

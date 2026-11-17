@@ -1,0 +1,12 @@
+[96738.0ms] ===== discrim start pid=9636 =====
+[96838.7ms] UAF alloc/mmap/touch/munmap OK (rbtree 条目与 PTE 预期残留)
+[96843.1ms] BOGUS VMA OK
+[96843.3ms] PLACEHOLDER OK
+[96844.3ms] racer 返回 ret=-1 errno=12 (BOGUS 节点应已插入, 树已重平衡)
+[96846.8ms] OVERLAP mmap → FAIL errno=12 (Out of memory)
+[96848.5ms] probe(OVERLAP∩¬UAF): MAP_USER_MEM(0x7001fe000) → ret=0 errno=0 (No error information) out_gpuaddr=0x7001fe000
+[96848.7ms] probe(inside UAF): MAP_USER_MEM(0x700200000) → ret=-1 errno=12 (Out of memory) out_gpuaddr=0x0
+[96848.7ms] ---- 判定 ----
+[96848.8ms] verdict: OVERLAP 节点不存在 → 主线程在 set_svm_region 就失败 → 未命中 (情况 a)
+[96848.8ms] control(inside UAF): ret=-1 errno=12 （预期 -1/ENOMEM）
+[96850.3ms] ===== end =====

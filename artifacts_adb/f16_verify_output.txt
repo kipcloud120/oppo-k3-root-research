@@ -1,0 +1,87 @@
+=== 1. 目标函数交叉引用 ===
+  SyS_futex @0xe7da0 (下一个符号 0xe7f78)
+    前5条: stp x29, x30, [sp, #-0x50]! | stp x26, x25, [sp, #0x10] | mov x29, sp | stp x24, x23, [sp, #0x20] | stp x22, x21, [sp, #0x30]
+    bl/b 目标: 0x3fc6d0=cfqg_prfill_rwstat_recursive, 0xe7e04=?, 0x3fc860=__cfq_slice_expired/cfq_del_cfqq_rr, 0x3fc020=cfq_set_group_idle/cfqg_print_stat, 0xe7e74=?, 0x3fc700=cfqg_stats_exit/cfq_put_queue, 0xe7f38=?, 0xe7ebc=?
+  do_futex @0xe77f8 (下一个符号 0xe79b0)
+    前5条: sub sp, sp, #0x70 | stp x29, x30, [sp, #0x10] | add x29, sp, #0x10 | stp x28, x27, [sp, #0x20] | stp x26, x25, [sp, #0x30]
+    bl/b 目标: 0xe7850=?, 0xe78a4=?, 0xe7908=?, 0x3fc6d0=cfqg_prfill_rwstat_recursive, 0xe7884=?, 0xe7990=?
+    字符串引用: 0x15a4f62='axtd'
+  futex_requeue @0xe7ac0 (下一个符号 0xe7c00)
+    前5条: stp x29, x30, [sp, #-0x40]! | str x23, [sp, #0x10] | mov x29, sp | stp x22, x21, [sp, #0x20] | stp x20, x19, [sp, #0x30]
+    bl/b 目标: 0xe7b1c=?, 0xe77f8=do_futex, 0x408158=idr_init, 0x408158=idr_init, 0xe7bd4=?, 0x109fa98=msm_ipc_check_send_permissions/msm_ipc_router_security_init, 0xe7bd0=?, 0x109fa98=msm_ipc_check_send_permissions/msm_ipc_router_security_init
+  futex_lock_pi @0xe7c00 (下一个符号 0xe7da0)
+    前5条: stp x29, x30, [sp, #-0x50]! | str x25, [sp, #0x10] | mov x29, sp | stp x24, x23, [sp, #0x20] | stp x22, x21, [sp, #0x30]
+    bl/b 目标: 0xe7c5c=?, 0xe7c50=?, 0xe7d70=?, 0x408158=idr_init, 0x408158=idr_init, 0xe7d24=?, 0x4191b0=prandom_u32_state, 0xe7d50=?
+  remove_waiter @0xae9c8 (下一个符号 0xae9e0)
+    前5条: stp x29, x30, [sp, #-0x10]! | mov x29, sp | mov x3, xzr | bl #0xae9e0 | ldp x29, x30, [sp], #0x10
+    bl/b 目标: 0xae9e0=rt_mutex_next_owner
+  task_blocks_on_rt_mutex @0xae960 (下一个符号 0xae9c8)
+    前5条: sub sp, sp, #0x40 | stp x29, x30, [sp, #0x30] | add x29, sp, #0x30 | adrp x8, #0x1d8d000 | mov x4, x0
+    bl/b 目标: 0xad9c0=rt_mutex_destroy, 0x2efc0=cbc_decrypt
+  rt_mutex_start_proxy_lock @0xae870 (下一个符号 0xae8d8)
+    前5条: sub sp, sp, #0x40 | stp x29, x30, [sp, #0x30] | add x29, sp, #0x30 | adrp x8, #0x1d8d000 | mov x4, x0
+    bl/b 目标: 0xad9c0=rt_mutex_destroy, 0x2efc0=cbc_decrypt
+  arm_lpae_map_sg @0x5bf650 (下一个符号 0x5bf938)
+    前5条: stp x29, x30, [sp, #-0x50]! | stp x26, x25, [sp, #0x10] | mov x29, sp | stp x24, x23, [sp, #0x20] | stp x22, x21, [sp, #0x30]
+    bl/b 目标: 0x737398=driver_detach, 0xa48d0=autogroup_path, 0xc06138=mt_report, 0x737398=driver_detach, 0xc043c8=uhid_char_poll, 0xc070f0=sony_report_fixup, 0x5bf74c=?, 0xc070f0=sony_report_fixup
+    字符串引用: 0x161e55a='&pwr->power_lock', 0x15fd992='clock-names', 0x15fd992='clock-names', 0x161e582='qcom,regulator-names', 0x161e597='qcom,deferred-regulator-disable-delay', 0x161e582='qcom,regulator-names', 0x15f127b='qcom,msm-bus,name', 0x161e56b="Couldn't get clock: %s"
+  arm_lpae_map @0x5bf550 (下一个符号 0x5bf650)
+    前5条: stp x29, x30, [sp, #-0x20]! | stp x20, x19, [sp, #0x10] | mov x29, sp | ldr x20, [x0, #0xb8] | cbz x20, #0x5bf57c
+    bl/b 目标: 0x5be120=arm_lpae_free_pgtable, 0x5bf644=?, 0x5bf644=?, 0x419240=prandom_u32, 0x419240=prandom_u32, 0x72fa48=adreno_perfcounter_save, 0x3fff38=perf_trace_block_fg_io_peek_req, 0x5be670=arm_lpae_alloc_pgtable
+  __arm_lpae_map @0x5bfd38 (下一个符号 0x5bfd48)
+    前5条: cmp w0, #3 | cset w0, lo | ret | nop | stp x29, x30, [sp, #-0x20]!
+  arm_lpae_init_pte @0x5bfd48 (下一个符号 0x5bfe10)
+    前5条: stp x29, x30, [sp, #-0x20]! | str x19, [sp, #0x10] | mov x29, sp | cmp w0, #1 | b.ne #0x5bfdfc
+    bl/b 目标: 0x1ac220=memblock_overlaps_region, 0xa48d0=autogroup_path, 0xa48d0=autogroup_path, 0x5bfe00=?
+    字符串引用: 0x161e8b8='&smmu_domain->init_mutex', 0x161e8d1='&smmu_domain->assign_lock'
+  arm_smmu_device_probe: 符号不存在
+  arm_smmu_domain_alloc @0x5ca2a0 (下一个符号 0x5ca4e8)
+    前5条: sub sp, sp, #0x70 | stp x29, x30, [sp, #0x10] | add x29, sp, #0x10 | stp x28, x27, [sp, #0x20] | stp x26, x25, [sp, #0x30]
+    bl/b 目标: 0x10a17e8=is_game_rtt_skb, 0x5cb420=arm_smmu_trigger_fault, 0x10a1aa8=oplus_sla_work_queue_func, 0x5dcf68=drm_legacy_mapbufs, 0x5c8b48=__arm_smmu_iova_to_phys_hard, 0x5ca454=?, 0x10a1aa8=oplus_sla_work_queue_func, 0x5ca450=?
+  kgsl_iommu_map @0x6e94f8 (下一个符号 0x6e97c8)
+    前5条: stp x29, x30, [sp, #-0x50]! | str x25, [sp, #0x10] | mov x29, sp | stp x24, x23, [sp, #0x20] | stp x22, x21, [sp, #0x30]
+    bl/b 目标: 0x6e95d0=?, 0x6e97ac=?, 0x6e97ac=?, 0x72f940=adreno_perfcounter_restore, 0x6e97ac=?, 0x1ac220=memblock_overlaps_region, 0x914a8=rq_online_fair, 0x914a8=rq_online_fair
+    字符串引用: 0x1657956='adreno_drawctxt_create', 0x1657990='&drawctxt->wq', 0x165799e='&drawctxt->waiting', 0x16579b1='&drawctxt->timeout', 0x1657956='adreno_drawctxt_create'
+  kgsl_mmu_set_svm_region @0x6df268 (下一个符号 0x6df2f8)
+    前5条: stp x29, x30, [sp, #-0x20]! | stp x20, x19, [sp, #0x10] | mov x29, sp | cmn x0, #0x150 | b.eq #0x6df2e0
+    bl/b 目标: 0x6d6bf0=kgsl_pwrctrl_adjust_pwrlevel, 0x6df2e4=?, 0x6df2e4=?
+  kgsl_memdesc_get_align: 符号不存在
+  kgsl_ioctl_gpuobj_alloc @0x6c91b8 (下一个符号 0x6c9260)
+    前5条: sub sp, sp, #0x70 | stp x29, x30, [sp, #0x40] | add x29, sp, #0x40 | str x21, [sp, #0x50] | stp x20, x19, [sp, #0x60]
+    bl/b 目标: 0x1283e0=blk_fill_rwbs, 0x121338=tracing_thresh_read, 0x121368=tracing_thresh_write, 0x1213f8=tracing_readme_read, 0x2efc0=cbc_decrypt
+  kgsl_ioctl_map_user_mem @0x6c8b10 (下一个符号 0x6c8bb8)
+    前5条: sub sp, sp, #0x70 | stp x29, x30, [sp, #0x40] | add x29, sp, #0x40 | str x21, [sp, #0x50] | stp x20, x19, [sp, #0x60]
+    bl/b 目标: 0x1283e0=blk_fill_rwbs, 0x121338=tracing_thresh_read, 0x121368=tracing_thresh_write, 0x1213f8=tracing_readme_read, 0x2efc0=cbc_decrypt
+
+=== 2. §11.2 反例复现：0x5bf650 起的 ADRP/ADD 字符串引用 ===
+    0x5bf69c add -> 0x161e55a  '&pwr->power_lock'
+    0x5bf6b8 add -> 0x15fd992  'clock-names'
+    0x5bf700 add -> 0x15fd992  'clock-names'
+    0x5bf7a0 add -> 0x161e582  'qcom,regulator-names'
+    0x5bf7f0 add -> 0x161e597  'qcom,deferred-regulator-disable-delay'
+    0x5bf820 add -> 0x161e582  'qcom,regulator-names'
+    0x5bf894 add -> 0x15f127b  'qcom,msm-bus,name'
+    0x5bf8f0 add -> 0x161e56b  "Couldn't get clock: %s"
+    0x5bf9a8 add -> 0x161e834  'arm_smmu_global_fault'
+    0x5bf9d0 add -> 0x161e834  'arm_smmu_global_fault'
+    0x5bfc8c add -> 0x161ea40  '__arm_smmu_tlb_sync'
+
+=== 3. arm_lpae_* / arm_smmu_* / io_pgtable 符号值分布 ===
+    arm_lpae_: 9 个, 值域 0x5be120..0x5bfd48
+      arm_lpae_free_pgtable@0x5be120, arm_lpae_alloc_pgtable@0x5be670, arm_lpae_map@0x5bf550, arm_lpae_map_sg@0x5bf650, arm_lpae_unmap@0x5bf938, arm_lpae_iova_to_phys@0x5bfa40
+    __arm_lpae_: 4 个, 值域 0x5be720..0x5bfe48
+      __arm_lpae_alloc_pages@0x5be720, __arm_lpae_map@0x5bfd38, __arm_lpae_unmap@0x5bfe10, __arm_lpae_free_pgtable@0x5bfe48
+    arm_smmu_: 70 个, 值域 0x5c87c0..0x20cb788
+      arm_smmu_power_on@0x5c87c0, arm_smmu_power_on_atomic@0x5c8c78, arm_smmu_power_off_slow@0x5c8d88, arm_smmu_power_off_atomic@0x5c9068, arm_smmu_device_dt_probe@0x5c91d8, arm_smmu_device_remove@0x5c9260
+    io_pgtable_: 11 个, 值域 0x5bd720..0x20caee0
+      io_pgtable_alloc_pages_exact@0x5bd720, io_pgtable_free_pages_exact@0x5bd9b0, io_pgtable_init@0x5bde90, io_pgtable_exit@0x5bdef8, io_pgtable_init_table@0x1203a80, io_pgtable_arm_64_lpae_s1_init_fns@0x1e3efa8
+    kgsl_memdesc_get_align: 0 个, 值域 -
+    kgsl_iommu_: 42 个, 值域 0x6e6198..0x1e530a0
+      kgsl_iommu_unmap_global_secure_pt_entry@0x6e6198, kgsl_iommu_map_global_secure_pt_entry@0x6e61f0, kgsl_iommu_get_qdss_global_entry@0x6e6270, kgsl_iommu_get_qtimer_global_entry@0x6e63c8, kgsl_iommu_probe@0x6e6670, kgsl_iommu_init@0x6e66a0
+
+=== 4. 与 0x10a6000 同值的符号 / vectors 附近符号 ===
+    值 0x10a6000: vclkdev_alloc/watchdog_kthread/store_sched_load_boost
+    值 0x6720: vectors
+    值 0x1189b88: sys_call_table
+    值 0x5bf650: arm_lpae_map_sg
+    kallsyms 0x6600..0x6900: __entry_text_start@0x6630, vectors@0x6720, el0_sync_invalid@0x67d0, el0_irq_invalid@0x68a8

@@ -1,0 +1,46 @@
+== open tests ==
+head: /dev/ashmem: Permission denied
+ashmem FAIL
+ion OK
+== trace readable? ==
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 0/0   #P:8
+#
+#                              _-----=> irqs-off
+#                             / _----=> need-resched
+#                            | /
+== trace_clock(读) ==
+[local] global counter uptime perf mono mono_raw boot
+== engineering app ==
+package:/system/system_ext/app/OppoEngineerMode/OppoEngineerMode.apk
+        398aaec com.oppo.engineermode/.network.MdSubSystemRestartService filter a9cdeb5 permission oppo.permission.OPPO_COMPONENT_SAFE
+Permissions:
+  Permission [com.oppo.engineermode.permissions.MY_BROADCAST] (6cc263f):
+    perm=Permission{c4dab0c com.oppo.engineermode.permissions.MY_BROADCAST}
+    userId=1000
+    versionName=V5.0
+    installPermissionsFixed=true
+    declared permissions:
+      com.oppo.engineermode.permissions.MY_BROADCAST: prot=signature|privileged, INSTALLED
+    requested permissions:
+      oppo.permission.OPPO_COMPONENT_SAFE
+      com.oppo.engineermode.permissions.MY_BROADCAST
+      oplus.permission.safe.radio.MODULE_REG
+      oplus.permission.safe.radio.MODULE_RF
+      Manifest.permission.WRITE_EMBEDDED_SUBSCRIPTIONS
+== logkit/onetrace/eid path ==
+com.coloros.logkit:
+package:/system/system_ext/app/LogKit/LogKit.apk
+com.oplus.onetrace:
+package:/system/system_ext/app/OTrace/OTrace.apk
+com.oplus.eid:
+package:/system/system_ext/app/EidService/EidService.apk
+== 已运行服务(工程/诊断) ==
+[init.svc.oplus.engineer-1-0]: [running]
+== selinux allow list 计数(可否读policy) ==
+total 0
+-rw-rw-rw-   1 root root      0 1970-01-01 08:00 access
+dr-xr-xr-x   2 root root      0 1970-01-01 08:00 avc
+dr-xr-xr-x   2 root root      0 1970-01-01 08:00 booleans
+-rw-r--r--   1 root root      0 1977-01-21 12:34 checkreqprot

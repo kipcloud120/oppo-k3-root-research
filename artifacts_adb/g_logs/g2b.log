@@ -1,0 +1,13 @@
+[525794.0ms] ===== G-2b start pid=11158 =====
+[525800.5ms] W: LOCK_PI(B) → 0 errno=0
+[525800.6ms] O: LOCK_PI(C) → 0 errno=0
+[525800.7ms] O: 进入 LOCK_PI(B)（预期阻塞）
+[525800.7ms] W: 进入 WAIT_REQUEUE_PI(A→C)
+[525907.6ms] R: CMP_REQUEUE_PI(A→C, 1)
+[525916.7ms] R: 返回 -1 errno=35 (Resource deadlock would occur)
+[525924.7ms] 前置达成：W 仍阻塞于 A，其 pi_blocked_on 应悬垂指向 C 的旧 waiter
+[525932.0ms] Y: 进入 LOCK_PI(C)（500ms 超时）
+[525933.0ms] Y: LOCK_PI(C) 返回 -1 errno=110 (Operation timed out)
+[525937.6ms] ---- 判定 ----
+[525938.0ms] verdict: 未成环 → W->pi_blocked_on 应为 NULL（悬垂已被清除）
+[525938.9ms] 结束（不做清理性 PI 操作）

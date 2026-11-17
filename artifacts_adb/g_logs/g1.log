@@ -1,0 +1,44 @@
+[406864.4ms] ===== G-1 start pid=11006 =====
+[406869.9ms] O: LOCK_PI(C) → 0 errno=0
+[406869.9ms] W: LOCK_PI(B) → 0 errno=0
+[406870.1ms] O: 进入 LOCK_PI(B)（预期阻塞）
+[406870.1ms] W: 进入 WAIT_REQUEUE_PI(A→C)（rt_waiter 在内核栈上）
+[406871.0ms] 同步完成: b_held=1 c_held=1 o_blocked=1 w_waiting=1
+[406973.4ms] R: 进入 CMP_REQUEUE_PI(A→C, nr_wake=1) —— 预期 -EDEADLK
+[406983.2ms] R: CMP_REQUEUE_PI 返回 -1 errno=35 (Resource deadlock would occur)
+[406986.4ms] ---- 判定 ----
+[406986.6ms] verdict: 命中 -EDEADLK 回滚点 → remove_waiter 已在错误上下文执行
+[406986.7ms] 立即退出，不做任何后续 PI 操作
+[417054.9ms] ===== G-1 start pid=11028 =====
+[417056.9ms] W: LOCK_PI(B) → 0 errno=0
+[417056.9ms] O: LOCK_PI(C) → 0 errno=0
+[417057.1ms] O: 进入 LOCK_PI(B)（预期阻塞）
+[417057.1ms] W: 进入 WAIT_REQUEUE_PI(A→C)（rt_waiter 在内核栈上）
+[417058.0ms] 同步完成: b_held=1 c_held=1 o_blocked=1 w_waiting=1
+[417166.3ms] R: 进入 CMP_REQUEUE_PI(A→C, nr_wake=1) —— 预期 -EDEADLK
+[417174.7ms] R: CMP_REQUEUE_PI 返回 -1 errno=35 (Resource deadlock would occur)
+[417177.6ms] ---- 判定 ----
+[417177.7ms] verdict: 命中 -EDEADLK 回滚点 → remove_waiter 已在错误上下文执行
+[417177.7ms] 立即退出，不做任何后续 PI 操作
+[417423.7ms] ===== G-1 start pid=11037 =====
+[417427.0ms] W: LOCK_PI(B) → 0 errno=0
+[417427.1ms] O: LOCK_PI(C) → 0 errno=0
+[417427.2ms] W: 进入 WAIT_REQUEUE_PI(A→C)（rt_waiter 在内核栈上）
+[417427.2ms] O: 进入 LOCK_PI(B)（预期阻塞）
+[417428.1ms] 同步完成: b_held=1 c_held=1 o_blocked=1 w_waiting=1
+[417530.7ms] R: 进入 CMP_REQUEUE_PI(A→C, nr_wake=1) —— 预期 -EDEADLK
+[417537.4ms] R: CMP_REQUEUE_PI 返回 -1 errno=35 (Resource deadlock would occur)
+[417542.1ms] ---- 判定 ----
+[417542.5ms] verdict: 命中 -EDEADLK 回滚点 → remove_waiter 已在错误上下文执行
+[417542.8ms] 立即退出，不做任何后续 PI 操作
+[417772.4ms] ===== G-1 start pid=11046 =====
+[417775.8ms] W: LOCK_PI(B) → 0 errno=0
+[417775.8ms] O: LOCK_PI(C) → 0 errno=0
+[417775.9ms] O: 进入 LOCK_PI(B)（预期阻塞）
+[417775.9ms] W: 进入 WAIT_REQUEUE_PI(A→C)（rt_waiter 在内核栈上）
+[417776.9ms] 同步完成: b_held=1 c_held=1 o_blocked=1 w_waiting=1
+[417879.4ms] R: 进入 CMP_REQUEUE_PI(A→C, nr_wake=1) —— 预期 -EDEADLK
+[417887.5ms] R: CMP_REQUEUE_PI 返回 -1 errno=35 (Resource deadlock would occur)
+[417890.7ms] ---- 判定 ----
+[417891.0ms] verdict: 命中 -EDEADLK 回滚点 → remove_waiter 已在错误上下文执行
+[417891.1ms] 立即退出，不做任何后续 PI 操作

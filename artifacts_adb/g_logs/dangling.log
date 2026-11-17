@@ -1,0 +1,14 @@
+[161985.0ms] ===== dangling test start pid=9733 =====
+[162017.0ms] UAF id=1 size=0x10004000 / OVERLAP id=2 size=0x7000
+[162022.3ms] [1-3] UAF mmap+touch+munmap OK
+[162022.5ms] BOGUS VMA + PLACEHOLDER OK
+[162023.6ms] racer 返回 ret=-1 errno=12
+[162026.4ms] [4] 主线程 mmap OVERLAP
+[162026.5ms] [4] OVERLAP mmap → FAIL errno=12 (Out of memory)
+[162030.6ms] [5] GPUOBJ_FREE(UAF) —— 若首 PTE 已被清零，unmap 会提前退出留下悬垂 PTE
+[162087.1ms] [5] free OK
+[162089.0ms] [6] 在原 UAF 内部 0x700200000 新建并 mmap（判据：失败 ENOMEM = 悬垂 PTE 存在）
+[162089.1ms] [6] new mmap → OK errno=12 (Out of memory)
+[162091.2ms] ---- 判定 ----
+[162091.3ms] verdict: 无残留 PTE → 漏洞路径未生效（需重新设计触发）
+[162093.3ms] ===== end =====

@@ -1,0 +1,9 @@
+[795806.9ms] ===== G-3b start pid=11662 =====
+[795828.6ms] O: LOCK_PI(B)（阻塞，形成环）
+[795828.6ms] W: WAIT_REQUEUE_PI(A→C) 带 600ms 超时
+[795930.0ms] [1] CMP_REQUEUE_PI(A→C,1) → -1 errno=35 (Resource deadlock would occur)
+[795938.2ms] [2] 等待 W 的 600ms 超时到期（早退分支，无 remove_waiter）
+[796429.3ms] W: 返回 -1 errno=110 (Operation timed out) ← 栈帧此刻起失效
+[796430.1ms] [2] W 已返回 ret=-1 errno=110 (Operation timed out) ← 栈帧已弹出
+[796439.8ms] W2: WAIT_REQUEUE_PI(A2→C)
+[796591.2ms] [3] oracle: CMP_REQUEUE_PI(A2→C,1)
