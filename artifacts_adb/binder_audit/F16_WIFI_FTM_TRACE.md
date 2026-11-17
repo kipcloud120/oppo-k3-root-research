@@ -434,11 +434,35 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
 | 无令牌 | ✗ |
 | 各种双令牌排列（4 种） | ✗ |
 
-**唯一还没试的候选**（从 jar 内字符串取得，此前没想到）：
-`vendor.oplus.hardware.wifi@1.1::IOppoWifiService`
+### 9.4.1 设备重连后补测（2026-11-17 19:0x，共 16 次只读探测）
 
-**2026-11-17 19:0x 执行该探测时设备断开**（`adb devices` 为空，daemon 重启后仍无设备），
-因此这一条留待设备重连后**验证一次**即可，不再扩展候选集（继续加候选就是猜了）。
+| # | 构造 | 结果 |
+|---|---|---|
+| 12 | `10069` + `vendor.oplus.hardware.wifi@1.1::IOppoWifiService` | SecurityException |
+| 13 | `10069` + `IWifiManager` + `IOplusWifiP2pManager` | SecurityException |
+| 14 | `10069` + `IWifiManager` + HIDL 描述符 | SecurityException |
+| 15 | `10069` + 前置 `i32 0` + `IOplusWifiManager`（strict-mode 头假设） | SecurityException |
+| 16 | `10069` + `IWifiManager`（复测） | SecurityException |
+
+**关键对照（本轮新增，最有信息量的一条）**：
+
+| 构造 | 结果 | 含义 |
+|---|---|---|
+| `wifi` tx **1** + 垃圾令牌 `s16 GARBAGE` | **正常返回数据** | `wifi` 服务的 AOSP 分支**不校验令牌** |
+| `iphonesubinfo` tx 1 + 垃圾令牌 | **正常返回 IMEI** | 本机 `Parcel.enforceInterface` 在多数进程是**宽松**的 |
+| `wifi` **9999 / 10999 / 12000** + 令牌 | **`Parcel(Error: ... "Not a data message")`** | 这些 code **没有处理器**（返回 false，回包为空） |
+| `wifi` **10069** + 任意令牌 | **SecurityException** | 10069 **有处理器**，且它**主动抛异常** |
+
+⇒ 三点确定：
+1. **10069 确实是一个已实现的事务**（不是死号），入口就在 §9.2 的分派上；
+2. 抛异常的动作发生在**该分支内部**，而不是在 `super.onTransact` 或全局门禁——否则越界 code 也会同样抛；
+3. 同一服务上 AOSP 事务对垃圾令牌毫无反应 ⇒ **拒绝不是"令牌不匹配"这么简单的机制**：
+   要么该分支用的是我们尚未枚举到的字符串，要么是服务端在该进程内对 `enforceInterface` 的严格性不同。
+
+**结论：P0 的动态验证被"AIBinder 调用方 ABI"卡住，不是被授权卡住。** 16 次探测已穷尽 `service call`
+能表达的构造（单令牌 5 种、双令牌 6 种、前置 int、无参、越界对照）。再往下只有一条路：
+用**真实 Java 客户端**（`android.net.wifi.OplusWifiManager` 或等价的 Parcel 构造）发起调用——
+本机没有 JDK/d8，无法把 `.java` 编成 dex，**这是工具链限制，不是目标限制**。
 
 ### 9.5 P0 的净结论（截至设备断开）
 

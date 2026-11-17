@@ -926,8 +926,12 @@ python tools/sdat2img.py <transfer.list> out.dat vendor.img
 - **不存在 uid 门禁**：helper 的 798 条指令里 `getCallingUid()` 只出现 1 次，且仅用于拼日志
   （`"APP enable sta2 in OplusWifiTranscation: ... uid ="`），不参与分支；每个分支只有
   `enforceInterface(常量字符串)` 这一道校验。
-- **剩下一跳**：描述符字符串仍未匹配（4 类候选 + 5 种排列全失败）。唯一未测候选是
-  `vendor.oplus.hardware.wifi@1.1::IOppoWifiService`，**执行时设备断开**，留待重连后验证一次。
+- **剩下一跳**：设备重连后补测 5 次（HIDL 描述符、IWifiManager+P2p、前置 i32 等），**全部失败**，累计 16 次探测。
+  关键新增对照：`wifi` tx1 对**垃圾令牌**照常返回、越界 code（9999/10999/12000）返回
+  `"Not a data message"`（无处理器），只有 10069 **主动抛异常** ⇒ 该 code 确有处理器，
+  抛异常动作在其分支内部，**不是全局门禁**。
+  ⇒ 动态验证被**调用方 ABI**（`service call` 能表达的 Parcel 构造）卡住，**不是被授权卡住**；
+  再往下必须用真实 Java 客户端，而本机无 JDK/d8。
 
 **判定：门禁是"接口描述符"而非 uid（静态证据一致），但"可达"仍记为未证**——没有一次成功调用就不算。
 详见 `F16_WIFI_FTM_TRACE.md` §9。
