@@ -373,3 +373,82 @@ slot6 0xa0dc  slot7 0xa568  slot8 0xa898  slot9 0xb2ec  slot10 0xb65c
 
 **这就是 P1 的终点：线索真实、危害真实，但入口在 shell 之外。** 继续投入的唯一理由是找到 system 上下文的执行点，
 而那属于另一个攻击面（§14 的 7 个未覆盖服务），不属于本条。
+
+---
+
+## 9. P0 追加：找到真实分派代码（2026-11-17 19:0x，静态）
+
+审核意见 v002 的 P0 是"找到 wifi Binder 服务的真实 onTransact 分派代码，确认 10069/10070 的外层描述符和 UID 门禁"。**找到了。**
+
+### 9.1 定位方法：ext4 偏移 → 文件路径
+
+`WifiServiceImpl` 不在 `services.jar`、也不在任何 wifi 相关 jar 里。用新增的 `tools/ext4_find_offset.py`
+把镜像内 grep 到的字符串偏移（`0xf009d7e`）反查回文件：
+
+```
+block_size=4096 inodes=315744 groups=39 target_block=61449
+OWNER: inode=74  path=/system/apex/com.android.wifi.apex   size=5,479,952
+```
+
+**Wi-Fi 服务在 APEX 里**（Android 模块化）：
+
+```
+com.android.wifi.apex → apex_payload.img (ext4) → javalib/service-wifi.jar (3.8 MB)
+                     → com/android/server/wifi/WifiServiceImpl.class
+```
+
+### 9.2 真实分派（`WifiServiceImpl.onTransact`，18 条指令）
+
+```java
+@Override
+public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
+    if (super.onTransact(code, data, reply, flags))      // ① AOSP IWifiManager$Stub 先跑
+        return true;
+    IWifiTransactionHelper h =
+        ((IWifiInjectManager) OplusFeatureCache.getOrCreate(IWifiInjectManager.DEFAULT, new Object[0]))
+            .getTransactionHelper();                      // ② OPPO 侧 helper
+    return h.onTransact(code, data, reply, flags);        // ③ 未知 code 落到这里
+}
+```
+
+⇒ **10069/10070 走的就是 §7 分析的那个 `OplusWifiTransactionHelper.onTransact`（798 条指令）**，
+之前的静态结论成立，且**外层没有额外的 uid 拦截**：`super.onTransact` 对未知 code 返回 `false`（不抛异常、
+不读 parcel），直接进 helper。
+
+### 9.3 关于"UID 门禁"的最终判定
+
+- helper 的 798 条指令里，`Binder.getCallingUid()` **只出现 1 次**（idx 98），用途是**拼日志**
+  （`"APP enable sta2 in OplusWifiTranscation: "` + 返回值 + `", uid ="` + uid），**不参与任何分支判定**；
+- 每个分支的第一条语句都是 `Parcel.enforceInterface(常量字符串)`，**这是唯一的校验**；
+- 因此：**不存在 uid 门禁。拒绝只能来自描述符字符串不匹配。**
+
+### 9.4 但描述符仍对不上（未完成的那一跳）
+
+已排除（全部服务端抛 `SecurityException`）：
+
+| 候选描述符 | 结果 |
+|---|---|
+| `android.net.wifi.IOplusWifiManager` | ✗ |
+| `android.net.wifi.IOplusWifiP2pManager` | ✗ |
+| `com.android.server.wifi.interfaces.IWifiTransactionHelper` | ✗ |
+| 无令牌 | ✗ |
+| 各种双令牌排列（4 种） | ✗ |
+
+**唯一还没试的候选**（从 jar 内字符串取得，此前没想到）：
+`vendor.oplus.hardware.wifi@1.1::IOppoWifiService`
+
+**2026-11-17 19:0x 执行该探测时设备断开**（`adb devices` 为空，daemon 重启后仍无设备），
+因此这一条留待设备重连后**验证一次**即可，不再扩展候选集（继续加候选就是猜了）。
+
+### 9.5 P0 的净结论（截至设备断开）
+
+| 问题 | 状态 |
+|---|---|
+| 真实 onTransact 分派在哪 | **已定位**：`service-wifi.jar` → `WifiServiceImpl.onTransact` → `IWifiTransactionHelper.onTransact` |
+| 是否有外层 uid 门禁 | **没有**（唯一 `getCallingUid` 只用于日志） |
+| 10069/10070 的描述符 | **未确定**：4 类候选 + 5 种排列全部失败，剩 1 个候选未测 |
+| 若该候选成立意味着什么 | 校验只剩"知道一个公开字符串" ⇒ 任意本地进程可调用 ⇒ **root 上下文命令执行可用** |
+| 若该候选也不成立 | 说明障碍在 parcel 构造细节（需用真实客户端复现），而非授权 |
+
+**结论的先验概率**：由于 helper 内确实没有 uid 判断，"描述符即唯一门限"与静态证据一致；
+但**在拿到一次成功调用之前，仍然只能记为"未证"**——这条纪律本轮已经吃过两次教训（§8.2）。

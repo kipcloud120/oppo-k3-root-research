@@ -3,7 +3,7 @@
 | 项 | 值 |
 |---|---|
 | 版本 | **v2.6（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 更正块 + §15 = GhostLock 复核与静态收束，**§16 = OPPO Wi-Fi 私有事务面（root 服务实证 + 可达性实测否定）**。下次会话从本文件 + `GHOSTLOCK_RESCAN.md` + `GHOSTLOCK_NUL_ANALYSIS.md` + `F16_WIFI_FTM_TRACE.md` 直接接手 |
-| 状态 | **整体 no-go。** 四个内核面判定不可达；GhostLock「载体已闭合、缺一次内核地址泄露」；P1 Wi-Fi 私有事务面「root HIDL 服务 + 无调用者鉴权 + 入参直通 `sh -c`」已证，但**实测从 shell 不可达**（11 次探测 + 2 组对照），入口在 shell 之外（§5.2.4 更正块 + §15 + `F16_WIFI_FTM_TRACE.md` §8）
+| 状态 | **整体 no-go。** 四个内核面判定不可达；GhostLock「载体已闭合、缺一次内核地址泄露」；P1 Wi-Fi 私有事务面「root HIDL 服务 + 无调用者鉴权 + 入参直通 `sh -c`」已证；**外层分派已定位到 `service-wifi.jar` 的 `WifiServiceImpl.onTransact`，且确认无 uid 门禁、唯一校验是接口描述符**；描述符仍未匹配（剩 1 个候选待设备重连验证）（§5.2.4 + §15 + §16 + `F16_WIFI_FTM_TRACE.md` §9）
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14、§15 全程只读 |
@@ -910,3 +910,22 @@ python tools/sdat2img.py <transfer.list> out.dat vendor.img
 ```
 
 分析脚本：`tools/find_service_reg.py`（dex 内定位服务名/注册点/onTransact 分派，含 androguard hiddenapi 解析绕过）。
+
+### 16.8 追加：外层分派已定位（2026-11-17 19:0x，静态；设备中途断开）
+
+审核意见 v002 的 P0（"找到 wifi Binder 的真实 onTransact 分派"）**已完成静态部分**：
+
+- **Wi-Fi 服务在 APEX 里**，不在 `services.jar`。用 `tools/ext4_find_offset.py` 把镜像内偏移
+  `0xf009d7e` 反查回 `/system/apex/com.android.wifi.apex` → `apex_payload.img` → `javalib/service-wifi.jar`。
+- `com.android.server.wifi.WifiServiceImpl.onTransact` 只有 **18 条指令**：
+  `if (super.onTransact(...)) return true;` 否则
+  `((IWifiInjectManager) OplusFeatureCache.getOrCreate(IWifiInjectManager.DEFAULT, ...)).getTransactionHelper().onTransact(code, data, reply, flags)`。
+  ⇒ **10069/10070 确实落到 §16.2 那个 helper**，外层没有额外拦截。
+- **不存在 uid 门禁**：helper 的 798 条指令里 `getCallingUid()` 只出现 1 次，且仅用于拼日志
+  （`"APP enable sta2 in OplusWifiTranscation: ... uid ="`），不参与分支；每个分支只有
+  `enforceInterface(常量字符串)` 这一道校验。
+- **剩下一跳**：描述符字符串仍未匹配（4 类候选 + 5 种排列全失败）。唯一未测候选是
+  `vendor.oplus.hardware.wifi@1.1::IOppoWifiService`，**执行时设备断开**，留待重连后验证一次。
+
+**判定：门禁是"接口描述符"而非 uid（静态证据一致），但"可达"仍记为未证**——没有一次成功调用就不算。
+详见 `F16_WIFI_FTM_TRACE.md` §9。

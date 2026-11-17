@@ -10,7 +10,7 @@
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
 | 结论 | **no-go**。四个候选面不可达（3 个机制成立但缺关键原语，1 个漏洞未引入，1 个被双重封闭）；GhostLock 的栈载体已找到，缺口推进到"缺一次内核地址泄露" |
 | 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**7 个未覆盖服务为已知未闭合项，不宣称穷尽** |
-| Wi-Fi 私有事务面 | 查到 `executeDriverCommand(String)` → **`user root` 的 HIDL 服务** → `sh -c`（入参直通，**已证**）；但 `wifi` binder 的 `code≥10069` **只对 system_uid 开放**，11 次只读探测 + 2 组对照证实 shell 不可达 |
+| Wi-Fi 私有事务面 | 查到 `executeDriverCommand(String)` → **`user root` 的 HIDL 服务** → `sh -c`（入参直通，**已证**）；外层分派已定位到 APEX 内 `service-wifi.jar` 的 `WifiServiceImpl.onTransact`，**无 uid 门禁、唯一校验是接口描述符**，该描述符尚未匹配（11 次探测 + 2 组对照全失败） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未 root**；累计 5 次内核重启（均为前期竞态实验） |
 
 ---
@@ -107,7 +107,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 | 对照：`service call wifi 1`（AOSP 事务） | 正常返回 |
 | 对照：`service call iphonesubinfo 1`（AIDL 需令牌） | 正常返回 IMEI |
 
-对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。⇒ 私有事务号只对 system_uid 开放，而拿到 system 上下文本身就是 root 的前置——**循环**。
+对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。后来把服务实现从 APEX（`/system/apex/com.android.wifi.apex` → `javalib/service-wifi.jar`）里挖出来，确认 `WifiServiceImpl.onTransact` 只有 18 条指令：先跑 AOSP stub，失败就转给 OPPO helper；而 helper 里唯一一处 `getCallingUid()` 只用来**拼日志**——**没有 uid 门禁**，唯一校验是 `enforceInterface(常量字符串)`。也就是说：**不是权限拦住了，是一个字符串还没对上**（剩 1 个候选待验证）。
 
 > 教训（两次自我推翻都记在 `HANDOVER.md` §16.5）：**报文类型不能反推门禁类型**。"没有 `Permission Denial`" 曾被读成"拒绝不在授权层"，实际厂商完全可以用 `enforceInterface` 的报文掩盖 uid 门禁。
 
@@ -138,6 +138,7 @@ tools/                      # Python 分析器 + C 实验程序（触发器与�
 ├── gl_nul_analysis.py      # 载体成立之后：NUL 语义 / 栈写区间 / 72B 字节映射
 ├── find_service_reg.py     # dex 内定位服务名/注册点/onTransact 分派（含 androguard hiddenapi 绕过）
 ├── ota_entry_range.py      # 只读 OTA ZIP 中央目录，算出任意条目的字节区间（不下整包）
+├── ext4_find_offset.py     # 把 image 内字节偏移反查回文件路径（找 APEX 里的 jar 就靠它）
 ├── f16_rtmux_49_layout.py  # 4.9 rtmutex/futex 结构体布局（离线复算 waiter=72B）
 ├── f16_layout_v2.py        # task_struct 布局引擎（含 slab 校准）
 ├── g1_edeadlk.c → g3c_v7.c # 三锁环触发 + 三段式换向 + A′ 活帧对照
