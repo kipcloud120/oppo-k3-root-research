@@ -2,12 +2,13 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.2（结项版 + Binder 面审计完整闭合）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文，§14 为同日新增并完成五轮的 Binder 面审计 |
-| 状态 | **已结项（no-go）**：四类组件、五个候选面全部判定完毕；§14 追加审计的 Binder 服务面亦基本否证，结论不变 |
+| 版本 | **v2.3（Binder 面闭合 + GhostLock 判定更正）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文；§14 为 Binder 五轮审计，§5.2 更正块为同日 GhostLock 复核 |
+| 状态 | **整体仍 no-go，但 GhostLock 面由"判死"改为"载体候选已找到、可利用性待验证"**（§5.2.4 更正块）；Binder 面五轮后确定否证（§14）。**不再是无条件结项**——GhostLock 需受控实验才能恢复 no-go |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
-| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 全程只读 |
-| Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮结论：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库**，脚本与报告已提交 |
+| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 与 GhostLock 复核全程只读 |
+| Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
+| GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选；待验证）；修正脚本 `tools/gl_carrier_rescan.py` |
 
 ---
 
@@ -44,7 +45,7 @@
 | 面 | 机制是否成立 | 卡点 | 章节 |
 |---|---|---|---|
 | **KGSL** CVE-2023-33107 | 成立（源码级 pre-fix 确定） | `arm_lpae_init_pte()` 的 `BUG_ON(!suppress_map_failures)`，该静态变量运行期恒 false ⇒ 进入缺陷路径即 `BUG()` panic，无中间状态可用 | §5.1 |
-| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现） | **无栈覆盖载体**：waiter 位于 `-0x288`，397 个 syscall 入口全扫、0 命中（合格带仅 54 字节宽，落在"浅 syscall"与"select 家族"之间的死区） | §5.2 |
+| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现） | **【2026-11-17 更正】原"全扫 0 命中"因扫描器判重 bug 漏报而作废**：修正后发现 3 条 xattr 栈覆盖候选；公开 select 路线仍不成立，但可利用性待验证，面从"判死"降为"待验证" | §5.2 + `GHOSTLOCK_RESCAN.md` |
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
@@ -290,6 +291,18 @@ waiter 绝对位置      = -(0x110 + 0x070 + 0x1f0) + 0xE8 = -0x288   [占 -0x28
 
 **为什么这条缺口是结构性的**：栈槽内容只能由内核写（`task`/`lock`/`prio` 均为内核按自身逻辑写入的值），本身不构成写原语；`PAN`/`UAO` 开启排除用户态伪造 `rt_mutex`；`kmalloc-128` 外部喷堆原语在本机不存在（`SYSVIPC` 未编译；`setxattr` 2000 次仅 33 次成功且 `kmalloc-128` delta = 0）。**"缺的正好是一个本机不存在的原语"**——这是不可利用性判定与"还没试出来"的本质区别。
 
+> ⚠️ **2026-11-17 更正：上述"无栈覆盖载体/不可利用"判定作废（依据见 `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`）。**
+> 审核意见指出 `gl_carrier_scan.py` 的 `seen` 以函数名为唯一键全局共享，丢失不同调用路径的累计栈帧上下文。
+> 复核证实：原口径跳过 18,691 次中 **18,074 次是不同累计帧上下文**；且 `COPY_PREFIX` 遗漏
+> `strncpy_from_user` 等原语。修正后从"0 命中"变为 **3 条满足几何判据的栈覆盖候选**：
+> `SyS_fgetxattr→getxattr`（d-buf=0x298, size=256, waiter 起点偏移 0x10）、
+> `SyS_getxattr→getxattr`（0x2c8）、`SyS_setxattr→setxattr`（0x2e8）——均经
+> `add x0,sp,#8; mov w2,#0x100; bl strncpy_from_user` 把用户串写到栈上。
+> **判定更新：从"不可利用(no-go)"降级为"公开 select/pselect 路线不成立，但 xattr 栈覆盖候选已找到、
+> 可利用性待验证"**。待验证项：栈重生时机（W 超时早退后是否复用同一栈槽进入 xattr）、
+> NUL 截断能否构造合法 fake waiter、内核局部量是否覆写、深度>3 未穷尽。
+> **"397/0/66"不再是穷尽证明；原版脚本保留为历史基线，修正版为 `tools/gl_carrier_rescan.py`。**
+
 #### 5.2.5 过程中的两个方法论产出
 
 1. **无创状态 oracle**：对 PI futex 发 `FUTEX_WAKE(f,1)`，返回 `EINVAL` = 有已入队 PI waiter（且在唤醒前 `break`，零副作用），返回 `0` = 无。`futex_wake()` 源码即 `if (this->pi_state || this->rt_waiter) { ret = -EINVAL; break; }`。**用一个 syscall 的返回值替代一次设备重启。**
@@ -429,7 +442,8 @@ ENOTTY（未实现）3833
 | "窗口 ≤10 ms 即安全"（v1 §21.24） | **否证** | v6 在 0.05 ms 窗口下同样 panic；真正变量是**帧是否已死** |
 | "`rtmutex.c:627` 无界 trylock 重试解释'不返回'" | **修正（补前提）** | trylock 无界重试本身成立，但必须先有"守卫退化"这一步：`next_lock` 与 `waiter->lock` 同源（`rtmutex.c:422`）⇒ `:579` 的 `next_lock != waiter->lock` 恒为假，任何被污染的 `lock` 都被接受。缺此前提时，若 `lock != next_lock` 本会在 `:579` 干净退出并返回 0 |
 | "G-3b 的'不返回' = 槽被复用成普通垃圾" | **修正** | 槽内 `lock` 指向已 `kfree` 的 `rt_mutex`，`wait_lock` 读到释放后内存 |
-| "GhostLock 卡在'缺 `kmalloc-128` 喷堆原语'"（v1 §22） | **理由作废** | 正确的问题是"能否用栈内缓冲区覆盖栈帧"，不是堆喷。结论（不可利用）不变，但原因改为"无栈覆盖载体" |
+| "GhostLock 卡在'缺 `kmalloc-128` 喷堆原语'"（v1 §22） | **理由作废** | 正确的问题是"能否用栈内缓冲区覆盖栈帧"，不是堆喷 |
+| "GhostLock 无栈覆盖载体、397 入口全扫 0 命中"（v2 §5.2.4） | **2026-11-17 作废** | 扫描器 `seen` 函数名判重漏报 18,074 个不同上下文 + `COPY_PREFIX` 漏 `strncpy_from_user`。修正后发现 3 条 xattr 栈覆盖候选。详见 `GHOSTLOCK_RESCAN.md` |
 | "`PR_SET_MM_MAP`/`user_auxv` 是可用载体" | **本机不适用** | `CONFIG_CHECKPOINT_RESTORE` 未设置 ⇒ 直接 `-EINVAL` |
 | "`TRYLOCK_PI` 可探 `rt_mutex.owner`" | **作废** | 只按 futex 字值查找，必然 `EAGAIN` |
 | "`src_ref/futex_4.9/` 是 4.9 源码" | **作废** | 实为 ~v4.20；`rt_mutex_waiter` 72 vs 80、`rt_mutex_futex_unlock(lock, wake_q)` |
@@ -444,7 +458,10 @@ ENOTTY（未实现）3833
 出现或触发**任一条**即须重评；否则"再试一次同样的构造"不会改变结论。
 
 1. 出现**面向 4.9 / arm64 ticket spinlock 的 UAF 原语**研究 ⇒ binder 线可直接接上（靶点、pre-fix 证据、堆条件已备，§5.3.2）。
-2. 出现能把用户数据写到 **`[-0x288, -0x240)`** 的**新 syscall / 驱动 ioctl**（含内核升级带入的新入口）⇒ GhostLock 线可直接接上。
+2. ~~出现能把用户数据写到 `[-0x288, -0x240)` 的新 syscall~~ **【2026-11-17 已命中，见 §5.2.4 更正块】**：
+   `SyS_fgetxattr/getxattr/setxattr` 经 `strncpy_from_user` 写栈 256 B，几何满足。
+   下一步不是"找新载体"，而是验证**栈重生时机 + NUL 截断下的 fake waiter 构造 + 内核局部量是否覆写**；
+   这三条任一否证才恢复 no-go，任一通过则 GhostLock 线真正重开。**需受控上机实验（先登记判据，用户授权）。**
 3. 设备 **SPL 或内核构建发生变化** ⇒ 帧几何、binder 形态、全部符号偏移同时改变，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 中任一个 ⇒ 可定位 GhostLock panic 的精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线（例如改用 `sched_setattr` 之外的链遍历入口）。
@@ -585,18 +602,19 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 | 10 | 4.9 源码保真性修正 | `rt_mutex_waiter` 80→72；G-3b 挂起根因定为"退化守卫 + 无界 trylock"；设计三段式 C1 |
 | 11 | C1 首次上机 | `[5]`/`[10]` 均 `-EDEADLK`（换向写入成立）；`[12]` 崩溃 3/3；`-EDEADLK` 会销毁 `pi_state` 的模型被提出 |
 | 12 | 窗口量化 + 亚毫秒版 | 证明窗口不是变量（0.05 ms 仍 panic）；提出 W1/W2 → 随即被自身探针否证 |
-| 13 | 探针判定 + A′ 活帧对照 | **A′ 证明"换向 + 走查"形态成立，panic 只由"帧已死"引起**；载体扫描 397 入口 0 命中 → GhostLock 收束 |
+| 13 | 探针判定 + A′ 活帧对照 | **A′ 证明"换向 + 走查"形态成立，panic 只由"帧已死"引起**；载体扫描 397 入口 0 命中 → GhostLock 收束【**2026-11-17 更正：该 0 命中因扫描器判重 bug 漏报而作废，见 §5.2.4 更正块**】 |
 | — | 补丁窗口扫描 + binder | 20938 未引入；20421 pre-fix 但 ticket 锁无原语；FastRPC 双重封闭 |
 
 ---
 
 ## 13. 一句话交接
 
-> 五个候选面、13 轮工作，缺陷与触发多次被证实是真的；**每一面都停在一个可命名的缺口上**——
-> KGSL 停在 `BUG_ON`（进入即 panic，没有中间态），GhostLock 停在"54 字节的栈覆盖窗口在本机构建下不存在"，
-> binder 停在"ticket spinlock 只给 +0x00010001"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"。
-> 这不是"没试够"，是本机权限模型与代码形态共同决定的 no-go。
-> 若将来要重开，**不要重复同样的构造**，只看 §7 的六条触发条件。
+> 五个候选面、13 轮工作，缺陷与触发多次被证实是真的；KGSL 停在 `BUG_ON`（进入即 panic，没有中间态），
+> binder 内核CVE 停在"ticket spinlock 只给 +0x00010001"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"——
+> 这三面是本机权限模型与代码形态共同决定的 no-go。Binder 服务面（§14）五轮审计后确定否证。
+> ⚠️ **GhostLock 的判定已于 2026-11-17 更正**：原"54 字节窗口不存在/全扫 0 命中"是扫描器判重 bug 漏报，
+> 修正后发现 3 条 xattr 栈覆盖候选（§5.2.4 更正块、`GHOSTLOCK_RESCAN.md`），现为"载体候选已找到、
+> 可利用性待验证"，**需受控实验才能恢复 no-go**。若继续，不要重复同样的构造，只看 §7 的触发条件（第 2 条已更新）。
 
 ---
 
