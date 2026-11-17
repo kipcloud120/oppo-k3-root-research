@@ -83,7 +83,7 @@ d = 0x110 + Σ(调用链帧)          # 到缓冲区的深度
 HANDOVER.md                 # 主文档：结论页 + 逐面论证 + 关键常数 + 重开条件
 README.md                   # 本文件
 LICENSE                     # MIT（代码）/ CC BY 4.0（文档）
-tools/                      # 55 个文件：25 个 Python 分析器 + 28 个 C 实验程序
+tools/                      # 53 个文件：25 个 Python 分析器 + 28 个 C 实验程序
 ├── gl_frame_calc.py        # 帧几何计算（读 vmlinux.elf，输出 waiter 绝对偏移）
 ├── gl_carrier_scan.py      # 397 个 syscall 入口的载体扫描
 ├── f16_rtmux_49_layout.py  # 4.9 rtmutex/futex 结构体布局（离线复算 waiter=72B）
