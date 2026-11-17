@@ -2,12 +2,12 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.1（结项版 + Binder 面审计增补）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文，§14 为同日新增的 Binder 面审计 |
+| 版本 | **v2.2（结项版 + Binder 面审计完整闭合）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文，§14 为同日新增并完成五轮的 Binder 面审计 |
 | 状态 | **已结项（no-go）**：四类组件、五个候选面全部判定完毕；§14 追加审计的 Binder 服务面亦基本否证，结论不变 |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 全程只读 |
-| Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（四轮结论）；**厂商二进制不入库**，脚本与报告已提交 |
+| Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮结论：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库**，脚本与报告已提交 |
 
 ---
 
@@ -21,7 +21,7 @@
 | 接手继续做 | §1 → §2（基线）→ §5（逐面）→ §7（重开条件）→ §8（关键常数） |
 | 复核某个判断 | §5 对应小节 + §6 负知识清单 + `artifacts_adb/` 原始日志 |
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
-| Binder 服务面（§4 唯一未闭合面）| **§14**（四轮审计：28/35 覆盖、atlas 线索从发现到否证、结论仍 no-go）|
+| Binder 服务面（§4 唯一未闭合面）| **§14**（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合确定否证、结论仍 no-go）|
 
 **三条硬规则**
 
@@ -602,9 +602,9 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 
 ## 14. 增补：Binder 服务面审计（2026-11-17，§7 第 6 条触发）
 
-> 本节执行并闭合了 §4 标注的"唯一未闭合未知面"。完整过程、字节码证据与四轮报告见
-> `artifacts_adb/binder_audit/AUDIT_REPORT.md`（脚本与文本报告入库；**厂商 jar/apk/so/dex 不入库**，
-> 读者从自己设备 `adb pull` 后用同目录脚本本地重跑）。
+> 本节执行并闭合了 §4 标注的"唯一未闭合未知面"。完整过程、字节码证据与五轮报告见
+> `artifacts_adb/binder_audit/AUDIT_REPORT.md`（脚本与文本报告入库；**厂商 jar/apk/so/dex/系统镜像不入库**，
+> 读者从自己设备 `adb pull` 或 OTA 重建后用同目录脚本本地重跑）。
 
 **触发**：`docs_archive/审核意见CHATGPT.txt` 主张把"OPPO 私有 Binder 服务审计"提升 P0，
 以 CVE-2026-70386（OnePlus atlasservice 未授权 → root 命令执行）等为历史证据。
@@ -619,7 +619,8 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 | 1 | 从设备只读拉 9 个 jar（`adb pull`，`/system/framework` 全可读） | 接口覆盖仅 **2/35**，材料不足 |
 | 2 | 补拉 `framework.jar`/`services.jar`/atlas apk + 多 dex | 覆盖升至 **28/35**；发现 atlasservice 结构同构线索 |
 | 3 | avc oracle 验证可达性（只读 `dumpsys` 探针） | **shell → root atlasservice binder 可达** |
-| 4 | 对可读 `libatlasservice.so` 做符号级反汇编 | **命令注入模式否证**，线索闭合 |
+| 4 | 对可读 `libatlasservice.so` 做符号级反汇编 | **命令注入模式否证** |
+| 5 | 纯静态从 OTA 解出 root 二进制（直连 Range 取 2.55 GiB → 重建 system.img → 7-Zip 提取） | root 二进制为薄壳、加载 so 与第四轮字节一致；**证据链 5/5 闭合，线索确定否证** |
 
 ### 14.2 决定性证据链：atlasservice 从发现到否证
 
@@ -636,6 +637,11 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 反汇编还原的调用链：`setEvent(int,String8)` → `OplusAtlasLogWriter::caputureLogs` →
 `OplusAtlasLogThread::threadLoop` → `doLogCaputure`/`checkPath` → `system()`（命令模板在 rodata 硬编码）。
 
+**第五轮闭合**：解出的 root 二进制 `system_ext/bin/atlasservice`（11608 B，ELF64，SHA256 `c7807798…`）
+是薄壳——65 个字符串、无 `system`/`popen`，`main()` 仅 `AtlasService()` → `addService("AtlasService")` →
+binder 线程池；其加载的 `lib64/libatlasservice.so` 与第四轮所反汇编的设备拉取版 SHA256 一致
+（`b65dde22…`）。故 root 侧无第二处注入逻辑，**第五环由"存疑"升级为"确定否证"**。
+
 ### 14.3 方法论产出（复用价值）
 
 1. **AIDL/HIDL `Stub.onTransact` 的 `enforceInterface` 不是鉴权**。28 个服务里 27 个 perm_calls=0 是结构正常现象，
@@ -645,13 +651,17 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
    前后的 avc 增量可判断 shell 能否触达某服务，对照组 `dumpsys commondcs` → "Can't find service"。零副作用。
 3. **工具可用性必须先自证**（§10 新增强调）：本机 Git Bash 无 `strings` 命令，
    其"返回空"曾被误读为"so 无 system() 字符串"，改用 Python 正则后结论反转。**已作为负知识登记。**
+4. **OTA 分区重建（第五轮，纯静态）**：`transfer.list` v4 逗号分隔为**范围编码**（覆盖度自检
+   uncovered=0/overlap=0）；`new.dat` 是**固定 4096B 块原始流、无长度前缀**
+   （`len(new.dat)==Σ(e−s)×4096`，diff=0）。此前按"4B 长度+数据"解析在块 256 失败。脚本见
+   `tools/dl_range.py`/`sdat2img.py`/`rebuild_system.py`/`elf_analyze.py`。大文件下载**直连不走代理**。
 
 ### 14.4 覆盖度缺口与不重开判据
 
 - 35 个私有服务覆盖 28 个；7 个 MISSING（`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/
   `IHansComunication`/`IOppoAppDataService`/`OplusResourceManagerService`）实现在独立 apk/服务，未纳入。
-- 唯一还能改变结论的动作：**从 OTA 整包解出 root 二进制 `/system_ext/bin/atlasservice` 静态分析**
-  （约 3.35 GB，root 二进制对 shell/adbd 均 Permission denied）——需用户授权下载成本。
+  **但最高价值的 atlas 线索已 5/5 闭合，7 个未覆盖项无 CVE 类比指向，不单独重开。**
+- ~~唯一还能改变结论的动作：解出 root 二进制~~ **已完成（第五轮），确定否证**；**无剩余可改变结论的动作**。
 - **路径 B（受控 setEvent 探针）不建议**：净执行 0.5–1 h，但命令模板硬编码、无输出 oracle
   （dmesg/kmsg/pstore 全不可读），且违反 §7"不盲试事务号"约定；成本不是时间，是无效性。
-- 全程只读：未推送二进制到设备、未调用业务事务号、未改分区；设备终态同 §11。
+- 全程只读：未推送二进制到设备、未调用业务事务号、未改分区；大文件下载直连不走代理；设备终态同 §11。

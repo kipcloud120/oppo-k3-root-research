@@ -22,6 +22,11 @@ artifacts_adb/binder_audit/dex/
 artifacts_adb/binder_audit/atlas/*.apk
 artifacts_adb/binder_audit/atlas/*.so
 artifacts_adb/binder_audit/atlas/apk_dex/
+# 第五轮 OTA 重建产物（system.new.dat.br 2.6G / .dat 4.8G / system.img 4.8G / 提取的二进制）
+artifacts_adb/binder_audit/rootbin/*.br
+artifacts_adb/binder_audit/rootbin/*.dat
+artifacts_adb/binder_audit/rootbin/*.img
+artifacts_adb/binder_audit/rootbin/_extract/
 
 # ---- 第三方完整利用代码：不重新分发，只在文档中引用出处 ----
 src_ref/poc_ex.c

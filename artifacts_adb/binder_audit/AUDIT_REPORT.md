@@ -1,4 +1,4 @@
-# OPPO K3 F.16 · OPPO 私有 Binder 服务静态审计（两轮）
+# OPPO K3 F.16 · OPPO 私有 Binder 服务静态审计（五轮，已完结）
 
 - 日期：2026-11-17
 - 触发：`docs_archive/审核意见CHATGPT.txt` 主张将"OPPO 私有 Binder 服务审计"提升为 P0，并以 CVE-2026-70386（OnePlus atlasservice 未授权 → root 命令执行）等为历史证据。
@@ -46,6 +46,24 @@ AtlasService::setEvent(int, String8 value)
 
 **这与 CVE-2026-70386"value 直接拼进 `system()` 命令"有本质差异。** 证据链第 5 环经实证后判定为 **不成立(至少不在可读的 `libatlasservice.so` 路径上)**。root 二进制本体虽仍不可读,但 native 侧可读库已不含注入模式。**判定:该项 specific lead 基本否证,维持 no-go。** 路径 B(受控探针)的技术价值因此大幅下降——见 §4。
 
+### 第五轮：解出 root 二进制，证据链最终闭合（2026-11-17）
+
+此前唯一剩余缺口是"root 二进制 `/system_ext/bin/atlasservice` 对 shell/adbd 不可读"。本轮用**纯静态**方式从官方 OTA 整包解出该二进制并分析，缺口关闭。
+
+**取流与重建（全程离线，直连下载不走代理）**：
+1. 用 Range 只取 OTA ZIP 中 `system.new.dat.br` 条目区间 `[5546, 2736576775]`（2.55 GiB），未下 3.71 GiB 整包；`system.transfer.list`（26357 B）单独 Range 提取。
+2. 关键格式自证（两次纠错后才确定）：
+   - `transfer.list` v4 逗号分隔 + **范围编码**——覆盖度自检 uncovered=0/overlap=0；
+   - `new.dat` 是**固定 4096 字节块**的原始流、**无长度前缀**——`len(new.dat) == Σ(e−s)×4096`，diff=0（此前误按"4B 长度+数据"解析，在块 256 失败）。
+3. brotli 解压 → `system.new.dat`(4.76 GiB)；sdat2img 重建 → `system.img`(4958 MiB)；7-Zip 读 ext4 提取目标。
+
+**决定性结论**：
+- root 二进制 `system_ext/bin/atlasservice`（11608 B，ELF64，SHA256 `c7807798…`）是一个**薄壳**：字符串仅 65 个，无 `system`/`popen`；`main()` 只做 `AtlasService()` 构造 → `addService("AtlasService")` → binder 线程池。DT_NEEDED 含 `libatlasservice.so`。
+- **字节级比对**：镜像解出的 `lib64/libatlasservice.so` 与第四轮反汇编的设备拉取版 SHA256 完全一致（`b65dde22…`）。故第四轮的 `setEvent → … → system()` 分析**就是 root 进程实际加载库的分析**。
+- ⇒ root 侧不存在"第二处把 value 拼进命令"的逻辑。第五环经 root 二进制实证后**确定否证**，不是"因不可读而存疑"。**atlas 线索彻底闭合：no-go。**
+
+**方法论产出**：`tools/dl_range.py`（指定区间分段下载）、`tools/sdat2img.py`（范围编码 + 固定块长重建，含覆盖度/大小双校验）、`tools/rebuild_system.py`、`tools/elf_analyze.py`。厂商二进制不入库。
+
 ### 次要发现
 
 1. **覆盖度 28/35**（第一轮仅 2/35）。7 个 MISSING：`IAntiRootDialog`、`IHephaestus`、`IHoraeService`、`IOIfaceService`、`IHansComunication`、`IOppoAppDataService`、`OplusResourceManagerService`（后者仅有 IFACE 无 Stub）——其实现在独立 apk/服务中，未纳入本轮。
@@ -84,7 +102,7 @@ AtlasService::setEvent(int, String8 value)
 | native 层参数处理 | **已反汇编证实**（第四轮）：`libatlasservice.so` 未 strip，`setEvent`/`caputureLogs`/`checkPath`/`doLogCaputure`/`threadLoop` 调用图完整还原 |
 | shell 对 atlas 服务的 SELinux 可达性 | **已实证：可达**。用标准只读 `dumpsys AtlasService` 作探针（DUMP_TRANSACTION，非业务事务号），捕获新增 avc：`avc: denied { use } for path="pipe" scontext=u:r:atlasservice:s0 tcontext=u:r:shell:s0 tclass=fd`——主语是 root 域 atlasservice 在使用 shell 传入的 fd，证明 shell 的 binder 调用**确实到达** root 服务进程，SELinux 未在 `{ call }` 层拦截。对照组 `dumpsys commondcs` → "Can't find service"，无 avc。按 HANDOVER 约定未盲试业务事务号。 |
 | 第二个 atlas 服务 | `0 AtlasService: [android.atlas.service]`（**root atlasservice 直接持有**）与 `121 multimediaDaemon: [IOppoMMAtlasService]`（`u:r:system_app:s0` 持有）并存。可达性实证针对前者。 |
-| 命令注入环节 | **基本否证**（第四轮）：`system()` 调用 3 处均属实，但命令模板 `dmesg > %s%s%s` / `chmod 0777 %s` / `%s > %s%s` **首参硬编码**；用户 value 流向路径构造与 `kill` pid,非命令本体。与 CVE-2026-70386 的"value 拼入 system()"有本质差异。root 二进制本体仍不可读，但可读 native 库已不含注入模式。 |
+| 命令注入环节 | **确定否证**（第四+五轮）：`system()` 调用 3 处均属实，但命令模板 `dmesg > %s%s%s` / `chmod 0777 %s` / `%s > %s%s` **首参硬编码**；用户 value 流向路径构造与 `kill` pid,非命令本体。第五轮解出 root 二进制本体，证实其为薄壳且加载的 so 与已反汇编版字节一致（SHA256 `b65dde22…`），无第二处注入逻辑。 |
 
 ---
 
@@ -102,15 +120,13 @@ AtlasService::setEvent(int, String8 value)
 
 1. ~~确认 shell 可达性~~ **已完成（第三轮）**。
 2. ~~native 命令注入环节~~ **已完成（第四轮）：基本否证**。
-3. **可选 · 纯静态补强（零设备风险）**：从 OTA 整包解出 root 二进制 `/system_ext/bin/atlasservice`（约 3.35 GB）做同样的反汇编,确认 root 侧是否有第二处把 value 拼进命令的逻辑——这是唯一还能改变结论的动作,但成本高。
-4. **维持 no-go 并归档**：基于现有证据,atlas 线索已是本机上被审计得最彻底的一条,结论为"结构相似但注入模式不成立"。
+3. ~~纯静态补强：解出 root 二进制~~ **已完成（第五轮）**：Range 只取 2.55 GiB 的 `system.new.dat.br` 重建镜像并解出 root 二进制，证实为薄壳、加载 so 与已反汇编版一致，无第二处注入逻辑。此路径关闭。
+4. **维持 no-go 并归档**：五环证据全部闭合，atlas 线索确定否证——本机上被审计得最彻底的一条，结论为"结构相似但注入模式不成立"。不再需要设备在线。
 
 **红线不变**：不盲试 `service call` 业务事务号、不做破坏性实验、不推送 su/Magisk、每重启先补文档。
-
-**红线**：不盲试 `service call` 事务号、不做破坏性实验、不推送 su/Magisk、每重启先补文档。
 
 ---
 
 ## 5. 一句话交接
 
-> 审核意见属实但为跨设备类比；四轮审计把覆盖度从 2/35 提到 28/35，把 atlas 线索从"类比"追到"本机二进制反汇编"：`setEvent(int,String)` Java 层无鉴权 → native `setEvent` → `OplusAtlasLogWriter` → `OplusAtlasLogThread` → `system()`,且 shell binder 可达、root init service 存在。**但反汇编证明 `system()` 命令模板全部硬编码(`dmesg > …`/`chmod 0777 …`),用户 value 不进命令本体——与 CVE-2026-70386 的注入模式有本质差异,该线索基本否证。维持 no-go。路径 B(受控探针)价值已大幅下降:即使执行也只能触发固定命令、且无输出 oracle,时间不是主要成本、无效性才是。唯一还能改变结论的是纯静态解出 root 二进制(约 3.35 GB),需用户授权。全程未盲试业务事务号。**
+> 审核意见属实但为跨设备类比；五轮审计把覆盖度从 2/35 提到 28/35，把 atlas 线索从"类比"追到"本机 root 二进制"：`setEvent(int,String)` Java 层无鉴权 → native `setEvent` → `OplusAtlasLogWriter` → `OplusAtlasLogThread` → `system()`,shell binder 可达、root init service 存在,但 `system()` 命令模板全部硬编码(`dmesg > …`/`chmod 0777 …`),value 只进路径与 pid。**第五轮纯静态解出 root 二进制,证实其为薄壳且加载的 so 与已反汇编版字节一致(SHA256 `b65dde22…`),无第二处注入逻辑——证据链 5/5 闭合,线索确定否证,维持 no-go。** 全程未盲试业务事务号、未走代理下载大文件、未改动设备。
