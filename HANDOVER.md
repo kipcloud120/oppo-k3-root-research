@@ -2,13 +2,13 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.3（Binder 面闭合 + GhostLock 判定更正）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文；§14 为 Binder 五轮审计，§5.2 更正块为同日 GhostLock 复核 |
+| 版本 | **v2.4（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文；§14 为 Binder 五轮审计，§5.2 更正块为 GhostLock 复核。**下次会话从本文件 + `GHOSTLOCK_RESCAN.md` 直接接手** |
 | 状态 | **整体仍 no-go，但 GhostLock 面由"判死"改为"载体候选已找到、可利用性待验证"**（§5.2.4 更正块）；Binder 面五轮后确定否证（§14）。**不再是无条件结项**——GhostLock 需受控实验才能恢复 no-go |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 与 GhostLock 复核全程只读 |
 | Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
-| GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选；待验证）；修正脚本 `tools/gl_carrier_rescan.py` |
+| GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）。**4 项待验证中 2 项已静态排除（内核覆写、深度）；仅剩 2 项需受控上机：栈重生时机、NUL 截断构造。静态准备已全部完成，接手无需再扫描**。修正脚本 `tools/gl_carrier_rescan.py` |
 
 ---
 
@@ -299,8 +299,9 @@ waiter 绝对位置      = -(0x110 + 0x070 + 0x1f0) + 0xE8 = -0x288   [占 -0x28
 > `SyS_getxattr→getxattr`（0x2c8）、`SyS_setxattr→setxattr`（0x2e8）——均经
 > `add x0,sp,#8; mov w2,#0x100; bl strncpy_from_user` 把用户串写到栈上。
 > **判定更新：从"不可利用(no-go)"降级为"公开 select/pselect 路线不成立，但 xattr 栈覆盖候选已找到、
-> 可利用性待验证"**。待验证项：栈重生时机（W 超时早退后是否复用同一栈槽进入 xattr）、
-> NUL 截断能否构造合法 fake waiter、内核局部量是否覆写、深度>3 未穷尽。
+> 可利用性待验证"**。原 4 项待验证中 **2 项已静态排除**：内核局部量覆写（getxattr copy 点后无 store）、
+> 深度>3（扩到 4 无新机制）。**仅剩 2 项需受控上机**：栈重生时机（W 超时早退后是否复用同一栈槽进入
+> xattr）、NUL 截断能否构造合法 fake waiter。详见 `GHOSTLOCK_RESCAN.md` §4（接手必读）。
 > **"397/0/66"不再是穷尽证明；原版脚本保留为历史基线，修正版为 `tools/gl_carrier_rescan.py`。**
 
 #### 5.2.5 过程中的两个方法论产出
@@ -460,8 +461,11 @@ ENOTTY（未实现）3833
 1. 出现**面向 4.9 / arm64 ticket spinlock 的 UAF 原语**研究 ⇒ binder 线可直接接上（靶点、pre-fix 证据、堆条件已备，§5.3.2）。
 2. ~~出现能把用户数据写到 `[-0x288, -0x240)` 的新 syscall~~ **【2026-11-17 已命中，见 §5.2.4 更正块】**：
    `SyS_fgetxattr/getxattr/setxattr` 经 `strncpy_from_user` 写栈 256 B，几何满足。
-   下一步不是"找新载体"，而是验证**栈重生时机 + NUL 截断下的 fake waiter 构造 + 内核局部量是否覆写**；
-   这三条任一否证才恢复 no-go，任一通过则 GhostLock 线真正重开。**需受控上机实验（先登记判据，用户授权）。**
+   **4 项待验证已有 2 项静态排除**：内核局部量覆写（getxattr copy 后无 store）、深度>3（扩到 4 无新机制）。
+   **仅剩 2 项需受控上机**：① 栈重生时机（W 超时早退后调用 fgetxattr 是否复用旧 waiter 槽）；
+   ② NUL 截断下能否构造通过链走查的 fake waiter（task/lock/prio）。任一否证恢复 no-go，任一通过则真正重开。
+   **接手步骤：静态准备已全部完成，无需再扫描；接上设备后先登记判据（HANDOVER §11，事后不改），
+   优先用无创 oracle（FUTEX_WAKE 返回值 / -EDEADLK 二元判据），经用户授权再运行。**
 3. 设备 **SPL 或内核构建发生变化** ⇒ 帧几何、binder 形态、全部符号偏移同时改变，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 中任一个 ⇒ 可定位 GhostLock panic 的精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线（例如改用 `sched_setattr` 之外的链遍历入口）。
