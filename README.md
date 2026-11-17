@@ -195,6 +195,8 @@ Start with [`HANDOVER.md`](HANDOVER.md).
 
 ## License
 
-代码（`tools/`）：MIT，见 [`LICENSE`](LICENSE)。
-文档（`HANDOVER.md`、`README.md`、`docs_archive/`）：CC BY 4.0。
-`src_ref/` 内的内核源码与补丁保留其原始许可证（GPLv2 及其对应条款）。
+- 代码（`tools/`）：**MIT**，见 [`LICENSE`](LICENSE)。
+- 文档（`HANDOVER.md`、`README.md`、`docs_archive/`）：**CC BY 4.0**。
+- `src_ref/` 内的内核源码与补丁：保留原始许可（GPLv2 及其对应条款）。
+
+分范围的完整说明见 [`NOTICE.md`](NOTICE.md)。
