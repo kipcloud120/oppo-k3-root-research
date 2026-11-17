@@ -879,9 +879,11 @@ app / system_server
 | **对照 B** `service call iphonesubinfo 1`（AIDL 需令牌） | 1 | **正常返回 IMEI** |
 
 **对照证明**：工具与 binder 通路正常、字符串参数可用、拒绝发生在**服务端**（不是 `FAILED_TRANSACTION`、
-不是 SELinux、不是工具侧失败）。**穷尽了所有可获得的描述符组合后仍然失败** ⇒ 该事务号存在一层
-不在已解出 jar 中的外层分派（`com.android.server.wifi` 的实现类不在这台机器的 `services.jar`、
-`oppo-wifi-service.jar` 里，`system/framework` 下也没有 `service-wifi.jar`）。
+不是 SELinux、不是工具侧失败）。**穷尽了当时可获得的描述符组合后仍然失败**。
+
+> ⚠️ **本段当时的推断"外层分派在未解出 jar 中 ⇒ 只对 system_uid 开放"已被 §16.8 更正**：
+> 外层分派找到了（APEX 内的 `service-wifi.jar`），且**没有任何 uid 判定**——唯一校验是接口描述符字符串。
+> 因此"只对 system_uid 开放"这句话不成立，真正的阻断是"描述符还没对上"。
 
 ### 16.5 记录两条负知识（本轮自我推翻）
 
