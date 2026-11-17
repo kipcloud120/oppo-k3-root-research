@@ -1,0 +1,348 @@
+OPPO K3 ROOT 项目第三次复评：出现了真正值得重开的突破口
+这次更新与前两次不同。项目不再只是增加审计材料，而是推翻了一个此前被认为已经证明不可利用的核心结论。
+
+我检查了 GitHub 当前 main 分支，重点审阅了：
+- HANDOVER.md：v2.4
+- GHOSTLOCK_RESCAN.md
+- AUDIT_REPORT.md
+- tools/gl_carrier_rescan.py
+- README.md
+我的最新结论：
+项目总体状态
+HOLD / 条件性 NO-GO
+
+GhostLock 已重新开放
+发现符合栈布局条件的用户数据写栈路径，但尚未验证完整利用链。
+
+KGSL
+NO-GO
+
+GhostLock
+发现新候选，待实机验证
+
+Binder 内核 CVE
+NO-GO
+
+FastRPC
+NO-GO
+
+OPPO 私有 Binder
+Atlas 已否证，整体审计尚有缺口
+
+
+目前没有获得 ROOT，也没有完成可复现的提权链。
+
+这次最重要的变化是 GhostLock。之前的 NO-GO 结论有一块重要基础被推翻了。
+GitHub+2
+
+一、重大变化：GhostLock 找到了三条 xattr 栈覆盖候选
+这是本次复评中最值得重视的发现。
+1. 作者承认此前的扫描结论错误
+之前的扫描结果：
+指标	旧结果
+syscall 入口	397
+栈覆盖候选	0
+近失配	66
+
+此前据此得出：内核栈上不存在满足 GhostLock 条件的用户数据覆盖载体。
+
+这次重新审查后，作者确认原扫描器有两个问题：
+
+问题 A：全局函数名判重。
+
+原代码使用：
+if name in seen:    return
+
+
+
+同一个辅助函数从不同调用路径进入，可能具有不同的累计栈帧。
+
+但原扫描器直接将第二条路径跳过。
+
+这次修正发现，在 18,691 次原有判重中，有 18,074 次涉及不同累计栈帧上下文，约占 96.7%。
+
+问题 B：漏掉了真正重要的拷贝函数。
+
+原扫描器没有识别：
+strncpy_from_user()
+
+
+而这个函数恰恰能够将用户控制的数据复制到内核栈缓冲区。
+
+这两项修改直接改变了扫描结果。
+GitHub+1
+
+2. 新发现的三条路径
+重大新证据
+作者通过 vmlinux.elf 反汇编发现：
+add x0, sp, #8
+mov w2, #0x100
+bl strncpy_from_user
+
+
+这表示用户数据被复制到当前函数的栈上，目标位置为 sp+8，长度上限为 256 字节。
+
+新候选如下：
+syscall 调用路径	waiter 在缓冲区内的位置	复制长度
+fgetxattr → getxattr	0x10	256 B
+getxattr → getxattr	0x40	256 B
+setxattr → setxattr	0x60	256 B
+
+这三条路径均符合作者设定的栈覆盖几何判据。
+
+最重要的是第一条：
+
+SyS_fgetxattr → getxattr
+
+它在缓冲区中的 waiter 起始偏移只有 0x10，所需的 task、lock、prio 字段都落在用户数据覆盖范围内。
+GitHub+1
+
+
+这意味着什么？
+
+原来项目遇到的问题是：
+我们知道 futex waiter 存在 UAF，但找不到能把用户数据写进这个 waiter 所在栈区域的载体。
+
+现在变成：
+已经发现能够覆盖该区域的内核栈写入路径，但还需要证明覆盖发生在正确的时间，并且能构造出有效的 fake waiter。
+
+这是研究性质上的重要变化。
+3. 为什么还不能宣布 GhostLock 成功？
+作者目前只解决了静态布局问题，还剩两个关键障碍。
+GhostLock 剩余验证项
+栈槽写入后是否被覆盖
+静态排除
+
+对 getxattr 的拷贝指令进行后续反汇编，确认相关栈缓冲区在拷贝之后没有被其他内核 store 指令覆盖。
+
+调用深度是否还会发现新机制
+已扩展验证
+
+扩展至调用深度 4，访问 78,944 次，没有发现新的载体机制。
+
+栈重生时机
+未验证
+
+W 线程从 futex wait 超时早退后，再执行 xattr syscall，能否复用此前 waiter 所占用的内核栈槽？
+
+NUL 截断与 fake waiter
+未验证
+
+strncpy_from_user 遇到 NUL 就会停止复制，而 fake waiter 中的指针和优先级字段必须满足内核链走查条件。
+
+是否能构造出全部有效的字段，目前没有答案。
+
+以上是作者最新复核报告中的明确状态。
+GitHub+1
+
+
+这里我特别强调第二个剩余问题。
+
+rt_mutex_waiter 并不是随意填充 72 字节就能使用的普通结构体。
+
+需要正确满足：
+字段	偏移	要求
+task	0x30	能通过任务结构检查
+lock	0x38	指向正确的 rt_mutex
+prio	0x40	与实际任务优先级条件相符
+
+尤其是 prio 等整数值可能含有零字节。由于 strncpy_from_user 的字符串语义，不能简单地把任意 72 字节写进去就认为成功。
+
+我认为这是现在最需要解决的技术障碍。
+4. 我对 GhostLock 新证据的独立评价
+这次我给出的评价是：
+证据	可信程度
+原扫描器存在判重漏报	高
+strncpy_from_user 写入内核栈	高
+三条路径的静态栈位置	较高，仍需实机复核
+复用旧 waiter 栈槽	未知
+构造有效 fake waiter	未知
+获得任意内核读写	尚未证明
+最终获得 uid=0	尚未证明
+
+这里有一个非常重要的判断：
+
+GhostLock 已经从理论上找不到载体，进展到了有明确静态载体、等待验证利用条件。
+
+但这还远远不是 ROOT exploit。
+
+而且新版的深度 4 结果也不能称为完全穷尽：报告承认深度超过 4 仍未从数学上完全覆盖。当前足以否定旧的 397/0 结论，却不足以宣称所有 syscall 调用路径都已经检查完毕。
+GitHub+1
+
+
+二、OPPO 私有 Binder：Atlas 线索终于有了较完整的负结果
+第二个重要更新是 Binder 审计。
+
+我上次建议优先审计 OPPO 私有 Binder 服务。这次作者确实做了五轮工作，并且找到了很有价值的反例。
+1. 发现与 OnePlus CVE 相似的接口
+在 K3 F.16 上找到了：
+
+IOppoMMAtlasService / IOppoAtlasService
+
+接口中存在：
+setEvent(int, String)
+
+
+它与 OnePlus 的 CVE-2026-70386 有明显相似之处：
+环节	OnePlus	OPPO K3
+Binder 接口	setEvent	setEvent
+Java 层鉴权	缺失	未发现调用者鉴权
+高权限服务	root 服务	root atlasservice
+命令执行	用户参数参与命令拼接	存在 system()，但参数关系不同
+
+这不是简单的名字相似，而是找到了实际的 Java → native 调用链。
+GitHub+1
+
+2. 最终为什么被否证？
+作者进行了相当有价值的工作：
+- 静态提取 libatlasservice.so。
+- 反汇编 AtlasService::setEvent()。
+- 追踪到 OplusAtlasLogWriter。
+- 继续追踪到 OplusAtlasLogThread。
+- 找到三个 system() 调用点。
+- 最后从官方 OTA 重建系统镜像，提取 root 服务二进制。
+结果发现：
+
+虽然 system() 确实存在，但命令模板是硬编码的：
+dmesg > 固定路径
+chmod 0777 固定路径
+固定命令 > 固定路径
+
+
+用户输入没有进入命令本体。
+
+第五轮还进行了字节级 SHA256 比对，确认 root 服务加载的 libatlasservice.so 与此前实际反汇编的版本完全一致。
+
+因此，作者认为不存在第二处隐藏命令注入逻辑。
+GitHub+1
+
+Atlas 命令注入路线：NO-GO 可信度明显提高
+这是一次很扎实的静态否证。
+3. 但我不完全接受 Binder 整体 NO-GO
+这里仍然有一个值得指出的问题。
+
+作者的 Binder 审计覆盖率是：
+私有 Binder 接口审计覆盖情况
+28/35
+约 80%
+
+
+
+7 个服务仍未纳入这轮实现审计。
+
+更值得注意的是，报告自己还记录了：
+
+OplusWifiHalService.executeDriverCommand
+
+这个接口没有发现 Java 层调用者鉴权，目前仍然是待验证线索。
+
+另外，7 个未覆盖项目包括：
+- IAntiRootDialog
+- IHephaestus
+- IHoraeService
+- IOIfaceService
+- IHansComunication
+- IOppoAppDataService
+- OplusResourceManagerService
+这些信息与 HANDOVER §14.4 的“无剩余可改变结论的动作”并不完全一致。
+GitHub+1
+
+
+我要区分两件事：
+- Atlas 这条特定提权类比链： 已经有充分理由关闭。
+- K3 所有 OPPO 私有 Binder 服务： 尚不能说已经证明不存在权限提升问题。
+尤其是 executeDriverCommand，至少应该先确认其服务运行 UID、调用者检查位置以及 native/HAL 下游是否存在高权限操作。
+
+所以，Binder 不再是之前那种完全没有研究的未知面，但也没有达到整机 Binder 攻击面穷尽审计的程度。
+
+三、五条原始内核路线的状态是否发生变化？
+总体没有变化。
+路线	最新判断	是否值得重试
+KGSL CVE-2023-33107	有效 PTE 命中导致 BUG_ON	不值得
+GhostLock CVE-2026-43499	三条新 xattr 载体候选	值得继续
+Binder CVE-2023-20938	目标代码没有引入漏洞	不值得
+Binder CVE-2022-20421	ticket spinlock 不具备预期利用原语	不值得
+FastRPC CVE-2023-33063	SELinux 与驱动权限双重封闭	不值得
+
+原来五条路线中的四条仍然应该冻结，GhostLock 是唯一发生实质性变化的内核路线。
+GitHub+1
+
+四、这次更新暴露出的三个项目管理问题
+除了技术结论，我还发现新版文档存在三个需要修正的地方。
+
+问题 1：README 没有同步最新结论。
+
+GitHub 首页 README 仍然写着：
+- GhostLock 没有栈覆盖载体；
+- 397 个入口全扫 0 命中；
+- 五个候选面全部 NO-GO。
+这些已经被最新 HANDOVER v2.4 和 GHOSTLOCK_RESCAN.md 推翻。
+
+建议立即同步，否则其他研究者只看 README 就会得到错误结论。
+GitHub+1
+
+
+问题 2：HANDOVER §1.1 与 §5.2 的措辞不一致。
+
+§1.1 仍然笼统地说五个候选面全部不可达目标，而 §5.2 已经承认 GhostLock 有三个载体候选。
+
+建议把它改成：
+四个候选面已经判定 NO-GO；GhostLock 已发现符合几何判据的栈覆盖载体，尚待验证完整利用条件。
+
+问题 3：Binder 审计完成度被表述得过于绝对。
+
+我支持关闭 Atlas 特定线索，但 28/35 覆盖率和 OplusWifiHalService.executeDriverCommand 待验证的记录，不足以支持整个私有 Binder 攻击面已经穷尽。
+
+五、我建议接下来怎样投入？
+现在不应该再继续无差别地扫描 CVE。
+
+我建议按照下面的顺序工作：
+P0：GhostLock 实机验证
+最高优先级
+
+只解决剩余两个问题：
+1. W 线程退出 futex wait 后，调用 fgetxattr 是否复用原来的 waiter 栈槽。
+2. NUL 截断约束下，是否可能满足 fake waiter 所需的字段条件。
+必须先设计非破坏性验证判据，再进行设备实验。项目已有 FUTEX_WAKE 返回值和 -EDEADLK 判据作为观测手段。
+
+P1：OplusWifiHalService
+次优先级
+
+追踪 executeDriverCommand 的实际运行权限、调用者身份和 native 调用链。
+
+P2：补齐剩余七个 Binder 服务
+完整性工作
+
+如果项目坚持宣称 Binder 攻击面已经闭合，就不能把这七个服务仅凭缺少 CVE 类比而全部排除。
+
+P3：整理 README 和结项标准
+文档工作
+
+保证首页、HANDOVER 和独立审计报告采用一致的最新结论。
+
+六、最终判断：这个项目应该继续吗？
+我的答案是：应该继续，但只值得进行有明确验证目标的下一阶段研究。
+
+我把项目状态调整为：
+判断维度	结论
+是否已取得 ROOT	否
+是否已经找到潜在利用载体	是，GhostLock xattr
+GhostLock 是否已经成功利用	未证明
+原五条路线是否值得全部重试	否
+Binder Atlas 路线是否值得继续	否
+是否完全排除所有 Binder 提权可能	否
+是否应该宣布整个项目永久 NO-GO	否
+
+我尤其看重这次 GhostLock 的变化。
+
+它不是简单地换一个参数、调整一次竞速窗口，而是发现之前的核心扫描器存在逻辑缺陷，修复后找到了原来遗漏的内核栈写入路径。
+
+这是能够改变项目技术方向的发现。
+
+我建议将正式项目状态改为：
+Conditional GO
+研究继续，ROOT 成功与否尚未确定。
+
+五条既有候选路径中，KGSL、两个 Binder 内核 CVE 和 FastRPC 正式冻结；GhostLock 重新开放，以 xattr 栈覆盖候选为唯一 P0。Atlas 命令注入线索关闭，但 Binder 剩余接口的覆盖缺口仍需如实记录。
+
+只有 GhostLock 的两个剩余条件全部被验证，才有资格恢复 NO-GO；如果构造链通过，才进入真正的 ROOT 利用验证阶段。

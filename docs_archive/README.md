@@ -19,5 +19,7 @@
 | `OPPO_K3_机型代号与ROOT生态调查汇总.md` | 机型/生态调研 | 背景参考 |
 | `ROOT_实施方案.md` | 早期 Magisk / 刷机路线 | **非本项目路径**（需解 BL，已移除） |
 | `github_research.md` | 外部仓库与 issue 调研笔记 | 背景参考 |
+| `审核意见CHATGPT.txt` | 第一次外部复审（主张 Binder 私有服务升 P0） | **已响应**：`artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮）、`HANDOVER.md` §14 |
+| `审核意见CHATGPT-v001.txt` | 第二次外部复审（指出扫描器判重 bug、要求 GhostLock 上机验证 + 文档同步） | **已响应**：`GHOSTLOCK_RESCAN.md`（判重复核）、`GHOSTLOCK_NUL_ANALYSIS.md`（剩余两项静态收束）、`HANDOVER.md` §15 |
 
 `HANDOVER.md` §6「负知识清单」汇总了 17 条**曾被认为是确定结论、后被自己推翻**的判断，以及推翻它们的依据——比删掉这些文档更有价值，也能防止后来者重走同一条死路。

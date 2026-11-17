@@ -68,7 +68,9 @@ AtlasService::setEvent(int, String8 value)
 
 1. **覆盖度 28/35**（第一轮仅 2/35）。7 个 MISSING：`IAntiRootDialog`、`IHephaestus`、`IHoraeService`、`IOIfaceService`、`IHansComunication`、`IOppoAppDataService`、`OplusResourceManagerService`（后者仅有 IFACE 无 Stub）——其实现在独立 apk/服务中，未纳入本轮。
 2. **`IOplusCustomizeService$Stub` 是 28 个里唯一在 Stub 层调用 `checkPermission()` 的**——说明厂商确实知道要鉴权，反衬其他服务依赖 SELinux/实现层。
-3. **`OplusWifiHalService.executeDriverCommand`** 无 Java 层鉴权（`checkIOplusWifiServiceAndLogFailure` 只查服务非空），仍为待验证线索。
+3. **`OplusWifiHalService.executeDriverCommand`** —— **【2026-11-17 已定性，见 `F16_WIFI_FTM_TRACE.md`】** 该方法本身是内部 helper（44 条指令），**不是 Binder 接口**；真正的暴露点是手写的 `OplusWifiTransactionHelper.onTransact`（798 条指令，实现 `IOplusWifiManager` + `IWifiTransactionHelper`），客户端 `android.net.wifi.OplusWifiManager` 用 tx **10070** 直接 transact 到 `wifi` binder 上。
+   该分支**只有 `enforceInterface()`，无调用者身份检查**；`enforceAccessPermission()` 是 1 条指令的空实现。
+   但**外部可达性未证明**：7 次只读探测（含 AOSP 对照组）全部止于描述符校验，**未出现 `Permission Denial`**；下游 vendor HAL 不可判。**不改变 no-go**（即便打通也只到 vendor Wi-Fi HAL，不产生 uid 0）。
 
 ---
 

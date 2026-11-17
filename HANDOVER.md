@@ -2,13 +2,13 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.4（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文；§14 为 Binder 五轮审计，§5.2 更正块为 GhostLock 复核。**下次会话从本文件 + `GHOSTLOCK_RESCAN.md` 直接接手** |
-| 状态 | **整体仍 no-go，但 GhostLock 面由"判死"改为"载体候选已找到、可利用性待验证"**（§5.2.4 更正块）；Binder 面五轮后确定否证（§14）。**不再是无条件结项**——GhostLock 需受控实验才能恢复 no-go |
+| 版本 | **v2.6（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 更正块 + §15 = GhostLock 复核与静态收束，**§16 = OPPO Wi-Fi 私有事务面（root 服务实证 + 可达性实测否定）**。下次会话从本文件 + `GHOSTLOCK_RESCAN.md` + `GHOSTLOCK_NUL_ANALYSIS.md` + `F16_WIFI_FTM_TRACE.md` 直接接手 |
+| 状态 | **整体 no-go。** 四个内核面判定不可达；GhostLock「载体已闭合、缺一次内核地址泄露」；P1 Wi-Fi 私有事务面「root HIDL 服务 + 无调用者鉴权 + 入参直通 `sh -c`」已证，但**实测从 shell 不可达**（11 次探测 + 2 组对照），入口在 shell 之外（§5.2.4 更正块 + §15 + `F16_WIFI_FTM_TRACE.md` §8）
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
-| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14 与 GhostLock 复核全程只读 |
+| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14、§15 全程只读 |
 | Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
-| GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）。**4 项待验证中 2 项已静态排除（内核覆写、深度）；仅剩 2 项需受控上机：栈重生时机、NUL 截断构造。静态准备已全部完成，接手无需再扫描**。修正脚本 `tools/gl_carrier_rescan.py` |
+| GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）→ **`GHOSTLOCK_NUL_ANALYSIS.md`（剩余两项的静态收束：栈复用为几何确定性；NUL 不阻断；缺口 = 内核地址知识）** |
 
 ---
 
@@ -22,7 +22,9 @@
 | 接手继续做 | §1 → §2（基线）→ §5（逐面）→ §7（重开条件）→ §8（关键常数） |
 | 复核某个判断 | §5 对应小节 + §6 负知识清单 + `artifacts_adb/` 原始日志 |
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
-| Binder 服务面（§4 唯一未闭合面）| **§14**（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合确定否证、结论仍 no-go）|
+| GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
+| Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证；**7 个未覆盖服务为已知未闭合项**）|
+| Wi-Fi 私有事务面（最接近"可用"的一条）| **§16**（root HIDL 服务 + 入参直通 `sh -c` 已证；**11 次只读探测证明 shell 不可达**）|
 
 **三条硬规则**
 
@@ -38,17 +40,18 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定**：在设备现状下，评估过的**五个候选面（4 类组件）全部不可达成本目标**，且每一面都已定位到"卡在哪一环、缺什么能力"——不是"跑崩了"。
+**判定**：在设备现状下，**四个候选面（KGSL / binder×2 / FastRPC）判定不可达**；**GhostLock 面机制与载体均已成立，但阻断在"无内核地址泄露"**。每一面都定位到"卡在哪一环、缺什么能力"——不是"跑崩了"。
 
 ### 1.2 逐面结论
 
 | 面 | 机制是否成立 | 卡点 | 章节 |
 |---|---|---|---|
 | **KGSL** CVE-2023-33107 | 成立（源码级 pre-fix 确定） | `arm_lpae_init_pte()` 的 `BUG_ON(!suppress_map_failures)`，该静态变量运行期恒 false ⇒ 进入缺陷路径即 `BUG()` panic，无中间状态可用 | §5.1 |
-| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现） | **【2026-11-17 更正】原"全扫 0 命中"因扫描器判重 bug 漏报而作废**：修正后发现 3 条 xattr 栈覆盖候选；公开 select 路线仍不成立，但可利用性待验证，面从"判死"降为"待验证" | §5.2 + `GHOSTLOCK_RESCAN.md` |
+| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现）| **【2026-11-17 二次更正】载体侧已闭合**：修正扫描器判重 bug 后发现 3 条 xattr 栈覆盖候选；进一步静态判定"栈槽复用"是几何确定性、NUL 截断不阻断，但 fake waiter 的 `lock`/rb 链接必须为**非零内核地址** ⇒ 阻断点变为**无信息泄露**（§5.2.4 + §15） | §5.2 / §15 |
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
+| **OPPO Wi-Fi 私有事务**（非内核面）| 成立（root HIDL 服务 + 入参直通 `sh -c`，已证） | **入口在 shell 之外**：`wifi` 服务的 `code≥10069` 只对 system_uid 开放；11 次只读探测 + 2 组对照全部被服务端 `enforceInterface` 拒绝 | §16 |
 
 ### 1.3 主要资产与代价
 
@@ -159,7 +162,7 @@ $ADB pull /data/local/tmp/<name>.log artifacts_adb/g_logs/
 | `/dev`（198 个节点） | 可读 12 个；白名单内**可写仅 4 个**：`binder`、`hwbinder`、`ashmem<uuid>`、`kgsl-3d0`（均 0666） |
 | `/proc/sys` + `/sys/module/*/parameters/*` + 16 个高危节点（764 项） | **可写仅 1 个**：`/sys/kernel/tracing/trace`（正常设计） |
 | SUID / `run-as` / debuggable | 四分区 `-perm -4000` 命中 **0**；`run-as` SUID 已移除（0750）；`ro.debuggable=0`、无 `su` |
-| binder 服务 | **236 个**（229 个可 `dumpsys`），含 10+ 个 OPPO/ColorOS 私有服务与已开启的工程模式 —— 本文件 v2 时"从未审计、唯一未闭合的未知面"；**已于 2026-11-17 审计，见 §14：35 个私有服务覆盖 28 个，atlas 线索否证，结论 no-go** |
+| binder 服务 | **236 个**（229 个可 `dumpsys`），含 10+ 个 OPPO/ColorOS 私有服务与已开启的工程模式 —— 本文件 v2 时"从未审计、唯一未闭合的未知面"；**已于 2026-11-17 审计，见 §14：35 个私有服务覆盖 28 个，atlas 线索 5/5 闭合否证；7 项未覆盖，不宣称穷尽（§14.4）** |
 
 **两条对早期记录的修正**
 
@@ -205,7 +208,7 @@ $ADB pull /data/local/tmp/<name>.log artifacts_adb/g_logs/
 
 ---
 
-### 5.2 GhostLock CVE-2026-43499 —— 机制成立，无栈覆盖载体
+### 5.2 GhostLock CVE-2026-43499 —— 机制成立；载体已闭合，缺口为「无地址泄露」（原标题「无栈覆盖载体」已作废，见 5.2.4 末更正块与 §15）
 
 **这是本项目投入最深、结论最细的一面。** 缺陷真实、触发确定性可达、换向机制已被正面证实，唯一缺口是"把攻击者数据放进那块栈槽"。
 
@@ -248,7 +251,7 @@ $ADB pull /data/local/tmp/<name>.log artifacts_adb/g_logs/
 
 **W 必须从"不自愈"的出口返回**：`FUTEX_WAKE(A)` 会被拒（`futex_wake()` 对 `q->rt_waiter != NULL` 返回 `-EINVAL`）；正解是**超时早退** `handle_early_requeue_pi_wakeup()`（`futex.c:2738`），它绕过 `rt_mutex_finish_proxy_lock()`，因此不清 `pi_blocked_on`。
 
-#### 5.2.4 卡点：无栈覆盖载体（决定性）
+#### 5.2.4 卡点（历史结论：无栈覆盖载体）—— **已作废**，见本小节末两条更正块
 
 **几何**（以进入内核时的栈顶为 0，两条路径共用 `el0_svc_handler`，该项相消）：
 
@@ -303,6 +306,16 @@ waiter 绝对位置      = -(0x110 + 0x070 + 0x1f0) + 0xE8 = -0x288   [占 -0x28
 > 深度>3（扩到 4 无新机制）。**仅剩 2 项需受控上机**：栈重生时机（W 超时早退后是否复用同一栈槽进入
 > xattr）、NUL 截断能否构造合法 fake waiter。详见 `GHOSTLOCK_RESCAN.md` §4（接手必读）。
 > **"397/0/66"不再是穷尽证明；原版脚本保留为历史基线，修正版为 `tools/gl_carrier_rescan.py`。**
+>
+> ⚠️ **2026-11-17 二次更正（载体侧闭合，见 §15）：** 剩余 2 项已在纯静态层面收束，**不再需要上机验证**：
+> ① **栈重生不是"时机"问题而是几何问题**——同线程、每次异常入口 sp 复位到栈顶、`SyS_fgetxattr→getxattr`
+> 全路径无 VLA／帧长定长 ⇒ 复用由构造保证；
+> ② **NUL 截断不构成阻断**——`strncpy_from_user` 无 arm64 asm 变体（走 C 实现），终止 NUL 落在 `prio`
+> 第 2 字节时 `zero_bytemask` 自动把上位 3 字节置 0（`prio∈[1,255]` 全部合法），但要求 **81/129/161 字节
+> 连续非零**（三条路径各自），且"少写一点靠残余补齐"不成立（NUL 恰好清零下一字段首字节）。
+> ⇒ **新阻断点**：`lock` 与 rb 链接必须取非零内核地址，而"干净"取值要么含 `0x00`、要么需 `RB_EMPTY_NODE`
+> 自引用（= 栈地址）。两者都要求**内核地址知识**，本机无泄露通道。判定由"待验证"改为
+> **"载体成立、缺信息泄露"**，面维持 no-go。
 
 #### 5.2.5 过程中的两个方法论产出
 
@@ -427,7 +440,7 @@ ENOTTY（未实现）3833
 
 ---
 
-## 6. 负知识清单：已作废的结论（**必须遵守，否则会重走死路**）
+## 6. 负知识清单：19 条已作废的结论（**必须遵守，否则会重走死路**）
 
 保留"已作废 + 依据"比删掉更有价值。以下每条都曾是"确定"结论。
 
@@ -451,6 +464,8 @@ ENOTTY（未实现）3833
 | "`rt_mutex` 应为 24 B"（v1 §20.1 初稿） | **自我更正** | 4.9 的 `struct rt_mutex` 本就带手工 `waiters_leftmost`，与 `rb_first_cached` 无关 ⇒ **32 B** |
 | "`rt_mutex_get_effective_prio` 是 vendor 回填 DL 的证据" | **误判** | 该函数 4.9 主线本来就有 |
 | "ion 可作喷堆" | **作废** | `0664`，shell 只有读权限 |
+| "没有 `Permission Denial` ⇒ 拒绝不在授权层"（Wi-Fi 面中途判断，§16.5） | **作废** | 11 次探测全部得到 `Binder invocation to an incorrect interface`，但对照实验证明工具与通路正常、拒绝发生在服务端；厂商可以用 `enforceInterface` 的报文掩盖 uid 门禁 ⇒ **报文类型不能反推门禁类型** |
+| "Wi-Fi 私有事务只差一次正确调用"（同上） | **作废** | 穷尽所有可获得的描述符组合（单令牌 4 种 / 双令牌 4 种排列 / 无参）后仍全部失败；外层分派所在的 `com.android.server.wifi` 实现类不在任何已解出 jar 中 |
 
 ---
 
@@ -459,17 +474,25 @@ ENOTTY（未实现）3833
 出现或触发**任一条**即须重评；否则"再试一次同样的构造"不会改变结论。
 
 1. 出现**面向 4.9 / arm64 ticket spinlock 的 UAF 原语**研究 ⇒ binder 线可直接接上（靶点、pre-fix 证据、堆条件已备，§5.3.2）。
-2. ~~出现能把用户数据写到 `[-0x288, -0x240)` 的新 syscall~~ **【2026-11-17 已命中，见 §5.2.4 更正块】**：
-   `SyS_fgetxattr/getxattr/setxattr` 经 `strncpy_from_user` 写栈 256 B，几何满足。
-   **4 项待验证已有 2 项静态排除**：内核局部量覆写（getxattr copy 后无 store）、深度>3（扩到 4 无新机制）。
-   **仅剩 2 项需受控上机**：① 栈重生时机（W 超时早退后调用 fgetxattr 是否复用旧 waiter 槽）；
-   ② NUL 截断下能否构造通过链走查的 fake waiter（task/lock/prio）。任一否证恢复 no-go，任一通过则真正重开。
-   **接手步骤：静态准备已全部完成，无需再扫描；接上设备后先登记判据（HANDOVER §11，事后不改），
-   优先用无创 oracle（FUTEX_WAKE 返回值 / -EDEADLK 二元判据），经用户授权再运行。**
+2. **【2026-11-17 二次更新：已不是"等载体"，而是"等泄露"】** 出现下列任一条，GhostLock 立刻重开：
+   (a) **任一可用的内核地址泄露**（`/proc` 侧信道、binder/驱动泄露、侧信道皆可）⇒ fake waiter 的 `lock`
+   与 rb 链接才有可填的值（§15 §6）；
+   (b) 出现**不经 NUL 语义**、能把用户数据写到 `[-0x288, -0x240)` 的载体（如某条路径让 xattr 的 **value**
+   经 `__arch_copy_from_user` 落在 waiter 槽，而非 `kname` 经 `strncpy_from_user`）⇒ NUL 约束整体消失；
+   (c) 出现**非栈复用**的利用路线（见第 5 条）。
+   ~~旧条件：xattr 栈覆盖候选的"栈重生 + NUL 构造"两项上机验证~~ **已静态收束（§15）**：
+   栈复用是几何确定性、NUL 不阻断、payload 长度 84/132/168 B 全部合规；且这两项**在无泄露前提下
+   不具可证伪性**（xattr 返回值不暴露栈内容；无地址只能猜测地址 ⇒ 必然 panic 而 panic 文本不可读）。
+   **接手步骤：不要再上机重跑同类构造；静态侧无需再扫描。**
 3. 设备 **SPL 或内核构建发生变化** ⇒ 帧几何、binder 形态、全部符号偏移同时改变，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 中任一个 ⇒ 可定位 GhostLock panic 的精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线（例如改用 `sched_setattr` 之外的链遍历入口）。
-6. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
+6. **出现任意 `system`（uid 1000）上下文的代码执行点** ⇒ 可把 `executeDriverCommand`
+   （root HIDL 服务、入参直通 `sh -c`，`F16_WIFI_FTM_TRACE.md` §7）作为**第二段**接上，直接得到 root 命令执行。
+   ⚠️ **该事务号已实测从 shell 不可达**（11 次探测 + AOSP/IMEI 两组对照，全部返回
+   `Binder invocation to an incorrect interface`）⇒ **不要再猜令牌**，那是死路（§8 已记负知识）。
+   只在"拿到 system 上下文"或"解出 `com.android.server.wifi` 实现类"时重开这一条。
+7. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
 
 ---
 
@@ -568,7 +591,7 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 3. **闸门必须量化且可被否证**。`[0x288, 0x2BE]`、`off_end` 三元式、spinlock 指令序列、`EPERM` 实测 —— 都能被数据推翻，而不是靠"感觉不对"。
 4. **任何"窗口"都要用至少三组不同量级的数据交叉验证**。本项目两次把"看起来相关的时间间隔"当窗口（W2、W1），均被新对照组推翻；最终结论是"窗口根本不是变量"。
 5. **不可利用性判定写成五段式**：可达 → 悬垂 → 可控改写 → 复填 → 任意写，逐段给证据与缺口。"试到崩"只能证明某条路径不通，五段式才能说清**为什么**不通、**缺哪一块**。
-6. **旧结论必须现场作废**。本项目已作废 17 条曾"确定"的结论（§6）。文档保留"已作废 + 依据"比删掉更有价值 —— 否则下一轮会重走同一条死路。
+6. **旧结论必须现场作废**。本项目已作废 19 条曾"确定"的结论（§6）。文档保留"已作废 + 依据"比删掉更有价值 —— 否则下一轮会重走同一条死路。
 7. **不要用构建日期推断代码版本**。本机 2025-03 构建，binder 仍是 2018 年语义。
 8. **会触发内核缺陷的程序必须每步落盘**（`write(2)` + `fsync`），且成功路径也要输出 —— 否则崩溃点不可判定。
 
@@ -608,17 +631,26 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 | 12 | 窗口量化 + 亚毫秒版 | 证明窗口不是变量（0.05 ms 仍 panic）；提出 W1/W2 → 随即被自身探针否证 |
 | 13 | 探针判定 + A′ 活帧对照 | **A′ 证明"换向 + 走查"形态成立，panic 只由"帧已死"引起**；载体扫描 397 入口 0 命中 → GhostLock 收束【**2026-11-17 更正：该 0 命中因扫描器判重 bug 漏报而作废，见 §5.2.4 更正块**】 |
 | — | 补丁窗口扫描 + binder | 20938 未引入；20421 pre-fix 但 ticket 锁无原语；FastRPC 双重封闭 |
+| 14 | Binder 私有服务审计（五轮） | 覆盖 2/35 → 28/35；atlas 结构与 CVE-2026-70386 同构，但命令模板硬编码 ⇒ **线索 5/5 闭合否证**；7 项未闭合（§14） |
+| 15 | 审核意见 v001 响应（静态） | 判重 bug 复核 → 3 条 xattr 候选；**栈复用=几何确定性、NUL 不阻断 ⇒ 缺口改为"无地址泄露"**（§15） |
+| 16 | Wi-Fi 私有事务面追溯（设备在环） | OTA → vendor.img → **内嵌 `euclid/odm.img`** 解出 `@1.1-service`；rc 为 `user root`；入参直通 `sh -c`（已证）；**11 次只读探测证明 shell 不可达**（§16） |
 
 ---
 
 ## 13. 一句话交接
 
-> 五个候选面、13 轮工作，缺陷与触发多次被证实是真的；KGSL 停在 `BUG_ON`（进入即 panic，没有中间态），
-> binder 内核CVE 停在"ticket spinlock 只给 +0x00010001"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"——
-> 这三面是本机权限模型与代码形态共同决定的 no-go。Binder 服务面（§14）五轮审计后确定否证。
-> ⚠️ **GhostLock 的判定已于 2026-11-17 更正**：原"54 字节窗口不存在/全扫 0 命中"是扫描器判重 bug 漏报，
-> 修正后发现 3 条 xattr 栈覆盖候选（§5.2.4 更正块、`GHOSTLOCK_RESCAN.md`），现为"载体候选已找到、
-> 可利用性待验证"，**需受控实验才能恢复 no-go**。若继续，不要重复同样的构造，只看 §7 的触发条件（第 2 条已更新）。
+> 五个候选面、16 轮工作，缺陷与触发多次被证实是真的；KGSL 停在 `BUG_ON`（进入即 panic，没有中间态），
+> binder 内核 CVE 停在"ticket spinlock 只给 `+0x00010001`"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"——
+> 这三面是本机权限模型与代码形态共同决定的 no-go。Binder 服务面（§14）：atlas 线索 5/5 闭合否证，
+> **7 个未覆盖服务仍是开口，不宣称穷尽**。
+> **Wi-Fi 私有事务面（§16）是全项目最接近"可用"的一条，也是最干净的一次否定**：`executeDriverCommand`
+> 的入参确实进 `sh -c`、服务确实是 `user root`，但那个事务号只对 system_uid 开放——拿 system 本身就要 root，
+> 循环。**结论：线索真实、危害真实、入口在 shell 之外。**
+> ⚠️ **GhostLock 的判定在 2026-11-17 经过两次更正，现在是终态（§15）**：第一次更正推翻了"全扫 0 命中"
+> （扫描器判重 bug 漏报 18,074 个不同栈上下文），找到 3 条 xattr 栈覆盖候选；第二次更正在纯静态层面
+> 判定"栈槽复用"是几何确定性、NUL 截断不阻断，**缺口因此从"载体/时机"换成"缺一次内核地址泄露"**。
+> 结论仍是 no-go，但理由完全换过了：**不是"没找到能把数据写进去的办法"，而是"数据能写进去，但不知道往哪写"**。
+> 若继续，不要重复同类构造，只看 §7 第 2 条的两类触发条件。
 
 ---
 
@@ -634,7 +666,7 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 
 ### 14.1 结论
 
-**Binder 服务面亦判定 no-go；§7 第 6 条从"未执行"变为"已执行且未命中"。** 项目维持整体结项。
+**Binder 服务面的 atlas 线索确定否证；整体私有服务面为「已审计、7 项未闭合、1 条待验证」，不宣称穷尽；§7 第 6 条从"未执行"变为"已执行且未命中"。** 项目维持整体结项。
 
 | 轮 | 动作 | 结果 |
 |---|---|---|
@@ -682,8 +714,199 @@ binder 线程池；其加载的 `lib64/libatlasservice.so` 与第四轮所反汇
 
 - 35 个私有服务覆盖 28 个；7 个 MISSING（`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/
   `IHansComunication`/`IOppoAppDataService`/`OplusResourceManagerService`）实现在独立 apk/服务，未纳入。
-  **但最高价值的 atlas 线索已 5/5 闭合，7 个未覆盖项无 CVE 类比指向，不单独重开。**
-- ~~唯一还能改变结论的动作：解出 root 二进制~~ **已完成（第五轮），确定否证**；**无剩余可改变结论的动作**。
+  **这 7 个是"已知未闭合项"，不是"已排除项"**；atlas 线索 5/5 闭合只关闭了该条特定类比链。
+- **`executeDriverCommand` 线索已定性（2026-11-17，设备在环）**，详见 `F16_WIFI_FTM_TRACE.md`：
+  ① 它是**内部 helper**（44 条指令），不是 Binder 接口；真正的暴露点是手写的
+  `OplusWifiTransactionHelper.onTransact`（798 条指令，实现 `IOplusWifiManager`+`IWifiTransactionHelper`）；
+  ② 客户端 `android.net.wifi.OplusWifiManager` 经 `ServiceManager.getService("wifi")` + 裸 `transact`
+  调用 **tx 10070 = `sendFTMCommand(String)`**、10069 = `getFTMState`；服务运行在 **system_server**
+  （uid 1000，`u:r:system_server:s0`）；
+  ③ 该分支**只有 `enforceInterface()`，无调用者身份检查**，`enforceAccessPermission()` 为空实现；
+  ④ **外部可达性未证明**：7 次只读探测（含 AOSP 对照组）全部止于描述符校验，**未出现 `Permission Denial`**；
+  ⑤ **下游已解出（2026-11-17 同日，比预期严重）**：ODM 分区封装在 `vendor.img` 的 `euclid/odm.img` 里，
+  目标是 `/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service`（115,408 B）；其 init rc 为
+  **`user root`** + caps `NET_ADMIN NET_RAW SYS_MODULE`；二进制内自实现
+  `system()` = `execv("/vendor/bin/sh", {sh,-c,cmd})`，9 个调用点；vtable slot5（HIDL code 4）
+  = `executeDriverCommand`，其中 `hidl_string::c_str()` → 拷入命令缓冲 → 按前缀（`myft`）分支 →
+  `std::string::append` → `sh -c` 执行。
+  ⇒ **"入参进入 shell 命令、以 uid 0 执行"已证**。
+  ⑥ **可达性：实测不可达**（同日 18:38–18:47，11 次只读探测 + 2 组对照，全部止于服务端
+  `enforceInterface`；AOSP tx1 与 `iphonesubinfo` 对照均正常）⇒ 该事务号只对 system_uid 上下文开放，
+  而拿到 system_uid 本身即 root 的前置，形成循环。**对"临时 ROOT"无直接价值**，
+  仅作为"若将来有 system 上下文执行点"的组合链第二段保留。见 `F16_WIFI_FTM_TRACE.md` §8。
+- ~~唯一还能改变结论的动作：解出 root 二进制~~ **已完成（第五轮），确定否证**。
+  **措辞更正（2026-11-17，响应审核意见 v001 问题 3）：应表述为"atlas 这条类比链已无可改变结论的动作"，
+  而非"整个私有 Binder 面已无剩余动作"**——7 个未覆盖服务仍是开口；`executeDriverCommand` 已于同日
+  定性（见上一条与 `F16_WIFI_FTM_TRACE.md`），不再列为开口。
 - **路径 B（受控 setEvent 探针）不建议**：净执行 0.5–1 h，但命令模板硬编码、无输出 oracle
   （dmesg/kmsg/pstore 全不可读），且违反 §7"不盲试事务号"约定；成本不是时间，是无效性。
 - 全程只读：未推送二进制到设备、未调用业务事务号、未改分区；大文件下载直连不走代理；设备终态同 §11。
+
+---
+
+## 15. 增补：GhostLock 剩余两项的静态收束（2026-11-17，响应审核意见 v001 · P0）
+
+> 完整推导、反汇编证据与工具见 `artifacts_adb/binder_audit/GHOSTLOCK_NUL_ANALYSIS.md`；
+> 工具 `tools/gl_nul_analysis.py`（离线，读 `vmlinux.elf`）。**全程未连设备。**
+
+### 15.1 结论
+
+审核意见把剩余工作定为"上机验证栈槽复用 + NUL 截断构造"。本轮的静态判定是：**这两项都不需要上机**，而且它们把阻断点改写成了一条新缺口。
+
+| 待验证项 | 判定 | 依据 |
+|---|---|---|
+| 拷贝后内核局部量覆写 | **排除** | `getxattr` 的 prologue store 区间 `[sp+0x110, sp+0x150)` 与 copy 缓冲 `[sp+8, sp+0x108)` 不相交；copy 之后全函数 0 条 `st*` |
+| 深度 >3 新机制 | **排除** | depth 4，78,944 次访问，无新原语（`GHOSTLOCK_RESCAN.md`） |
+| **栈重生时机** | **不是时机问题；几何确定性成立** | 同线程、异常入口 sp 复位到栈顶、路径无 VLA 且帧长定长、`el0_svc_handler` 项相消 |
+| **NUL 截断构造** | **NUL 不阻断；约束精确化为"连续非零前缀"** | 见 15.2、15.3 |
+
+**判定：GhostLock 维持 no-go，但理由换成"缺一次内核地址泄露"。** 载体侧已闭合。
+
+### 15.2 三个硬事实（可离线复现）
+
+1. **无 `__strncpy_from_user` asm 变体** ⇒ 走 `lib/strncpy_from_user.c` 的 C 实现：含 NUL 的 8 字节字按
+   `zero_bytemask` 掩码后整字存储（NUL 之后同字内字节被写 0），再往后保留栈残余。
+2. **`getxattr @0xffffff8008271408`**：`0x8271440 bl strncpy_from_user`，目标 `sp+8`、长度 `0x100`；
+   全部栈写只有 prologue 4 条 `stp`，区间 `[sp+0x110, sp+0x150)`；缓冲整体在自身 `sp` 之上
+   ⇒ 被调用者帧与中断帧（压在该 `sp` 之下）不可能碰到它。
+3. **字节映射**（串自 buffer 起点写入 ⇒ `串索引 = waiter偏移 + (waiter−buffer)`）：waiter 72 B 全部落在
+   256 B 缓冲内，**没有"前面留残余"的可能**。覆盖全部被读字段所需串长：`fgetxattr` **84 B**、
+   `getxattr` **132 B**、`setxattr` **168 B**（若算到结构尾部 `0x48` 则 88/136/172 B），
+   全部在 `XATTR_NAME_MAX`=255 内。
+
+### 15.3 NUL 约束的真实形态
+
+- 必须提供**到 `prio` 低字节为止的连续非零前缀**：81 / 129 / 161 字节（三条路径）。
+- `prio` 上位 3 字节**由掩码自动补 0** ⇒ `prio ∈ [1,255]` 全部合法（NUL 语义在这里是帮忙而非阻碍）。
+- `prio` 必须 **≠ `task->prio`**（`rtmutex.c:611` 相等时只置 `requeue=false`，跳过 `[7]` 的 dequeue/enqueue，
+  写原语消失）。W 为 120，取 130 一类即可。
+- **"少写一点靠残余补齐"不成立**：终止 NUL 恰好落在下一个字段的首字节，任何指针首字节被清零即失效
+  ⇒ 不存在"用户段 + 内核残余"的混合构造。
+
+### 15.4 新的阻断点（本轮核心）
+
+`rt_mutex_adjust_prio_chain()` 对 fake waiter 的读取面已逐行核对（原因子见分析文档 §5）。两处关键：
+`:579` 守卫天然通过（`next_lock` 与 `waiter->lock` 同源）；`waiter->task` **在 `prio ≥ 0` 时不被解引用**
+（全文件仅 `:975` 赋值、`:1067` `wake_q_add`）⇒ `task` 只要 8 字节全非零。
+
+真正的约束是 `lock`（0x38）与 `tree_entry` 的三个链接：它们必须**非零**（否者串在此截断），而"干净"取值
+全部不可得：
+
+| 想要的取值 | 为何不成立 |
+|---|---|
+| `RB_EMPTY_NODE` 自引用（让 `rt_mutex_dequeue` 直接返回） | 需 `__rb_parent_color == &waiter->tree_entry`，即**内核栈地址**，本机无泄露 |
+| `rb_left/rb_right = NULL`（叶子节点常态） | 含 `0x00`，串在此截断，后续字段全废 |
+| `lock` 指向攻击者可控对象 | 需该对象的**内核地址**；`pi_state` 在 `kmalloc-128`，随 KASLR 与分配序变化 |
+
+⇒ **两个必要条件归约为同一件事：必须知道至少一个内核地址。** 本机泄露面为空（§2.3：`/proc/kallsyms`、
+`/proc/iomem`、`dmesg`、`/dev/kmsg`、`pstore` 全不可读；`RANDOMIZE_BASE=y`；无 `BPF`/`KPROBES`/`perf`）。
+
+### 15.5 为什么不再上机
+
+| 实验 | 能否结论 |
+|---|---|
+| E1 只验"栈槽复用" | **不能**：xattr 返回值只反映文件系统语义（`-ENODATA`/`-ERANGE`），不暴露栈内容；没有无创 oracle |
+| E2 端到端 | **不能**：无泄露 ⇒ 只能填猜测地址 ⇒ 必然 panic，而 panic 文本不可读 ⇒ 既不能证真也不能证伪 |
+
+⇒ **在"无泄露"前提下，这两项实验不具可证伪性**；重跑只会重现"帧死即 panic 3/3"的已知现象并消耗重启额度
+（§11 约定 2 次）。P0 降级为"等泄露原语或 raw-byte 载体"（§7 第 2 条）。此判断可被否证，否证条件即 §7 第 2 条。
+
+### 15.6 方法论产出
+
+1. **"待验证"要先问可证伪性**：一个实验若在现有观测面上既不能证真也不能证伪，它不是实验，是重启。
+   本轮因此把两项"待验证"直接改判为"静态成立 / 静态阻断"。
+2. **C 实现的边界语义要按 8 字节字算，不是按字节算**：`zero_bytemask` 会在 NUL 之后多清 0–7 字节，
+   这既是 `prio` 合法取值的来源，也是"残余不可用"的原因。
+3. **掩码位宽要双向检查**：`rb_parent()` 清低 2 位 ⇒ 攻击者给的链接地址不是任意值，这既放宽了构造，
+   也意味着"随便填一个非零垃圾"必然把写操作打到不可控地址。
+
+---
+
+## 16. 增补：OPPO Wi-Fi 私有事务面（2026-11-17，设备在环）
+
+> 完整逐指令证据、11 次探测原始输出与负知识见 `artifacts_adb/binder_audit/F16_WIFI_FTM_TRACE.md`。
+> 本轮**动了设备**（只读：`service list`/`service check`/`dumpsys`/`service call` 无参与单字符串事务/OTA 下载），
+> 未 push、未安装、未改分区、未触发内核。
+
+### 16.1 结论（一句话）
+
+**线索真实、危害真实、入口在 shell 之外。** `executeDriverCommand(String)` 的入参确实进 `sh -c`、
+服务确实以 `user root` 运行，但该事务号（`wifi` binder `code≥10069`）**只对 system_uid 上下文开放**；
+而拿到 system 上下文本身就是 root 的前置 ⇒ 对"临时 ROOT"目标形成循环，无直接价值。
+
+### 16.2 调用链（已证部分）
+
+```
+app / system_server
+  └─ android.net.wifi.OplusWifiManager（framework/classes2.dex）
+       mService = ServiceManager.getService("wifi")
+       Parcel.writeInterfaceToken("android.net.wifi.IOplusWifiManager")
+       transact(10070 = sendFTMCommand(String) / 10069 = getFTMState)
+  └─ wifi 服务（system_server, uid 1000）内 OPPO 分派
+       └─ com.oplus.server.wifi.common.OplusWifiTransactionHelper.onTransact（手写 798 条指令，
+          实现 IOplusWifiManager + IWifiTransactionHelper；FTM 分支只有 enforceInterface，
+          `enforceAccessPermission()` 是 1 条指令的空实现）
+            └─ OplusWifiHalService.executeDriverCommand(String)
+                 └─ HIDL vendor.oplus.hardware.wifi@1.1::IOppoWifiService.executeDriverCommand(String, cb)
+                      └─ /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service  ← **user root**
+```
+
+### 16.3 下游实证（关键：它不是普通 HAL 进程）
+
+- **取数路径**：OTA zip（Range 584 MiB）→ `vendor.new.dat.br` → brotli → `vendor.new.dat`（`diff=0`）
+  → `sdat2img` → `vendor.img`（2.09 GiB）→ **`euclid/odm.img`（166 MiB）** → `bin/hw/vendor.oplus.hardware.wifi@1.1-service`（115,408 B）。
+  `/odm` 不是独立分区，而是封装在 `vendor.img` 里——这是此前四条取数路径全部失败的原因。
+- **运行身份**（`etc/init/vendor.oplus.hardware.wifi@1.1-service.rc`）：
+  `user root`，group `wifi system vendor_qti_diag net_admin`，caps `NET_ADMIN NET_RAW SYS_MODULE`。
+- **shell 执行原语**：二进制无 `system`/`popen` 导入，而是手写
+  `execv("/vendor/bin/sh", {"/vendor/bin/sh","-c",cmd,NULL})`（入口 `0x95b4`，**9 个调用点**）。
+- **入参直通（最后一跳）**：vtable @`0x1a0a0` 与 HIDL 事务号严格对应，`code 4 = executeDriverCommand = slot5 = 0x992c`；
+  该函数体内 `hidl_string::c_str()` → 拷入命令缓冲 → 按前缀（`myft`）分支 → `std::string::append` → `sh -c`。
+  **⇒ "入参进入 shell 命令、以 uid 0 执行" 已证。**
+- 同族接口（同样以 root 执行）：`sendSupplicantCommand`（`wpa_cli`）、`runWiFiScript`、
+  `catchSnifferLog`（`tar … && rm -rf …`）、`changeConnectionMode`（写 `/sys/module/wlan/parameters/con_mode`）。
+
+### 16.4 可达性实测（本节最重要的否定）
+
+判据先登记后执行：只用 `10069 = getFTMState`（无参、只读），返回整型即"可达"。
+
+| 构造 | 次数 | 结果 |
+|---|---|---|
+| 单令牌 4 种（`IOplusWifiManager` / `IWifiManager` / `IWifiTransactionHelper` / `IOplusWifiP2pManager`） | 4 | `SecurityException: Binder invocation to an incorrect interface` |
+| 无参 | 1 | 同 |
+| 双令牌 4 种排列 | 4 | 同 |
+| **对照 A** `service call wifi 1`（AOSP 事务） | 1 | **正常返回 Parcel** |
+| **对照 B** `service call iphonesubinfo 1`（AIDL 需令牌） | 1 | **正常返回 IMEI** |
+
+**对照证明**：工具与 binder 通路正常、字符串参数可用、拒绝发生在**服务端**（不是 `FAILED_TRANSACTION`、
+不是 SELinux、不是工具侧失败）。**穷尽了所有可获得的描述符组合后仍然失败** ⇒ 该事务号存在一层
+不在已解出 jar 中的外层分派（`com.android.server.wifi` 的实现类不在这台机器的 `services.jar`、
+`oppo-wifi-service.jar` 里，`system/framework` 下也没有 `service-wifi.jar`）。
+
+### 16.5 记录两条负知识（本轮自我推翻）
+
+| 我先前的判断 | 实测更正 |
+|---|---|
+| "全程无 `Permission Denial` ⇒ 拒绝不在授权层" | **错**。厂商可以用 `enforceInterface` 的报文掩盖 uid 门禁；报文类型不能反推门禁类型。 |
+| "只差一次正确调用，用真实客户端即可" | **未证且很可能不成立**。所有令牌布局均失败；在拿到外层分派代码前，不得假设再试一次就会通。 |
+
+### 16.6 何时重开这一条
+
+仅两种情形（§7 第 6 条）：
+1. 出现**任意 system（uid 1000）上下文的代码执行点** ⇒ 可把本节这条链作为**第二段**接上，直接得到 root 命令执行；
+2. 解出 `com.android.server.wifi` 的实现类（外层分派）⇒ 可判定门禁是 uid 还是令牌，但即便如此，
+   从 shell 到 system 上下文之间仍缺一环。
+
+**禁止**再用猜事务号的方式试探（236 个服务 × 未知令牌 = 盲试，且已证此路不通）。
+
+### 16.7 复现路径（全部离线，不需要设备）
+
+```bash
+python tools/ota_entry_range.py <OTA_URL> vendor        # 列条目区间（vendor.new.dat.br / transfer.list）
+python tools/dl_range.py <OTA_URL> <start> <end> out.br 16 ""   # 只取该区间
+python tools/rebuild_system.py out.br out.dat            # brotli 流式解压
+python tools/sdat2img.py <transfer.list> out.dat vendor.img
+# 7z x vendor.img euclid/odm.img  &&  7z x odm.img "bin/hw/vendor.oplus.hardware.wifi@1.1-service"
+```
+
+分析脚本：`tools/find_service_reg.py`（dex 内定位服务名/注册点/onTransact 分派，含 androguard hiddenapi 解析绕过）。
