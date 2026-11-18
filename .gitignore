@@ -27,6 +27,8 @@ artifacts_adb/binder_audit/rootbin/*.br
 artifacts_adb/binder_audit/rootbin/*.dat
 artifacts_adb/binder_audit/rootbin/*.img
 artifacts_adb/binder_audit/rootbin/_extract/
+# P2 七服务审计从 system.img 提取的厂商二进制（同 _extract，不入库）
+artifacts_adb/binder_audit/rootbin/_p2/
 
 # ---- 第三方完整利用代码：不重新分发，只在文档中引用出处 ----
 src_ref/poc_ex.c

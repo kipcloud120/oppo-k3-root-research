@@ -99,7 +99,7 @@ AtlasService::setEvent(int, String8 value)
 | 环节 | 状态 |
 |---|---|
 | 35 服务接口定义 | **28/35 覆盖** |
-| 7 个服务实现 | 未纳入（独立 apk/服务） |
+| 7 个服务实现 | **P2 已补审 6/7**（2026-11-18，见 `P2_SEVEN_SERVICES_AUDIT.md`）：hephaestus 有 `system(串)` 但 `uid==1000` 门禁挡 shell，其余无命令面/带签名校验；antirootdialog 实现未解出为缺口 |
 | atlas `setEvent` Java→native 链 | **已证实**（含 root init service） |
 | native 层参数处理 | **已反汇编证实**（第四轮）：`libatlasservice.so` 未 strip，`setEvent`/`caputureLogs`/`checkPath`/`doLogCaputure`/`threadLoop` 调用图完整还原 |
 | shell 对 atlas 服务的 SELinux 可达性 | **已实证：可达**。用标准只读 `dumpsys AtlasService` 作探针（DUMP_TRANSACTION，非业务事务号），捕获新增 avc：`avc: denied { use } for path="pipe" scontext=u:r:atlasservice:s0 tcontext=u:r:shell:s0 tclass=fd`——主语是 root 域 atlasservice 在使用 shell 传入的 fd，证明 shell 的 binder 调用**确实到达** root 服务进程，SELinux 未在 `{ call }` 层拦截。对照组 `dumpsys commondcs` → "Can't find service"，无 avc。按 HANDOVER 约定未盲试业务事务号。 |

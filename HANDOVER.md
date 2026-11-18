@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.8**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8 新增 §18 = P0 静态定性（`-3` 归因 = native regex 黑名单 + 固定命令模板；更正 myftm 前缀判据），P0/P1 已完成**。下次会话**从 §17 开始**，再按需查 §18 / §16 / §15 / §14 |
+| 版本 | **v2.9**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8 新增 §18 = P0 静态定性（`-3` 归因 + myftm 前缀更正，P0/P1 已完成）；v2.9 新增 §19 = P2 七服务审计（6/7 定性，hephaestus 唯一 system 面但 uid==1000 门禁挡 shell；antirootdialog 实现未解出为缺口）**。下次会话**从 §17 开始**，再按需查 §19 / §18 / §16 / §15 / §14 |
 | 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、入参被 uid 0 服务接收，**但所有注入均被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0，不构成临时 ROOT 实锤**（§16.11）。**§18（P0 静态）已定性 `-3` = native regex 黑名单 `[@#$%&*^:;?|]+` + 固定命令模板；myftm 分支前缀判据更正为 5 字节；判定为受限 root 工具接口，非任意命令执行** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -23,7 +23,7 @@
 | 复核某个判断 | §5 对应小节 + §6 负知识清单 + `artifacts_adb/` 原始日志 |
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
-| Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证；**7 个未覆盖服务为已知未闭合项**）|
+| Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证）+ §19（P2 补审 7 服务中 6 个：均无 shell 可达提权路径，hephaestus system 面被 uid==1000 门禁挡住；**antirootdialog 实现未解出为唯一缺口**）|
 | Wi-Fi 私有事务面（当前主线索）| **§18 → §16 + §16.11**（P0 已定性 `-3` = native regex 黑名单 + 固定命令模板，myftm 前缀判据更正；"入参直通任意命令/实锤"已撤回，维持 no-go）|
 
 **三条硬规则**
@@ -654,8 +654,10 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 > 判定"栈槽复用"是几何确定性、NUL 截断不阻断，**缺口因此从"载体/时机"换成"缺一次内核地址泄露"**。
 > 结论仍是 no-go，但理由完全换过了：**不是"没找到能把数据写进去的办法"，而是"数据能写进去，但不知道往哪写"**。
 > 若继续，不要重复同类构造，只看 §7 第 2 条的两类触发条件。
-> **Wi-Fi 面 P0（§18，2026-11-18）已静态收束：`-3` = native regex 黑名单 + 固定命令模板；更正 myftm 前缀为 5 字节
-> （历史注入串全是 `myft `，从未进 myftm 分支）。判定为"受限 root 工具接口"，非任意命令执行，整体 no-go 不翻转；P0/P1 闭合，不建议上机重试。**
+> **Wi-Fi 面 P0（§18）已静态收束：`-3` = native regex 黑名单 + 固定命令模板；更正 myftm 前缀为 5 字节
+> （历史注入串全是 `myft `，从未进 myftm 分支），判定"受限 root 工具接口"非任意命令执行。
+> P2（§19）七服务审计 6/7 定性：hephaestus 唯一有 `system(可控串)` 但被 native `uid==1000` 门禁挡住 shell；
+> 其余无命令面或带签名校验；antirootdialog 实现未解出为缺口。**P0/P1/P2 全部闭合，整体 no-go 不翻转，不建议上机。**
 
 ---
 
@@ -1032,11 +1034,13 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 逐个确认哪些 segment 来自调用方字符串。若只有整型/枚举进入 ⇒ 受限 root 工具接口，不构成任意命令执行；
 若 `iwpriv` 参数串可控 ⇒ 仍有驱动层攻击面。
 
-**P2 — 七个未覆盖私有服务（用户此前的 P1）**
+**~~P2 — 七个未覆盖私有服务（用户此前的 P1）~~ ✅ 已完成，见 §19**
 
-`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/`IHansComunication`/
-`IOppoAppDataService`/`OplusResourceManagerService`。实现 apk 在 system 镜像里，
-复用 `tools/ext4_find_offset.py` 定位后按 §14 atlas 同格式审计。纯静态，可与 P0 并行。
+6/7 定性，**无一提供 shell 可达的提权路径**：hephaestus 是唯一有 `system(可控串)` 的服务，
+但 native 层 `getCallingUid()==1000` 硬门禁挡住 shell(2000)；hans/horae/oiface/orms/appdata 无命令执行面
+或带签名校验；**antirootdialog 实现未解出（odex/vdex）记为缺口**。整体 no-go 维持。
+（原计划：`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/`IHansComunication`/
+`IOppoAppDataService`/`OplusResourceManagerService`，按 §14 atlas 同格式审计。）
 
 **冻结**：KGSL、两个 binder 内核 CVE、FastRPC、GhostLock，无新原语不动。
 
@@ -1054,6 +1058,7 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 | 主文档 | `HANDOVER.md`（本文件，唯一权威） |
 | Wi-Fi 全证据 | `artifacts_adb/binder_audit/F16_WIFI_FTM_TRACE.md`（§7 静态链 / §9 外层分派 / §11 可达 / §12 撤回）|
 | Wi-Fi P0 归因 | `artifacts_adb/binder_audit/WIFI_P0_PARAMETER_TRACE.md`（`-3` 逐层归因 / myftm 前缀更正 / 合法命令格式表）|
+| P2 七服务审计 | `artifacts_adb/binder_audit/P2_SEVEN_SERVICES_AUDIT.md`（宿主/身份/门禁总表 / hephaestus uid 门禁解码 / antirootdialog 缺口）|
 | GhostLock 静态 | `artifacts_adb/binder_audit/GHOSTLOCK_NUL_ANALYSIS.md` |
 | GhostLock 载体 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md` |
 | Binder 审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md` |
@@ -1117,4 +1122,41 @@ native 状态码表：`0`=命令已拼装执行；`-2`=空参数；**`-3`=regex 
 ### 18.5 下一步
 
 P0/P1 已闭合，**不建议上机重试**：命令模板固定 + regex 黑名单 + token 边界三重约束，现有判据下无法构造可执行新命令。
-重开条件：出现能绕过 token 边界或 regex 的新构造（§7 第 6 条）。P2（七个未覆盖私有服务）仍未启动，纯静态可与本轮并行。
+重开条件：出现能绕过 token 边界或 regex 的新构造（§7 第 6 条）。P2（七个未覆盖私有服务）见 §19，已审计闭合。
+
+---
+
+## 19. 增补：P2 七个未覆盖私有服务审计（2026-11-18，纯离线，§17.3 P2 收束）
+
+> 完整逐项证据见 `artifacts_adb/binder_audit/P2_SEVEN_SERVICES_AUDIT.md`。从 `system.img` 解出 4 个 native
+> 二进制 + rc + so（落 `rootbin/_p2/`），结合已入库 apk/jar，按 §14 atlas 同格式审计。**未连设备、无写操作。**
+
+### 19.1 结论
+
+**七服务无一产生 shell 可达的 uid 0 提权路径，整体 no-go 维持。** 覆盖度 6/7 定性，1 个缺口。
+
+### 19.2 关键发现：hephaestus 的 `system()` 被 uid 门禁挡住
+
+- rc 有两个 service：`hephaestus`(user system) 与 `hephaestus_install`(**user root**, oneshot, installd seclabel)。
+- 全量反汇编（stripped AArch64，.text 0x908 B）确认 `system@plt=0x2ab0` **仅一处调用 @0x24f0**，
+  参数是客户端字符串 `x21`。
+- 但 `0x246c getCallingUid()` → `0x2490-0x24b0` 算出 `uid % 100000`，`cmp #0x3e8(1000)`，
+  **仅 uid==1000(AID_SYSTEM) 才执行 system()**；shell(2000) → 走 "not apply to this uid" 分支。
+- ⇒ 对 shell 是**硬性否证**（native 硬编码门禁，非模板可绕）。再次印证"看到 system() ≠ 可执行注入"。
+
+### 19.3 其余六服务判定
+
+| 服务 | 身份 | 判定 |
+|---|---|---|
+| hans | system | 无 system/execv/popen 导入；cgroup freezer 用途 |
+| horae | system,group root | 无 system；仅 fopen 读配置 |
+| oiface | system,group root,SYS_NICE | 无 system；5 处 property_set 全为固定 `persist/debug.oiface.*` |
+| orms | 系统 (32bit so + HIDL) | 仅 fopen，无命令执行 |
+| appdata | system_app | 无 exec；`deleteFileOrFolder` + 签名校验 `getPackagesForUid`+`checkPackageSignature` 挡 shell |
+| **antirootdialog** | 未知 | **缺口**：实现未解出（odex/vdex 剥离，已检索全部已解出 jar/apk 均无），不臆测；闭合需解 odex/vdex |
+
+### 19.4 下一步
+
+P0/P1/P2 全部完成。**不建议上机**：hephaestus uid 门禁无绕行余地，盲试 property 只产生噪声。
+剩余可选纯静态工作：解出 antirootdialog 的 odex/vdex 补齐最后 1/7 缺口（需 `vdexExtractor`，当前物料未含）。
+冻结面（KGSL / binder CVE / FastRPC / GhostLock）无新原语，不动。
