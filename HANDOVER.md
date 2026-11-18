@@ -23,7 +23,7 @@
 | 复核某个判断 | §5 对应小节 + §6 负知识清单 + `artifacts_adb/` 原始日志 |
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
-| Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证）+ §19（P2 补审 6/7：hephaestus system 面被 uid==1000 门禁挡住；**antirootdialog 未完成，复评升为新 P1**）|
+| Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证）+ §19（P2 补审：hephaestus system 面被 uid==1000 门禁挡住）+ **v2.14：antirootdialog 闭合为否证（shell 不可达）⇒ 7/7**（§24.13）|
 | Wi-Fi 私有事务面（当前主线索，**已取得受限 root**）| **§23 → §22 → §20 → §16.11**（v2.13：L3 达成——`\n`/反引号绕过黑名单，`sh -c` 以 uid=0 执行；域 `oplus_wifi_service` 受限，下一步是域逃逸）|
 
 **三条硬规则**
@@ -625,9 +625,10 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 | 项 | 状态 |
 |---|---|
 | 系统 | `PCGM00_11_F.16` 未变；未刷写、未解锁、未改分区、未 root |
-| 最近一轮操作 | 全部只读（`ls -lZ`、`cat /proc/self/status`、`service list`、`open()` 探测）；未推送任何二进制 |
-| `/data/local/tmp` | 空（清理后未再写入；日志已全部拉回 `artifacts_adb/dev_tmp_backup/` 与 `g_logs/`，16/16 齐全） |
-| 内核重启 | 累计 **5 次**（run1 / run3 / run4 / D2 / v6，均为前期竞态实验），此后 0 次 |
+| 最近一轮操作 | **2026-11-18 12:31 四次事务（用户授权）**：`P1UID2`(补第二份 uid=0 原文) / `CAPS` / `LBL` / `CD`，均为"一次事务一条只读命令"；另有策略与 rc 的只读 `adb pull`（§24）。**未改属性、未写持久化路径、未触发内核** |
+| `/data/local/tmp` | **空**（12:32 已删 `ftmprobe.jar` 与四个探针载荷，`ls -la` 实测为空） |
+| 内核重启 | 累计 **5 次**（run1 / run3 / run4 / D2 / v6，均为前期竞态实验），此后 **0 次**；本轮 `uptime` 87406 s（24.3 h），无重启 |
+| 进程终态 | `shell` 仍为 uid 2000；原生 HAL `vendor.oplus.hardware.wifi@1.1-service` PID 29241 存活；`system_server` PID 1755 存活；`tombstoned` PID 792 存活 |
 | 建议 | **关闭系统 OTA**（§7 第 3 条） |
 
 **运营约定（继续本项目时沿用）**
@@ -1202,6 +1203,10 @@ P2（七个未覆盖私有服务）见 §19，6/7 完成、antirootdialog 升为
 
 **七服务无一产生 shell 可达的 uid 0 提权路径，整体 no-go 维持。** 覆盖度 6/7 定性，1 个缺口。
 
+> ⚠️ **2026-11-18 v2.14 更新：第 7 个（antirootdialog）已闭合为否证，覆盖度 7/7。**
+> `anti_root_dialog_service` 不是域而是 service_manager 类型；全策略只有 `oplus_kevents` 能 call
+> 其宿主域 `color_system_service_app`，shell 零权限。详见 `P2_SEVEN_SERVICES_AUDIT.md` §8 与 §24.13。
+
 ### 19.2 关键发现：hephaestus 的 `system()` 被 uid 门禁挡住
 
 - rc 有两个 service：`hephaestus`(user system) 与 `hephaestus_install`(**user root**, oneshot, installd seclabel)。
@@ -1304,6 +1309,13 @@ v2.9 断言"myftm 分支参数只是固定路径后的一个 token，无法逃�
   vendor SELinux 策略中 `anti_root_dialog_service` 是独立 domain。
 - ⇒ 它不是纯 Java 服务，而是 **native + SELinux domain + kevent 内核接口**；把 pid/uid 下发内核做 anti-root 判定。
 - **不臆测**，覆盖度维持 6/7；闭合需完整 factory 镜像或设备只读拉取（需授权）。
+
+> ⚠️ **2026-11-18 12:3x 更正（见 `P2_SEVEN_SERVICES_AUDIT.md` §8）**：本节"独立 SELinux domain"的判断**不成立**。
+> `anti_root_dialog_service` 是 **service_manager 类型**（定义在 `system_ext_sepolicy.cil`，属 `system_api_service` 属性），不是域。
+> 宿主已定位为 `com.coloros.exsystemservice`（`android:persistent="true"`，域 `color_system_service_app`）；
+> 全策略中**只有 `oplus_kevents`** 能 `binder call` 该域，**shell 对该域 0 条 binder 权限、对该服务 0 条 `find` 权限**
+> ⇒ **对 shell 不可达，P1 闭合为否证，覆盖度 7/7**。设备实测：`service list` 第 17 项
+> `anti_root_dialog: [com.oplus.exsystemservice.antirootdialog.IAntiRootDialog]`。
 
 ### 21.3 状态与下一步
 
@@ -1435,6 +1447,10 @@ shell(uid 2000) → javaprobe(app_process) → transact(10070, "android.net.wifi
 | 2 | ``x\nlog -t P1UID `id` `` | **`I P1UID : uid=0(root) …`** —— 通过 `log` 把 `id` 输出写进 logcat |
 | 3 | `x\nlog -t P1CAP `getenforce`` + `ls -ld /data/system` + `cat /proc/sys/kernel/randomize_va_space` | 三条均 `avc: denied`（域能力探测） |
 
+> **2026-11-18 12:31 追加第三次同构事务**（载荷 ``x\nlog -t P1UID2 `id` ``），目的是补齐"第二份 `uid=0` 原文"的
+> 归档缺口：`11-18 12:31:09.976 31167 31167 I P1UID2 : uid=0(root) … context=u:r:oplus_wifi_service:s0`。
+> 原始记录见 `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt` F 节与 `p1_probes/20261118T123110_P1UID2.log`。
+
 ### 23.3 证据（原文）
 
 ```
@@ -1457,6 +1473,13 @@ W getenforce : avc: denied { read } … tcontext=u:object_r:selinuxfs:s0 … per
 W ls : avc: denied { getattr } for path="/data/system" … tcontext=u:object_r:system_data_file:s0
 W cat : avc: denied { read } … tcontext=u:object_r:proc_security:s0
 ```
+
+> ⚠️ **2026-11-18 12:33 更正（实测 `ps`）**：上面 `# HAL` 那两行的进程 1755 是 **system_server**，不是原生 HAL。
+> `OplusWifiHalService` 是 system_server 内的 Java 封装类，因此这两行只证明"**HIDL 调用已返回**"（Java 侧判读），
+> 不能当作"原生 HAL 内部执行完成"的独立证据。原生 HAL 是 `vendor.oplus.hardware.wifi@1.1-service`（本轮实测 PID 29241，uid 0），
+> 只有它处于 `u:r:oplus_wifi_service:s0`。
+> **L3 判定不受影响**：决定性证据是 `I P1UID : uid=0(root) … context=u:r:oplus_wifi_service:s0` 这一行，
+> 它给出的是执行者的 uid 与域，与该日志由谁打印无关。举证口径改为：**执行者身份 ← `id` 回显；调用链 ← binder 事务回包**。
 
 ### 23.4 这个 root 能做什么、不能做什么（边界，必须一起读）
 
@@ -1558,7 +1581,9 @@ shell 仍为 uid 2000；未写属性、未安装任何东西、未重启。
 - 物料：`vendor_sepolicy.cil`（981,335 B，`6d1c54a6…`）、`plat_sepolicy.cil`（1,579,853 B，`5249d8e1…`）、
   `plat_pub_versioned.cil`（950,003 B）、`precompiled_sepolicy`（1,054,954 B）、`*_file_contexts`、
   `*_property_contexts`、197 个 init rc。策略版本 `30.0`。
-- 规模：三份 CIL 共 **21,011 条 allow**；对本域适用 **304 条**；本域所属属性 **41 个**；显式授予的目标类型 **44 个**。
+- 规模：**五份** CIL 共 **24,657 条 allow**；对本域适用 **307 条**；本域所属属性 **89 个**；显式授予的目标类型 **44 个**。
+  （初版只读 3 份（plat/vendor，21,011 条），漏了 `system_ext_sepolicy.cil` 与 `product_sepolicy.cil`；
+  补全后多出 3 条 `domain` 继承规则，**关键否定全部不变**。更正过程见 §24.13 与审计报告 §13。）
 - 工具口径：`direct` = 源为域名的规则；`via:X` = 经属性 `X` 继承。类型名已归一化去 `_30_0` 版本后缀
   （不归一化会产生成对的重复类型，首版工具即踩此坑）。
 
@@ -1638,13 +1663,27 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 | R3 | `/dev/diag` 全 ioctl + root + `diag` 组 | **新登记的内核面**（此前 §1.2 五面清单未含），主线已放弃内核原语，不评估 |
 | R4 | `vendor_file: module_load` + `SYS_MODULE` | 只能加载既有 `.ko`，不构成新面 |
 
-### 24.9 待验证（只读，需授权）
+### 24.9 探针结果（判据先登记、后执行；2026-11-18 12:31，用户授权）
 
-| # | 假设 | 一条事务即可验证 | 判据（先登记） |
+| # | 探针 | 载荷 | 结果 |
 |---|---|---|---|
-| V1 | `CapEff` 不含 `sys_admin` | `x\nlog -t CAPS $(grep Cap /proc/self/status)` | `CapEff` 的 0x200000 位为 0 |
-| V2 | `/mnt/vendor/persist/wlan` 标签为 `mnt_vendor_file` | `x\nlog -t LBL $(ls -ldZ /mnt/vendor/persist/wlan)` | 输出含 `mnt_vendor_file` |
-| V3 | `crash_dump` 转换可达但零收益 | `x\n/system/bin/crash_dump64 --help` | audit 出现 `scontext=u:r:crash_dump:s0` 且进程即退 |
+| V1 | 实际能力集 | ``x\nlog -t CAPS `grep Cap /proc/self/status` `` | **`CapInh/CapPrm/CapEff/CapBnd/CapAmb = 0x13000`** = `NET_ADMIN`+`NET_RAW`+`SYS_MODULE`；`SYS_ADMIN`(0x200000) 缺席，**Bounding 亦缺席** |
+| V2 | `persist/wlan` 标签 | ``x\nlog -t LBL `ls -ldZ /mnt/vendor/persist/wlan` `` | `drwxrwxrwx 2 system system u:object_r:mnt_vendor_file:s0` ⇒ **R1 成立** |
+| V3 | `crash_dump` 转换 | ``x\nlog -t CD `/system/bin/crash_dump64` `` | `F crash_dump64: wrong number of args: 1 (expected 4)` + `tombstoned: received crash request for pid -1` ⇒ **转换成立（间接）** |
+
+> 注：初版登记的 V1 载荷写成 `$(grep …)`，**不可用**——`$` 在黑名单内（§22.2），实测改用反引号。
+> 这类"判据正确、载荷写错"的情况按 §1.2 的纪律处理：改载荷、不改判据，并把更正记在此处。
+
+**V3 的判别逻辑**：本域 `unix_stream_socket` 的 `connectto` 目标只有 `init` 一个；`crash_dump` 域才有
+`connectto tombstoned`。执行后 2 ms 内 `tombstoned` 收到 crash socket 请求 ⇒ 那个进程**不可能**是本域
+⇒ 已转为 `crash_dump`。记为中等置信（非标签直读），但已足够排除"转换未发生"。
+
+**三点后果**：
+1. §24.3 的"策略 10 个 / 实际 3 个"由推导升级为**实测**；`CapBnd` 同值 ⇒ 即便日后有 `capset` 原语也提不上 `sys_admin`。
+2. R1 由策略推导升级为**实测标签确认**；该目录 `0777`，写它即持久化改动，**维持禁用**。
+3. 域转换"能转 ≠ 能利用"：`crash_dump` 需 4 参数 + init 传入的 tombstone fd，参数不足时连上 `tombstoned` 后即退。
+
+**放弃项**（风险不可接受，不再讨论）：用 `--pid` 让 `crash_dump` 真实附加目标进程——若对手是被允许的 `vold` 等，会真的挂起它。
 
 ### 24.10 未穷尽项
 
@@ -1665,3 +1704,94 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 | 第三节：GhostLock 冻结 | 维持冻结；§23.9 已实证新域同样拿不到内核地址 |
 | 第六节：三项术语（Root UID 命令执行 / 可用 root / 持久 ROOT） | **采纳**，写入 §1.1 |
 | 第七节：不要再追求内核 ROOT | 采纳；主线已从内核转向域边界，本轮进一步证明域边界也无出口 |
+
+### 24.12 授权后的现场动作与结果（2026-11-18 12:31，四次事务）
+
+用户批准后按"一次事务、单变量、判据先登记"执行，原始日志全量落盘 `artifacts_adb/binder_audit/p1_probes/`：
+
+| 事务 | 目的 | 关键结果 | 判据 |
+|---|---|---|---|
+| `P1UID2` | 补第二份 `uid=0` 原文 | `12:31:09.976 31167 I P1UID2 : uid=0(root) … u:r:oplus_wifi_service:s0` | ✅ |
+| `CAPS` | 实测能力集 | `CapEff=CapBnd=0x13000`（`NET_ADMIN`+`NET_RAW`+`SYS_MODULE`） | ✅ `sys_admin` 缺席 |
+| `LBL` | `persist/wlan` 标签 | `drwxrwxrwx system system u:object_r:mnt_vendor_file:s0` | ✅ R1 成立 |
+| `CD` | `crash_dump` 转换 | `F crash_dump64: wrong number of args` + `tombstoned: received crash request for pid -1` | ⚠️ 间接成立 |
+
+**顺带纠正两处自己的错误**（都已写进对应文档，不删原文）：
+
+1. **PID 归属**：`1755` 是 **system_server**（`ps` 实测 `1755 836 system_server`），不是原生 HAL。
+   `OplusWifiHalService: … completed successfully` 是 system_server 内的 Java 封装打的，只能证明"**HIDL 调用返回**"。
+   原生 HAL 是 PID 29241、uid 0、域 `oplus_wifi_service`。**L3 判定不变**（执行者身份由 `id` 回显直接给出）。
+2. **探针载荷**：初版 V1 写的 `$(grep …)` 不可用（`$` 在黑名单），实测改反引号；判据未改。
+
+**设备终态**：`/data/local/tmp` 已清空（jar 与四个载荷全删）；`/proc/uptime` 87406 s（未重启）；
+shell 仍 uid 2000；原生 HAL / system_server / tombstoned 均存活；`/data/tombstones` 未新增（访问仍被 MAC 拒）。
+
+**工具**：`tools/wifi_exec.py`（单事务执行器：建载荷 → push → 清 logcat → transact → 抓全量日志 → 删远端文件）。
+踩坑记录：`adb shell` 的 `CLASSPATH=… app_process …` 必须作为**单个字符串**传入，分成多个 argv 时 CLASSPATH 前缀丢失，
+表现为 `could not find class 'FtmProbe'` + `app_process` abort。已修在脚本里。
+
+### 24.13 策略全集更正 + P1（antirootdialog）闭合（2026-11-18 12:3x）
+
+#### （1）我漏读了两份策略
+
+核实"`anti_root_dialog_service` 是不是独立域"时出现矛盾：它在 `precompiled_sepolicy`（二进制）里存在，
+在 `vendor_sepolicy.cil` / `plat_sepolicy.cil` 里计数为 **0**。查 `/odm/etc/selinux/precompiled_sepolicy.*.sha256`
+才发现运行期策略是 **5 份 CIL** 合成，我初版只读了 3 份：
+
+| 文件 | 大小 | 初版 |
+|---|---|---|
+| `plat_sepolicy.cil`（`/system/etc/selinux/`） | 1,579,853 | ✅ |
+| `plat_pub_versioned.cil`（`/vendor/etc/selinux/`） | 950,003 | ✅ |
+| `vendor_sepolicy.cil`（`/vendor/etc/selinux/`） | 981,335 | ✅ |
+| `system_ext_sepolicy.cil`（`/system_ext/etc/selinux/`） | 437,972 | ❌ |
+| `product_sepolicy.cil`（`/product/etc/selinux/`） | 37,176 | ❌ |
+
+补全后重算（工具已改为按文件名自动纳入 5 份，并在注释里写明踩坑）：
+
+| 指标 | 3 份 | **5 份** |
+|---|---|---|
+| allow 总数 | 21,011 | **24,657** |
+| 本域适用 | 304 | **307**（+3，全部经 `domain` 继承：`svelte_log_device` chr_file 写、两个属性类型读） |
+| 所属属性 | 41 | **89** |
+| direct 目标类型 | 44 | **44** |
+| **可写类型上的 `execute` 规则** | 0 | **0**（结论不变） |
+| 可 exec 文件类型 / 可达域转换 | 9 / 仅 `crash_dump` | **9 / 仅 `crash_dump`** |
+
+⇒ §24.1 的"无逃逸"结论**不变**，但"策略全集"的口径必须改：**以 `precompiled_sepolicy.*.sha256` 的对账为准，不要按常见路径猜。**
+
+#### （2）antirootdialog：从"未解出"变成"不可达"
+
+| 旧记录（§21.2） | 实测 |
+|---|---|
+| `anti_root_dialog_service` 是独立 SELinux **域** | **是 service_manager 类型**（`system_ext_sepolicy.cil`，属 `system_api_service` 属性） |
+| 宿主未知 | `com.coloros.exsystemservice`（`/system/system_ext/priv-app/`，`android:persistent="true"`），域 `color_system_service_app` |
+| 实现不在物料中 | APK 与设备同一文件（7,311,019 B，`7cea0ba8…`）；dex 有接口描述符与源文件名，**无实现类 class_def**（疑为混淆名） |
+
+策略原文（`system_ext_sepolicy.cil`）：
+
+```
+(type anti_root_dialog_service)
+(allow color_system_service_app anti_root_dialog_service (service_manager (add find)))
+(allow oplus_kevents           anti_root_dialog_service (service_manager (find)))
+# 全策略中 binder call 到 color_system_service_app 的域只有：
+oplus_kevents  (binder (call))
+```
+
+设备实测：`service list` 第 17 项 `anti_root_dialog: [com.oplus.exsystemservice.antirootdialog.IAntiRootDialog]`。
+
+严格判定（含属性展开）：**shell 对该域 0 条 binder 权限、对该服务 0 条 `service_manager:find`**
+⇒ **对 shell 不可达**。判定的性质变了：不是"实现拿不到所以不知道"，而是"**策略不给路径**"。
+
+**P1 闭合为否证，七服务覆盖度 7/7。** 实现内部鉴权仍未审计，且因不可达而无需审计；
+若将来出现 `color_system_service_app` / `oplus_kevents` 的执行点，再回来反编译（详见 `P2_SEVEN_SERVICES_AUDIT.md` §8）。
+
+#### （3）本轮新增/改动的文件
+
+| 文件 | 变更 |
+|---|---|
+| `artifacts_adb/binder_audit/SELINUX_DOMAIN_AUDIT.md` | §2 物料与计数改 5 份口径；新增 §13 审计更正；§10 探针结果；§7 补 V3 证据 |
+| `artifacts_adb/binder_audit/P2_SEVEN_SERVICES_AUDIT.md` | 新增 §8 antirootdialog 闭合（三处更正 + 可达性判定） |
+| `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt` | 新增 F 节（第二份 `uid=0` 原文）；更正 B 节 PID 归属 |
+| `tools/sepolicy_domain_audit.py` | 改为纳入 5 份 CIL + 各分区 contexts |
+| `tools/prop_trigger_audit.py` | 新增（属性 × init 触发器交叉） |
+| `tools/wifi_exec.py` | 新增（单事务执行器，含 `adb shell` 单字符串踩坑说明） |

@@ -9,8 +9,8 @@
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
 | 结论 | **受限 root 已达成，可用 root 未达成。** 四个内核候选面不可达；Wi-Fi 私有事务面已打通：从 shell 发 tx 10070、载荷含 `\n` 或反引号即绕过 11 字符黑名单，`sh -c` 以 **`uid=0(root)`**、域 `u:r:oplus_wifi_service:s0` 执行任意命令（2026-11-18 12:07，两次复现）。**但该域受 SELinux 限制**（读不到 `/data/system`、`selinuxfs`、`proc_security`）⇒ 尚非可用 root，缺口是域逃逸。**域逃逸的静态审计已完成（v2.14 / §24）：该域内不存在可达的逃逸路径**——可写路径无任何域持有 `execute`、无 `mount` 权限、`module_load` 只对不可写的 `vendor_file` 生效、属性触发器无 `start`/`exec`、唯一域转换 `crash_dump` 零收益 |
-| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 6/7**（见 `HANDOVER.md` §19）：hephaestus 有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；**antirootdialog 未完成**，复评为新 P1 |
-| Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22 |
+| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 7/7 全部否证**（见 `HANDOVER.md` §19、§24.13）：hephaestus 有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；**antirootdialog 已闭合**——`anti_root_dialog_service` 是 service_manager 类型而非域，全策略只有 `oplus_kevents` 能 call 其宿主域，shell 零权限 |
+| Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22。**v2.14 探针**：`CapEff=CapBnd=0x13000`（`sys_admin` 从不在 Permitted/Bounding 内）、`/mnt/vendor/persist/wlan` 实测 `mnt_vendor_file`（`0777`）、`crash_dump` 域转换可判别成立但零收益（§24.9） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
 ---

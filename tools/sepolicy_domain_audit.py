@@ -266,7 +266,11 @@ def main():
 
     pol = Policy()
     loaded = []
-    for f in ('plat_sepolicy.cil', 'plat_pub_versioned.cil', 'vendor_sepolicy.cil'):
+    # 运行期策略由 5 份 CIL 合成：plat(+pub_versioned) / vendor / product / system_ext。
+    # 只取非 debug 版本；漏掉 product/system_ext 会得出错误的"权限全集"（2026-11-18 踩坑）。
+    cil_names = ['plat_sepolicy.cil', 'plat_pub_versioned.cil', 'vendor_sepolicy.cil',
+                 'system_ext_sepolicy.cil', 'product_sepolicy.cil']
+    for f in cil_names:
         p = os.path.join(args.cil, f)
         if os.path.exists(p):
             before = len(pol.allows)

@@ -37,6 +37,8 @@
 |---|---|---|---|
 | `vendor_sepolicy.cil` | `/vendor/etc/selinux/` | 981,335 | `6d1c54a658484e52` |
 | `plat_sepolicy.cil` | `/system/etc/selinux/` | 1,579,853 | `5249d8e1eef4db34` |
+| **`system_ext_sepolicy.cil`** | `/system_ext/etc/selinux/` | 437,972 | （初版遗漏，见 §13） |
+| **`product_sepolicy.cil`** | `/product/etc/selinux/` | 37,176 | （初版遗漏，见 §13） |
 | `plat_pub_versioned.cil` | `/vendor/etc/selinux/` | 950,003 | `890e3177b00dfa0c` |
 | `precompiled_sepolicy`（二进制，备查） | `/odm/etc/selinux/` | 1,054,954 | `7293d4c33580fb5b` |
 | `vendor_file_contexts` | `/vendor/etc/selinux/` | 129,857 | `0b5ca261b452c753` |
@@ -65,11 +67,11 @@ python tools/prop_trigger_audit.py --cil .build/sepolicy --rc .build/sepolicy/rc
 
 | 指标 | 值 |
 |---|---|
-| 三个 CIL 的 `allow` 语句总数 | 21,011 |
-| 对本域适用的 `allow` | **304** |
-| 本域所属属性（含嵌套） | **41** |
-| 显式以本域为源的规则覆盖的目标类型 | **44** |
-| 可写目标类型（`file`/`dir`/`chr_file`/`sock_file` 等） | 12 |
+| 五份 CIL 的 `allow` 语句总数 | **24,657**（初版只读 3 份：21,011） |
+| 对本域适用的 `allow` | **307**（初版 304；多出的 3 条见 §13） |
+| 本域所属属性（含嵌套） | **89**（初版 41） |
+| 显式以本域为源的规则覆盖的目标类型 | **44**（不变） |
+| 可写目标类型（`file`/`dir`/`chr_file`/`sock_file` 等） | 12（不变） |
 
 ---
 
@@ -106,7 +108,13 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 |---|---|---|
 | SELinux 策略允许 | `chown fowner fsetid net_admin net_raw setgid setuid sys_admin sys_module sys_resource` | 上条规则（`direct`） |
 | **进程实际 Permitted** | `NET_ADMIN NET_RAW SYS_MODULE` | rc 的 `capabilities` 行；init 建立 Permitted/Effective/Bounding 后，进程**无法**把 `sys_admin`（`sys_ptrace`、`sys_rawio`、`dac_*`）提上来 |
+| **实测（2026-11-18 12:31:30，V1）** | `CapInh/CapPrm/CapEff/CapBnd/CapAmb = 0x13000` | `0x13000` = bit12 `NET_ADMIN` + bit13 `NET_RAW` + bit16 `SYS_MODULE`；bit21 `SYS_ADMIN`(0x200000) **为 0**，且 **Bounding 集同样不含** ⇒ 连 `capset` 也提不上来 |
 | 结论 | **策略里的 `sys_admin` 是潜伏授予，运行期不可达** | 两层校验：能力集不含 + `filesystem:mount` 类权限缺失 |
+
+> 实测原文（`p1_probes/20261118T123130_CAPS.log`）：
+> `I CAPS : CapInh: 0000000000013000 CapPrm: 0000000000013000 CapEff: 0000000000013000 CapBnd: 0000000000013000 CapAmb: 0000000000013000`
+> 这一行同时证明另一件事：该域**能读 `/proc/self/status`**，但读不到 `/proc/kallsyms`（§23.9 的定向策略拒绝），
+> 说明拒绝是按文件标签而非按目录，与 §23.9 的判读一致。
 
 ⇒ "用 `CAP_SYS_ADMIN` 挂载覆盖"在本机是**双锁**：能力拿不到，SELinux 也不给 `mount`。这条否证与 §1 的第 2 行一致。
 
@@ -173,6 +181,27 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 
 ⇒ 判定：**"可达但零收益"**。这一条应登记为负知识，避免后续把 `crash_dump` 当作候选反复尝试。
 
+**运行期验证（2026-11-18 12:31:41，V3）**：一条事务执行 `/system/bin/crash_dump64`，logcat 原文
+（`p1_probes/20261118T123142_CD.log`）：
+
+```
+12:31:41.992 31259 31259 F crash_dump64: crash_dump.cpp:243] wrong number of args: 1 (expected 4)
+12:31:41.994   792   792 I tombstoned: received crash request for pid -1
+12:31:41.996   792   792 W tombstoned: crash socket received short read of length 0 (expected 12)
+```
+
+域标签没有直接打印（该二进制不接受"打印自身上下文"这种用法），但**行为可判别**：
+
+| 事实 | 策略依据 | 推论 |
+|---|---|---|
+| 执行后 2 ms 内 `tombstoned` 收到来自 crash socket 的请求 | `(allow crash_dump tombstoned (unix_stream_socket (connectto)))` 存在 | 有进程连上了 tombstoned |
+| 本域 `unix_stream_socket` 的 `connectto` **只有 `init` 一个目标** | 本域 direct 规则全集 | 连 tombstoned 的进程**不可能**是 `oplus_wifi_service` |
+| 时间与 PID（31259，父为本域 `sh`）唯一对应 | 日志时序 | ⇒ 该进程已在 `crash_dump` 域 |
+
+⇒ **域转换在运行期成立**（间接证据，非标签直读，故记为"中等置信"）。同时印证 §7 的第 2 条：
+它拿到 `--pid`/tombstone fd 之前就因参数不足退出，`tombstoned` 只收到 `short read`，没有任何内存被 dump。
+**结论不变：可达、零收益。**
+
 ---
 
 ## 8. 属性面：55 个前缀、11 条触发器、1 条可用且无下游
@@ -221,15 +250,34 @@ on property:sys.oplus.wifi.dump.trigger=1
 
 ---
 
-## 10. 待验证项（需要授权，且只做只读）
+## 10. 探针结果（2026-11-18 12:31，用户授权后执行；每条一次事务、单变量）
 
-| # | 假设 | 最小只读验证 | 判据（先登记） |
-|---|---|---|---|
-| V1 | 进程实际 `CapEff` = `NET_ADMIN NET_RAW SYS_MODULE`（不含 `sys_admin`） | 一次事务：`x\nlog -t CAPS \`grep Cap /proc/self/status\`` | logcat 出现 `CapEff=…` 且第 21 位（`sys_admin`，0x200000）为 0 |
-| V2 | `/mnt/vendor/persist/wlan` 实际标签为 `mnt_vendor_file` | 一次事务：`x\nlog -t LBL \`ls -ldZ /mnt/vendor/persist/wlan\`` | 输出含 `u:object_r:mnt_vendor_file:s0` |
-| V3 | `crash_dump` 转换可达但零收益 | 一次事务：`x\n/vendor/bin/sh -c '/system/bin/crash_dump64 --help'`，观察 audit 日志 `scontext` | 若出现 `scontext=u:r:crash_dump:s0` 且进程随即退出 ⇒ 与 §7 判定一致 |
+判据均在执行前登记于本文件初版 §10 与 `HANDOVER.md` §24.9，**未事后修改**。原始日志见
+`artifacts_adb/binder_audit/p1_probes/`，驱动脚本 `tools/wifi_exec.py`。
 
-> 三项都不是"逃逸验证"，只是把 §4/§5/§7 的静态判定钉到实测上。**任何写操作（含写 `/data/vendor/wifi` 与 `/mnt/vendor/persist`）一律不在此列。**
+| # | 探针 | 载荷 | 结果 | 判据 |
+|---|---|---|---|---|
+| V1 | 实际能力集 | `x\nlog -t CAPS \`grep Cap /proc/self/status\`` | `CapEff = 0x13000`（`NET_ADMIN`+`NET_RAW`+`SYS_MODULE`），`CapBnd` 同值，`SYS_ADMIN` 缺席 | ✅ 0x200000 位为 0 |
+| V2 | `persist/wlan` 标签 | `x\nlog -t LBL \`ls -ldZ /mnt/vendor/persist/wlan\`` | `drwxrwxrwx 2 system system u:object_r:mnt_vendor_file:s0` | ✅ 确为 `mnt_vendor_file`（R1 成立） |
+| V3 | `crash_dump` 域转换 | `x\nlog -t CD \`/system/bin/crash_dump64\`` | `F crash_dump64: wrong number of args` + `tombstoned: received crash request for pid -1` | ⚠️ 间接成立（见 §7）；收益仍为零 |
+
+**三点后果**：
+
+1. §4 的"策略 10 个 / 实际 3 个"由推导升级为**实测**；`CapBnd` 同值意味着即便日后有 `capset` 原语也无法提权。
+2. R1（`WCNSS_qcom_cfg.ini` 可写）由"策略推导"升级为**实测标签确认**；该目录 `0777`，写它即持久化改动，维持禁用。
+3. §7 的"唯一域转换"在运行期被证实可用；同时再次证明**能转换 ≠ 能利用**——`crash_dump` 需要 4 个参数与
+   init 传入的 tombstone fd，参数不足时它只会在连上 `tombstoned` 后立即退出。
+
+> 方法论产出：**当一个二进制不打印自身上下文时，用"该进程必然触发的、目标域独有的一次系统调用"反推域**。
+> 本例的判别物是 `connectto tombstoned` —— 本域没有这个权限，`crash_dump` 有，于是日志本身成为域标签。
+
+### 10.1 仍然待验证（本轮未做，理由如下）
+
+| 项 | 为何不做 |
+|---|---|
+| 用 `--pid` 让 `crash_dump` 真实附加到某进程 | 需 ptrace 真实进程；若目标是 `vold` 等被允许对象，会真的挂起该进程。**风险不可接受，放弃** |
+| 写 `/mnt/vendor/persist/**` 验证可写性 | 持久化改动，违反 §11 约定 |
+| `fuse` / `sdcardfs` 落点枚举 | 需读挂载状态并可能触碰挂载；收益低（§24 已证无域可执行这些路径） |
 
 ---
 
@@ -251,3 +299,51 @@ on property:sys.oplus.wifi.dump.trigger=1
 2. `fuse` / `sdcardfs` 无静态落点，其对应用途未确认（未做挂载态枚举，避免触碰 `/proc/mounts` 之外的状态）。
 3. `usage_hidl`、`vendor_autochmod`、`fstman`、`wcnss_service`、`hostapd` 与本域**共享** `/data/vendor/wifi` 写权限（同权或更低权域），它们的解析逻辑未审计。
 4. `hwservice_manager: hidl_base_hwservice add` 允许本域注册 HIDL 服务名，理论上存在"冒充"面；但每个服务名经 `vendor_hwservice_contexts` 映射到具体类型，本域只能注册 `oplus_wifi_hal_service` / `hidl_base_hwservice` 两类，未发现可冒充更高权限服务的路径（未穷尽，因为 `hwservice_contexts` 的 `plat` 侧部分被 `Permission denied` 拒绝 stat）。
+
+---
+
+## 13. 审计更正：运行期策略是 5 份 CIL，初版只读了 3 份
+
+**发现经过**：核实"`anti_root_dialog_service` 是不是独立 SELinux 域"时，发现它在
+`precompiled_sepolicy`（1,054,954 B 的二进制策略）里以**类型名字符串**存在，但在
+`vendor_sepolicy.cil` / `plat_sepolicy.cil` 中计数为 0。矛盾指向一个可能：**运行期策略还有别的来源**。
+
+`/odm/etc/selinux/` 下的 `precompiled_sepolicy.*.sha256` 正好列了三项：`plat`、`product`、`system_ext`。
+补拉后确认：
+
+| 文件 | 路径 | 大小 | 是否被初版纳入 |
+|---|---|---|---|
+| `plat_sepolicy.cil` | `/system/etc/selinux/` | 1,579,853 | ✅ |
+| `plat_pub_versioned.cil` | `/vendor/etc/selinux/` | 950,003 | ✅ |
+| `vendor_sepolicy.cil` | `/vendor/etc/selinux/` | 981,335 | ✅ |
+| `system_ext_sepolicy.cil` | `/system_ext/etc/selinux/` | 437,972 | ❌ **初版遗漏** |
+| `product_sepolicy.cil` | `/product/etc/selinux/` | 37,176 | ❌ **初版遗漏** |
+
+⇒ **§2–§12 的所有计数都是"3 份策略"口径，已在 §2.3 更新为 5 份。**
+
+### 13.1 重跑后新增的 3 条规则（全部经 `domain` 属性继承，不在本域 direct 集合内）
+
+| 目标 | 类 | 权限 | 影响 |
+|---|---|---|---|
+| `svelte_log_device` | `chr_file` | `append lock map open write` | 可写一个日志型字符设备，仅"写日志"，不构成面 |
+| `vendor_exported_odm_prop` | `file` | `getattr map open read` | 只读属性类型 |
+| `vendor_exported_system_prop` | `file` | `getattr map open read` | 只读属性类型 |
+
+### 13.2 关键否定在 5 份策略下重新验证（结论不变）
+
+| 判定 | 3 份口径 | **5 份口径** |
+|---|---|---|
+| 可写类型上持有 `execute` 的规则数 | 0 | **0**（含属性目标展开） |
+| 本域可执行文件类型数 | 9 | **9**（同一集合） |
+| 可 exec 类型能触发的域转换 | 仅 `crash_dump` | **仅 `crash_dump`** |
+| `filesystem` 类权限 | 仅 `getattr` | **仅 `getattr`** |
+| 属性可写类型 | 仅 `vendor_oppo_prop` | **仅 `vendor_oppo_prop`** |
+
+⇒ §1 的"无逃逸"结论**不因补全策略而改变**，但计数、属性数量与"我还漏了什么"的答案变了。
+
+### 13.3 方法论教训
+
+**"策略全集"必须从 `precompiled_sepolicy` 的 sha256 清单反推，而不是从常见路径猜。**
+本次是因为一个类型名在 CIL 里查不到、却在二进制策略里查得到，才暴露出缺件；
+如果那个类型名恰好与我关心的问题无关，这个缺口会一直沉默。
+下一轮凡涉及"某域能做什么"，先 `ls /odm/etc/selinux/*.sha256` 对账。

@@ -168,3 +168,64 @@ Field "uid" greater than UID...
 
 **不臆测其鉴权/敏感操作**。 §2 总表中 antirootdialog 一行维持"未完成"。
 **整体 no-go 不受影响**：本项只是补齐覆盖度，未提供任何新提权路径。
+
+---
+
+## 8. antirootdialog 闭合（2026-11-18 12:3x，设备在环 + 五份策略）
+
+> 触发：核实 §7.2 第三条"`anti_root_dialog_service` 是独立 SELinux 域"时，发现它在
+> `vendor_sepolicy.cil` 与 `plat_sepolicy.cil` 中**均为 0 次命中**。顺线索补拉
+> `system_ext_sepolicy.cil` / `product_sepolicy.cil`（见 `SELINUX_DOMAIN_AUDIT.md` §13），
+> 结论随之改写。**全程只读。**
+
+### 8.1 三处更正
+
+| # | 旧记录（§7.2） | 实际 |
+|---|---|---|
+| 1 | `anti_root_dialog_service` 是**独立 SELinux domain** | **是 service_manager 类型**（`(type anti_root_dialog_service)` + 属 `system_api_service` 属性），**不是域** |
+| 2 | 宿主"未解出，可能在另一 apk" | 宿主是 `/system/system_ext/priv-app/OppoExSystemService/`，包名 `com.coloros.exsystemservice`，`android:persistent="true"` |
+| 3 | 实现"不在当前镜像物料中" | 该 APK 的设备实时版本与镜像版本**同一文件**（7,311,019 B，sha256 `7cea0ba8…`）；dex 中有接口描述符 `…antirootdialog.IAntiRootDialog` 与源文件名 `OplusAntiRootDialogService.java`，但**没有实现类的 class_def** |
+
+### 8.2 服务注册与调用方（策略原文）
+
+```
+# system_ext_sepolicy.cil
+(type anti_root_dialog_service)
+(allow color_system_service_app anti_root_dialog_service (service_manager (add find)))
+(allow oplus_kevents           anti_root_dialog_service (service_manager (find)))
+
+# 全策略中能 binder call 到 color_system_service_app 的域
+oplus_kevents  (binder (call))
+```
+
+设备侧对应：
+
+```
+$ service list | grep -i antiroot
+17  anti_root_dialog: [com.oplus.exsystemservice.antirootdialog.IAntiRootDialog]
+```
+
+⇒ 架构为：`com.coloros.exsystemservice`（域 `color_system_service_app`，persistent 系统应用）
+注册 `anti_root_dialog`，**唯一调用方是 `oplus_kevents`**（kevent 守护进程，即 §7.2 那些
+`/data/oplus/kevent`、`send_pid_to_kernel` 字符串的宿主）。
+
+### 8.3 可达性判定（shell 方向，这是 P1 唯一关心的问题）
+
+| 检查 | 结果 |
+|---|---|
+| `shell` 对 `color_system_service_app` 的 `binder` 类权限 | **0 条**（严格匹配，含属性展开） |
+| `shell` 对 `anti_root_dialog_service` 的 `service_manager:find` | **0 条** |
+| `oplus_kevents` 之外能 call 该域的域 | **无** |
+
+⇒ **`IAntiRootDialog` 对 shell 不可达**。判定方式与 §7.2 的猜测不同：不是"实现拿不到，所以不知道"，
+而是"**策略直接不给 shell 任何一条通往该服务的路径**"。
+
+### 8.4 结论
+
+**P1 闭合为否证（不可达），覆盖度 7/7。** 实现类的内部鉴权与敏感操作**仍未审计**，
+但因不可达，不影响"shell 可达提权路径为零"的结论；若将来出现
+`color_system_service_app` 或 `oplus_kevents` 的执行点，再回来审计其内部（届时才需要反编译）。
+
+**遗留说明（诚实登记）**：实现类名未解出——dex 里只有接口名与源文件名，没有对应 class_def。
+最可能是被混淆成无意义短名（`IAntiRootDialog` 的实现类），次可能是运行期动态加载。
+本轮未继续定位，因为**它不影响可达性结论**。
