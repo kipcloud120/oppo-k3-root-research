@@ -1703,7 +1703,9 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 3. `usage_hidl`、`vendor_autochmod`、`fstman`、`wcnss_service`、`hostapd` 与本域**共享** `/data/vendor/wifi` 写权，
    其解析逻辑未审计。
 4. `hwservice_manager` 注册面：本域只能注册 `oplus_wifi_hal_service` / `hidl_base_hwservice` 两类名字，
-   未发现可冒充更高权限服务的路径（`plat` 侧 `hwservice_contexts` stat 被拒，未穷尽）。
+   未发现可冒充更高权限服务的路径。~~`plat` 侧 `hwservice_contexts` stat 被拒，未穷尽~~
+   → **v2.15 已离线闭合（§25.9）**：该文件标签 `hwservice_contexts_file`，全策略**只有 `hwservicemanager` 能读**，
+   `shell` 与 `oplus_wifi_service` 零 allow ⇒ 不是漏读，是策略不允许；注册面本身已闭合为否定。
 
 ### 24.11 对审核意见 v003 的逐条回应
 
@@ -1888,24 +1890,36 @@ R3 由"新攻击面、未审计"降级为「**入口层否证；余量 = 解析�
 | "其他 Qualcomm 设备上的 diag 漏洞不能直接移植到 K3" | 接受：未引用任何 CVE 编号、未做移植断言 |
 | "不建议未经分析就进行设备侧 ioctl 实验" | 遵守：本轮 0 次上机 |
 | 第八节"若 diag 无问题可正式 NO-GO" | **部分支持**：diag 入口层已否证，但 G1 + 消费面 P1 未穷尽 ⇒ 现在下整体 NO-GO 仍早一步 |
+| 第七节 P2：`plat` 侧 `hwservice_contexts` 完整性 | **完成（离线）**：该文件标签 `hwservice_contexts_file`，全策略只有 `hwservicemanager` 能读；`shell` 与 `oplus_wifi_service` 零 allow ⇒ "未读取"是策略约束而非遗漏。本域 HSM 注册面同时闭合为否定（只能 `add` 两类名字）。见 §25.9 |
 | 第六节三项更正（版本号 / README 新旧结论并存 / 第二次 uid=0 证据独立归档） | ①②已修（版本表 v2.15、README 同步 7/7）；③ 已于 v2.14 落地（`P1_L3_EVIDENCE.txt` F 节）。**②的 README 部分在本轮一并清理**，见 §25.10 |
 
-### 25.9 P2 状态：`plat_hwservice_contexts` 覆盖度（**未闭合，如实登记**）
+### 25.9 P2：`plat_hwservice_contexts` 覆盖度——**离线闭合为"策略不允许"**
 
-审核意见 v004 第七节 P2 要求"完成 platform 侧 `hwservice_contexts` 的缺失核实，避免把未读取的策略部分误称为穷尽审计"。**核实结果：确实读不到，且不是"漏看"。**
+审核意见 v004 第七节 P2 要求"完成 platform 侧 `hwservice_contexts` 的缺失核实，避免把未读取的策略部分误称为穷尽审计"。
+**结果：不是"漏读"，是"策略规定只有 `hwservicemanager` 能读"。无需上机即可闭合。**
 
-| 事实 | 证据 |
-|---|---|
-| 物料里只有 **vendor 侧** | `.build/sepolicy/vendor_hwservice_contexts` 存在；**没有** `plat_hwservice_contexts` |
-| 设备上该文件对被 shell **连 `stat` 都不允许** | `ls -l /system/etc/selinux/` 中该行显示 `-????????? ? ? ? ?`（`getattr` 被拒），同目录其余 8 个文件均 `-rw-r--r-- root root` 正常列出 |
-| 读取直接失败 | `head`/`wc` → `Permission denied`（DAC 上该文件为 root 600，shell 非属主） |
+| 层 | 事实 | 证据 |
+|---|---|---|
+| 物料 | 只有 **vendor 侧** `vendor_hwservice_contexts`；**无** `plat_hwservice_contexts` | `.build/sepolicy/` 清单 |
+| 设备（DAC 表象） | `ls -l /system/etc/selinux/` 中该行 `-????????? ? ? ? ?`，同目录其余 8 个文件正常列出 | 2026-11-18 实测（本轮唯一一次 `adb shell` 只读列目录） |
+| 设备（读取） | `head`/`wc` → `Permission denied` | 同上 |
+| **SELinux 归因** | 该路径标签 = **`hwservice_contexts_file`** | `plat_file_contexts:570`：`/system/etc/selinux/plat_hwservice_contexts  u:object_r:hwservice_contexts_file:s0` |
+| **全策略授权域** | **只有 `hwservicemanager`（含 `_30_0`）持有** `(file (ioctl read getattr lock map open watch watch_reads))`；`shell` 与 `oplus_wifi_service` **均无任何 allow** | 5 份 CIL 全量 grep |
 
-**推断（标明为推断）**：该文件被单独打了高敏标签（同目录其它文件可读），因此受限 root 域也未必能 `getattr`。
-**影响**：§24.10 第 4 项"`plat` 侧 `hwservice_contexts` 未穷尽"**成立且必须保留**；不得把 §24 的策略审计称为"穷尽"。
+⇒ `-?????????` 是 **MAC `getattr` 拒绝**，不是 DAC 位；**本域即使有 uid=0 也读不到它**。
+⇒ §24.10 第 4 项的正确表述是："`plat` 侧 `hwservice_contexts` **在策略层对 shell 与 `oplus_wifi_service` 均不可读**，
+  因此 §24 对 HSM 注册面的审计只能停在 `vendor_hwservice_contexts` + `hwservice_manager` 类规则上，
+  **不得称为穷尽**。"——这是策略约束，不是分析遗漏，**不需要也不应该为此上机**。
 
-**闭合方式（需授权，只读）**：用 §23 的事务通道以 `oplus_wifi_service` 域执行一次
-`cat /system/etc/selinux/plat_hwservice_contexts > /data/vendor/wifi/…`（或仅打印前 N 行到 logcat），
-属**只读**、不改设备状态。**未执行——按 §23 约定，上机动作需用户逐次授权。**
+**顺带闭合 §24.10 第 4 项的另一半（本域注册面）**：
+
+```
+(allow oplus_wifi_service hidl_base_hwservice_30_0 (hwservice_manager (add)))
+(allow oplus_wifi_service oplus_wifi_hal_service    (hwservice_manager (add find)))
+```
+
+⇒ 本域**只能注册这两类名字**，且对 `oplus_wifi_hal_service` 只有 `add/find`、没有 `list`；
+不存在"用本域身份冒充更高权限 HIDL 服务"的路径（原本的"未穷尽"改为**已闭合、否定**）。
 
 ### 25.10 本轮文件变更
 
@@ -1917,4 +1931,4 @@ R3 由"新攻击面、未审计"降级为「**入口层否证；余量 = 解析�
 | `tools/kcopy.py` | **新增**：拷贝点 ±10 条上下文 |
 | `tools/klen_scan.py` | **新增**：全量"长度是常量还是寄存器"扫描 |
 | `README.md` | 同步 7/7 与 antirootdialog 闭合，去掉"6/7、未完成"的并存表述；补 v2.15 结论行 |
-| `HANDOVER.md` | 版本表 v2.15；§1.1/§1.2 增 diag 面；§7 增第 9 条；§24.8 R3 状态更新；本 §25（含 §25.9 P2 未闭合登记） |
+| `HANDOVER.md` | 版本表 v2.15；§1.1/§1.2 增 diag 面；§7 增第 9 条；§24.8 R3 状态更新；§24.10 第 4 项闭合；本 §25（含 §25.9 P2 离线闭合） |
