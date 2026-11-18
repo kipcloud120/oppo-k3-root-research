@@ -28,7 +28,7 @@
 |---|---|
 | 反汇编源 | `firmware_F16/vmlinux.elf`（`vmlinux-to-elf` 重建，`.kernel` + `.kernel2` 两段，符号空间对齐） |
 | 符号数 | 123,784；其中 `diag*` 函数 **301** 个（本审计的扫描域） |
-| 工具口径 | 符号地址一律取 ELF `.symtab`；**不用** `kallsyms_out.txt`（偏移在 futex/binder 区有 0x6–0x9 万字节偏差，见 §0 硬规则 1） |
+| 工具口径 | 符号地址一律取 ELF `.symtab`；**不用** `kallsyms_out.txt`（偏移在 futex/binder 区有 0x6–0x9 万字节偏差，见 `HANDOVER.md` §0 三条硬规则之第 1 条） |
 | 判据 | ①每条 `bl __arch_copy_from_user/__arch_copy_to_user` 前 20 条内回溯 w2/x2 的最后一次写；`mov w2,#imm` 记 CONST，其余记 REG 并人工复核 ②分派表按 `adrp+add+ldrh+adr+add+br` 形态解出 |
 
 **方法说明（避免"抽查当穷尽"，也避免"脚本当权威"）**：`klen_scan.py` 对**全部 301 个** `diag*` 符号逐函数反汇编，
