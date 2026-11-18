@@ -8,9 +8,9 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
-| 结论 | **no-go**。四个候选面不可达（3 个机制成立但缺关键原语，1 个漏洞未引入，1 个被双重封闭）；GhostLock 的栈载体已找到，缺口推进到"缺一次内核地址泄露" |
+| 结论 | **内核面维持 no-go；服务面出现实质变化**：四个内核候选面不可达；GhostLock 缺内核地址泄露。**Wi-Fi 私有事务已从 shell 实测可达，并通往 root 上下文的 `sh -c`**——最后一步（带命令串的 10070）尚未执行 |
 | 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**7 个未覆盖服务为已知未闭合项，不宣称穷尽** |
-| Wi-Fi 私有事务面 | 查到 `executeDriverCommand(String)` → **`user root` 的 HIDL 服务** → `sh -c`（入参直通，**已证**）；外层分派已定位到 APEX 内 `service-wifi.jar` 的 `WifiServiceImpl.onTransact`，**无 uid 门禁、唯一校验是接口描述符**，该描述符尚未匹配（11 次探测 + 2 组对照全失败） |
+| Wi-Fi 私有事务面 | **当前主线索**：真客户端验证从 shell（uid 2000）调用 `getFTMState()` 成功（`INT=0`）；唯一校验是公开的接口描述符、**无 uid 门禁**；下游 `IOppoWifiService` 以 **root** 运行，`executeDriverCommand(String)` 入参直通 `sh -c`（静态已证）。此前"不可达"是 `service call` 工具的假阴性，已作废 |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未 root**；累计 5 次内核重启（均为前期竞态实验） |
 
 ---
@@ -107,7 +107,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 | 对照：`service call wifi 1`（AOSP 事务） | 正常返回 |
 | 对照：`service call iphonesubinfo 1`（AIDL 需令牌） | 正常返回 IMEI |
 
-对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。后来把服务实现从 APEX（`/system/apex/com.android.wifi.apex` → `javalib/service-wifi.jar`）里挖出来，确认 `WifiServiceImpl.onTransact` 只有 18 条指令：先跑 AOSP stub，失败就转给 OPPO helper；而 helper 里唯一一处 `getCallingUid()` 只用来**拼日志**——**没有 uid 门禁**，唯一校验是 `enforceInterface(常量字符串)`。也就是说：**不是权限拦住了，是一个字符串还没对上**（剩 1 个候选待验证）。
+对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。后来把服务实现从 APEX（`/system/apex/com.android.wifi.apex` → `javalib/service-wifi.jar`）里挖出来，确认 `WifiServiceImpl.onTransact` 只有 18 条指令：先跑 AOSP stub，失败就转给 OPPO helper；而 helper 里唯一一处 `getCallingUid()` 只用来**拼日志**——**没有 uid 门禁**，唯一校验是 `enforceInterface(常量字符串)`。也就是说：**不是权限拦住了，是一个字符串还没对上**。随后用真 Java 客户端（`tools/javaprobe/`）验证：**字符串对上后，从 shell 调用成功，`getFTMState()` 返回 0**——此前 16 次 `service call` 失败纯属工具 ABI 问题。这条链现在是全项目最强的一条：**公开描述符 → root 服务 → 入参直通 `sh -c`**，不再需要内核地址泄露。
 
 > 教训（两次自我推翻都记在 `HANDOVER.md` §16.5）：**报文类型不能反推门禁类型**。"没有 `Permission Denial`" 曾被读成"拒绝不在授权层"，实际厂商完全可以用 `enforceInterface` 的报文掩盖 uid 门禁。
 
