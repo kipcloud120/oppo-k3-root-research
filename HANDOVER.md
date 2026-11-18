@@ -50,7 +50,7 @@
 | 面 | 机制是否成立 | 卡点 | 章节 |
 |---|---|---|---|
 | **KGSL** CVE-2023-33107 | 成立（源码级 pre-fix 确定） | `arm_lpae_init_pte()` 的 `BUG_ON(!suppress_map_failures)`，该静态变量运行期恒 false ⇒ 进入缺陷路径即 `BUG()` panic，无中间状态可用 | §5.1 |
-| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现）| **【2026-11-17 二次更正】载体侧已闭合**：修正扫描器判重 bug 后发现 3 条 xattr 栈覆盖候选；进一步静态判定"栈槽复用"是几何确定性、NUL 截断不阻断，但 fake waiter 的 `lock`/rb 链接必须为**非零内核地址** ⇒ 阻断点变为**无信息泄露**（§5.2.4 + §15） | §5.2 / §15 |
+| **GhostLock** CVE-2026-43499 | 成立（`-EDEADLK` 10+ 次确定性复现）| **【2026-11-17 二次更正】载体侧已闭合**：修正扫描器判重 bug 后发现 3 条 xattr 栈覆盖候选；进一步静态判定"栈槽复用"是几何确定性、NUL 截断不阻断，但 fake waiter 的 `lock`/rb 链接必须为**非零内核地址** ⇒ 阻断点变为**无信息泄露**（§5.2.4 + §15）。**【2026-11-18 v2.13 实证】新取得的 `oplus_wifi_service` 域 uid=0 同样读不到 `kallsyms`/`kcore`/`dmesg`/`sections`（`/proc/modules` 基址恒 `0`）⇒ 阻断点未变**（§23.9） | §5.2 / §15 / §23.9 |
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
@@ -1478,3 +1478,33 @@ W cat : avc: denied { read } … tcontext=u:object_r:proc_security:s0
 
 `/data/local/tmp` 下 `ftmprobe.jar` 与三个载荷文件已删除，目录为空；HAL 进程存活、无 tombstone；
 shell 仍为 uid 2000；未写属性、未安装任何东西、未重启。
+
+### 23.9 附带结论：该域拿不到内核地址 ⇒ GhostLock 阻断点未变（2026-11-18 12:13）
+
+> 判据登记见 `WIFI_P1_ROOT_COMMAND_AUDIT.md` §7.3，逐条结果见 §7.4。全部只读，未写 `/proc/sys`。
+
+**问题**：有了 `oplus_wifi_service` 域的 uid=0，能否取得 GhostLock 需要的内核地址？
+
+**答案：不能。** 19 条探针（含两组对照）的结果：
+
+| 面 | 结果 |
+|---|---|
+| `/proc/kallsyms` | **MAC 拒绝**：`avc: denied { read } … tcontext=u:object_r:proc:s0` |
+| `/proc/version` / `vmallocinfo` / `timer_list` / `kcore` / `/dev/kmsg` / `dmesg` | 全部拒绝或不可读 |
+| `/sys/module/{kgsl,wlan}/sections/.text` | 拒绝 |
+| `/proc/modules` | **可读，但模块基址恒为 `0x0`**（内核掩码，与 uid 无关） |
+| `/proc/sys/kernel/perf_event_paranoid` | `3` ⇒ perf 不给内核地址 |
+| 对照 `/proc/self/maps`、`perf_event_paranoid` | 可读 ⇒ 拒绝是**按文件标签的定向策略**，不是"该域读不了 proc" |
+
+**判读**：
+
+1. 该域**不是 KASLR 的泄露口**；`CAP_NET_ADMIN/NET_RAW/SYS_MODULE` 三个能力都不提供现成地址泄露。
+2. **GhostLock 的阻断点（无内核地址泄露）不因本次 root 而改变**——原判断在更强前提下再次成立。
+3. `init_module` 受模块签名与 `module_load` 策略双重限制，未尝试（超出只读探测范围，且不是"泄露"而是"加载"）。
+
+**策略含义**：内核路线（GhostLock）依然缺同一个东西；而**域逃逸路线不需要内核地址**。
+因此 §23.7 的优先级不变：先做域逃逸，内核路线只在出现新泄露原语时重开。
+
+**方法修正（记一次踩坑）**：首轮探针用 `log -t K0 "M:…"` 作标记，全部 `-3 INVAILD_PARAMETER`——
+**冒号本身在黑名单里**（§22.2）。改用 `M=` 后通道正常；另发现多行载荷在同一 `sh -c` 中
+只有部分行产生日志，故改为每条探针一个事务。

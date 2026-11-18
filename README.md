@@ -20,7 +20,7 @@
 | 候选面 | 机制是否成立 | 卡在哪一环 | 缺口能否参数化 |
 |---|---|---|---|
 | **KGSL** `CVE-2023-33107` | 成立（源码级 pre-fix 确定） | `arm_lpae_init_pte()` 的 `BUG_ON(!suppress_map_failures)`：静态变量运行期恒 false ⇒ **进入缺陷路径即 panic**，没有"先命中再利用"的中间态 | 否 |
-| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次确定性复现） | **栈载体已闭合、缺信息泄露**：修正扫描器判重 bug 后找到 3 条 xattr 栈覆盖候选（256 B 经 `strncpy_from_user` 写栈）；静态判定"栈槽复用"是几何确定性、NUL 截断不阻断，但 fake waiter 的 `lock` 与 rb 链接必须取**非零内核地址**，本机无泄露通道 | 否（缺泄露） |
+| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次确定性复现） | **栈载体已闭合、缺信息泄露**：修正扫描器判重 bug 后找到 3 条 xattr 栈覆盖候选（256 B 经 `strncpy_from_user` 写栈）；静态判定"栈槽复用"是几何确定性、NUL 截断不阻断，但 fake waiter 的 `lock` 与 rb 链接必须取**非零内核地址**，本机无泄露通道。**v2.13 实证：新取得的 uid=0 域同样读不到内核地址**（`kallsyms`/`kcore`/`dmesg` 被 MAC 拒，`/proc/modules` 基址恒 0）⇒ 阻断点未变 | 否（缺泄露） |
 | **binder** `CVE-2023-20938` | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间：`is_failure=1 且 failed_at=0` 时清理循环执行 0 次 | — |
 | **binder** `CVE-2022-20421` | 成立（pre-fix 形态确证） | 本机是 **ticket spinlock**，公开技术依赖 qspinlock；原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | 部分 |
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |

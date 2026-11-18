@@ -362,3 +362,68 @@ x \n l o g   - t   P 1 U I D   ` i d `
 **项目状态用语**：由"Wi-Fi 面 L3 未证"改为 **"L3 已证：受限域内的 uid=0 命令执行"**。
 "临时 ROOT"若定义为"运行时 uid=0 的命令执行"，则**已达成**；若定义为"可自由读写的 root"，
 则**尚未达成**，缺的是**域逃逸**而非内存破坏。
+
+## 7.3 判据登记：受限 root 能否取得内核地址（2026-11-18 12:11）
+
+> 目的：GhostLock 的唯一阻断点是"无内核地址泄露"。现有 `oplus_wifi_service` 域的 uid=0 执行
+> 是否改变该阻断，必须实测而非推测。**只读探测，不写任何文件。**
+
+| 项 | 登记内容 |
+|---|---|
+| 通道 | tx10070，载荷为多行 `log -t K# \`<只读命令>\``（反引号捕获 stdout） |
+| 对照 K0 | `head -1 /proc/version` —— 机制有效性；若 K0 空则整轮无效 |
+| 探针 | K1 `head -1 /proc/kallsyms`；K2 `cat /proc/sys/kernel/kptr_restrict`；K3 `head -1 /proc/vmallocinfo`；K4 `head -c 120 /sys/module/kgsl/sections/.text`；K5 `grep -m1 _stext /proc/kallsyms` |
+| **通过判据** | K1 或 K5 输出形如 `ffffff8…` 的 16 位十六进制地址（非全 0） |
+| 部分通过 | 地址非零但仅限某类（如仅 module sections 可读） |
+| 失败判据 | K0 有输出而 K1/K5 为空 ⇒ 该域仍被 MAC 拒绝读取，GhostLock 阻断点不变 |
+| 停止条件 | 任一次 HAL 崩溃即停止；不写 `/proc/sys`、不改 `kptr_restrict` |
+
+## 7.4 执行结果：内核地址可达性 —— **否**（2026-11-18 12:13）
+
+> 判据见 §7.3。全部为只读探测，未写 `/proc/sys`、未改 `kptr_restrict`、未触发崩溃。
+> 每条探针单独一个事务（多行载荷会互相干扰，见下方"方法修正"）。
+
+### 7.4.1 结果表
+
+| 探针 | 命令 | 输出 | 判读 |
+|---|---|---|---|
+| **A0 对照** | `id` | `M=uid=0(root) gid=1010(wifi) … u:r:oplus_wifi_service:s0` | 通道有效，root 再次确认 |
+| A1 | `head -1 /proc/version` | 空 | `avc: denied { read } … proc_version` |
+| A2 | `head -1 /proc/kallsyms` | 空 | **`avc: denied { read } … tcontext=u:object_r:proc:s0`** |
+| A3 | `cat /proc/sys/kernel/kptr_restrict` | 空 | 拒绝 |
+| A4 | `head -1 /proc/vmallocinfo` | 空 | 拒绝 |
+| A5 | `head -c 120 /sys/module/kgsl/sections/.text` | 空 | 拒绝（sections 需 CAP_SYSLOG + 策略） |
+| A6 | `grep -m1 _stext /proc/kallsyms` | 空 | 同 A2 |
+| B1 | `timeout 1 head -c 160 /dev/kmsg` | 空 | 拒绝 |
+| B2 | `timeout 2 dmesg` | 空 | 拒绝 |
+| B3 | `head -1 /proc/modules` | `wlan 8314880 0 - Live 0x0000000000000000 (O)` | **可读，但模块基址被内核掩为 0** |
+| B4 | `head -1 /proc/timer_list` | 空 | 拒绝 |
+| B5 | `cat /proc/sys/kernel/dmesg_restrict` | 空 | 拒绝 |
+| B6 | `head -1 /proc/interrupts` | 空 | 拒绝（无地址可泄，亦不可读） |
+| B7 | `head -c 120 /sys/kernel/notes` | 空 | 拒绝 |
+| C1 | `timeout 2 head -c 64 /proc/kcore` | 空 | 拒绝 |
+| C2 | `ls -l /dev/mem /dev/kmem` | 空 | 设备不存在 |
+| C3 | `head -1 /sys/module/wlan/sections/.text` | 空 | 拒绝 |
+| **C4** | `cat /proc/sys/kernel/perf_event_paranoid` | `3` | 可读（对照 C5），perf 无内核地址 |
+| **C5 对照** | `head -1 /proc/self/maps` | `6068758000-… /vendor/bin/toybox_vendor` | 用户态地址可读 ⇒ 拒绝是按文件标签的 MAC，不是"proc 全禁" |
+
+### 7.4.2 方法修正（记录一次踩坑）
+
+首轮探针用 `log -t K0 "M:..."` 作标记，全部返回 `-3 INVAILD_PARAMETER`——
+**冒号 `:` 本身在黑名单里**（§3.1）。改用 `M=` 后通道恢复正常。
+另：多行载荷在同一个 `sh -c` 中只有部分行产生日志（原因未穷尽），故改为**每条探针一个事务**。
+
+### 7.4.3 结论
+
+**在这个域里拿不到内核地址。** 具体地：
+
+- `/proc/kallsyms`、`/proc/version`、`vmallocinfo`、`timer_list`、`kcore`、`dmesg`、`/dev/kmsg`、
+  `/sys/module/*/sections/*` 全部被 MAC 拒绝或不可读；
+- `/proc/modules` 可读但**模块基址恒为 `0x0`**（内核层掩码，与 uid 无关）；
+- `perf_event_paranoid=3`，perf 路径不给内核地址；
+- 对照组（`/proc/self/maps`、`perf_event_paranoid`）可读 ⇒ 拒绝是按文件标签的定向策略，
+  不是"该域读不了 proc"。
+
+⇒ **GhostLock 的阻断点（无内核地址泄露）不因本次 root 而改变。** 该域不是 KASLR 的泄露口。
+`oplus_wifi_service` 有 `CAP_NET_ADMIN/NET_RAW/SYS_MODULE`，但这三个能力都不提供现成的地址泄露；
+`init_module` 受签名与 `module_load` 策略双重限制，不在只读探测范围内，未尝试。
