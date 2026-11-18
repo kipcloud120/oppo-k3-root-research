@@ -18,7 +18,8 @@
 > 结论四条：`/dev/diag` **入口层否证**；Wi-Fi 可写面**消费不构成提权通道**；`system_server` 通道**在"取句柄"处断开**；**root 脚本消费 persist 配置 = 内核面，不是域逃逸**。
 > v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调；v2.20 **闭合 G-S1** —— 从 HAL 二进制的 `.gnu_debugdata` 解出 19 个方法签名，证明它**不接收任何 binder 句柄**；v2.21 **收敛 G-S2** —— HAL 回传串在 Java 侧只进日志与字段，该类 28 个方法对 `java.io`/`Runtime`/`ProcessBuilder`/`SystemProperties`/`Intent`/`java.net` **0 命中**。
 > 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.21）](#审阅须知v221) 的「本轮自我更正」。
-> **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.19）](#审阅须知v219)。**
+> **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.21）](#审阅须知v221)。**
+> **最终判定与"我们没做但认为不值得做"的清单，见 [`CLOSURE.md`](CLOSURE.md)（一页收口稿）。**
 
 ---
 
@@ -37,6 +38,8 @@
 | **`system_server` Binder 通道**（v2.17 新增面，v2.20 补全） | **在取句柄处断开（双向）** | ① 本域对 AIDL 注册表 `servicemanager` **零规则**：无 `binder call`、无 `service_manager find`，`domain` 属性也无全局授予；② `binder call` 只对已持有句柄生效；③ **HAL 侧也不递句柄**（v2.20）：该服务只注册 `IOppoWifiService`、19 个方法无句柄入参、不导入 `readStrongBinder`。⇒ 评审列的三类服务层判定（`checkCallingPermission` / uid==1000 / uid==0）**到不了**。残余：3 个 `_hidl_cb` 构成**反向数据通道**（HAL→system_server 回传 status+字符串），风险落在 Java 侧处理器 = G-S2 |
 | **Wi-Fi 可写面消费者**（v2.16 新增面） | **不构成提权通道** | 连接门（`connectto` 只有 `init`）、执行门（可写类型 `execute` 域数 = 0）、触发门（触发属性属 `system_prop`）**三道全封**；且消费者域全部无 `system_server` binder，唯一有该通道的是本域 ⇒ 跨域是 DAC 降级（uid 0 → 1010/1000）。本机 supplicant/hostapd 无 `-c`，`fstman` 未部署 |
 | **`/dev/diag`**（diagchar，v2.15 新增面） | **入口层无缺陷** | 42 槽 ioctl（22 有效/20 `-EINVAL`）、**入口三函数逐路径复核穷尽、脚本口径 55/55 拷贝点定长或显式封顶**、`write()` 三条路径长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**、形态与上游**修复后** diag 一致。余量：DCI 解析子树未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** |
+
+**最终判定：[`CLOSURE.md`](CLOSURE.md)** —— 四条方向的否证索引、剩余缺口与"为什么不追"、自我声明的最可能错处。
 
 完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**，**`/dev/diag` 入口层审计（否证）在 §25**，**Wi-Fi 可写面消费者审计（不构成提权通道）在 §26**。
 
