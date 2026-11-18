@@ -9,6 +9,7 @@
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未装任何持久化文件**；`/data/local/tmp` 已清空（§23 的探针与载荷已删）；shell `id` 仍为 uid 2000；HAL 进程存活、无 tombstone。累计 5 次内核重启（均在前期竞态实验期，本轮 0 次） |
 | Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
 | GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）→ **`GHOSTLOCK_NUL_ANALYSIS.md`（剩余两项的静态收束：栈复用为几何确定性；NUL 不阻断；缺口 = 内核地址知识）** |
+| **本轮提交审核（v2.16）** | **§25**（`/dev/diag` 入口层否证）+ **§26**（Wi-Fi 可写面消费不构成提权通道）；独立报告 `artifacts_adb/binder_audit/DIAG_DRIVER_AUDIT.md` / `WIFI_DATA_CONSUMER_AUDIT.md`；**复核靶面、离线复现命令、推翻口径见 `README.md`「审阅须知（v2.16）」** |
 
 ---
 
@@ -25,6 +26,7 @@
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
 | Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证）+ §19（P2 补审：hephaestus system 面被 uid==1000 门禁挡住）+ **v2.14：antirootdialog 闭合为否证（shell 不可达）⇒ 7/7**（§24.13）|
 | Wi-Fi 私有事务面（当前主线索，**已取得受限 root**）| **§23 → §22 → §20 → §16.11**（v2.13：L3 达成——`\n`/反引号绕过黑名单，`sh -c` 以 uid=0 执行；域 `oplus_wifi_service` 受限，下一步是域逃逸）|
+| **只做外部复核（v2.16）** | `README.md` 的「审阅须知（v2.16）」→ **§26 → §25** → 两份报告（`DIAG_DRIVER_AUDIT.md` / `WIFI_DATA_CONSUMER_AUDIT.md`）。§7 第 8–10 条是这三面的可证伪条件 |
 
 **三条硬规则**
 

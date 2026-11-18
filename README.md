@@ -13,6 +13,12 @@
 | Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22。**v2.14 探针**：`CapEff=CapBnd=0x13000`（`sys_admin` 从不在 Permitted/Bounding 内）、`/mnt/vendor/persist/wlan` 实测 `mnt_vendor_file`（`0777`）、`crash_dump` 域转换可判别成立但零收益（§24.9） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
+> **📌 审阅入口（v2.16 · 本轮提交审核）**
+> 三份材料：`HANDOVER.md` **§25 / §26**、`artifacts_adb/binder_audit/DIAG_DRIVER_AUDIT.md`、`artifacts_adb/binder_audit/WIFI_DATA_CONSUMER_AUDIT.md`。
+> 本轮结论两条：`/dev/diag` **入口层否证**；Wi-Fi 可写面**消费不构成提权通道**。
+> **请重点攻击的三个点、复现命令、以及"什么证据才算推翻"的口径，见[审阅须知（v2.16）](#审阅须知v216)。**
+> 全部结论可用**纯离线**命令复算（不需要设备）。
+
 ---
 
 ## 结论一览
@@ -245,6 +251,62 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
   仓库**只记录结论与复现方法，不提供任何调用样例、命令串或利用代码**。
   若你要在自己的设备上验证，请自行判断风险与合规性。
 - 发现本项目中任何**可用于真实攻击且有实际危害**的遗漏，请开 issue 而不是直接扩散。
+
+---
+
+## 审阅须知（v2.16）
+
+本节是给外部复核者的**靶面说明**：列出本轮三条结论、各自的判据强度、建议优先攻击的点，以及"什么才算推翻"。
+
+### 待审结论与判据强度
+
+| # | 结论 | 判据 | 强度与已知弱点 |
+|---|---|---|---|
+| 1 | **`/dev/diag` 入口层无可利用缺陷** | 42 槽 ioctl 分派表全解（22 有效/20 `-EINVAL`）；入口三函数（`ioctl`/`write`/`read`）逐路径人工复核；脚本口径 301 符号/55 拷贝点/8 个变长全部给出上界出处；无 `mmap` | **强**（二进制级、可复算）。弱点：脚本只反汇编到首个 `ret`，大函数会被截断（`diagchar_write` 即不在矩阵里）——已用全路径复核补偿，**若复核不完整则是本结论的唯一软肋** |
+| 2 | `plat_hwservice_contexts` 读不到是**策略约束**而非遗漏 | 该路径标签 `hwservice_contexts_file`；5 份 CIL 全量核对后只有 `hwservicemanager` 持有 read/getattr | **强**（纯策略文本，可 grep 复算） |
+| 3 | **Wi-Fi 可写面消费不构成提权通道** | 三道前置门（连接/执行/触发）逐条封死；消费者域 binder 目标全量核对后**只有本域持有 `system_server`** | **中—强**。弱点在**枚举完备性**：消费者集合取自 §24.5 的读方列表，**若该列表漏域，本结论不成立** |
+
+### 请重点攻击的三点
+
+1. **§24.5 的读方列表是否完整**（决定结论 3 是否成立）。若存在一个域：能读 `/data/vendor/wifi/**` 或 `/mnt/vendor/persist/**`，**且**能 `binder call` `system_server`/`vold`/`installd`，**且**我们可控其读到的内容 —— 结论 3 即被推翻。
+2. **入口三函数的"逐路径复核"是否真穷尽**（决定结论 1）。具体可查：`diagchar_write` 的 `0x40`/`0x80`/`0x400` 三条路径之外，是否存在第四条能进入 `copy_from_user` 的分支；`diag_process_single_dci_pkt` 的 opcode 子集（`0x93/0x94/0x98/0x9a`）是否有上游越界。
+3. **是否还有未被枚举的攻击面**。这是唯一无法由内向外证伪的问题：本项目已覆盖 4 个内核面 + `/dev/diag` + Wi-Fi 私有事务 + 7 个私有 Binder 服务 + 域逃逸 + 可写面消费者。**若存在第七类面，请指名。**
+
+### 复现（全部离线，不需要设备）
+
+```bash
+# 结论 1：diag ioctl 分派表全表
+python tools/kfn.py diagchar_ioctl --calls
+# 结论 1：拷贝点长度来源全量扫描（输出即 artifacts_adb/binder_audit/diag/copy_matrix.txt）
+python tools/klen_scan.py
+# 结论 1：单个变长拷贝的判界上下文
+python tools/kcopy.py diag_cmd_register_tbl diag_user_process_dci_apps_data diagmem_alloc
+# 结论 2：该标签的授权域
+grep -hoE "\(allow [a-z_0-9]+ hwservice_contexts_file(_30_0)? \(" .build/sepolicy/*.cil | sort -u
+# 结论 3：消费者域的 binder 目标
+grep -hoE "\(allow (hal_wifi_hostapd_default|hal_wifi_supplicant_default|wcnss_service|fstman) [a-z_0-9]+ \(binder" .build/sepolicy/*.cil | sort -u
+```
+
+> 前置物料（`firmware_F16/vmlinux.elf`、`.build/sepolicy/`）不入库，见 `firmware_F16/README.md` 的本地重建步骤；
+> `.build/sepolicy/` 由设备侧 `adb pull` 5 份 CIL + 各分区 contexts 得到（纯读取）。
+
+### 推翻口径（本项目对"反驳"的要求）
+
+沿用本项目一贯纪律：**只接受可复算的反例**，不接受"我觉得还可以试试"。
+
+| 不构成推翻 | 构成推翻 |
+|---|---|
+| "diag 历史上出过漏洞" | 指明本机 `diag_process_single_dci_pkt` 下游某 opcode 的越界点，并给出可复算的反汇编地址 |
+| "wifi 配置可写很危险" | 指出一个"读该路径 + 能呼 `system_server`/`vold`"的域 |
+| "可能还有别的面" | 指名该面，并给出它在策略/rc/二进制中的存在证据 |
+| 用不同 SPL/内核版本的结论外推 | 指明本机 SPL `2022-04-05` / 内核 `4.9.227-perf+` 下同一路径的差异 |
+
+### 本轮刻意未做的事（避免把"没做"当"做了"）
+
+- **未**做消费端解析器的二进制审计（G-W1）：`DIAG_DRIVER_AUDIT.md` §7 与 `WIFI_DATA_CONSUMER_AUDIT.md` §6 均已登记。
+- **未**逐条审计 `vendor_oppo_prop` 55 条前缀的值语义（G-W2）。
+- **未**确认 197 份 init rc 中哪一份是 sdm710 实际生效版本（G-W4）；已用 `atoll` + 设备 `ps` 交叉过滤。
+- **未**向 `/mnt/vendor/persist/**` 写任何内容（跨重启持久化，§24 R1 禁令）。
 
 ---
 
