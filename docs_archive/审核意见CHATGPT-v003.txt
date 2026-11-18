@@ -1,0 +1,259 @@
+OPPO K3 ROOT 项目第六次复评：已经取得真实的 UID 0 命令执行
+这次更新是整个项目迄今为止最重要的一次突破。
+
+我重新检查了当前 GitHub main 分支的 README、HANDOVER v2.13、§23 实机记录以及原始证据文件。
+
+此前的 NO-GO 结论已经发生实质性变化：Wi-Fi 私有 Binder 路线已经在真实设备上实现从 shell 到 UID 0 命令执行。
+
+但需要准确描述：这不是一个不受限制的 root shell，而是一个受到 Android SELinux 约束的 root 执行环境。
+项目最新状态 · 2026-11-18
+重大突破
+
+受限 ROOT 已实现
+Wi-Fi HIDL → root shell → UID 0，已实机验证。
+
+shell UID 2000 → UID 0
+已证实
+
+两次独立复现
+报告确认
+
+BL 锁定状态
+保持
+
+持久化 ROOT
+未实现
+
+完整 SELinux 权限
+未实现
+
+可交互 root shell
+未实现
+
+
+这次不应该再把整个项目评价为 NO-GO。更合理的状态是：
+
+原始临时 UID 0 目标已经达到；完整、可用的 Android ROOT 尚未达到。 
+GitHub+1
+
+一、最重要的实机突破
+新版 HANDOVER §23 记录了 2026 年 11 月 18 日 12:06–12:07 的现场实验。
+
+原始调用链：
+普通 ADB shell
+UID 2000
+u:r:shell:s0
+
+Binder transaction 10070
+OplusWifiTransactionHelper
+
+权限检查为空实现
+
+
+OplusWifiHalService
+
+executeDriverCommand
+
+
+/vendor/bin/sh -c
+
+
+实机确认
+UID 0
+u:r:oplus_wifi_service:s0
+
+GID 1010 · wifi
+
+
+这里最关键的不是静态反汇编，而是已经在目标机器上看到了执行结果。
+1. 实际证据
+HANDOVER §23.3 记录的结果：
+uid=0(root)
+gid=1010(wifi)
+groups=1010(wifi),1000(system),
+       2901(vendor_qti_diag),3005(net_admin)
+context=u:r:oplus_wifi_service:s0
+
+
+调用方仍然是：
+uid=2000(shell)
+context=u:r:shell:s0
+
+
+这证明不是 shell 本身变成了 root，而是 shell 通过 Binder 请求，让另一个 root 服务执行了命令。
+
+作者报告使用两次独立实验复现，使用此前没有测试过的换行和命令替换输入。
+GitHub+1
+
+2. 这是一个真实的安全边界突破
+此前的四次失败实验使用的是被 11 字符黑名单覆盖的 Shell 字符。
+
+新版纠正了历史判断：
+- 黑名单没有覆盖换行。
+- 黑名单没有覆盖反引号。
+- 命令拼接没有正确引用参数。
+- 最终通过 sh -c 解释执行。
+因此，这不是一个虚假的 service call 成功，也不是单纯的 HAL 返回成功。
+
+这是从低权限 shell 到 root 服务命令执行的真实权限边界突破。
+
+二、但是这个 ROOT 为什么还不完整？
+这是这次评审中必须重视的部分。
+
+Android 并不只依赖 Linux UID 决定权限。
+
+SELinux 是独立的强制访问控制机制，即使进程已经运行在 UID 0 下，也仍然必须遵循对应 SELinux domain 的访问规则。Android 官方对此有明确说明。
+Android Open Source Project+1
+
+实际权限测试结果
+测试	结果
+UID 0 命令执行	成功
+访问 Wi-Fi 域允许的文件	允许
+使用厂商 Wi-Fi 工具	允许范围内
+读取 /data/system	SELinux 拒绝
+读取 selinuxfs	SELinux 拒绝
+读取 proc_security	SELinux 拒绝
+访问 /data/local/tmp 中的文件	SELinux 拒绝
+安装持久化 su	未实现
+
+尤其值得注意的是，getenforce 读取 selinuxfs 被拒绝，/data/system 也无法访问。
+
+这表明即使 UID 为 0，该进程仍然被限制在 oplus_wifi_service 域中。
+GitHub+2
+
+
+所以我建议使用三个不同术语：
+术语	OPPO K3 当前状态
+Root UID 命令执行	实现
+可用 root（完整系统管理能力）	未实现
+持久 ROOT（重启后保留）	未实现
+
+三、GhostLock 联合利用：这次反而有了确定答案
+上一轮你问过 Wi-Fi 和 GhostLock 能不能联合利用。
+
+新版 §23.9 已经对此进行了实机调查。
+
+结果很有价值：
+GhostLock 仍然没有解除阻断
+作者利用新获得的受限 UID 0 环境，进行 19 项只读探测。
+
+结果：
+信息来源	结果
+/proc/kallsyms	SELinux 拒绝
+/proc/kcore	不可读
+/proc/kmsg / dmesg	不可读
+/proc/vmallocinfo	不可读
+/sys/module/kgsl/sections/.text	拒绝
+/proc/modules	基址仍为 0
+perf_event_paranoid	3
+
+也就是说：
+
+即使获得 UID 0，当前 Wi-Fi SELinux domain 仍然不能提供 GhostLock 所需的内核地址。 
+GitHub+1
+
+
+这次数据实际上验证了我们此前提出的组合假设：
+- Wi-Fi 可以提供受限 UID 0。
+- Wi-Fi 不会自动提供 KASLR 地址泄露。
+- GhostLock 需要的 rt_mutex 对象及 rbtree 指针仍然无法得到。
+- 因此目前没有必要把两条利用链强行拼接。
+我的建议是：暂时冻结 GhostLock。它不再是完成原始临时 UID 0 目标所必需的研究方向。
+
+四、下一阶段的核心不再是内核漏洞，而是 SELinux 域边界
+这是项目研究目标的重大转变。
+
+之前的工作重点：
+
+普通 shell → 内核漏洞 → 内核控制 → root
+
+现在已经找到另一条路径：
+
+普通 shell → Binder → root Wi-Fi 服务 → 受限 UID 0
+
+所以接下来最值得研究的是，oplus_wifi_service 能够访问哪些系统资源，以及这些资源有没有被更高权限组件消费。
+
+我建议把下一阶段定义为：
+
+P0：SELinux 域权限边界审计。
+
+优先审阅的材料：
+1. oplus_wifi_service 对应的 vendor SELinux policy。
+2. 该域允许访问的文件类型和目录。
+3. Wi-Fi 服务能修改的配置、属性及数据。
+4. system_server、init 和其他高权限组件如何使用这些数据。
+5. 该域的 capability、组权限与 Binder 服务注册情况。
+重点是找到真实的权限边界缺陷，而不是简单地把 UID 0 等同于 unrestricted root。
+
+这里也要注意：写入某个配置文件并不自动形成域逃逸，必须同时证明高权限组件会以不安全的方式消费它。
+
+另一个未完成事项是 AntiRootDialog。当前七个私有服务仍为 6/7 完成，不过它已不再是最优先的工作。
+GitHub+1
+
+
+五、我发现一个值得修正的取证问题
+虽然我认可这次的突破，但重新检查公开证据文件时发现一个小问题。
+
+作者在 HANDOVER §23.3 引用了：
+I P1UID : uid=0(root) ...
+
+
+但仓库中目前提供的 P1_L3_EVIDENCE.txt，实际能直接看到的是：
+- 调用方 UID 2000。
+- Binder transaction 返回成功。
+- HIDL 服务收到输入。
+- executeDriverCommand 报告 completed successfully。
+这个文件本身没有展示完整的 I P1UID 输出行。
+GitHub+1
+
+
+因此，我认为应该补交：
+- 包含 I P1UID 的完整 logcat 原始片段。
+- 第二次独立复现的对应原始记录。
+- 两次记录的时间戳与进程 PID。
+这是证据归档完整性问题，不足以否定 HANDOVER 所报告的实机突破，但正式发布时应该补齐。
+
+六、项目状态应该怎样重新分类？
+我给出以下更新后的评审：
+研究方向	最新判断	下一步
+KGSL	NO-GO	冻结
+Binder CVE-2023-20938	NO-GO	冻结
+Binder CVE-2022-20421	NO-GO	冻结
+FastRPC	NO-GO	冻结
+GhostLock	缺少内核地址	冻结
+Wi-Fi Binder 命令执行	L3 成功	保留
+SELinux 域逃逸	未实现	P0
+AntiRootDialog	6/7 审计	P1
+
+我给项目的最终评价
+Partial Success
+原始临时 UID 0 目标已达成
+BL 保持锁定，系统没有刷写、修改分区或安装持久化文件。
+
+已实现
+
+从 shell UID 2000 触发 root 服务，在 oplus_wifi_service 域内以 UID 0 执行命令。
+
+尚未实现
+
+脱离该 SELinux domain 的限制，获得普通 Android ROOT 所需的系统管理能力和交互式 root shell。
+
+七、最终建议：现在不要再追求内核 ROOT
+这是我对整个项目最重要的建议。
+
+原先花费大量时间研究 KGSL、Binder UAF、FastRPC 和 GhostLock，是为了实现最初的临时 ROOT 目标。
+
+现在 Wi-Fi 线路已经证明能够达到 UID 0。
+
+继续盲目寻找内核漏洞，投入产出比已经显著下降。
+
+下一轮应该集中在 SELinux policy 的静态审计、域内能力清单和可信组件的数据消费关系上。
+
+最终判断：OPPO K3 的 BL 锁定临时 UID 0 命令执行，已经获得实机成功记录。项目不再是 NO-GO 项目，而是从“能否获得 UID 0”进入了“能否获得可用 root”的第二阶段。
+
+最新资料：
+- GitHub 最新 README
+- HANDOVER v2.13 §23
+- L3 实机证据
+- Wi-Fi 命令执行完整审计
+- Android SELinux 官方安全模型

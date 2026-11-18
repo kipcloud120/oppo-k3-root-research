@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.13**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证**。下次会话**从 §17 开始**，再按需查 §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.14**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径**。下次会话**从 §17 开始**，再按需查 §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -40,10 +40,17 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定**：**临时 ROOT 的"uid=0 命令执行"一侧已达成（2026-11-18 12:07，Wi-Fi 私有事务面，§23）**；
-但该 root 处于 SELinux 域 `oplus_wifi_service` 内，**不具备无限制读写能力**，因此"可用 root"尚未达成，
-剩余缺口是**域逃逸**。四个内核候选面（KGSL / binder×2 / FastRPC）仍判定不可达；GhostLock 仍阻断在
-"无内核地址泄露"，但已不再是主线（不再需要内核原语）。
+**判定（v2.14，术语按审核意见 v003 三分）**：
+
+| 术语 | 含义 | 本机状态 |
+|---|---|---|
+| **Root UID 命令执行** | 从 shell 让 root 服务以 uid=0 执行任意命令 | **已达成**（2026-11-18 12:07，§23，两次独立载荷） |
+| **可用 root** | 脱离域限制的系统管理能力（读写任意 `/data`、装 `su`、改 `/system`、交互式 root shell） | **未达成**；缺口 = SELinux 域逃逸 |
+| **持久 ROOT** | 重启后仍保留 | **未达成**（且按约定不做任何持久化写入） |
+
+域逃逸一侧已完成静态审计（§24）：**`oplus_wifi_service` 域内不存在可达的逃逸路径**——四条候选（写-执行、挂载、
+加载模块、属性→init 执行）各被策略断链，唯一可达的域转换 `crash_dump` 零收益。四个内核候选面仍判定不可达；
+GhostLock 仍阻断在"无内核地址泄露"，且已非主线。
 
 ### 1.2 逐面结论
 
@@ -501,6 +508,14 @@ ENOTTY（未实现）3833
    ⚠️ **不要再猜令牌、不要再用 `service call` 试**（16 次证明是工具 ABI 问题，非授权）；
    **也不要再用元字符试注入**（全部失败且导致 HAL 崩溃）。
 7. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
+8. **【2026-11-18 v2.14 新增：域逃逸路的可证伪条件】** 出现下列任一条，§24 的"无逃逸"结论即失效，须重评：
+   (a) 策略更新后某域对 `wifi_vendor_data_file` / `mnt_vendor_file` / `fuse` / `sdcardfs` 获得 **`execute`**
+       ⇒ "写-执行"链复活（当前 0 个域持有，这是 §24 的核心否定）；
+   (b) 本域获得 `filesystem:mount` / 文件类型 `mounton`，**且**能取得 `CAP_SYS_ADMIN`（rc caps 需同时放宽）；
+   (c) 本域获得 `ctl_start_prop` / `system_prop` 等更大属性写面 ⇒ "属性 → init `start`"范式复活
+       （现成范式见 `odm/init.vendor.oppo.connectivity.rc`，但其触发属性不在本域可写类型内）；
+   (d) 出现"读方把可写配置文件当命令/路径消费"的**二进制级证据**（§24 只审策略、未审解析逻辑）；
+   (e) 出现 shell（非 init）可触发的、`crash_dump_exec` 之外的域转换。
 
 ---
 
@@ -1024,10 +1039,18 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 
 ### 17.3 下一步优先级（按推荐顺序）
 
-> **🟢 v2.13 更新（2026-11-18 12:07，见 §23）：L3 已达成。** Wi-Fi 面不再是"待验证"，而是"已取得受限 root"。
-> 新的优先级只有一条主线：
+> **🟢 v2.14 更新（2026-11-18 12:26，见 §24）：域逃逸 P0 的静态审计已完成。**
+> 结论：**该域内不存在可达的逃逸路径**（五条候选逐一断链），详见 §24 与
+> `artifacts_adb/binder_audit/SELINUX_DOMAIN_AUDIT.md`。
+> 当前主线**已无"下一跳"**：需要一个新的前提才会重开（§7 第 8 条列出 5 个可证伪条件）。
+> 可选动作只剩两项，均需用户决策：
+> ① 三个只读探针（`CapEff` / `persist/wlan` 标签 / `crash_dump` 域转换），把 §24 的静态判定钉到实测；
+> ② 再执行一次同构事务以补齐"第二份 `uid=0` 原文"（纯归档完整性问题，非研究推进）。
+>
+> **🟢 v2.13 记录（2026-11-18 12:07，见 §23）：L3 已达成。** Wi-Fi 面不再是"待验证"，而是"已取得受限 root"。
+> 当时的优先级只有一条主线：
 > - **P0 = SELinux 域逃逸**（纯静态优先）：枚举 `oplus_wifi_service` 的可写面与"被更高权限域消费"的落点，
->   把 uid=0 的受限执行变成可用 root。**不要**再重复已验证的注入实验。
+>   把 uid=0 的受限执行变成可用 root。**不要**再重复已验证的注入实验。← **已于 v2.14 完成，结论见 §24**
 > - **P1 = antirootdialog**（仍缺物料，需完整 factory 镜像或授权只读拉取）。
 > - **冻结**：KGSL / binder×2 / FastRPC / GhostLock——已非主线，不再需要内核原语。
 >
@@ -1508,3 +1531,137 @@ shell 仍为 uid 2000；未写属性、未安装任何东西、未重启。
 **方法修正（记一次踩坑）**：首轮探针用 `log -t K0 "M:…"` 作标记，全部 `-3 INVAILD_PARAMETER`——
 **冒号本身在黑名单里**（§22.2）。改用 `M=` 后通道正常；另发现多行载荷在同一 `sh -c` 中
 只有部分行产生日志，故改为每条探针一个事务。
+
+---
+
+## 24. 增补：域逃逸 P0 —— `oplus_wifi_service` 策略边界审计（2026-11-18，纯静态）
+
+> 响应 `docs_archive/审核意见CHATGPT-v003.txt` 第四节 P0。**全程只读**：`adb pull` 策略文本与 init rc，
+> 未 push、未注入、未改属性、未重启。
+> 完整报告 **`artifacts_adb/binder_audit/SELINUX_DOMAIN_AUDIT.md`**；
+> 工具 `tools/sepolicy_domain_audit.py`（域 allow 展开 + 写面/消费面）、`tools/prop_trigger_audit.py`（属性 × init 触发器）。
+
+### 24.1 结论
+
+**该域内不存在可达的 SELinux 域逃逸路径。** 四条候选各被策略本身断链，第五条（域转换）可达但零收益：
+
+| 候选 | 判定 | 断链点 |
+|---|---|---|
+| 写入 → 更高权限域执行 | **不可行** | 该域可写的 `wifi_vendor_data_file` / `mnt_vendor_file` / `fuse` / `sdcardfs`，**全策略无任何域持有 `execute`** ⇒ 写-执行链在策略层不存在 |
+| 挂载覆盖（`CAP_SYS_ADMIN`） | **不可行（双锁）** | ① `filesystem` 类只有 `getattr`，无 `mount`/`remount`；无 `mounton`；② rc 只给 3 个能力，`sys_admin` 不在 Permitted 集 |
+| 加载自定义模块 | **不可行（单向）** | `module_load` 只对 `vendor_file` 生效，而本域对 `vendor_file` **无写权** ⇒ 只能加载既有签名模块 |
+| 属性写 → init 执行为 root | **部分可行、无害** | 只能写 `vendor_oppo_prop`；命中的 11 条触发器全是 `chmod`/`chown`/`setprop`，**无一条 `start`/`exec`** |
+| 域转换 | **唯一：`crash_dump`，零收益** | `(typetransition domain crash_dump_exec process crash_dump)`；可读集与可写集**交集为空**（无法注入库），且行为不可控 |
+
+### 24.2 方法与规模
+
+- 物料：`vendor_sepolicy.cil`（981,335 B，`6d1c54a6…`）、`plat_sepolicy.cil`（1,579,853 B，`5249d8e1…`）、
+  `plat_pub_versioned.cil`（950,003 B）、`precompiled_sepolicy`（1,054,954 B）、`*_file_contexts`、
+  `*_property_contexts`、197 个 init rc。策略版本 `30.0`。
+- 规模：三份 CIL 共 **21,011 条 allow**；对本域适用 **304 条**；本域所属属性 **41 个**；显式授予的目标类型 **44 个**。
+- 工具口径：`direct` = 源为域名的规则；`via:X` = 经属性 `X` 继承。类型名已归一化去 `_30_0` 版本后缀
+  （不归一化会产生成对的重复类型，首版工具即踩此坑）。
+
+### 24.3 域身份与能力（两层校验）
+
+```
+service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
+    user root | group wifi system vendor_qti_diag net_admin | capabilities NET_ADMIN NET_RAW SYS_MODULE
+```
+
+| 层 | 结果 |
+|---|---|
+| 策略允许能力（`direct`） | `chown fowner fsetid net_admin net_raw setgid setuid sys_admin sys_module sys_resource` |
+| **进程实际 Permitted** | `NET_ADMIN NET_RAW SYS_MODULE`（rc 决定；`sys_admin` 提不上来） |
+| DAC | **无 `CAP_DAC_OVERRIDE` / `CAP_DAC_READ_SEARCH`** ⇒ uid=0 并不读遍全盘，只按"root 属主 + wifi/system/diag/net_admin 四组"生效 |
+
+> 这条更正很重要：审核意见把 "UID 0" 与 "unrestricted" 分开是对的，但**分开的机制不止 SELinux 一层**——
+> 能力集本身就被 rc 削到 3 个。任何 "root 应能……" 的推断都要先过这一关。
+
+### 24.4 可写面（`direct`，12 个目标类型）
+
+| 类 | 目标 | 落点 |
+|---|---|---|
+| file+dir | `wifi_vendor_data_file` | `/data/vendor/wifi(/.*)?`（全权） |
+| file+dir | `mnt_vendor_file` | `/mnt/vendor(/.*)?`（全权，**含 `persist/wlan`**） |
+| file+dir | `fuse` | 无静态落点（挂载时指定） |
+| file | `sdcardfs` | 无静态落点 |
+| file | `sysfs_wlan_con_mode` / `proc_overcommit_memory` | `/sys/module/wlan/parameters/con_mode`、`/proc/sys/vm/overcommit_memory` |
+| chr_file | `diag_device` | `/dev/diag`（全 ioctl） |
+| sock_file | `property_socket` | `/dev/socket/property_service` |
+| property | `vendor_oppo_prop` | 55 条前缀（§24.6） |
+
+### 24.5 消费面：写-执行链的断点
+
+| 可写类型 | 持有 `read` 的域 | 持有 `execute` 的域 |
+|---|---|---|
+| `wifi_vendor_data_file` | hostapd、supplicant、hal_wigig、wcnss_service、fstman、usage_hidl、vendor_autochmod、cnd | **0** |
+| `mnt_vendor_file` | hal_audio、hal_camera、hal_health、rild、wcnss_service、self_init、ueventd、qti_init_shell 等 20+ | **0** |
+
+`execute` 不被 `read` 蕴含，且没有任何域持有它 ⇒ **"写脚本 / 写 ELF → 等别人执行"在本机从策略层不成立**。
+这正是"缺的不是技巧，是策略不给"的形态。
+
+### 24.6 属性面
+
+- 可写类型只有一个 `vendor_oppo_prop`（55 条前缀），粒度过粗：除 `vendor.oplus.wifi.*` 外还覆盖
+  `vendor.oppo.camera.`、`persist.oppo.camera.`、`persist.odm.dirac.`、`vendor.vold.serialno`、
+  `vendor.modem_dump_action`。读方含 **`system_server`**。
+- 与 354 条 `on property:` 触发器交叉，命中 11 条：3 条 `vendor.oplus.sniffer.on`（init 执行 `chmod 0777 /data/vendor/wifi`）、
+  1 条 `persist.vendor.oppo.region`（init 代写 `persist.sys.oppo.region`，值洗白到 `system_prop` 类型，**无下游消费者**）、
+  其余 7 条全为 `ro.*`（运行期不可写）。
+- **关键否定**：11 条里无 `start` / `exec`。本机确有"属性 → root 执行脚本"的现成范式
+  （`sys.oplus.wifi.dump.trigger=1 → start triggerwifidump` → `/vendor/bin/sh /odm/bin/init.vendor.wifi.autochmod.sh`），
+  但其触发属性属 `system_prop`、`ctl.start` 属 `ctl_start_prop`，**本域都没有 `set`** ⇒ 范式对本域关闭。
+
+### 24.7 域转换枚举（唯一一条，零收益）
+
+先求本域 `execute` 的 9 个文件类型，再找 `typetransition(SRC, 该类型, process, NEW)` 且 SRC 覆盖本域：
+
+| 文件类型 | 目标域 | 转换源 | 可达 |
+|---|---|---|---|
+| `crash_dump_exec` | `crash_dump` | `domain`（全局） | **是** |
+| `oplus_wifi_service_exec` | 自身 | `init` | 否 |
+| `vendor_shell_exec` | `qti_init_shell` / `vendor_shell` | `init` / `shell` | 否 |
+| `wcnss_service_exec` | `wcnss_service` | `init` | 否 |
+
+⇒ **执行 `/vendor/bin/sh` 不转换域**，与 §23 实测（`sh` 的 `scontext` 仍是 `oplus_wifi_service`）完全吻合。
+`crash_dump` 不可用三条理由：① 该域可读集（`exec_type`/`vendor_file`/`apk_data_file`/`same_process_hal_file` 等）
+与本域可写集**交集为空**，无法 `LD_PRELOAD`；② 它需要 `--pid` 与 init 传入的 tombstone fd，手工 exec 起来即退；
+③ 输出目标是他人崩溃现场，不可指定。
+
+### 24.8 风险登记（越界写面，非逃逸）
+
+| # | 项 | 规制 |
+|---|---|---|
+| R1 | `/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini` 可写（无专属标签 ⇒ `mnt_vendor_file`；init `chmod 0666`；WLAN 驱动配置入口） | **禁止写实验**：跨重启持久化，违反 §11 约定 |
+| R2 | 属性类型过粗（相机 / 显示 / vold 序列号 / modem dump 同在 `vendor_oppo_prop`） | 记录为厂商策略缺陷，不据此构造实验 |
+| R3 | `/dev/diag` 全 ioctl + root + `diag` 组 | **新登记的内核面**（此前 §1.2 五面清单未含），主线已放弃内核原语，不评估 |
+| R4 | `vendor_file: module_load` + `SYS_MODULE` | 只能加载既有 `.ko`，不构成新面 |
+
+### 24.9 待验证（只读，需授权）
+
+| # | 假设 | 一条事务即可验证 | 判据（先登记） |
+|---|---|---|---|
+| V1 | `CapEff` 不含 `sys_admin` | `x\nlog -t CAPS $(grep Cap /proc/self/status)` | `CapEff` 的 0x200000 位为 0 |
+| V2 | `/mnt/vendor/persist/wlan` 标签为 `mnt_vendor_file` | `x\nlog -t LBL $(ls -ldZ /mnt/vendor/persist/wlan)` | 输出含 `mnt_vendor_file` |
+| V3 | `crash_dump` 转换可达但零收益 | `x\n/system/bin/crash_dump64 --help` | audit 出现 `scontext=u:r:crash_dump:s0` 且进程即退 |
+
+### 24.10 未穷尽项
+
+1. **只审策略、未审解析逻辑**：`mnt_vendor_file` 的 20+ 读方（含 `ueventd`、`rild`、`self_init`）如何解析所读内容，
+   未做二进制级审计 ⇒ §24.1 是**策略层**结论，不等于"所有消费逻辑安全"。
+2. `fuse` / `sdcardfs` 无静态落点，用途未确认。
+3. `usage_hidl`、`vendor_autochmod`、`fstman`、`wcnss_service`、`hostapd` 与本域**共享** `/data/vendor/wifi` 写权，
+   其解析逻辑未审计。
+4. `hwservice_manager` 注册面：本域只能注册 `oplus_wifi_hal_service` / `hidl_base_hwservice` 两类名字，
+   未发现可冒充更高权限服务的路径（`plat` 侧 `hwservice_contexts` stat 被拒，未穷尽）。
+
+### 24.11 对审核意见 v003 的逐条回应
+
+| 审核意见 | 本轮处置 |
+|---|---|
+| 第四节 P0：域权限边界审计（policy / 可写面 / 属性 / 消费方 / capability + 组 + Binder） | **完成**，见 §24.2–§24.7；结论"无逃逸"，附 5 条可证伪条件（§7 第 8 条） |
+| 第五节：证据文件缺完整 `I P1UID` 行、缺第二次复现原始记录、缺时间戳与 PID | **主要为版本错位**：该文件自提交 `2869823` 起即含完整第 28 行（`28560 28560 I P1UID : uid=0(root) …`），本地与 `origin/main` 同步、无未推送差异。已在文件末尾补 A–E 五节：行号定位、PID 归属、时间基准、**两次复现的准确口径**（载荷 1 只留下域标签 avc，只有载荷 2 留下 `uid=0` 原文）、核对结论。**"两份都带 `uid=0` 原文"仍缺一份**，需再执行一次同构事务，待授权 |
+| 第三节：GhostLock 冻结 | 维持冻结；§23.9 已实证新域同样拿不到内核地址 |
+| 第六节：三项术语（Root UID 命令执行 / 可用 root / 持久 ROOT） | **采纳**，写入 §1.1 |
+| 第七节：不要再追求内核 ROOT | 采纳；主线已从内核转向域边界，本轮进一步证明域边界也无出口 |

@@ -27,3 +27,46 @@ INT=1
 11-18 12:07:14.745  1755  4874 D OplusWifiHalService: log -t P1UID `id`) with result =  
 11-18 12:07:14.834 28560 28560 I P1UID   : uid=0(root) gid=1010(wifi) groups=1010(wifi),1000(system),2901(vendor_qti_diag),3005(net_admin) context=u:r:oplus_wifi_service:s0
 11-18 12:07:14.831 18129 18129 W kworker/2:1: type=1400 audit(0.0:14925): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0
+
+# ============================================================
+# 归档完整性核对（2026-11-18 12:26，响应审核意见 v003 第五节）
+# 本节只补"归属、时间戳、PID"三要素，不改动上面任何原始字节。
+# ============================================================
+
+## A. 关键行定位（上面日志原文，不做改写）
+行号  内容摘要
+第 15 行  TRANSACT=true   REPLY size=8 hex=0000000001000000   INT=1        ← 事务层：调用成功
+第 22-23 行 1755/4874 D OplusWifiHalService: entering executeDriverCommand(x … )  ← 入参回显（L1，不可单证执行）
+第 24-25 行 1755/4874 D OplusWifiHalService: executeDriverCommand(…) completed successfully.  ← 服务端完成
+第 28 行 28560/28560 I P1UID : uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0  ← 决定性行
+第 29 行 W sh : avc: denied { search } … tcontext=u:object_r:shell_data_file:s0  ← 域限制（旁证）
+
+## B. 进程归属（为什么 PID 28560 属于本次调用）
+- 28560 是 `log` 进程（`I P1UID` 标签由 `log -t P1UID` 写入），其父即 1755 派生的 `sh`；
+- 1755 = `vendor.oplus.hardware.wifi@1.1-service` 主进程（tid 4874 为 HIDL 回调线程）；
+- 28543 = 本次 `app_process`（javaprobe）客户端，即调用方；其 avc 行（第 19-21 行）显示 `scontext=u:r:shell:s0`；
+- 三者在同一秒内（12:07:14.561 → .834）构成完整链路：shell(28543) → HAL(1755/4874) → sh → log(28560)。
+
+## C. 时间基准
+- 设备时区 = UTC+8；`11-18 12:07:14` 即 UTC `2026-11-18T04:07:14Z`（与本文件标题一致）。
+- 事务发起时刻 .561（客户端 avc）→ HAL 回调 .742/.745 → `id` 输出 .834，全程 273 ms。
+
+## D. 两次复现的准确表述（更正 HANDOVER §23.2 的口径）
+| # | 载荷 | 是否留下 `uid=0` 原始行 | 证据位置 |
+|---|---|---|---|
+| 1 | `x\nid > /data/local/tmp/_p1_uid` | **否**：`sh` 被 MAC 拒 `search shell_data_file`，文件未创建；只留下 `scontext=u:r:oplus_wifi_service:s0` 的 avc 行 | HANDOVER §23.2 表第 1 行 |
+| 2 | `x\nlog -t P1UID \`id\`` | **是**：第 28 行 | 本文件第 28 行 |
+| 3 | `x\nlog -t P1CAP \`getenforce\`` 等三条 | 否（同为 avc 拒绝，用于域能力探测） | HANDOVER §23.2 表第 3 行 |
+
+⇒ **"两次独立复现"指的是载荷 1 与载荷 2 两次独立执行**（不同载荷、不同观察通道），
+   其中只有载荷 2 通过 `log` 通道留下了可直接引用的 `uid=0` 原文；
+   载荷 1 留下的是执行者域标签（`oplus_wifi_service`）这一间接证据。
+   **归档现状：`uid=0` 的原始行只有 1 份。** 若要求"两份都带 `uid=0` 原文"，
+   需再执行一次同构事务（同一判据、只换日志标签），属命令注入，须用户授权后按 §17.4 单变量原则执行。
+
+## E. 对审核意见"该文件未展示完整 I P1UID 行"的核对结果
+- 本文件自 commit `2869823`（feat: 上机达成 L3）起即包含第 28 行完整原文；
+- `git log --oneline -3 -- artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt` → 仅 `2869823` 一次提交；
+- 本地与 `origin/main` 同步（`4693a32`），无未推送差异；
+- 故"文件里看不到 `uid=0` 行"的情形，只可能来自审核时看到的版本早于该提交，或未展开本文件的第 28 行（该行较长，终端折行时会与第 27 行的 `with result =` 连排）。
+- **本文件不做任何后补改写**：上面第 28 行是 12:07 当次 `adb logcat -d` 的原文粘贴。
