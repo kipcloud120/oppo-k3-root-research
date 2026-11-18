@@ -209,3 +209,61 @@ executeDriverCommand(String v7):
 **结论**：myftm 分支**从"已否证"改判为"静态注入面开放、待授权验证"**；
 Wi-Fi P0 **重开**、不随 P1 关闭。L3（真实 `uid=0` 回显）仍未证，整体 no-go 不翻转。
 **不上机**（复评亦建议先审计清楚再决定）；下一次更新聚焦补齐静态过滤路径，不新增 CVE。
+
+---
+
+## 8. 新 P0 收束（2026-11-18，纯离线）：Java 传输层 + myftm 二进制
+
+> 响应 §20 / 复评"需证明三件事"。本轮补齐了 §7 遗留的两条静态路径，**未连设备、无写操作**。
+> 新解出 `/vendor/bin/myftm`（vendor.img，225,752 B，AArch64 PIE）落 `rootbin/_p2/`（gitignored）。
+
+### 8.1 Java/HIDL 传输层：确认全程无过滤（复评第①点的传输段）
+
+逐方法 dump（dex 反汇编）：
+
+| 环节 | 方法 | 结论 |
+|---|---|---|
+| 入口 | `OplusWifiTransactionHelper.sendFTMCommand(String v1)` | `enforceAccessPermission()` **= 1 条 return-void 空实现**；`v1` 原样传 `executeDriverCommand` |
+| HAL | `OplusWifiHalService.executeDriverCommand(v7)` | 原样拼日志 + 原样传 HIDL |
+| HIDL Proxy | `IOppoWifiService$Proxy.executeDriverCommand` | `writeString(v6)` 原样写 Parcel，code=4；回调 `onValues(status,value)` 原样回传 |
+
+⇒ **Java/HIDL 层无转义、无过滤、无引号封装，字符串逐字节透传到 native**（与 §2.1 一致）。
+
+### 8.2 `/vendor/bin/myftm` 本体：第二道约束（关键发现）
+
+逆向结果（PLT 经 GOT 精确映射，非 stub 序号猜测）：
+
+- **参数解析**：导入 `getopt_long` + `atoi`/`strtol`/`sscanf`/`strtok_r`；option spec 串为
+  `hdi:nb:e:Em:S:w:Wr:Rg:f:p:Pqt:Tua:Ax:s:C:c:D:k:G:j:y:z:lL:M:B:H:I:JN:O:o:Q:X:Y:U:rateBw:nss:...`
+  ——典型的**高通 Wi-Fi ATE 工厂测试工具**，argv 由固定选项表解析成结构化参数，不是 shell 串。
+- **main（`0x10048`）**：`argc==2` 才继续（否则 return -1）；argv[1] 内容在 main 里**从未被读取**去拼命令。
+- **popen（3 处）+ system（5 处）命令全部硬编码**，逐字节读出的代表：
+  - `cat /proc/modules | grep %s`（`%s`=`wlan` 硬编码 @`0x48ad`）→ popen 检查模块
+  - `/system/bin/rmmod wlan`
+  - `/system/bin/insmod /system/lib/modules/wlan.ko con_mode=5`
+  - 其余 system 点（`0x10680`/`0x106c4`）参数亦为 adrp 固定串常量
+- ⇒ **argv（即 input[5:] 尾串）不进入任何 popen/system 的命令串**；元字符会被 `getopt_long` 当作未知选项或普通参数解析掉。
+
+### 8.3 判定（诚实标注边界）
+
+复评第①点的"HAL 拼接点无过滤"仍成立（§4/§7 不改）；但**新增的第二道约束改变了注入面的实际可达性**：
+
+| 层次 | 结论 |
+|---|---|
+| HAL 拼接点 `/vendor/bin/myftm <input[5:]>` | 无引号/转义 ⇒ `sh -c` 会把 `;` 解析为**外层 shell 的操作符** |
+| 但外层 shell 执行的是 `myftm` + 一个参数 token | 带 `;` 的串会被外层 shell 拆成第二条命令——这点复评仍对 |
+| **myftm 对 argv[1] 的处理** | getopt_long 固定选项解析 + 硬编码 system 命令 ⇒ 即使元字符进入 argv，myftm 不会把它当 shell 执行 |
+
+**关键澄清**：外层 `sh -c` 的注入与 myftm 的 parser 是**两个独立层面**。复评指出的
+`input="myftm; id"` → `cmd="/vendor/bin/myftm ; id"` → 外层 sh 执行 `id` —— **这条路径不经过 myftm 的 getopt，
+myftm 的 parser 无法阻挡**。因此 §8.2 的发现**不能用来否证复评的注入路径**，只能说明"若 payload 作为 myftm 的参数 token 传入，则被约束"。
+
+**最终判定**：
+- 复评的"myftm 分支注入面静态开放"**维持**——因为元字符可在**外层 shell**层面生效，绕过 myftm。
+- myftm 本体的 getopt+硬编码命令是**额外信息**，但不构成对复评的有效反驳。
+- L3（真实 `uid=0` 回显）仍未证，整体 no-go 不翻转。**仍不上机**；下一步若要继续，须用户明确授权。
+
+### 8.4 未穷尽项（诚实登记）
+
+- 未逐一审计 myftm 全部 5 个 system 调用点的每个 option 分支（已审 main + 2 处代表，均为固定串）。
+- 未验证外层 `sh -c` 对 `;` 的解析在真机 shell（`/vendor/bin/sh`,mksh）上的具体行为（属动态，需授权）。

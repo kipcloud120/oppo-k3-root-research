@@ -27,7 +27,7 @@
 | **OPPO Wi-Fi 私有事务**（非内核面） | 成立（root 服务、shell 可达、字符串被接收已证；myftm 分支注入面静态开放） | **v2.10 重开**：`-3`/regex 仅限 iwpriv 分支；myftm 分支 cmd=`/vendor/bin/myftm <原始尾串>`，无引号/转义/过滤，`sh -c` 解析 shell 元字符。L3 待授权上机验证 | 是（注入面开放，未证提权） |
 | **P2 七服务审计**（非内核面） | 不成立（6/7 定性） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验 | 否（antirootdialog 实现未解出） |
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P1/P2 的收束分别在 §18 / §19。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21。
 
 ---
 
@@ -117,6 +117,8 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 > **⚠️ v2.10 外部复评更正（§20，来源 `审核意见CHATGPT-v002.txt`）**：上面"myftm 非任意命令执行"的断言**已撤销**——它混淆了 shell 参数分隔与控制操作符。逐指令重建 SSO 结构证实 myftm 分支命令为 `/vendor/bin/myftm <原始尾串>`，**无引号/转义/过滤**，`sh -c` 会解析 `;` `|` `&&` `$()` 等操作符（`0x9c08` 的 `0x22` 是 SSO 长度字节 17<<1，**不是引号**）。⇒ **myftm 注入面静态开放，Wi-Fi P0 重开、待授权验证 L3；仍无 ROOT 成功证据，整体 no-go 不翻转。** 复评结论为 Conditional GO：只针对 myftm 定向复审，不新增 CVE、不急着上机。
 
 **P2 七服务收束（§19）**：6/7 定性。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 未完成（复评为新 P1）**。
+
+**复评后新 P0/P1 执行（§21）**：新 P0 补齐静态证据——Java/HIDL 传输全程无过滤；`/vendor/bin/myftm` 是 getopt 工厂工具、system 命令硬编码，但**挡不住外层 `sh -c` 的 `;`**，故 myftm 注入面开放判定维持、L3 仍待授权上机。新 P1 解包 antirootdialog 仍未闭合，新增线索表明它是 native 守护进程（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。**整体 no-go / Conditional GO 不变。**
 
 ---
 
@@ -241,12 +243,13 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 3. 设备 **SPL 或内核构建变化** → 帧几何、binder 形态、全部符号偏移同时失效，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 任一 → 可定位 panic 精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线。
-6. **【Wi-Fi myftm 分支·新 P0】** 当前就是重开状态（§20）：myftm 分支 cmd=`/vendor/bin/myftm <原始尾串>`
-   无引号/转义/过滤、`sh -c` 解析 shell 元字符 ⇒ 注入面静态开放。**下一步先补静态证据**：确认 Java/HIDL
-   传输层与 `/vendor/bin/myftm` 自身是否另有统一过滤；之后若申请授权上机，唯一判据是现场 `uid=0` 回显。
+6. **【Wi-Fi myftm 分支·新 P0】** 注入面静态开放维持（§20/§21）。§21 已补静态证据：Java/HIDL 全程无过滤；
+   `/vendor/bin/myftm` 本体是 getopt 工厂工具、system 命令硬编码——但这**挡不住外层 `sh -c` 的 `;`**，
+   故注入面判定不变。**下一步须用户授权上机**，唯一判据是现场 `uid=0` 回显。
    ⚠️ 历史 `INVAILD_PARAMETER` 只来自 iwpriv 分支（`myft ` 空格前缀），**不能据此认为 myftm 安全**。
-7. **【Binder·新 P1】** 补齐 antirootdialog 的 odex/vdex 实现（最后 1/7 缺口），确认身份/鉴权/敏感操作。
-   hephaestus 的 `uid==1000` 门禁否证可靠，不因复评改变。详见 §19/§20。
+7. **【Binder·新 P1】** antirootdialog 解包仍未闭合（§21）：apk/odex/vdex 均无该类；
+   新线索显示它是 **native 守护进程**（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。
+   闭合需完整 factory 镜像或设备只读拉取（需授权）。hephaestus 的 `uid==1000` 门禁否证可靠。详见 §19/§20/§21。
 
 ---
 

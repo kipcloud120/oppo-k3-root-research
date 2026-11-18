@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.10**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 七服务审计（6/7）；v2.10=§20 外部复评更正：myftm 分支从"已否证"改判"静态注入面开放、待授权验证"，Wi-Fi P0 重开**。下次会话**从 §17 开始**，再按需查 §20 / §18 / §19 / §16 / §15 / §14 |
+| 版本 | **v2.11**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1：Java/HIDL 传输无过滤确认 + myftm 本体逆向（getopt 解析/硬编码 system，但不反驳外层 shell 注入）；antirootdialog 解包仍缺口、新增 native kevent 线索**。下次会话**从 §17 开始**，再按需查 §21 / §20 / §18 / §19 / §16 / §15 / §14 |
 | 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、入参被 uid 0 服务接收，历史注入串（均 `myft ` 空格前缀）被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0（§16.11）。**§20 复评更正：`-3` 归因仅适用于 iwpriv 分支；myftm 分支（前缀 5 字节）实为 `/vendor/bin/myftm <原始尾串>` 裸拼进 `sh -c`，无引号/转义/过滤，shell 元字符可被解析 ⇒ 静态注入面开放、Wi-Fi P0 重开、待用户授权上机验证 L3。v2.9"非任意命令执行"断言已撤销** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -1215,3 +1215,44 @@ v2.9 断言"myftm 分支参数只是固定路径后的一个 token，无法逃�
 | 冻结 | KGSL / binder CVE-2023-20938 / binder CVE-2022-20421 / FastRPC | 不动 |
 
 **复评明确**：P0 是研究优先级，不代表已发现可用漏洞；不要新增 CVE、不要急着上机注入。
+
+---
+
+## 21. 增补：执行复评的新 P0 / 新 P1（2026-11-18，纯离线）
+
+> 响应 §20 复评重排的优先级。全程未连设备、无写操作。新解出 `/vendor/bin/myftm` 与
+> `OppoExSystemService.{odex,vdex}`（落 `rootbin/_p2/`，gitignored）。
+
+### 21.1 新 P0（Wi-Fi 静态过滤路径）—— 完成，注入面判定不变
+
+**（a）Java/HIDL 传输层：确认全程无过滤**（证据 `WIFI_P0_PARAMETER_TRACE.md` §8.1）
+- `OplusWifiTransactionHelper.sendFTMCommand`：`enforceAccessPermission()` = **1 条 return-void 空实现**，串原样下传。
+- `OplusWifiHalService.executeDriverCommand`：原样拼日志 + 原样传 HIDL。
+- `IOppoWifiService$Proxy.executeDriverCommand`：`writeString` 原样写 Parcel（code=4），回调原样回传。
+- ⇒ 复评第①点传输段坐实：**无转义/过滤/引号**，逐字节透传。
+
+**（b）`/vendor/bin/myftm` 本体：第二道约束，但不反驳复评**（证据 §8.2/§8.3）
+- 逆向（225,752 B，AArch64 PIE；PLT 经 GOT 精确映射）：导入 `getopt_long`+`atoi`/`strtol`/`sscanf`；
+  option spec 为固定 AT 表（`hdi:nb:e:Em:...:rateBw:nss:...`）——高通 Wi-Fi ATE 工厂测试工具。
+- main `argc==2` 才继续；**popen(3)/system(5) 命令全为硬编码**：`cat /proc/modules|grep wlan`、
+  `rmmod wlan`、`insmod wlan.ko con_mode=5` 等；argv[1] 不进入这些命令。
+- **关键自我纠正**：这条约束**不能否证复评**。复评的 `myftm; id` → `/vendor/bin/myftm ; id`
+  是在**外层 `sh -c`** 层生效、绕过 myftm 的 getopt。myftm 内部约束只挡"作为其参数 token 传入"的 payload。
+- ⇒ **复评"myftm 分支注入面静态开放"维持**；§20 判定不改。L3 未证，不上机。
+
+### 21.2 新 P1（antirootdialog）—— 仍未闭合，新增线索
+
+- 试过：apk classes.dex（只有 appdata）、oat odex/vdex（vdex021，提取内嵌 dex 无该类）、
+  system.img 全文搜（2 处游离偏移不在任何文件内）、vendor/odm（仅 SELinux type 名）。**实现未解出**。
+- **新增线索**：游离字符串上下文显示它是 **native 守护进程**：
+  `/data/oplus/kevent` + `send_pid_to_kernel` + `$$pkgName@@%s`/`,payload@@%s` + `Field "uid" greater than UID...`；
+  vendor SELinux 策略中 `anti_root_dialog_service` 是独立 domain。
+- ⇒ 它不是纯 Java 服务，而是 **native + SELinux domain + kevent 内核接口**；把 pid/uid 下发内核做 anti-root 判定。
+- **不臆测**，覆盖度维持 6/7；闭合需完整 factory 镜像或设备只读拉取（需授权）。
+
+### 21.3 状态与下一步
+
+- **整体 no-go / Conditional GO 不变**；§20 三层次与优先级不变（新 P0 已完成静态部分，新 P1 因物料不足暂停）。
+- **不上机**：L3 唯一判据是授权下的 `uid=0` 现场回显；复评亦要求先审清再定。
+- 若继续：① 授权上机验证 myftm 分支 L3（用户决策）；② 取完整镜像闭合 antirootdialog（用户决策）。
+  冻结面（KGSL / binder CVE / FastRPC / GhostLock）无新原语，不动。

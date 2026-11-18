@@ -121,3 +121,50 @@ odex/vdex 并用 `vdexExtractor` 之类工具还原 dex（当前物料未含该�
 
 **不建议上机**：hephaestus 的 uid 门禁是 native 硬编码，无 §14 所述"模板硬编码但可绕"的余地；
 盲试 property 触发只会产生噪声。保持纯静态归档。
+
+---
+
+## 7. 新 P1 尝试：antirootdialog 解包（2026-11-18，纯离线）
+
+> 响应 HANDOVER §20 新 P1。**结论：仍无法闭合，但新增两条确定线索。**
+
+### 7.1 定位过程（全部试过）
+
+| 尝试 | 结果 |
+|---|---|
+| `OppoExSystemService.apk` 的 classes.dex | 只有 coloros.appdata 的 9 类，**无 antirootdialog** |
+| 同 apk 的 oat/arm64 odex + vdex（vdex021） | 提取内嵌 dex 段（`Ljava/lang/ref/Reference;` 等 string_data），**全文无 antirootdialog 字符串** |
+| system.img 全文搜 `antirootdialog` | 仅 2 处游离偏移（`0x10e315aad`/`0x1219d5f0e`），ext4 反查**不在任何文件内**（空闲/裁剪残留） |
+| vendor.img / odm.img 搜字符串 | 仅 `anti_root_dialog_service`（SELinux type 名，见下），无实现代码 |
+| 7z 列文件名 | 无 antiroot/kevent 命名的文件 |
+
+### 7.2 新增确定线索
+
+system.img 游离字符串上下文（`0x10e315aad`）明确显示该服务是**native 守护进程**且走内核通道：
+
+```
+/data/oplus/kevent
+/data/oplus/kevent/tmp_info.txt
+com.oplus.exsystemservice.antirootdialog.IAntiRootDialog
+$$pkgName@@%s
+Send pid error
+,payload@@%s
+send_pid_to_kernel err ,ret is %d
+Failed to open '%s' (%s)
+Field "uid" greater than UID...
+```
+
+- vendor.img SELinux 策略（`0xb66394e`）：`anti_root_dialog_service` 是一个独立 SELinux domain/type。
+- 第二处偏移（`0x1219d5f0e`）是某 binder 服务接口描述符表，同时含 `IOplusMirageDisplayObserver` /
+  `IOplusNecService` / `IOplusPowerMonitor` 等多个 Oplus 服务——说明它注册在某个多服务宿主中。
+
+⇒ antirootdialog 不是纯 Java 服务，而是 **native 服务 + SELinux domain + /data/oplus/kevent 内核接口**。
+`send_pid_to_kernel` 提示它把 pid/uid 下发给内核做 anti-root 判定。
+
+### 7.3 判定与缺口
+
+**仍未闭合**：实现二进制/ dex 不在当前镜像物料（system.img 为 OTA 重建、可能裁剪）中。
+要继续需：完整 factory system.img（非 OTA 重建），或含该 native 服务的独立分区镜像，或设备上 `/data/oplus/kevent` 相关可执行文件的只读拉取（需授权）。
+
+**不臆测其鉴权/敏感操作**。 §2 总表中 antirootdialog 一行维持"未完成"。
+**整体 no-go 不受影响**：本项只是补齐覆盖度，未提供任何新提权路径。
