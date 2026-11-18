@@ -1,0 +1,27 @@
+# antirootdialog Binder 可达性探针（2026-11-18，设备在环，只读单事务）
+# 判据见同目录 PROBE_ANTIROOT_CRITERIA.md（执行前登记）
+
+## 身份
+uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid) context=u:r:shell:s0
+
+## 服务条目
+17	anti_root_dialog: [com.oplus.exsystemservice.antirootdialog.IAntiRootDialog]
+
+## 宿主进程（ps -A -Z）
+u:r:color_system_service_app:s0 system 2833 836 5590164 47268 0 0 S com.coloros.exsystemservice
+
+## 正对照：service call alarm 65535
+Result: Parcel(Error: 0xffffffffffffffb6 "Not a data message")
+
+## 目标：service call anti_root_dialog 65535
+Result: Parcel(Error: 0xffffffffffffffb6 "Not a data message")
+
+## AVC（logcat -d，紧邻时刻）
+无 scontext=u:r:shell:s0 相关拒绝；现存 167 行 avc 全为
+u:r:kernel:s0 -> system_data_file 的 write 拒绝（与本探针无关，历史累积）
+
+## 判读
+两次事务都返回"对端 parcel 错误"，说明事务已送达服务端并收到回包：
+  service_manager:find  放行
+  binder:call           放行
+⇒ §24.13「shell 对 anti_root_dialog 不可达」的结论作废。

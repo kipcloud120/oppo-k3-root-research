@@ -1,217 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-sepolicy_domain_audit.py v2 —— SELinux 域权限边界审计（离线，纯静态）
+sepolicy_domain_audit.py v3 —— SELinux 域权限边界审计（离线，纯静态）
 
-用途：给定一个 SELinux domain（如 oplus_wifi_service），从 Android CIL 策略文本中展开该域
-      的完整 allow 集合，并区分
-        * direct  —— 策略中直接以该域名为源的规则（厂商"显式授予"）
-        * via X   —— 通过属性 X 继承的规则（平台基线或厂商属性模板）
-      然后按「可写面 → 落点路径 → 被哪些域消费」三段式输出候选逃逸点。
-
-输入（从设备只读拉取，见 artifacts_adb/binder_audit/sepolicy/PULL.md）：
-      plat_sepolicy.cil / plat_pub_versioned.cil / vendor_sepolicy.cil
-      plat|vendor_file_contexts / *_property_contexts / *_service_contexts / *_hwservice_contexts
+v3 变更（2026-11-18，响应审核意见 v006 的 P0）：
+  本脚本不再自带 CIL 解析，改为调用 `tools/cil_policy.py`。
+  旧版（v2.23）自带的两处缺陷已移除：
+    * 集合表达式 and/or/not/xor 的近似处理；
+    * 版本化名字一律去后缀合并。
+  语义正确性由 `tools/cil_selftest.py` 的 28 条用例守护。
 
 用法：
-  python tools/sepolicy_domain_audit.py --domain oplus_wifi_service --cil .build/sepolicy \
-         --json .build/sepolicy/audit.json [--top 80] [--class file,dir,property_service]
-
-设计约束：
-  * 全部结论来自策略原文；无法解析的语句计数上报，不静默丢弃。
-  * 类型名归一化：CIL 中同一类型会以 `X` 与 `X_30_0` 两种形式出现，统一去版本后缀。
-  * 只读：不连接设备、不修改设备。
+  python tools/sepolicy_domain_audit.py --domain oplus_wifi_service \
+         --cil .build/sepolicy --json .build/sepolicy/audit.json [--top 60]
+  python tools/sepolicy_domain_audit.py --domain shell --naming canon --semantics legacy
+         （仅用于与 v2.23 旧数字对账）
+  python tools/sepolicy_domain_audit.py --query 'shell,anti_root_dialog_service,service_manager'
 """
 
 import argparse
 import json
 import os
-import re
 import sys
 from collections import defaultdict
 
-VER_SUFFIX = re.compile(r'_\d+_\d+$')
-
-
-def canon(name):
-    return VER_SUFFIX.sub('', name)
-
-
-# ---------------------------------------------------------------- S-expression
-
-
-def tokenize(text):
-    stmts, stack, cur = [], [], []
-    i, n = 0, len(text)
-    while i < n:
-        c = text[i]
-        if c == ';':
-            j = text.find('\n', i)
-            i = n if j < 0 else j + 1
-            continue
-        if c == '(':
-            stack.append(cur)
-            cur = []
-            i += 1
-        elif c == ')':
-            if not stack:
-                raise ValueError('unbalanced ) at %d' % i)
-            done, cur = cur, stack.pop()
-            cur.append(done)
-            i += 1
-        elif c in ' \t\r\n':
-            i += 1
-        else:
-            j = i
-            while j < n and text[j] not in ' \t\r\n()':
-                j += 1
-            cur.append(text[i:j])
-            i = j
-    while stack:
-        done, cur = cur, stack.pop()
-        cur.append(done)
-    return cur if (cur and isinstance(cur[0], list)) else [cur]
-
-
-def flatten(node):
-    """CIL 集合表达式 -> (names, unknown)"""
-    if isinstance(node, str):
-        return {canon(node)}, []
-    if not node:
-        return set(), []
-    head = node[0] if isinstance(node[0], str) else None
-    if head == 'and':
-        base, unknown = None, []
-        for x in node[1:]:
-            names, unk = flatten(x)
-            unknown += unk
-            base = names if base is None else (base & names)
-        return (base or set()), unknown
-    if head == 'or':
-        out, unknown = set(), []
-        for x in node[1:]:
-            names, unk = flatten(x)
-            out |= names
-            unknown += unk
-        return out, unknown
-    if head in ('not', 'xor', 'range'):
-        return set(), ['(%s ...)' % head]
-    out, unknown = set(), []
-    for x in node:
-        names, unk = flatten(x)
-        out |= names
-        unknown += unk
-    return out, unknown
-
-
-# ---------------------------------------------------------------- 策略模型
-
-
-class Policy:
-    def __init__(self):
-        self.attr_members = defaultdict(set)   # 属性 -> 直接成员（已归一化）
-        self.attr_expr = {}                    # 属性 -> 原始表达式
-        self.types = set()
-        self.attrs = set()
-        self.allows = []                       # (src, tgt, cls, frozenset(perms))
-        self.transitions = []
-        self.stats = defaultdict(int)
-        self._closure = {}
-
-    def load(self, path):
-        with open(path, 'r', encoding='utf-8', errors='replace') as f:
-            text = f.read()
-        for stmt in tokenize(text):
-            self._feed(stmt)
-
-    def _feed(self, node):
-        if not isinstance(node, list) or not node:
-            return
-        head = node[0] if isinstance(node[0], str) else None
-        if head is None:
-            for sub in node:
-                self._feed(sub)
-            return
-        self.stats[head] += 1
-        if head == 'type' and len(node) >= 2 and isinstance(node[1], str):
-            self.types.add(canon(node[1]))
-        elif head == 'typeattribute' and len(node) >= 2 and isinstance(node[1], str):
-            self.attrs.add(canon(node[1]))
-        elif head == 'typeattributeset' and len(node) >= 3:
-            if not isinstance(node[1], str):
-                self.stats['!typeattributeset-noname'] += 1
-                return
-            a = canon(node[1])
-            self.attrs.add(a)
-            self.attr_expr[a] = node[2]
-            names, unknown = flatten(node[2])
-            for u in unknown:
-                self.stats['!typeattributeset%s' % u] += 1
-            self.attr_members[a] |= names
-        elif head == 'allow' and len(node) >= 4:
-            src, tgt, spec = node[1], node[2], node[3]
-            if not isinstance(src, str) or not isinstance(tgt, str):
-                self.stats['!allow-noname'] += 1
-                return
-            if isinstance(spec, list) and len(spec) >= 2 and isinstance(spec[0], str):
-                cls = spec[0]
-                perms, _ = flatten(spec[1])
-                self.allows.append((canon(src), canon(tgt), cls, frozenset(perms)))
-            else:
-                self.stats['!allow-form'] += 1
-        elif head == 'typetransition' and len(node) >= 5:
-            self.transitions.append(tuple(canon(x) if isinstance(x, str) else '?' for x in node[1:5]))
-
-    def closure(self, attr):
-        if attr in self._closure:
-            return self._closure[attr]
-        seen, result = set(), set()
-
-        def walk(a):
-            if a in seen:
-                return
-            seen.add(a)
-            names = set(self.attr_members.get(a, ()))
-            expr = self.attr_expr.get(a)
-            if isinstance(expr, list) and expr and isinstance(expr[0], str) and expr[0] in ('and', 'or', 'not', 'xor'):
-                for sub in expr[1:]:
-                    names |= flatten(sub)[0]
-            for m in names:
-                # 修正（2026-11-18）：CIL 中同一名字可能既是 type 又是 attribute
-                # （shell / bluetooth / sensors / mediaserver …）。旧实现只对 attr 展开、
-                # 不入结果集，导致这类成员被静默丢弃，经由它们继承的 allow 被漏计。
-                # 正确语义：先计入成员集，若它本身也是属性则继续展开。
-                result.add(m)
-                if m in self.attrs:
-                    walk(m)
-
-        walk(attr)
-        self._closure[attr] = result
-        return result
-
-
-# ---------------------------------------------------------------- 上下文文件
-
-
-def load_ctx(path):
-    out = []
-    if not os.path.exists(path):
-        return out
-    with open(path, 'r', encoding='utf-8', errors='replace') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            parts = line.split()
-            if len(parts) < 2:
-                continue
-            ty = parts[-1]
-            m = re.match(r'u:object_r:([A-Za-z0-9_]+):s0', ty)
-            out.append((parts[0], canon(m.group(1)) if m else canon(ty)))
-    return out
-
-
-# ---------------------------------------------------------------- 权限语义
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cil_policy import Policy, CilError, NAMING_MODES  # noqa: E402
 
 WRITE = {
     'file': {'write', 'append', 'create', 'unlink', 'rename', 'setattr', 'relabelfrom',
@@ -219,7 +33,8 @@ WRITE = {
     'dir': {'write', 'add_name', 'remove_name', 'create', 'rmdir', 'rename', 'setattr',
             'relabelfrom', 'relabelto', 'mounton', 'reparent'},
     'lnk_file': {'create', 'unlink', 'rename', 'setattr', 'relabelfrom', 'relabelto'},
-    'sock_file': {'write', 'create', 'unlink', 'setattr', 'relabelfrom', 'relabelto', 'append'},
+    'sock_file': {'write', 'create', 'unlink', 'setattr', 'relabelfrom', 'relabelto',
+                  'append'},
     'fifo_file': {'write', 'create', 'unlink', 'setattr', 'append'},
     'chr_file': {'write', 'create', 'unlink', 'setattr', 'ioctl', 'open', 'append'},
     'blk_file': {'write', 'create', 'unlink', 'setattr', 'mounton'},
@@ -238,68 +53,88 @@ WRITE = {
     'netlink_kernel_socket': {'*'},
 }
 
-# 消费侧：真正比该 HAL 域权限更高的域（按需增删，避免把 shell/app 算进去）
 CONSUMER_PRIORITY = [
     'init', 'vendor_init', 'ueventd', 'vold', 'installd', 'system_server', 'zygote',
     'servicemanager', 'hwservicemanager', 'vndservicemanager', 'netd', 'keystore',
     'surfaceflinger', 'audioserver', 'wificond', 'dumpstate', 'debuggerd',
 ]
-CONSUMER_PREFIX = ('hal_', 'vendor_hal_', 'oppo_hal_')
 
 
 def consumer_rank(src):
     if src in CONSUMER_PRIORITY:
         return 100 - CONSUMER_PRIORITY.index(src)
-    if src.startswith(CONSUMER_PREFIX):
+    if src.startswith(('hal_', 'vendor_hal_', 'oppo_hal_')):
         return 10
     return 0
 
 
-# ---------------------------------------------------------------- 主流程
+def load_ctx(path):
+    out = []
+    if not os.path.exists(path):
+        return out
+    with open(path, 'r', encoding='utf-8', errors='replace') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            p = line.split()
+            if len(p) >= 2:
+                out.append((p[0], p[-1].split(':')[-2] if ':' in p[-1] else p[-1]))
+    return out
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--domain', required=True)
+    ap.add_argument('--domain')
+    ap.add_argument('--query', help='src,tgt[,class] —— 单点查询模式')
     ap.add_argument('--cil', default='.build/sepolicy')
     ap.add_argument('--json')
     ap.add_argument('--top', type=int, default=60)
-    ap.add_argument('--class', dest='classes', default=None, help='逗号分隔，只看这些 class')
+    ap.add_argument('--naming', default='alias', choices=NAMING_MODES)
+    ap.add_argument('--semantics', default='cil', choices=['cil', 'legacy'])
+    ap.add_argument('--allow-partial', action='store_true')
     args = ap.parse_args()
 
-    pol = Policy()
-    loaded = []
-    # 运行期策略由 5 份 CIL 合成：plat(+pub_versioned) / vendor / product / system_ext。
-    # 只取非 debug 版本；漏掉 product/system_ext 会得出错误的"权限全集"（2026-11-18 踩坑）。
-    cil_names = ['plat_sepolicy.cil', 'plat_pub_versioned.cil', 'vendor_sepolicy.cil',
-                 'system_ext_sepolicy.cil', 'product_sepolicy.cil']
-    for f in cil_names:
-        p = os.path.join(args.cil, f)
-        if os.path.exists(p):
-            before = len(pol.allows)
-            pol.load(p)
-            loaded.append({'file': f, 'allow_added': len(pol.allows) - before})
-    if not loaded:
-        print('未找到 CIL 文件: %s' % args.cil, file=sys.stderr)
+    pol = Policy(semantics=args.semantics, naming=args.naming,
+                 allow_partial=args.allow_partial)
+    try:
+        loaded = pol.load_dir(args.cil)
+    except CilError as e:
+        print('审计失败（CIL 语义无法求值）：%s' % e, file=sys.stderr)
         return 2
 
-    dom = canon(args.domain)
-    dom_attrs = sorted(a for a in pol.attrs if dom in pol.closure(a))
+    st = pol.stats()
 
-    # 采集规则 + 溯源
-    rules = []          # dict(src_raw, tgt, cls, perms, via)
-    for src, tgt, cls, perms in pol.allows:
-        if src == dom:
-            rules.append({'via': 'direct', 'tgt': tgt, 'cls': cls, 'perms': perms})
-        elif src in pol.attrs and dom in pol.closure(src):
-            rules.append({'via': 'via:' + src, 'tgt': tgt, 'cls': cls, 'perms': perms})
+    # ---------------- 单点查询
+    if args.query:
+        parts = [x.strip() for x in args.query.split(',')]
+        src, tgt = parts[0], parts[1]
+        cls = parts[2] if len(parts) > 2 else None
+        r = pol.perms(src, tgt, cls, prov=True)
+        print('查询 %s -> %s%s' % (src, tgt, (' [%s]' % cls) if cls else ''))
+        if not r:
+            print('  并集 = ∅（该类别下无任何适用 allow）')
+        for c, d in sorted(r.items()):
+            print('  %-22s %s' % (c, ' '.join(sorted(d['perms']))))
+            for v in sorted({x for x in d['via']})[:8]:
+                print('      <- %-18s 目标 %s' % v)
+        print('\n口径：%s / %s | allow %d | 属性 %d'
+              % (st['semantics'], st['naming'], st['allows'], st['attrs_declared']))
+        return 0
 
-    # 按 (cls,tgt) 合并
+    if not args.domain:
+        print('需要 --domain 或 --query', file=sys.stderr)
+        return 2
+
+    dom = args.domain
+    attrs = pol.attrs_of(dom)
+    rules = pol.rules_for(dom)
+
     merged = {}
     for r in rules:
         k = (r['cls'], r['tgt'])
         m = merged.setdefault(k, {'perms': set(), 'via': set(), 'direct': False})
-        m['perms'] |= r['perms']
+        m['perms'] |= set(r['perms'])
         m['via'].add(r['via'])
         if r['via'] == 'direct':
             m['direct'] = True
@@ -324,81 +159,51 @@ def main():
     def svc(t):
         return [rx for rx, ty in sctx if ty == t]
 
-    # 消费侧索引：目标类型 -> [(src, cls, perms)]
-    cons_index = defaultdict(list)
-    for src, tgt, cls, perms in pol.allows:
-        cons_index[(cls, tgt)].append((src, perms))
-
-    def consumers(cls, tgt):
-        out = []
-        cands = [(tgt, None)]
-        if tgt in pol.attrs:
-            cands = [(m, None) for m in pol.closure(tgt)]
-        for ct, _ in cands:
-            for src, perms in cons_index.get((cls, ct), ()):
-                if src == dom:
-                    continue
-                r = consumer_rank(src)
-                if r <= 0:
-                    continue
-                if not (perms & {'read', 'open', 'getattr', 'execute', 'map', 'get', 'search'}):
-                    continue
-                out.append((r, src, sorted(perms)))
-        out.sort(key=lambda x: -x[0])
-        seen, uniq = set(), []
-        for r, src, perms in out:
-            if src in seen:
-                continue
-            seen.add(src)
-            uniq.append({'src': src, 'perms': perms, 'rank': r})
-        return uniq[:12]
-
     items = []
     for (cls, tgt), m in merged.items():
         wset = WRITE.get(cls)
         eff = sorted(m['perms'] & wset) if wset else []
         if not eff:
             continue
-        it = {
+        cons = []
+        for src, perms in pol.consumers_of(cls, tgt):
+            if src == dom or consumer_rank(src) <= 0:
+                continue
+            cons.append({'src': src, 'perms': perms, 'rank': consumer_rank(src)})
+        cons.sort(key=lambda x: -x['rank'])
+        seen, uniq = set(), []
+        for c in cons:
+            if c['src'] not in seen:
+                seen.add(c['src'])
+                uniq.append(c)
+        items.append({
             'class': cls, 'target': tgt, 'write_perms': eff,
-            'all_perms': sorted(m['perms']),
-            'direct': m['direct'],
+            'all_perms': sorted(m['perms']), 'direct': m['direct'],
             'via': sorted(v for v in m['via'] if v != 'direct')[:6],
             'paths': paths(tgt)[:10], 'props': props(tgt)[:14],
             'hwservices': hwsvc(tgt)[:6], 'services': svc(tgt)[:6],
-            'consumers': consumers(cls, tgt),
-        }
-        items.append(it)
+            'consumers': uniq[:12],
+        })
 
     order = {'capability': 0, 'capability2': 0, 'security': 1, 'system': 2,
              'property_service': 3, 'hwservice_manager': 4, 'service_manager': 5,
              'file': 6, 'dir': 7, 'sock_file': 8, 'chr_file': 9, 'lnk_file': 10,
-             'process': 11, 'binder': 12}
-    items.sort(key=lambda x: (order.get(x['class'], 20), -int(x['direct']), x['target']))
+             'blk_file': 11, 'process': 12, 'binder': 13}
+    items.sort(key=lambda x: (order.get(x['class'], 20), -x['direct'], x['target']))
 
-    if args.classes:
-        keep = {c.strip() for c in args.classes.split(',')}
-        items = [i for i in items if i['class'] in keep]
-
-    result = {
-        'domain': dom, 'cil_loaded': loaded,
-        'statements': dict(sorted(pol.stats.items())),
-        'allow_applicable': len(rules),
-        'attrs_count': len(dom_attrs), 'attrs': dom_attrs,
-        'types_total': len(pol.types), 'attrs_total': len(pol.attrs),
-        'items': items,
-    }
-
-    # ---- 控制台输出
-    print('域 %s | 策略语句 %d | 适用 allow %d | 所属属性 %d'
-          % (dom, len(pol.allows), len(rules), len(dom_attrs)))
-    print('解析告警: %s' % {k: v for k, v in pol.stats.items() if k.startswith('!')})
-    print('由该域显式授予(direct)的规则目标数: %d' % sum(1 for k, v in merged.items() if v['direct']))
+    print('域 %s | 口径 %s/%s | 5 份 CIL allow %d'
+          % (dom, st['semantics'], st['naming'], st['allows']))
+    print('所属属性 %d | 适用 allow %d | 显式目标类型 %d | 审计失败 %d'
+          % (len(attrs), len(rules),
+             sum(1 for k, v in merged.items() if v['direct']), st['errors']))
+    print('可写面（按 class 计）: %s' % dict(sorted(
+        ((c, sum(1 for i in items if i['class'] == c)) for c in
+         {i['class'] for i in items}), key=lambda x: -x[1])))
     print()
     for it in items[:args.top]:
         tag = 'D' if it['direct'] else 'A'
         loc = ''
-        if it['class'] in ('file', 'dir', 'lnk_file', 'sock_file', 'chr_file'):
+        if it['class'] in ('file', 'dir', 'lnk_file', 'sock_file', 'chr_file', 'blk_file'):
             loc = ' | '.join(it['paths'][:3]) or '(无 file_contexts 落点)'
         elif it['class'] == 'property_service':
             loc = ' | '.join(it['props'][:5]) or '(无 property_contexts 落点)'
@@ -406,15 +211,17 @@ def main():
             loc = ' | '.join(it['hwservices'][:3])
         elif it['class'] == 'service_manager':
             loc = ' | '.join(it['services'][:3])
-        cons = ', '.join(c['src'] for c in it['consumers'][:5]) or '-'
-        print('[%s] %-16s %-40s %-38s %s' % (
-            tag, it['class'], it['target'], '/'.join(it['write_perms'])[:38], loc[:70]))
+        print('[%s] %-18s %-42s %-34s %s'
+              % (tag, it['class'], it['target'], '/'.join(it['write_perms'])[:34], loc[:64]))
         if it['consumers']:
-            print('     消费: %s' % cons[:120])
+            print('     消费: %s' % ', '.join(c['src'] for c in it['consumers'][:6])[:110])
 
     if args.json:
         with open(args.json, 'w', encoding='utf-8') as f:
-            json.dump(result, f, ensure_ascii=False, indent=1)
+            json.dump({'domain': dom, 'stats': st, 'cil_loaded': loaded,
+                       'attrs_count': len(attrs), 'attrs': sorted(attrs),
+                       'allow_applicable': len(rules), 'items': items},
+                      f, ensure_ascii=False, indent=1)
         print('\nJSON: %s' % args.json)
     return 0
 

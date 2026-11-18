@@ -209,23 +209,74 @@ $ service list | grep -i antiroot
 注册 `anti_root_dialog`，**唯一调用方是 `oplus_kevents`**（kevent 守护进程，即 §7.2 那些
 `/data/oplus/kevent`、`send_pid_to_kernel` 字符串的宿主）。
 
-### 8.3 可达性判定（shell 方向，这是 P1 唯一关心的问题）
+### 8.3 可达性判定（shell 方向，这是 P1 唯一关心的问题）—— **本小节已于 v2.24 被推翻，见 §9**
 
-| 检查 | 结果 |
+| 检查 | 结果（**旧工具口径，已作废**） |
 |---|---|
-| `shell` 对 `color_system_service_app` 的 `binder` 类权限 | **0 条**（严格匹配，含属性展开） |
-| `shell` 对 `anti_root_dialog_service` 的 `service_manager:find` | **0 条** |
-| `oplus_kevents` 之外能 call 该域的域 | **无** |
+| `shell` 对 `color_system_service_app` 的 `binder` 类权限 | ~~0 条~~ |
+| `shell` 对 `anti_root_dialog_service` 的 `service_manager:find` | ~~0 条~~ |
+| `oplus_kevents` 之外能 call 该域的域 | ~~无~~ |
 
-⇒ **`IAntiRootDialog` 对 shell 不可达**。判定方式与 §7.2 的猜测不同：不是"实现拿不到，所以不知道"，
+⇒ ~~**`IAntiRootDialog` 对 shell 不可达**~~。判定方式与 §7.2 的猜测不同：不是"实现拿不到，所以不知道"，
 而是"**策略直接不给 shell 任何一条通往该服务的路径**"。
 
-### 8.4 结论
+### 8.4 结论 —— **已撤回，见 §9**
 
-**P1 闭合为否证（不可达），覆盖度 7/7。** 实现类的内部鉴权与敏感操作**仍未审计**，
-但因不可达，不影响"shell 可达提权路径为零"的结论；若将来出现
-`color_system_service_app` 或 `oplus_kevents` 的执行点，再回来审计其内部（届时才需要反编译）。
+~~**P1 闭合为否证（不可达），覆盖度 7/7。**~~
 
 **遗留说明（诚实登记）**：实现类名未解出——dex 里只有接口名与源文件名，没有对应 class_def。
 最可能是被混淆成无意义短名（`IAntiRootDialog` 的实现类），次可能是运行期动态加载。
-本轮未继续定位，因为**它不影响可达性结论**。
+本轮未继续定位，因为~~它不影响可达性结论~~ —— 该理由在 v2.24 已失效（可达性结论被推翻）。
+
+---
+
+## 9. 撤回 §8（2026-11-18 18:xx，响应审核意见 v006 · P1）
+
+### 9.1 为什么撤
+
+§8.3 的三行"0 条 / 无"来自两处方法错误，都不在数据，而在**判定方式**：
+
+1. **按名字精确匹配，未按属性展开**。策略里通往该服务的两条实际路径都不是以它的名字出现的：
+
+   ```
+   (allow shell base_typeattr_511 (service_manager (find)))
+   base_typeattr_511 = (and (service_manager_type) (not (apex_service default_android_service
+                           dnsresolver_service gatekeeper_service …)))
+   ⇒ anti_root_dialog_service ∈ service_manager_type ⇒ shell 有 find
+
+   (allow appdomain appdomain (binder (call transfer)))
+   ⇒ shell 与宿主域 color_system_service_app 同属 appdomain ⇒ shell 有 binder call
+   ```
+
+   §8.2 里"能 binder call 到 color_system_service_app 的域只有 oplus_kevents"这句，
+   查的是**目标名字面等于**该类型的那条规则，漏掉了以属性为目标的规则。
+
+2. **`service_manager:find` 与 `binder:call` 被混为一谈**。即使 find 为 0，也不能据此断言
+   "没有任何 Binder 调用路径"；反之，find 为 1 也不等于服务端会放行任何方法。
+
+### 9.2 设备实证（判据先登记）
+
+见 `p1_probes/PROBE_ANTIROOT_CRITERIA.md` 与 `p1_probes/ANTIROOT_PROBE_20261118.txt`：
+
+```
+$ service call anti_root_dialog 65535
+Result: Parcel(Error: 0xffffffffffffffb6 "Not a data message")
+```
+
+越界事务码不触发业务方法，只走 `find` + `call` 两道 LSM 检查。返回的是**对端 parcel 错误**
+（事务已送达并收到回包），`logcat` 无 `scontext=u:r:shell:s0` 的 `avc: denied`。
+正对照 `service call alarm 65535` 返回同形态错误。
+
+宿主身份实测：`u:r:color_system_service_app:s0 system 2833 com.coloros.exsystemservice`（uid 1000）。
+
+### 9.3 现在的判定
+
+| 层次 | 判定 |
+|---|---|
+| 策略可达性 | **可达**（find + binder call 均放行） |
+| 实现审计 | **未做**（物料里无实现类 class_def，见 §7 / §8.4 遗留说明） |
+| 覆盖度 | 先记 **6/7**（本项重开为 G-A1）；**§34.3 已闭合**：实现为混淆类 `com.oplus.exsystemservice.a.b$a`，单 `int` 事务、无鉴权、无危险 sink ⇒ **7/7，理由改为"可达但无能力"** |
+
+**不宣称"存在提权路径"**：可达只说明"策略不挡"，服务端是否对 uid 2000 做鉴权、
+是否有危险方法，都还没有证据。要闭合 G-A1，需要拿到完整的 odex/vdex，或对真实事务码做
+受控调用——后者属于需要单独授权的动作，本轮未做。

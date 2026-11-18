@@ -1,0 +1,260 @@
+OPPO K3 ROOT v2.23：增量复评结论
+这次更新是有实质价值的。作者补上了上次评审指出的 FastRPC 身份验证缺口，并没有因为 Wi-Fi 服务拥有 UID 0 就假定它拥有更多设备访问权限。
+
+我认可 v2.23 对两个 FastRPC 设备节点的实机 NO-GO 结论，但发现新修复的 SELinux 分析工具仍有一个更深层的 CIL 表达式解析问题，需要重新检查部分历史结论。
+
+这次评审分为两部分：先看 FastRPC 是否真正封闭，再看工具修复是否足以支撑整份结项报告。
+一、FastRPC：上次提出的关键疑问已经解决
+v2.23 的 HANDOVER.md §32 和新报告 FASTRPC_DOMAIN_GATE.md 都已在线确认。
+GitHub+1
+
+
+上次的疑问是：
+
+普通 shell UID 2000 对 FastRPC 的写访问受到 DAC 限制，但 Wi-Fi root 服务属于 system 组，理论上可能通过 DAC。
+
+新版正面解决了这个问题。
+1. 两个设备节点的权限差异
+项目	/dev/adsprpc-smd	/dev/adsprpc-smd-secure
+SELinux 类型	qdsp_device	xdsp_device
+文件权限	0664	0644
+属主/属组	system:system	system:system
+Wi-Fi root 的 DAC 访问	读写允许	只能读取
+SELinux 策略	无授权	无授权
+
+这里有一个重要细节：Wi-Fi root 服务具有附加组 system，所以对第一个设备节点，DAC 本来就允许它读写。
+
+因此最终拒绝确实来自 SELinux，而不是 UID 或文件组权限造成的假象。第二个节点的权限也被更正为 0644。
+GitHub+1
+
+2. 静态策略和实机结果相互印证
+作者针对两种目标类型检查了：
+- 五份 CIL。
+- Wi-Fi 域的 89 个属性。
+- 目标设备类型的属性继承。
+- 18 条相关 allowx ioctl 规则。
+- dontaudit 是否可能隐藏拒绝。
+报告结果为两个目标类型的适用权限集合均为空。
+GitHub+1
+
+
+更重要的是，作者没有只依赖静态脚本，还做了设备在环正、负对照：
+同一个受限 UID 0 域内的运行时测试
+/dev/null 正常打开
+成功
+
+/dev/diag 正对照
+成功
+
+/dev/adsprpc-smd 只读
+SELinux 拒绝
+
+/dev/adsprpc-smd 只写
+SELinux 拒绝
+
+/dev/adsprpc-smd-secure 只读
+SELinux 拒绝
+
+
+实际 AVC 记录包含：
+scontext=u:r:oplus_wifi_service:s0
+tcontext=u:object_r:qdsp_device:s0
+tclass=chr_file
+permissive=0
+
+
+以及对应的 xdsp_device 拒绝记录。测试进程的身份回显仍然是 UID 0。
+GitHub+1
+
+
+正对照 /dev/diag 能成功，说明测试程序和执行通道是有效的，不是所有设备打开操作都失败。
+FastRPC：受限 UID 0 身份下的设备打开路径，NO-GO 证据充分
+3. 一个很有价值的反直觉发现
+新版证明：
+身份	FastRPC 权限
+shell UID 2000	经 appdomain 可以只读打开，并有 ioctl 授权
+Wi-Fi 服务 UID 0	对两个设备类型均没有字符设备权限
+
+也就是说，取得 UID 0 后，FastRPC 这条路径反而更窄。
+
+这非常重要：Android 中实际权限由 UID、GID、capability、SELinux domain 和对象标签共同决定，不能按 UID 数字简单排序。
+
+项目对此的分析是正确的。
+GitHub+1
+
+
+需要保留一个范围限制：由于 UID 0 域无法打开设备，它的 ioctl 语义没有得到测试；相邻 DSP 节点也只完成策略分析，没有逐一进行设备验证。作者已经在 §32.7 明确记录这些缺口，我认可这种限定。
+GitHub
+
+二、但我发现一个比 FastRPC 更重要的新问题：CIL 解析器仍然没有正确实现全部集合运算
+这是本次复评最重要的独立发现。
+
+v2.23 修复了此前 shell 既是 type 又是 attribute 时，被属性闭包逻辑丢弃的问题。
+
+这是正确的修复。
+
+但我直接检查了新版 tools/sepolicy_domain_audit.py，发现它的 CIL 表达式解析仍存在缺陷。
+1. 官方 CIL 语法支持哪些运算？
+SELinux 官方 CIL Reference Guide 明确规定，typeattributeset 支持：
+- and
+- or
+- xor
+- not
+- all
+其中 not 是集合补集，而不是简单忽略某个成员。Android 11 对应的 CIL 文档也给出了 not (appdomain) 的实际例子。
+GitHub+1
+
+2. 当前脚本的问题
+新版脚本的 flatten()：
+if head == 'and':    # 交集    ...if head == 'or':    # 并集    ...if head in ('not', 'xor', 'range'):    return set(), ['unknown']
+
+
+
+表面上有处理 and 和 or，并记录了未知表达式。
+
+但下面的 Policy.closure() 又存在问题：
+if expr[0] in ('and', 'or', 'not', 'xor'):    for sub in expr[1:]:        names |= flatten(sub)[0]
+
+
+
+它把逻辑表达式的子项统一做并集。
+GitHub+1
+
+
+这样会出现：
+表达式	正确语义	当前闭包处理
+(and A B)	A 与 B 的交集	又把 A、B 并起来
+(not A)	全集减去 A	把 A 当成成员
+(xor A B)	对称差	当成普通并集
+
+尤其是 not：
+
+假如策略写的是：
+(typeattributeset not_in_appdomain
+    (not (appdomain)))
+
+
+正确结果应该是所有类型减去 appdomain。
+
+而当前代码可能把 appdomain 本身当成该属性成员。
+
+这不是单纯统计误差，而是可能影响源域或目标类型的权限匹配。
+静态策略分析工具仍需要修正
+3. 这个缺陷会不会推翻 FastRPC 结论？
+不会直接推翻两个具体设备节点的 NO-GO。
+
+原因是这次有独立的设备实测：
+- 同一进程可以打开 /dev/diag。
+- 打开 /dev/adsprpc-smd 得到真实 AVC 拒绝。
+- 打开 /dev/adsprpc-smd-secure 得到真实 AVC 拒绝。
+- 写打开第一个设备节点也得到真实 AVC 拒绝。
+- permissive=0。
+因此，无论静态解析器有没有漏算某项授权，这两个设备节点在当前运行时策略下确实拒绝该域的读写打开。
+GitHub+1
+
+
+不过，以下静态结论仍应暂时视为待重新验证：
+- 89 个源域属性是否完全准确。
+- 目标类型的属性集合是否完全准确。
+- 所有继承自属性的 allow 是否都被正确统计。
+- allowx 规则是否真的完整覆盖相关属性关系。
+尤其是报告没有给出所有未解析 not/xor 表达式的数量和归属。
+
+所以，我认可实际设备访问被阻断，但暂时不把脚本计算出的空权限并集作为完全独立、穷尽性的证明。
+
+三、更大的影响：之前对 shell 的历史审计应该重新检查
+v2.23 自己也承认了一个重要后果：
+
+原来的工具低估了 shell 域的属性集合。
+
+修复后：
+shell 域权限统计修正
+131
+修正后的关联属性
+
+1,012
+修正后的 allow 记录
+
+
+这是工具修复后的新统计，并不代表 1,012 条都是 shell 可以直接利用的权限。
+
+作者在 HANDOVER §32.8 已经明确说，之前对 shell、bluetooth、sensors、mediaserver 等同名 type/attribute 域的结论一律应看作权限下界。
+GitHub
+
+
+我特别建议重新检查之前的 AntiRootDialog 结论。
+
+旧结论是：
+shell 对 color_system_service_app 没有 Binder call 权限，对 anti_root_dialog_service 没有 find 权限。
+
+这项结论依赖属性继承分析，而 shell 正是这次被发现低估的域。
+
+这里还需要严格区分两个权限：
+- service_manager:find：能否通过服务管理器取得服务句柄。
+- binder:call：能否向已经持有的服务句柄发送 Binder 事务。
+两个权限不同。
+
+即使无法按名称查找服务，也不能不经检查就断言没有任何可能的 Binder 调用路径。
+
+我没有证据证明 AntiRootDialog 已经变成可利用入口，但旧的 7/7 结项依据需要用修复后的解析逻辑重新计算，不能原样保留。
+GitHub+1
+
+
+同样，所有以前用旧脚本判定 shell 权限为零的项目，都应该做一次回归检查。
+
+四、我对 v2.23 的综合评价
+审计项目	当前评价
+FastRPC DAC 分析	正确
+FastRPC 两节点运行时拒绝	强证据
+/dev/diag 正对照	设计合理
+UID 0 与 SELinux 域的区别	正确
+同名 type/attribute 修复	正确
+CIL not/xor/and 完整语义	仍有缺陷
+历史 shell 权限审计	需要回归
+完整 ROOT NO-GO	基本可信，待回归确认
+
+我建议 v2.24 做什么？
+不需要再开展新的设备利用实验，只需要完成两项真正有价值的工作：
+
+P0：修复 CIL 集合表达式处理。
+
+最好直接使用与本机策略版本匹配的 libsepol / CIL 编译器语义，而不是继续增加不完整的正则或递归近似。
+
+必须正确实现集合并、交集、补集和对称差，并且将未支持表达式作为审计失败处理，而不是悄悄按空集合处理。
+
+P1：重新运行历史权限审计。
+
+优先检查：
+1. shell → AntiRootDialog 的 service find / Binder call。
+2. shell → 七个私有 Binder 服务的可达性。
+3. 之前所有依赖 shell 属性闭包的 NO-GO。
+4. 其他与 type/attribute 同名的域。
+FastRPC 的两个具体节点不需要重新做危险实验，现有的 AVC 和正对照已经足够说明当前拒绝状态。
+
+五、最终结论：v2.23 是一次有价值的补强，但没有带来新的 ROOT 突破
+OPPO K3 PCGM00 / F.16
+有条件认可结项
+
+受限 UID 0 已实现
+
+目标	本次判断
+Wi-Fi root 命令执行	已实现
+FastRPC 经 Wi-Fi root 域访问	实测 NO-GO
+完整 Android ROOT	尚未实现
+持久 ROOT	尚未实现
+历史 shell 权限结论	需要回归验证
+
+
+我对 v2.23 的最终评价：它成功关闭了上次评审中最重要的 FastRPC 证据缺口，但也意外暴露了更值得重视的工具正确性问题。
+
+这次不能说项目发现了新的提权路线，也不能说 v2.22 的所有结项结论都已经被推翻。
+
+我的建议是：FastRPC 这条路线正式冻结；完整 ROOT 的 NO-GO 暂时保留；但在 CIL 表达式解析修复，以及 shell 权限历史结果重新计算之前，不建议把 7/7 Binder 可达性审计称为完全闭合。
+本次复评的主要原始资料
+- HANDOVER.md v2.23 §32
+- FASTRPC_DOMAIN_GATE.md
+- fastrpc_domain_gate.py
+- sepolicy_domain_audit.py
+- SELinux 官方 CIL Reference Guide
+- Android CIL 官方 typeattributeset 说明
+一句话：v2.23 把 FastRPC 的最后一个身份权限疑问解决了，却也暴露了 SELinux 分析器的第二个逻辑缺陷。现在真正值得做的是修复分析器并回归旧结论，而不是重新寻找一个内核 CVE。

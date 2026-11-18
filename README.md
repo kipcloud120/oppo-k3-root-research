@@ -1,6 +1,6 @@
 # OPPO K3 临时 ROOT 可行性研究
 
-> **一份负结果加上一次突破的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 阻断在"无内核地址泄露"；但 Wi-Fi 私有事务面在第 5 轮审计 + 外部复评 + 上机验证后被打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18 12:07，两次复现）。** 该 root 处于 SELinux 域 `oplus_wifi_service` 内、受 MAC 限制，**属"受限 root 命令执行"，尚非可用 root**；剩余缺口已从"内存破坏"变成"域逃逸"。域逃逸静态审计的结论是**该域内无任何可达逃逸路径**（v2.14 / §24）；第七个服务 antirootdialog 已闭合为**不可达**，七服务覆盖 **7/7**；外部复评指出的第六个内核面 `/dev/diag` 已完成入口层审计，**入口层逐路径复核穷尽、55/55 拷贝点判界闭合、无 mmap、post-fix 形态 ⇒ 入口层否证，且与 GhostLock 撞同一面"无内核地址泄露"的墙**（v2.15 / §25）。曾有一次"结论翻转"误判，已撤回（§16.11）；本次 L3 与那次误判无关，用的是从未尝试过的 `\n`/反引号载荷。
+> **一份负结果加上一次突破的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 阻断在"无内核地址泄露"；但 Wi-Fi 私有事务面在第 5 轮审计 + 外部复评 + 上机验证后被打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18 12:07，两次复现）。** 该 root 处于 SELinux 域 `oplus_wifi_service` 内、受 MAC 限制，**属"受限 root 命令执行"，尚非可用 root**；剩余缺口已从"内存破坏"变成"域逃逸"。域逃逸静态审计的结论是**该域内无任何可达逃逸路径**（v2.14 / §24）；**v2.24+ 重写了 CIL 求值引擎并回归全部历史结论**：antirootdialog 实为**可达但无能力**（实现是单 `int` 事务、无危险 sink），七服务覆盖 7/7 但理由已从"不可达"改为"无能力"；shell 可 `find` 228/235 个服务，**servicemanager 的 find/call 不是有效门槛，真正的门在服务端方法内**（§33–§37）；外部复评指出的第六个内核面 `/dev/diag` 已完成入口层审计，**入口层逐路径复核穷尽、55/55 拷贝点判界闭合、无 mmap、post-fix 形态 ⇒ 入口层否证，且与 GhostLock 撞同一面"无内核地址泄露"的墙**（v2.15 / §25）。曾有一次"结论翻转"误判，已撤回（§16.11）；本次 L3 与那次误判无关，用的是从未尝试过的 `\n`/反引号载荷。
 
 | | |
 |---|---|
@@ -9,17 +9,18 @@
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
 | 结论 | **受限 root 已达成，可用 root 未达成。** 四个内核候选面不可达；Wi-Fi 私有事务面已打通：从 shell 发 tx 10070、载荷含 `\n` 或反引号即绕过 11 字符黑名单，`sh -c` 以 **`uid=0(root)`**、域 `u:r:oplus_wifi_service:s0` 执行任意命令（2026-11-18 12:07，两次复现）。**但该域受 SELinux 限制**（读不到 `/data/system`、`selinuxfs`、`proc_security`）⇒ 尚非可用 root，缺口是域逃逸。**域逃逸的静态审计已完成（v2.14 / §24）：该域内不存在可达的逃逸路径**——可写路径无任何域持有 `execute`、无 `mount` 权限、`module_load` 只对不可写的 `vendor_file` 生效、属性触发器无 `start`/`exec`、唯一域转换 `crash_dump` 零收益 |
-| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 7/7 全部否证**（见 `HANDOVER.md` §19、§24.13）：hephaestus 有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；**antirootdialog 已闭合**——`anti_root_dialog_service` 是 service_manager 类型而非域，全策略只有 `oplus_kevents` 能 call 其宿主域，shell 零权限 |
+| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 7/7**（见 §19 / §24.13 / §33.4 / §34.3）：hephaestus 的 `system()` 被 native `uid%100000==1000` 门禁挡住 shell；**antirootdialog 策略可达（旧"零权限"结论作废）但实现无能力**（§34.3）；**范围更正 §35**：shell 可 `find` 228/235 个服务、36/36 个 OPPO 私有服务，`binder:call` 经 `appdomain→binderservicedomain` 也通铺 ⇒ 门槛在方法级鉴权；`power_monitor`/`usage`/三个 native 服务均已补审、未发现新路径（§36/§37） |
 | Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22。**v2.14 探针**：`CapEff=CapBnd=0x13000`（`sys_admin` 从不在 Permitted/Bounding 内）、`/mnt/vendor/persist/wlan` 实测 `mnt_vendor_file`（`0777`）、`crash_dump` 域转换可判别成立但零收益（§24.9） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
-> **📌 审阅入口（v2.21 · 本轮提交审核）**
-> 五份材料：`HANDOVER.md` **§25 / §26 / §27 / §28**、`DIAG_DRIVER_AUDIT.md`、`WIFI_DATA_CONSUMER_AUDIT.md`、`SYSTEM_SERVER_BINDER_AUDIT.md`（均在 `artifacts_adb/binder_audit/`）。
-> 结论四条：`/dev/diag` **入口层否证**；Wi-Fi 可写面**消费不构成提权通道**；`system_server` 通道**在"取句柄"处断开**；**root 脚本消费 persist 配置 = 内核面，不是域逃逸**。
-> v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调；v2.20 **闭合 G-S1** —— 从 HAL 二进制的 `.gnu_debugdata` 解出 19 个方法签名，证明它**不接收任何 binder 句柄**；v2.21 **收敛 G-S2** —— HAL 回传串在 Java 侧只进日志与字段，该类 28 个方法对 `java.io`/`Runtime`/`ProcessBuilder`/`SystemProperties`/`Intent`/`java.net` **0 命中**。
-> 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.21）](#审阅须知v221) 的「本轮自我更正」。
-> **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.21）](#审阅须知v221)。**
-> **最终判定与"我们没做但认为不值得做"的清单，见 [`CLOSURE.md`](CLOSURE.md)（一页收口稿）。**
+> **📌 审阅入口（v2.24+ · 本轮提交审核）**
+> 最新五份材料：`HANDOVER.md` **§33 / §34 / §35 / §36 / §37**；独立报告 `P1_REGRESSION_FINDINGS.md`、`P2_ANTIROOT_IMPLEMENTATION.md`、`CONSUMER_RECHECK.md`、`PRIVATE_SERVICE_SURFACE.md`、`NATIVE_SERVICES_AUDIT.md`（均在 `artifacts_adb/binder_audit/`）。
+> 核心结论：**CIL 求值引擎重写（28 条用例）** 后回归历史结论——antirootdialog 从"不可达"翻为"可达但无能力"；`module_load` 的墙是内核签名而非 SELinux；§26 的"消费者无 `system_server` 通道"前提作废（结论靠"无法触发"维持）。总体 NO-GO 不变。
+> 早期 v2.18–v2.21 的 G-W5/G-W6/G-S1/G-S2 闭合仍有效，见 §28–§30；**新对话从 §17 接手清单开始，再读 §33–§37**。
+> 累计**撤回/收窄自己的判断十余处**，见[审阅须知（v2.24）](#审阅须知v224) 的「本轮自我更正」。
+> **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.24）](#审阅须知v224)。**
+> **最终判定与"我们没做但认为不值得做"的清单，见 [`CLOSURE.md`](CLOSURE.md)（一页收口稿）。
+> **新对话请先看 [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md)（一页接手摘要）**，再进入 `HANDOVER.md` §17 / §33–§37。**
 
 ---
 
@@ -33,15 +34,15 @@
 | **binder** `CVE-2022-20421` | 成立（pre-fix 形态确证） | 本机是 **ticket spinlock**，公开技术依赖 qspinlock；原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | 部分 |
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
 | **OPPO Wi-Fi 私有事务**（非内核面） | **成立且已利用**（root 服务、shell 可达、字符串进入 `sh -c`、以 uid=0 执行均已实测） | **卡点已移到 SELinux 域逃逸**：`oplus_wifi_service` 域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` ⇒ 不能装 `su`、改 `/system`、读任意 `/data` | **是**（uid=0 已证；可用 root 未证） |
-| **P2 七服务审计**（非内核面） | 不成立（**7/7 全部否证**） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 判不可达**（service_manager 类型；全策略仅 `oplus_kevents` 能 call 其宿主域，shell 零权限） |
+| **P2 七服务审计**（非内核面） | **7/7 闭合，但理由已更正** | hephaestus 的 `system(可控串)` 被 native `uid%100000==1000` 门禁挡住 shell(2000)；**antirootdialog 策略可达**（旧"零权限"作废），但实现是单 `int` 事务、无鉴权、**无危险 sink** ⇒ 可达但无能力（§33.4 / §34.3）；其余无命令原语或带签名校验 |
 | **root 脚本消费 persist 配置**（v2.18 提出，v2.19 实测下调） | **无新能力（已实测）** | `wifiserver` = `/odm/bin/init.oppo.wifi.sh`（`user root`，`late_start` oneshot）。它检查 `/mnt/vendor/persist/WCNSS_qcom_cfg.ini`（顶层）——**实测该路径不存在**（真文件在 `persist/wlan/`），分支是死的；即便活着，其 `cp` 的源与目标（`targetFile=/mnt/vendor/persist/wlan/…`）**都在本域可写的 `mnt_vendor_file` 内**，等于在我们自己的两个可写位置之间搬运 ⇒ **不提供新能力**。同一脚本读 `bin_version` 只进 `[ -gt ]` 数值比较（实测两边都是 `200`），**不构成注入** |
 | **`system_server` Binder 通道**（v2.17 新增面，v2.20 补全） | **在取句柄处断开（双向）** | ① 本域对 AIDL 注册表 `servicemanager` **零规则**：无 `binder call`、无 `service_manager find`，`domain` 属性也无全局授予；② `binder call` 只对已持有句柄生效；③ **HAL 侧也不递句柄**（v2.20）：该服务只注册 `IOppoWifiService`、19 个方法无句柄入参、不导入 `readStrongBinder`。⇒ 评审列的三类服务层判定（`checkCallingPermission` / uid==1000 / uid==0）**到不了**。残余：3 个 `_hidl_cb` 构成**反向数据通道**（HAL→system_server 回传 status+字符串），风险落在 Java 侧处理器 = G-S2 |
-| **Wi-Fi 可写面消费者**（v2.16 新增面） | **不构成提权通道** | 连接门（`connectto` 只有 `init`）、执行门（可写类型 `execute` 域数 = 0）、触发门（触发属性属 `system_prop`）**三道全封**；且消费者域全部无 `system_server` binder，唯一有该通道的是本域 ⇒ 跨域是 DAC 降级（uid 0 → 1010/1000）。本机 supplicant/hostapd 无 `-c`，`fstman` 未部署 |
+| **Wi-Fi 可写面消费者**（v2.16 新增面） | **不构成提权通道** | 连接门（`connectto` 只有 `init`）、执行门（可写类型 `execute` 域数 = 0）、触发门（触发属性属 `system_prop`）**三道全封**；**v2.24+ 更正**："消费者全无 `system_server` binder"是错的（hostapd/supplicant/fstman 都有，经 `hal_*_server→hal_*_client` 回调规则），结论改由**"无法触发"**支撑（`init.svc.hostapd/fstman=[]`；supplicant 在跑但无 `-c`，用 `-g` 控制口，§34.2 / §35.5） |
 | **`/dev/diag`**（diagchar，v2.15 新增面） | **入口层无缺陷** | 42 槽 ioctl（22 有效/20 `-EINVAL`）、**入口三函数逐路径复核穷尽、脚本口径 55/55 拷贝点定长或显式封顶**、`write()` 三条路径长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**、形态与上游**修复后** diag 一致。余量：DCI 解析子树未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** |
 
 **最终判定：[`CLOSURE.md`](CLOSURE.md)** —— 四条方向的否证索引、剩余缺口与"为什么不追"、自我声明的最可能错处。
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**，**`/dev/diag` 入口层审计（否证）在 §25**，**Wi-Fi 可写面消费者审计（不构成提权通道）在 §26**。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始，再读 §33–§37（v2.24+ 最新）**；P0/P2 收束在 §18/§19，外部复评在 §20，上机取得受限 root（L3）在 §23，域逃逸 P0 在 §24，`/dev/diag` 入口层审计在 §25，Wi-Fi 可写面消费者在 §26。**§33** CIL 语义重写 + v006 回归；**§34** 域级重算 + G-A1 闭合 + 配置依赖；**§35** 私有服务面重测（228/235 可 find）；**§36** G-P1 闭合；**§37** 三个 native 服务补审。
 
 ---
 
@@ -130,7 +131,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 
 > **⚠️ v2.10 外部复评更正（§20，来源 `审核意见CHATGPT-v002.txt`）**：上面"myftm 非任意命令执行"的断言**已撤销**——它混淆了 shell 参数分隔与控制操作符。逐指令重建 SSO 结构证实 myftm 分支命令为 `/vendor/bin/myftm <原始尾串>`，**无引号/转义/过滤**，`sh -c` 会解析 `;` `|` `&&` `$()` 等操作符（`0x9c08` 的 `0x22` 是 SSO 长度字节 17<<1，**不是引号**）。⇒ **myftm 注入面静态开放，Wi-Fi P0 重开、待授权验证 L3；仍无 ROOT 成功证据，整体 no-go 不翻转。** 复评结论为 Conditional GO：只针对 myftm 定向复审，不新增 CVE、不急着上机。
 
-**P2 七服务收束（§19）**：6/7 定性。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 未完成（复评为新 P1）**。
+**P2 七服务收束（§19 / §24.13 / §34.3）**：7/7。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 已闭合**——策略可达（v2.24 更正），但实现是单 `int` 事务、无鉴权、无危险 sink ⇒ 可达但无能力。
 > **状态更新（v2.14 / §24.13）**：该缺口已闭合——`anti_root_dialog_service` 是 service_manager 类型而非域，宿主域 `color_system_service_app` 全策略只有 `oplus_kevents` 能 `binder call`，shell 零权限 ⇒ **判不可达，七服务覆盖 7/7**。上句为 v2.11 时的历史状态。
 
 **复评后新 P0/P1 执行（§21）**：新 P0 补齐静态证据——Java/HIDL 传输全程无过滤；`/vendor/bin/myftm` 是 getopt 工厂工具、system 命令硬编码，但**挡不住外层 `sh -c` 的 `;`**，故 myftm 注入面开放判定维持、L3 仍待授权上机。新 P1 解包 antirootdialog 仍未闭合，新增线索表明它是 native 守护进程（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。**整体 no-go / Conditional GO 不变。**
@@ -261,9 +262,20 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 
 ---
 
-## 审阅须知（v2.23）
+## 审阅须知（v2.24）
 
 本节是给外部复核者的**靶面说明**：列出六条结论、各自的判据强度、累计自我更正、建议优先攻击的点，以及"什么才算推翻"。
+
+> **v2.24 必读**：本轮重写了策略求值引擎（`tools/cil_policy.py`，28 条语义用例），并据此**推翻了一条既有的否证**：
+> `anti_root_dialog_service` 对 shell **可达**（`find` + `binder call`，设备实测事务送达）。详见 `HANDOVER.md` §33 与
+> `artifacts_adb/binder_audit/P1_REGRESSION_FINDINGS.md`。下面标 "~~删除线~~" 的旧表述即因此作废。
+> **后续（§34）**：该服务的实现已定位（混淆类，单 `int` 事务、无鉴权、无危险 sink）⇒ 可达但无能力，
+> 覆盖度回到 7/7，但理由从"不可达"换成"无能力"。同时 §26 的"消费者无 `system_server` 通道"这一**前提**被推翻
+> （结论仍成立，断点改为"无法触发"）。见 `P2_ANTIROOT_IMPLEMENTATION.md` / `CONSUMER_RECHECK.md`。
+> **§35**：私有服务面范围也被更正——shell 可 `find` 228/235 个服务、36/36 个 OPPO 私有服务，
+> `binder:call` 同样通铺；门槛移到方法级鉴权。已建注册点索引并初筛，未确认新路径。
+> **§36**：初筛里 `power_monitor` / `usage` 两行已做事务级审计——Stub 无鉴权但可控串未流向 sink，
+> `Runtime` 为 `RuntimeException` 假阳性、`SystemProperties.set` 在 `dump()`，两行闭合。
 
 ### 待审结论与判据强度
 
@@ -271,10 +283,10 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 |---|---|---|---|
 | 1 | **`/dev/diag` 入口层无可利用缺陷** | 42 槽 ioctl 分派表全解（22 有效/20 `-EINVAL`）；入口三函数（`ioctl`/`write`/`read`）逐路径人工复核；脚本口径 301 符号/55 拷贝点/8 个变长全部给出上界出处；无 `mmap` | **强**（二进制级、可复算）。弱点：脚本只反汇编到首个 `ret`，大函数会被截断（`diagchar_write` 即不在矩阵里）——已用全路径复核补偿，**若复核不完整则是本结论的唯一软肋** |
 | 2 | `plat_hwservice_contexts` 读不到是**策略约束**而非遗漏 | 该路径标签 `hwservice_contexts_file`；5 份 CIL 全量核对后只有 `hwservicemanager` 持有 read/getattr | **强**（纯策略文本，可 grep 复算） |
-| 3 | **Wi-Fi 可写面消费不构成提权通道** | 三道前置门（连接/执行/触发）逐条封死；消费者域 binder 目标全量核对后**只有本域持有 `system_server`** | **中—强**。弱点在**枚举完备性**：消费者集合取自 §24.5 的读方列表**且依赖"本机导入哪份 rc"（G-W5，未证）**——若漏域或 rc 选错，本结论需重评 |
+| 3 | **Wi-Fi 可写面消费不构成提权通道** | 三道前置门（连接/执行/触发）逐条封死；消费者域 binder 目标全量核对后~~**只有本域持有 `system_server`**~~ **（v2.24 更正：3 个消费者域也持有；断点改为"无法触发"）** | **中—强**。弱点在**枚举完备性**：消费者集合取自 §24.5 的读方列表**且依赖"本机导入哪份 rc"（G-W5，未证）**——若漏域或 rc 选错，本结论需重评 |
 | 5 | **root 脚本消费 persist 配置 = 无新能力（实测闭合）** | `init.oppo.wifi.sh` 检查 `/mnt/vendor/persist/WCNSS_qcom_cfg.ini`（顶层）→ 实测**不存在**（真文件在 `persist/wlan/`）；且其 `cp` 两端都在本域可写的 `mnt_vendor_file` 内 | **强（已实测）**。连"新能力"都不成立；只剩"内核驱动如何解析该 ini"这个纯内核问题（§25 类），且需动 persist（禁写） |
 | 4 | **`system_server` 通道在"取句柄"处断开** | ①本域对 `servicemanager` **零规则**（无 `binder call`、无 `service_manager find`）；②`binder call` 只对已持有句柄生效；③**HAL 侧也不递句柄**——二进制只注册 `IOppoWifiService`、无句柄入参、不导入 `readStrongBinder` | **强**（策略可 grep、二进制可复算）。残余：`_hidl_cb` 反向数据通道（G-S2，Java 侧） |
-| 6 | **FastRPC（`CVE-2023-33063`）在 uid 0 域下同样封闭，且比 shell 更封闭** | 标签层：`/dev/adsprpc-smd*` = `qdsp_device`/`xdsp_device`（设备 `ls -lZ` 与 `file_contexts` 一致）；策略层：本域 `chr_file` 权限并集 **∅**（direct + 89 属性 + 目标侧属性展开 + 18 条 `allowx` 全核）；运行层：域内 `open` 读/写两向 `denied`，附 `{ read }`/`{ write }` 两条 AVC，另设 `/dev/diag` 同类正对照 | **强（已实测）**。判据强度依赖两点：①正对照通过（已验证 `diag_open_ok`）；②无 `dontaudit` 遮蔽（已验证唯一一条不适用）。弱点：`ioctl` 语义因 open 前置失败而不可达 ⇒ 该层仍是 shell 身份的旧结论 |
+| 6 | **FastRPC（`CVE-2023-33063`）在 uid 0 域下同样封闭，且比 shell 更封闭** | 标签层：`/dev/adsprpc-smd*` = `qdsp_device`/`xdsp_device`（设备 `ls -lZ` 与 `file_contexts` 一致）；策略层：本域 `chr_file` 权限并集 **∅**（direct + 775 个所属属性 + 目标侧属性展开 + `allowx` 全核；v2.24 用修正后的引擎重算，仍为 ∅）；运行层：域内 `open` 读/写两向 `denied`，附 `{ read }`/`{ write }` 两条 AVC，另设 `/dev/diag` 同类正对照 | **强（已实测）**。判据强度依赖两点：①正对照通过（已验证 `diag_open_ok`）；②无 `dontaudit` 遮蔽（已验证唯一一条不适用）。弱点：`ioctl` 语义因 open 前置失败而不可达 ⇒ 该层仍是 shell 身份的旧结论 |
 
 ### 本轮自我更正（v2.17）
 
@@ -291,6 +303,11 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 | §28.4 "root 脚本把 persist ini 复制成驱动配置 ⇒ R1 升级" | **再降级（同日两次翻转）**：实测该脚本检查的顶层路径**不存在**，且 `cp` 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **不提供任何新能力** | 授权探针（§28.9） |
 | `/dev/adsprpc-smd-secure` 记为 `0640`、写打开"被 SELinux 拒" | **更正**：实测 `0644`；且 shell 下的 `EACCES` 无法区分 DAC 与 SELinux，因为 shell 无 `system` 组、DAC 本就只给 `r--`。换 uid 0 身份后（DAC 放行读写）重测，确认是 SELinux 拒 | 审核 v005 补证（§32.2） |
 | `sepolicy_domain_audit.py` 的属性闭包可直接采信 | **已修正**：成员名同时是 type 与 attribute 时（`shell`/`bluetooth`/`sensors`…）该成员被丢弃，经其继承的规则漏计。本域数字不变（89 属性/307 条），但同名域此前被**低估**（`shell`：131 属性/1,012 条） | 自查（§32.8） |
+| 「`sepolicy_domain_audit.py` 已修好」（v2.23 §32.8） | **不成立（v2.24）**：只修了"同名丢弃"这一个症状，真正的两个缺陷是 `not` 的补集语义与 `X`/`X_30_0` 强行合并。重写为 `tools/cil_policy.py`（28 用例）后，本域属性由 89 → **775**、allow 307 → **347**；`shell` 由 131 → **752** / 1012 → **1271** | 审核意见 v006 P0（§33.2） |
+| 「7 个私有 Binder 服务 7/7 全部否证；shell 对 `anti_root_dialog` 零权限、对宿主域零 `binder call`」 | **理由作废、结论保留**：旧判定按"目标名字面等于该类型"查规则，漏掉**以属性为目标**的规则。实际 `(allow shell base_typeattr_511 (service_manager (find)))` 与 `(allow appdomain appdomain (binder (call transfer)))` 都成立，`service call anti_root_dialog 65535` 事务送达、无 AVC ⇒ **可达**（中间态 6/7）；随后定位实现（混淆类 `…a.b$a`，单 `int` 事务、无鉴权、**无危险 sink**）⇒ **可达但无能力，7/7 以更强理由闭合** | 审核 v006 P1 + 设备实证（§33.4）+ 实现审计（§34.3） |
+| 「读本域可写路径的域**全部没有** `system_server` binder，唯一持有的是本域」（§26） | **前提作废**：`hal_wifi_hostapd_default` / `hal_wifi_supplicant_default` / `fstman` 都持有（`(allow hal_*_server hal_*_client (binder (call transfer)))`，而 `hal_*_client` 的成员就是 `system_server`）。跳板仍不成立，但断点从**"没有通道"改为"无法触发"**（`init.svc.hostapd/fstman = []`、无 `-c <path>`） | 自查（§34.2） |
+| 「加载自定义模块被策略断链；`sys_admin` 连 Bounding 都没有 ⇒ 策略也不给」 | **归因更正**：策略**放行** `module_load`（对 `vendor_file`）与 `sys_admin`/`sys_module`/`setuid`（direct 能力规则）。真正的墙是 `CONFIG_MODULE_SIG_FORCE=y` 与内核 `CapEff=0x13000` | 自查（§33.5） |
+| 「root oneshot 实例 = 可用的免门禁接口」 | **新增负知识**：`hephaestus` 与 `hephaestus_install` 是同一二进制、同一 `onTransact`，门禁查**调用者** uid，不看实例身份 | 审核意见 v006-1（§33.6） |
 
 ### 请重点攻击的四点
 
@@ -299,7 +316,11 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 3. **"别人递句柄"这一路是否成立**（决定结论 4 的边界）。若 OPPO Wi-Fi HAL 的某个 HIDL 方法接收 system_server 托管的回调对象，则该回调句柄**可能**带一个"显式允许 `ROOT_UID`"的方法（G-S1）。请指名接口与方法。
 4. **`init.oppo.wifi.sh` 是否有我们漏掉的命令位置**（决定结论 5 的边界）。全文 1036 行、本地可得；我们只确认 `persist_version` 进的是 `[ -gt ]`。若你能指出它被用在命令位置（或某个 `$(( ))` / `eval` 里），结论 5 即升级为提权候选。
 5. **是否还有未被枚举的攻击面**。这是唯一无法由内向外证伪的问题：本项目已覆盖 4 个内核面 + `/dev/diag` + Wi-Fi 私有事务 + 7 个私有 Binder 服务 + 域逃逸 + 可写面消费者 + `system_server` 句柄来源。**若存在第八类面，请指名。**
-6. **FastRPC 的封闭性是否成立**（结论 6）。可攻击点有两个：①指出本域对 `qdsp_device`/`xdsp_device` 所属**任一属性**的 `chr_file open` 授权行（`grep` 5 份 CIL 即可）；②在 `u:r:oplus_wifi_service:s0` 下成功 `open("/dev/adsprpc-smd", O_RDWR)` 或 `O_RDONLY` 并给回显。任一成立即推翻。另请注意：本域**不在** `appdomain`，所以"shell 能打开的节点，root 域不一定能打开"——这一方向常被直觉搞反（§32.5）。
+6. **新引擎的语义是否真的正确**（v2.24）。这是本轮唯一新增的"底座"：若你能给出 CIL Reference 中
+   `and`/`or`/`xor`/`not`/`all` 与本实现不同的语义，或指出 `alias` 档（仅并"无自身成员定义"的版本化名）
+   在某个真实属性上给出了错误的成员集，则 §33 的全部回归结论需要重算。可执行 `python tools/cil_selftest.py`
+   直接看 28 条用例的期望值。
+7. **FastRPC 的封闭性是否成立**（结论 6）。可攻击点有两个：①指出本域对 `qdsp_device`/`xdsp_device` 所属**任一属性**的 `chr_file open` 授权行（`grep` 5 份 CIL 即可）；②在 `u:r:oplus_wifi_service:s0` 下成功 `open("/dev/adsprpc-smd", O_RDWR)` 或 `O_RDONLY` 并给回显。任一成立即推翻。另请注意：本域**不在** `appdomain`，所以"shell 能打开的节点，root 域不一定能打开"——这一方向常被直觉搞反（§32.5）。
 
 ### 复现（全部离线，不需要设备）
 

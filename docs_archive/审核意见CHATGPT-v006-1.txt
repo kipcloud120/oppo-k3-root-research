@@ -1,0 +1,364 @@
+档中多次提到UID门禁的问题，这个真的没有解法吗？
+
+思考了 6m 10s
+有解法，但不是直接“伪造 UID”。对于 OPPO K3 F.16，目前最值得研究的是：能否让一个真正以 UID 1000 运行的系统进程，替当前受限 ROOT 调用被 UID 门禁保护的服务。
+
+这两种情况完全不同：
+
+伪造 UID：让系统误以为调用者是 system。
+
+代理调用：由真正的 system 进程接受请求，再以自己的身份调用目标服务。
+
+第二种在 Android 架构上是可能的，也是值得研究的方向。但目前仓库还没有找到一条可用的代理调用链。
+
+一、先弄清楚 UID 门禁究竟检查什么
+Android 中几个重要身份：
+
+身份
+
+UID
+
+含义
+
+root
+
+0
+
+Linux root
+
+system
+
+1000
+
+Android system_server 身份
+
+wifi
+
+1010
+
+Wi-Fi 子系统
+
+shell
+
+2000
+
+ADB shell
+
+这些是不同的身份，不能互相替代。Android 官方源码明确规定了这些 AID。
+
+Git at Google
+
+OPPO K3 当前的关键身份：
+
+ADB shell:
+uid=2000
+context=u:r:shell:s0
+
+Wi-Fi root service:
+uid=0
+gid=1010
+context=u:r:oplus_wifi_service:s0
+这就产生了一个容易误解的问题：
+
+UID 0 并不等于 UID 1000。
+
+即使 Wi-Fi root 进程附加了 system 组，也不会因此变成 system UID。
+
+二、项目中最明确的 UID 门禁：Hephaestus
+仓库 P2_SEVEN_SERVICES_AUDIT.md §3 反汇编出了非常明确的逻辑：
+
+uid = IPCThreadState::self()->getCallingUid();
+
+if ((uid % 100000) == 1000) {
+    system(client_string);
+} else {
+    log("not apply to this uid");
+}
+
+实际对应：
+
+bl getCallingUid()
+...
+cmp w8, #0x3e8
+b.ne reject
+...
+bl system
+这是原生代码里的硬门禁，不是 Java 层可以简单修改的权限声明。
+
+GitHub
++1
+
+当前身份与门禁的关系：
+
+调用者
+
+UID
+
+结果
+
+ADB shell
+
+2000
+
+拒绝
+
+Wi-Fi root
+
+0
+
+拒绝
+
+system
+
+1000
+
+通过
+
+普通应用
+
+10xxx
+
+拒绝
+
+这里还有一个技术细节：作者反汇编出来的是 uid % 100000 == 1000，严格说检查的是 Android appId，而不只是原始 UID。在当前单用户环境中，它等价于 UID 1000。Android 多用户 UID 使用 100000 的用户偏移量。
+
+Git at Google
++1
+
+所以问题很具体：
+
+怎样让真正的 UID 1000 进程调用 Hephaestus，而不是让 UID 0 进程冒充 UID 1000？
+
+三、真正可行的 UID 门禁解决思路
+我把可能性分成四种。
+
+方案 A：通过真正的 system UID 服务做代理
+架构上可行，当前尚无证据
+这是最值得研究的方式。
+
+假设存在这样的服务：
+
+受限 ROOT
+
+UID 0 · oplus_wifi_service
+
+请求一个系统服务执行授权操作
+system_server
+
+真正的 UID 1000
+
+可信身份代理
+以自身身份进行合法的下游调用
+Hephaestus
+
+检查 Binder calling UID
+
+UID 1000 门禁通过
+Android 本身提供了 Binder.clearCallingIdentity()。
+
+它允许服务在处理外部 Binder 请求时，暂时清除原始调用者身份，使后续调用以服务自己的身份进行。使用完后，还可以恢复原始调用身份。
+
+Android Developers
++1
+
+这是一种合法的系统服务代理机制。
+
+但它也存在安全风险：如果系统服务没有先检查原始调用者权限，却替调用者执行了本来只有 system 才能执行的敏感操作，就会形成典型的 confused deputy（混淆代理）漏洞。
+
+Google 的 Android 安全文档也特别强调，服务替调用者访问其他服务前，应当检查调用者权限。
+
+Android Developers
+
+对 K3 的问题是：还没找到一个可被当前受限 ROOT 使用、又愿意代为调用 Hephaestus 的 system 服务方法。
+
+方案 B：通过另一个 UID 1000 进程执行代码
+理论可行，门槛高
+例如，一个具备以下条件的进程：
+
+UID 1000；
+
+能够访问 Hephaestus；
+
+有一个可由当前低权限主体触发的功能；
+
+该功能存在权限检查遗漏或不安全的参数转交。
+
+这相当于寻找一个可信身份代理。
+
+不过，仅仅发现一个 system UID 进程是不够的。它必须存在实际可调用的接口，而且不能在接受请求之前正确拒绝调用者。
+
+方案 C：直接将 Wi-Fi root 进程切换为 UID 1000
+当前条件下不可行
+Linux 提供 setuid()、setresuid() 等身份切换机制，但任意修改 UID 需要 CAP_SETUID。
+
+Linux manual page
++1
+
+当前项目的能力集：
+
+CapEff=CapBnd=0x13000
+对应：
+
+CAP_NET_ADMIN
+
+CAP_NET_RAW
+
+CAP_SYS_MODULE
+
+不包含 CAP_SETUID。
+
+所以，不能因为进程现在是 UID 0，就认为可以任意切换成 UID 1000。
+
+而且即使能够切换进程 UID，也不能自动解决 SELinux domain、能力集继承及 Binder 访问权限问题。
+
+方案 D：寻找另一条没有相同 UID 门禁的接口
+取决于固件是否存在遗漏
+例如某个组件提供另一个接口：
+
+同样可以执行高权限操作；
+
+没有 getCallingUid()==1000 检查；
+
+具备足够的实际运行权限。
+
+这种情况下，不是绕过原门禁，而是找到另一条授权路径。
+
+四、为什么当前 K3 上的 system_server 路线也不容易走通？
+这一点已经在仓库的 SYSTEM_SERVER_BINDER_AUDIT.md 中专门检查过。
+
+作者发现：
+
+项目
+
+当前权限
+
+对 system_server 执行 Binder call
+
+有
+
+向 servicemanager 发送 Binder call
+
+无
+
+对服务执行 service_manager find
+
+无
+
+接收其他进程传递的 Binder handle
+
+有来源限制
+
+Wi-Fi HAL 接收 system_server Binder 对象
+
+未发现
+
+这里有一个容易忽略的事实：
+
+拥有 Binder call 权限，不等于可以任意找到一个 system_server 服务。
+
+通常需要先取得 Binder handle，然后才能发起事务。
+
+项目已经检查了 HAL 的 19 个方法签名，没有发现接收 Binder 对象的接口，因此此前设想的 system_server 句柄传递路线也被否证。
+
+GitHub
++2
+
+所以，方案 A 并不是完全没有实现机制，而是项目当前尚未找到它所需要的入口。
+
+五、我认为项目还应该补查一个具体问题
+这是我现在最建议作者研究的地方：
+
+Hephaestus 的两个 init 实例是否都暴露同一个 Binder 接口？
+
+仓库记录了两个服务：
+
+服务
+
+init 身份
+
+hephaestus
+
+system UID
+
+hephaestus_install
+
+root UID，oneshot，installd SELinux domain
+
+而 UID 门禁是在 system() 调用路径之前检查 Binder 的调用者身份。
+
+GitHub
++1
+
+我建议进一步确认：
+
+哪个实例实际上注册 IHephaestus Binder 服务？
+
+hephaestus_install 是否也运行相同的 Binder 服务实现？
+
+它的 oneshot 生命周期及启动条件是什么？
+
+是否存在真正的 UID 1000 客户端调用链？
+
+是否有客户端把外部参数传递到受保护的操作？
+
+特别是第 2 点：
+
+如果 root oneshot 实例根本不提供 Binder 服务，那么它虽然以 root 运行，也不能成为可调用的命令执行接口。
+
+反过来，如果它确实提供受门禁保护的接口，并且存在可达的 system UID 调用路径，就值得重新评估。
+
+目前公开报告没有充分证明这条路径成立，因此只能列为未解决的架构问题，而不能当作利用入口。
+
+六、我的最终判断
+不是绝对无解
+但直接突破 UID 门禁的方式，在 K3 当前权限条件下基本走不通。
+
+方法
+
+当前判断
+
+直接修改 Binder UID
+
+不行
+
+通过 GID system 冒充 UID 1000
+
+不行
+
+调用者自己使用 clearCallingIdentity
+
+不行
+
+直接 setuid(1000)
+
+能力不足
+
+UID 1000 服务代为调用
+
+值得研究
+
+发现另一个未设门禁的特权接口
+
+可能存在，尚未发现
+
+我认为下一步不要继续研究如何伪造 UID，而应该研究 UID 1000 的真实调用者是谁，以及他们有没有提供可被外部触发的代理操作。
+
+尤其是 Hephaestus 的客户端调用关系和两个 init 实例的关系。
+
+这比继续重复试验 uid=2000 或 uid=0 调用同一个被硬门禁阻挡的接口有价值。
+
+一句话总结：
+
+UID 门禁本身没有魔法绕过方法，但可以存在身份代理漏洞。对于 OPPO K3，目前没有找到可用的身份代理链；这才是尚未闭合的问题，而不是 UID 1000 在 Android 中绝对不可获得。
+
+参考：
+
+OPPO K3 Hephaestus UID 门禁反汇编
+
+system_server Binder 通道审计
+
+Android Binder 官方 API
+
+Android 官方 IPC 安全建议
+
+Linux CAP_SETUID 说明
