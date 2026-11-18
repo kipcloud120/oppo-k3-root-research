@@ -1,0 +1,40 @@
+--------- beginning of main
+11-18 13:35:45.867  5246  5246 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:45.869  5246  5246 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:45.860  5246  5246 W app_process: type=1400 audit(0.0:16483): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:45.870   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+11-18 13:35:45.870   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+11-18 13:35:45.871   987  3734 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+11-18 13:35:45.871   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+11-18 13:35:45.879  5246  5246 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:45.882  5246  5246 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:45.882  5246  5246 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:45.882  5246  5246 I AndroidRuntime: Using default boot image
+11-18 13:35:45.882  5246  5246 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:45.882  5246  5246 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:45.882  5246  5246 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:45.870  5246  5246 W app_process: type=1400 audit(0.0:16484): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:45.870  5246  5246 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 13:35:45.870  5246  5246 W app_process: type=1400 audit(0.0:16487): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:45.886  9603  9676 E Melody_BluetoothBroadcastReceiver: onReceive basic functions not accepted
+11-18 13:35:45.912   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+11-18 13:35:45.912   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+11-18 13:35:45.977  5246  5246 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:45.978  5246  5246 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:45.990  4689  4734 D HoraeHelper: getAllShellTemps tSize : 4
+11-18 13:35:46.020  5246  5246 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:46.030  5246  5246 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:46.052  1755  2948 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:46.052  1755  2948 D OplusWifiHalService: log -t GW6D `ls -l /mnt/vendor/persist/WCNSS_qcom_cfg.ini`)
+11-18 13:35:46.056  1755  2948 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:46.056  1755  2948 D OplusWifiHalService: log -t GW6D `ls -l /mnt/vendor/persist/WCNSS_qcom_cfg.ini`) completed successfully.
+11-18 13:35:46.056  1755  2948 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:46.056  1755  2948 D OplusWifiHalService: log -t GW6D `ls -l /mnt/vendor/persist/WCNSS_qcom_cfg.ini`) with result =  
+11-18 13:35:46.058  5246  5246 D AndroidRuntime: Shutting down VM
+11-18 13:35:46.062   987  3208 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+11-18 13:35:46.500  3591  3591 W kworker/3:3: type=1400 audit(0.0:16488): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0
+--------- beginning of system
+11-18 13:35:45.878  4082  4082 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1159 android.content.ContextWrapper.sendBroadcast:478 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:34 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:0 com.coloros.wirelesssettings.bluetooth.oppopods.c$a.onScanResult:56 
+11-18 13:35:46.549  1755  9950 D BatteryLed: getLightInColorState, oppoLightMgr empty!
+11-18 13:35:46.560 23998 23998 I MainLooperBlockDetector: com.bytedance.q.q.to.q.ml$q.onReceive
+11-18 13:35:46.560 23998 23998 I MainLooperBlockDetector: checkMainLooperBlocked: message not updated

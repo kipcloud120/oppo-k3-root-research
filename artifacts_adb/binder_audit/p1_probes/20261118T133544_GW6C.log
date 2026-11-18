@@ -1,0 +1,32 @@
+--------- beginning of main
+11-18 13:35:43.645  5217  5217 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:43.646  5217  5217 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:43.640  5217  5217 W app_process: type=1400 audit(0.0:16478): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:43.655  5217  5217 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:43.650  5217  5217 W app_process: type=1400 audit(0.0:16479): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:43.650  5217  5217 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 13:35:43.650  5217  5217 W app_process: type=1400 audit(0.0:16482): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:43.658  5217  5217 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:43.658  5217  5217 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:43.658  5217  5217 I AndroidRuntime: Using default boot image
+11-18 13:35:43.658  5217  5217 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:43.658  5217  5217 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:43.658  5217  5217 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:43.747  5217  5217 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:43.747  5217  5217 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:43.787  5217  5217 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:43.800  5217  5217 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:43.825  1755  2948 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:43.825  1755  2948 D OplusWifiHalService: log -t GW6C `ls -l /mnt/vendor/persist/wlan/`)
+11-18 13:35:43.828  1755  2948 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:43.828  1755  2948 D OplusWifiHalService: log -t GW6C `ls -l /mnt/vendor/persist/wlan/`) completed successfully.
+11-18 13:35:43.828  1755  2948 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:43.828  1755  2948 D OplusWifiHalService: log -t GW6C `ls -l /mnt/vendor/persist/wlan/`) with result =  
+11-18 13:35:43.831  5217  5217 D AndroidRuntime: Shutting down VM
+11-18 13:35:44.633   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+11-18 13:35:44.633   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+11-18 13:35:44.635   987  3734 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+11-18 13:35:44.635   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+11-18 13:35:44.678   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+11-18 13:35:44.679   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+11-18 13:35:44.830   987  3208 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 

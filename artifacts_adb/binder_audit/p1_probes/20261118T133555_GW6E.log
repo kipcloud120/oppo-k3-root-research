@@ -1,0 +1,55 @@
+--------- beginning of main
+11-18 13:35:55.111  5287  5287 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:55.113  5287  5287 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:55.100  5287  5287 W app_process: type=1400 audit(0.0:16490): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:55.121  5287  5287 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:55.124  5287  5287 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:55.124  5287  5287 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:55.124  5287  5287 I AndroidRuntime: Using default boot image
+11-18 13:35:55.124  5287  5287 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:55.124  5287  5287 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:55.124  5287  5287 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:55.120  5287  5287 W app_process: type=1400 audit(0.0:16491): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:55.120  5287  5287 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 13:35:55.120  5287  5287 W app_process: type=1400 audit(0.0:16494): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:55.221  5287  5287 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:55.221  5287  5287 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:55.254  5287  5287 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:55.262  5287  5287 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:55.286  1755  2948 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:55.286  1755  2948 D OplusWifiHalService: log -t GW6E R-`ls -m /mnt/vendor/persist/wlan/`)
+11-18 13:35:55.290  1755  2948 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:55.290  1755  2948 D OplusWifiHalService: log -t GW6E R-`ls -m /mnt/vendor/persist/wlan/`) completed successfully.
+11-18 13:35:55.290  1755  2948 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:55.290  1755  2948 D OplusWifiHalService: log -t GW6E R-`ls -m /mnt/vendor/persist/wlan/`) with result =  
+11-18 13:35:55.293  5287  5287 D AndroidRuntime: Shutting down VM
+11-18 13:35:55.375  5305  5305 I GW6E    : R-WCNSS_qcom_cfg.ini
+11-18 13:35:55.480   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+11-18 13:35:55.480   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+11-18 13:35:55.482   987  3734 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+11-18 13:35:55.483   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+11-18 13:35:55.503  4632  5255 I AF.APP.ScanService: discoveryDevice, plugin device: { tag: DEBUG NOT PRINT. name: DEBUG NOT PRINT. bt_name: DEBUG NOT PRINT. }
+11-18 13:35:55.504  4632  5253 E AF.CORE.g: PluginDevice run
+11-18 13:35:55.504  4632  5253 I AF.APP.a: DeviceEvent STATE :12
+11-18 13:35:55.504  4632  5253 W AF.APP.a: isBgScanPluginWithoutUI scanResult ： DEBUG NOT PRINT., DEBUG NOT PRINT.
+11-18 13:35:55.506  4632  5253 W AF.APP.a: queryPlugins scanResult ： DEBUG NOT PRINT., DEBUG NOT PRINT.
+11-18 13:35:55.506  4632  5253 W AF.APP.a: None valid devices found
+11-18 13:35:55.506  4632  5253 I chatty  : uid=10271(com.heytap.accessory) DMR identical 1 line
+11-18 13:35:55.506  4632  5253 W AF.APP.a: None valid devices found
+11-18 13:35:55.524   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+11-18 13:35:55.524   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+11-18 13:35:55.680   987  3208 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+11-18 13:35:55.997  4689  4731 D HoraeHelper: getAllShellTemps tSize : 4
+11-18 13:35:56.633   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+11-18 13:35:56.633   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+11-18 13:35:56.637   987  3734 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+11-18 13:35:56.638   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+--------- beginning of system
+11-18 13:35:56.649  4082  4082 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1159 android.content.ContextWrapper.sendBroadcast:478 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:34 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:0 com.coloros.wirelesssettings.bluetooth.oppopods.c$a.onScanResult:56 
+11-18 13:35:56.668  9603  9676 E Melody_BluetoothBroadcastReceiver: onReceive basic functions not accepted
+11-18 13:35:56.680  4632  5255 I AF.APP.ScanService: discoveryDevice, plugin device: { tag: DEBUG NOT PRINT. name: DEBUG NOT PRINT. bt_name: DEBUG NOT PRINT. }
+11-18 13:35:56.681  4632  5253 E AF.CORE.g: PluginDevice run
+11-18 13:35:56.681  4632  5253 I AF.APP.a: DeviceEvent STATE :12
+11-18 13:35:56.681  4632  5253 W AF.APP.a: isBgScanPluginWithoutUI scanResult ： DEBUG NOT PRINT., DEBUG NOT PRINT.
+11-18 13:35:56.681  4632  5253 W AF.APP.a: queryPlugins scanResult ： DEBUG NOT PRINT., DEBUG NOT PRINT.
+11-18 13:35:56.681  4632  5253 W AF.APP.a: None valid devices found

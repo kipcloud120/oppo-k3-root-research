@@ -1,0 +1,42 @@
+--------- beginning of main
+11-18 13:35:59.490  5350  5350 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:59.492  5350  5350 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:59.480  5350  5350 W app_process: type=1400 audit(0.0:16501): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:59.501  5350  5350 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:59.504  5350  5350 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:59.504  5350  5350 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:59.504  5350  5350 I AndroidRuntime: Using default boot image
+11-18 13:35:59.504  5350  5350 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:59.504  5350  5350 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:59.504  5350  5350 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:59.500  5350  5350 W app_process: type=1400 audit(0.0:16502): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:59.500  5350  5350 I chatty  : uid=2000(shell) app_process identical 1 line
+11-18 13:35:59.500  5350  5350 W app_process: type=1400 audit(0.0:16504): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:59.607  5350  5350 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:59.607  5350  5350 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:59.609  1755  2400 D SensorService: FusionLight processRawLux, stop to shot
+11-18 13:35:59.610  1755  2400 D SensorService: ShotOnce, after outEvent->light = 199.098663, comp_lux = 13.798786, RGB(0.000000,26.000000,80.000000), C = 0.000000, threshold = 1000, mBrightLevel = 483
+11-18 13:35:59.657  5350  5350 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:59.672  5350  5350 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:59.700  1755  3139 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:59.700  1755  3139 D OplusWifiHalService: log -t GW6G R-`cat /odm/etc/wifi/bin_version`)
+11-18 13:35:59.704  1755  3139 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:59.704  1755  3139 D OplusWifiHalService: log -t GW6G R-`cat /odm/etc/wifi/bin_version`) completed successfully.
+11-18 13:35:59.704  1755  3139 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:59.704  1755  3139 D OplusWifiHalService: log -t GW6G R-`cat /odm/etc/wifi/bin_version`) with result =  
+11-18 13:35:59.706  5350  5350 D AndroidRuntime: Shutting down VM
+11-18 13:35:59.821  5368  5368 I GW6G    : R-200
+11-18 13:36:00.018  3942  3942 I WeatherS_WeatherServiceVersionUtils: serviceVersionCode16024000
+11-18 13:36:00.019  3942  3942 I chatty  : uid=10076(com.coloros.alarmclock) identical 1 line
+11-18 13:36:00.019  3942  3942 I WeatherS_WeatherServiceVersionUtils: serviceVersionCode16024000
+11-18 13:36:00.033  3328  3328 E Launcher.ColorBubbleTextView: mForceHideDot is false
+11-18 13:36:00.046  2919  2919 D SingleClockView: updateTime,  24hfmt=true, h=13, m=36
+--------- beginning of system
+11-18 13:36:00.052  1755  2948 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+11-18 13:36:00.054  1755  2813 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+11-18 13:36:00.080  3328  3328 E Launcher.ColorBubbleTextView: mForceHideDot is false
+11-18 13:36:00.461  1755  2532 D JobScheduler.Temperature: get temperature=28.302
+11-18 13:36:00.086  3328  3328 I chatty  : uid=10046(com.oppo.launcher) identical 5 lines
+11-18 13:36:00.086  3328  3328 E Launcher.ColorBubbleTextView: mForceHideDot is false
+11-18 13:36:00.912  4689  4734 D HoraeHelper: getAllShellTemps tSize : 4
+11-18 13:36:00.915  4689  4734 D HoraeHelper: Thermal length:1

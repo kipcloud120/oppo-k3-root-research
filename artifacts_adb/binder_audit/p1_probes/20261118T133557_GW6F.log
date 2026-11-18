@@ -1,0 +1,34 @@
+--------- beginning of main
+11-18 13:35:57.152  4525  5594 I Athena  : MemoryGuardAction: 22338s since the last releasing, try to force trigger
+11-18 13:35:57.152  4525  5594 I Athena  : MemoryGuardAction: triggerMemory:1600MB, availMemory:2910MB
+11-18 13:35:57.306  5317  5317 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:57.308  5317  5317 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:57.300  5317  5317 W app_process: type=1400 audit(0.0:16495): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:57.317  5317  5317 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:57.319  5317  5317 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:57.319  5317  5317 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:57.319  5317  5317 I AndroidRuntime: Using default boot image
+11-18 13:35:57.319  5317  5317 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:57.319  5317  5317 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:57.320  5317  5317 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:57.310  5317  5317 W app_process: type=1400 audit(0.0:16496): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:57.310  5317  5317 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 13:35:57.310  5317  5317 W app_process: type=1400 audit(0.0:16499): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:57.411  5317  5317 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:57.411  5317  5317 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:57.451  5317  5317 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:57.463  5317  5317 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:57.487  1755  3139 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:57.487  1755  3139 D OplusWifiHalService: log -t GW6F R-`ls -m /mnt/vendor/persist/WCNSS_qcom_cfg.ini`)
+11-18 13:35:57.490  1755  3139 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:57.490  1755  3139 D OplusWifiHalService: log -t GW6F R-`ls -m /mnt/vendor/persist/WCNSS_qcom_cfg.ini`) completed successfully.
+11-18 13:35:57.491  1755  3139 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:57.491  1755  3139 D OplusWifiHalService: log -t GW6F R-`ls -m /mnt/vendor/persist/WCNSS_qcom_cfg.ini`) with result =  
+11-18 13:35:57.493  5317  5317 D AndroidRuntime: Shutting down VM
+11-18 13:35:57.576  5338  5338 I GW6F    : R-
+--------- beginning of system
+11-18 13:35:58.150  1755  2028 W OppoBaseWatchdog: !@WatchDog_745
+11-18 13:35:58.650  3591  3591 W kworker/3:3: type=1400 audit(0.0:16500): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0
+11-18 13:35:58.689  1755  9950 D BatteryLed: getLightInColorState, oppoLightMgr empty!
+11-18 13:35:58.703 23998 23998 I MainLooperBlockDetector: com.bytedance.q.q.to.q.ml$q.onReceive
+11-18 13:35:58.703 23998 23998 I MainLooperBlockDetector: checkMainLooperBlocked: message not updated

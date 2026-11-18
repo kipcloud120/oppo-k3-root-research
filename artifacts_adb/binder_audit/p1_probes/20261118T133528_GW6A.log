@@ -1,0 +1,37 @@
+--------- beginning of main
+11-18 13:35:27.348  5151  5151 D OplusUtils: OplusUtils [83]: 
+11-18 13:35:27.349  5151  5151 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 13:35:27.340  5151  5151 W app_process: type=1400 audit(0.0:16448): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 13:35:27.358  5151  5151 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 13:35:27.361  5151  5151 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 13:35:27.361  5151  5151 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 13:35:27.361  5151  5151 I AndroidRuntime: Using default boot image
+11-18 13:35:27.361  5151  5151 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 13:35:27.361  5151  5151 I AndroidRuntime: Leaving lock profiling enabled
+11-18 13:35:27.361  5151  5151 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 13:35:27.350  5151  5151 W app_process: type=1400 audit(0.0:16449): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:27.350  5151  5151 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 13:35:27.350  5151  5151 W app_process: type=1400 audit(0.0:16452): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 13:35:27.455  5151  5151 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 13:35:27.455  5151  5151 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 13:35:27.490  5151  5151 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 13:35:27.505  5151  5151 D AndroidRuntime: Calling main entry FtmProbe
+11-18 13:35:27.526  1755  4863 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 13:35:27.526  1755  4863 D OplusWifiHalService: log -t GW6A `ls -m /mnt/vendor/persist/`)
+11-18 13:35:27.532  1755  4863 D OplusWifiHalService: executeDriverCommand(x
+11-18 13:35:27.532  1755  4863 D OplusWifiHalService: log -t GW6A `ls -m /mnt/vendor/persist/`) completed successfully.
+11-18 13:35:27.532  1755  4863 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 13:35:27.532  1755  4863 D OplusWifiHalService: log -t GW6A `ls -m /mnt/vendor/persist/`) with result =  
+11-18 13:35:27.534  5151  5151 D AndroidRuntime: Shutting down VM
+11-18 13:35:27.660  5169  5169 I GW6A    : alarm, bdwlan.bin, bdwlan_18041_id1.bin, bdwlan_18081_2.4g_ch0.bin, bdwlan_18081_2.4g_ch1.bin, bdwlan_18081_5g_ch0.bin, bdwlan_18081_5g_ch1.bin, bdwlan_18081_id1.bin, bdwlan_18081_id2.bin, bdwlan_18081_id3.bin, bdwlan_18081_id4.bin, bdwlan_18081_src.bin, bdwlan_18097_id1.bin, bdwlan_18097_id2.bin, bdwlan_18181_id1.bin, bdwlan_18181_id2.bin, bdwlan_18181_id3.bin, bdwlan_18181_id4.bin, bdwlan_18381_id1.bin, bdwlan_18381_id2.bin, bdwlan_18381_id3.bin, bdwlan_18381_id4.bin, bdwlan_18383.bin, bdwlan_18385_id1.bin, bdwlan_18385_id2.bin, bdwlan_18385_id3.bin, bdwlan_18385_id4.bin, bdwlan_18397_id1.bin, bdwlan_18539.bin, bin_version, bluetooth, bms, camera, copy, data, display, engineermode, fingerprint, ftm_admin, hlos_rfs, hvdcp_opti, iar_db, lost+found, media, qti_fp, rfs, rpmb_status, secnvm, sensors, time, vpp, wlan
+11-18 13:35:27.922   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_WAKE_IND: 0xFD
+11-18 13:35:27.922   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK ON
+11-18 13:35:27.925   987  3734 D vendor.qti.bluetooth@1.0-wake_lock: Acquire wakelock is acquired 
+11-18 13:35:27.925   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Writing IBS_WAKE_ACK
+11-18 13:35:27.952  9603  9676 E Melody_BluetoothBroadcastReceiver: onReceive basic functions not accepted
+11-18 13:35:27.967   987  3734 I vendor.qti.bluetooth@1.0-ibs_handler: ProcessIbsCmd: Received IBS_SLEEP_IND: 0xFE
+11-18 13:35:27.967   987  3734 D vendor.qti.bluetooth@1.0-ibs_handler: SerialClockVote: vote for UART CLK OFF
+11-18 13:35:28.118   987  3208 D vendor.qti.bluetooth@1.0-wake_lock: Release wakelock is released 
+--------- beginning of system
+11-18 13:35:27.938  4082  4082 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1159 android.content.ContextWrapper.sendBroadcast:478 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:34 com.coloros.wirelesssettings.bluetooth.oppopods.c.a:0 com.coloros.wirelesssettings.bluetooth.oppopods.c$a.onScanResult:56 
+11-18 13:35:28.144  1755  2028 W OppoBaseWatchdog: !@WatchDog_744
