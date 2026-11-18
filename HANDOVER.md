@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.19**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判；v2.18=§28 设备在环实测 —— `ro.hardware=qcom` ⇒ 生效 rc 是 `init.wlan.qcom.rc`（G-W5 闭合）；以 `init.svc.*` 重建生效服务集：hostapd/fstman/triggerwifidump **均未定义**，发现两个漏掉的 root 消费者（`wifiserver` 脚本、`wifisar`）；v2.19=§28.9 G-W6 探针 —— `WCNSS_qcom_cfg.ini` 实在 `persist/wlan/`，脚本检查的顶层路径不存在、且 cp 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **R1 降级为"不提供新能力"**、G-W6 闭合**。下次会话**从 §17 开始**，再按需查 §28（含 §28.9 探针）/ §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.20**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判；v2.18=§28 设备在环实测 —— `ro.hardware=qcom` ⇒ 生效 rc 是 `init.wlan.qcom.rc`（G-W5 闭合）；以 `init.svc.*` 重建生效服务集：hostapd/fstman/triggerwifidump **均未定义**，发现两个漏掉的 root 消费者（`wifiserver` 脚本、`wifisar`）；v2.19=§28.9 G-W6 探针 —— `WCNSS_qcom_cfg.ini` 实在 `persist/wlan/`，脚本检查的顶层路径不存在、且 cp 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **R1 降级为"不提供新能力"**、G-W6 闭合；v2.20=§29 G-S1 闭合 —— HAL 带 `.gnu_debugdata`（315 符号/92 函数），19 个方法签名全部可得；只注册 `IOppoWifiService`、无句柄入参、不调 `readStrongBinder` ⇒ **不接收任何 binder 句柄**，但发现 3 个 `_hidl_cb` 构成**反向数据通道**（重登记为 G-S2）**。下次会话**从 §17 开始**，再按需查 §29 / §28（含 §28.9 探针）/ §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -42,7 +42,7 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定（v2.19，术语按审核意见 v003 三分）**：
+**判定（v2.20，术语按审核意见 v003 三分）**：
 
 | 术语 | 含义 | 本机状态 |
 |---|---|---|
@@ -542,7 +542,10 @@ ENOTTY（未实现）3833
 11. **【2026-11-18 v2.17 新增：`system_server` 通道的可证伪条件】** 满足任一条才重开（§27.6）：
    (a) 本域出现可用的 `servicemanager` 通道（`binder call` 或 `service_manager find`，当前 0 条规则）；
    (b) 发现 HAL 接收 system_server 回调，且该回调接口存在"显式允许 `ROOT_UID`"的方法；
-   (c) 发现任一进程把 **system_server 的服务句柄**（而非回调对象）递进本域。
+   (c) 发现任一进程把 **system_server 的服务句柄**（而非回调对象）递进本域；
+   (d) 发现该 HAL 出现 `readStrongBinder`（v2.20 实测为 0）；
+   (e) 发现它同时注册 AOSP `android.hardware.wifi@x::IWifi`（那才有 `registerEventCallback` 入参）；
+   (f) 发现接口方法里出现 `sp<...Callback>` 型入参。
    **不重开**：`service call` 盲试；对不可达接口做方法级权限穷举。
 
 ---
@@ -2119,7 +2122,7 @@ uid 1010/1000、呼不到 system_server 的域去读**。所谓信任边界的"�
 
 | # | 缺口 | 闭合方式 |
 |---|---|---|
-| **G-S1** | HAL 是否把 system_server 托管的回调对象递进本域；其方法集合与鉴权 | 反汇编 `/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service` 及其 `.so`，枚举带回调参数的方法（该二进制本地未存，需一次只读 `adb pull`） |
+| **G-S1** | ~~HAL 是否把 system_server 托管的回调对象递进本域~~ | **已闭合（§29）：否证**。本地解包该二进制并用 `.gnu_debugdata` 解出 19 个方法签名：只注册 `IOppoWifiService`、无句柄入参、不导入 `readStrongBinder`。反向通道（`_hidl_cb`）另立 G-S2 |
 | G-S2 | `platform_app` 的 `call` 权限同样受"无 find"限制；未枚举哪些 platform_app 会主动连本域 | 同上 |
 | G-S3 | `engineermode_app` 只有 `transfer`，是否存在递句柄路径 | 低优先 |
 
@@ -2287,3 +2290,61 @@ uid 1010/1000、呼不到 system_server 的域去读**。所谓信任边界的"�
 **踩坑记录（方法论）**：首版探针写成 `log -t TAG \`cmd\``，当 `cmd` 输出为空（文件不存在）时，`log` 收到空消息⇒**整条日志不出现**，与"事务没执行"无法区分。改为固定前缀 `log -t TAG R-\`cmd\`` 后，空输出会体现为 `R-`，非空为 `R-<内容>`，前者才能证明"命令跑了但没有输出"（GW6F 即靠此判定"顶层 cfg 不存在"，而不是靠"没看到日志"）。
 
 **现场**：`/data/local/tmp` 已空（jar 与 5 个 payload 全删）；shell 仍 `uid=2000(shell)`；HAL 进程存活；未写属性、未改任何文件、未重启。
+
+---
+
+## 29. 增补：G-S1 闭合 —— 该 HAL 不接收任何 binder 句柄（2026-11-18，纯离线）
+
+> 完整报告 `artifacts_adb/binder_audit/SYSTEM_SERVER_BINDER_AUDIT.md` **§8**。
+> **物料全部本地**：`/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service`（115,408 B，odm 解包已在 `.build/vendor/x/odm/bin/hw/`）。
+> **未上机**（`adb pull` 被 `getattr` 拒，改用本地解包，反而更快且可复现）。
+
+### 29.1 方法上的突破：`.gnu_debugdata` 里有符号
+
+该 ELF 带 **xz 压缩的 mini debug info**，解出 **315 个符号 / 92 个函数**，
+其中 `vendor::oplus::hardware::wifi::V1_1::implementation::OppoWifiService` 的 **19 个方法名与完整签名**全部可见。
+这是本项目第一次拿到该服务的符号级方法表（此前 §22 只能靠 vtable 偏移反推）。
+
+### 29.2 结论：G-S1 否证
+
+| 判据 | 结果 |
+|---|---|
+| 注册了哪个接口 | **只有 `IOppoWifiService`**；不实现 AOSP `IWifi`（无 `registerEventCallback`） |
+| 方法有没有句柄类入参 | **没有**；唯一句柄参数是 base 的 `debug(hidl_handle)`，`hidl_handle` 是 **fd 不是 binder** |
+| 是否导入 `readStrongBinder` | **没有** |
+
+⇒ **系统侧不存在"把 system_server 的 binder 对象递进本域"的机制。** §27 的"取句柄"一问就此关闭。
+
+### 29.3 但发现一条反向数据通道（§27 真正的残余，重登记为 G-S2）
+
+3 个方法带 HIDL 生成的 `_hidl_cb`（`getIniVersion` / `sendIniContent` / `executeDriverCommand`，
+签名 `std::function<void(OplusWifiServiceStatus, hidl_string)>`）。执行该回调 = **HAL 主动向 system_server 发一次 binder 事务**，
+载荷 `(status, string)` **由我们控制**。
+
+⇒ **数据能进 system_server，但拿不到可调用的句柄。** 这条通道在 §23 的 logcat 里已经出现过
+（`OplusWifiHalService: … with result = <我们的串>`）。风险取决于 Java 侧如何处理该字符串 = **G-S2**。
+
+### 29.4 附带产出：19 个方法的性质区分
+
+- **HIDL 导出（13 个）**：用 `hidl_string` / 标量 → 可被 binder 调用。含 3 个带 `_hidl_cb` 的、5 个无参的、`runWiFiScript`/`sendSupplicantCommand`/`catchSnifferLog`/`setConMode`/`changeConnectionMode`。
+- **内部辅助（5 个）**：`executeShellCommand(const char*)`、`loadDriver(const char*,const char*)`、`executeDaemonCommand(const char*)`、`filterModuleName(std::string)`、`checkIfStringSafe(std::string)` —— 判据：HIDL 用 `hidl_string`，出现 `const char*`/`std::string` 必为 C++ 内部函数。
+- **信号处理（1 个）**：`internalSignalHandler(int)`。
+
+> 与 §22 的关系：§22 的"九类命令（vtable slot2–10）"是 **Java 侧可达子集**；本节得到 13 个导出方法。
+> 两者不矛盾，但**方法 ↔ transaction code 的完整对应尚未建立**，登记为待办（不影响 §29.2 的三条判据）。
+
+### 29.5 缺口更新
+
+| 缺口 | 状态 |
+|---|---|
+| G-S1 | **闭合（否证）** |
+| **G-S2**（Java 侧 `OplusWifiHalService` 如何处理回调字符串） | **新登记**：需 system_server 的 Java 侧产物（`framework.jar` / `services.jar` 的 odex），本地未存 |
+| G-S3 | 低优先，未动 |
+| G-W7（`wifisar` 二进制） | 现在可以本地解包取到（odm/vendor 镜像在手），但该服务不可触发 ⇒ 仍不做 |
+
+### 29.6 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `artifacts_adb/binder_audit/SYSTEM_SERVER_BINDER_AUDIT.md` | 新增 §8（G-S1 闭合 + 19 方法表 + 反向通道） |
+| `HANDOVER.md` | 本 §29；版本表 v2.20；§27.6 G-S1 状态更新；§7 第 11 条补 (d)(e)(f) |

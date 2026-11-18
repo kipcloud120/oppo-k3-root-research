@@ -124,3 +124,81 @@ grep -hoE "\(allow domain [a-z_0-9]+ \(service_manager \([^)]*\)\)" .build/sepol
 # 是否存在 servicemanager 通道（应为空）
 grep -h "oplus_wifi_service" .build/sepolicy/*.cil | grep -E "\bservicemanager(_30_0)?\b" | grep -v hwservicemanager
 ```
+
+---
+
+## 8. G-S1 闭合：HAL 是否把 system_server 的句柄递进本域（2026-11-18）
+
+> **物料全部来自本地**，未上机：`/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service`
+> （115,408 B，从 odm 解包得 `.build/vendor/x/odm/bin/hw/`）。
+> 关键突破：该 ELF 带 `.gnu_debugdata`（xz 压缩的 mini debug info），解出 **315 个符号**，其中 **92 个 `STT_FUNC`**，
+> 含 **`vendor::oplus::hardware::wifi::V1_1::implementation::OppoWifiService` 的全部 19 个方法名与签名**。
+> 工具：pyelftools + `lzma`（无 objdump 依赖）。
+
+### 8.1 三条判据（接口面 / 签名面 / 符号面）
+
+| # | 判据 | 结果 |
+|---|---|---|
+| ① **接口面**：注册了哪个接口 | **只有 `vendor.oplus.hardware.wifi@1.1::IOppoWifiService`**：`registerAsService` 1 处、接口类符号 11 处全为该接口；二进制内**无** `android.hardware.wifi@` 描述符、无 `IWifi` 字样 ⇒ **不实现 AOSP `IWifi`**，因此不存在 `registerEventCallback(IWifiEventCallback)` 这类「客户端把句柄递进来」的方法 |
+| ② **签名面**：方法有没有句柄类入参 | **没有**。19 个方法全是 `hidl_string` / 标量 / `std::string` / `const char*`；唯一的句柄类参数是 HIDL base 的 `debug(const hidl_handle&, ...)`，而 `hidl_handle` 是 **fd**、**不是 binder 对象** |
+| ③ **符号面**：会不会接收 binder 对象 | 二进制**不导入** `readStrongBinder`（`.dynsym` 与字符串表均无）⇒ 即便有 hidl_handle 参数，也只取 fd，不取 binder |
+
+⇒ **G-S1 对"取句柄"这一问：否。** 三条判据互相独立且都指向同一结论：
+该服务只注册 OPPO 私有接口、方法签名里没有回调入参、也不调用 `readStrongBinder`。
+
+### 8.2 但存在一条**反向数据通道**（这才是 §27 真正的残余）
+
+3 个方法的签名带 HIDL 生成的 `_hidl_cb`：
+
+```cpp
+getIniVersion       (const hidl_string&, std::function<void(OplusWifiServiceStatus, hidl_string)>)
+sendIniContent      (const hidl_string&, std::function<void(OplusWifiServiceStatus, hidl_string)>)
+executeDriverCommand(const hidl_string&, std::function<void(OplusWifiServiceStatus, hidl_string)>)
+```
+
+HIDL stub 执行该 `std::function` 时，会**从 HAL 进程向调用方（system_server）发起一次 binder 事务**，载荷是
+`(status, string)`。这两个值**由我们控制**（我们控制 HAL 的行为与返回串）。
+
+⇒ **数据可以进 system_server，但拿不到可调用的句柄。** 这条通道在 §23 已经实际出现过：
+logcat 里 `OplusWifiHalService: … with result = <我们的串>` 就是它。
+
+**风险边界**：回调的**动作是固定的**（把结果交回 Java 侧的异步回调），不是"任意 system_server 方法"。
+它能造成什么，取决于 Java 侧怎么处理这个字符串 —— 这是新的缺口 **G-S2**，不在本报告的 SELinux 口径内。
+
+### 8.3 附带产出：19 个方法的全表（首次拿到名字与参数）
+
+| 方法 | 参数 | 尺寸 | 性质 |
+|---|---|---|---|
+| `executeDriverCommand` | `hidl_string` + `_hidl_cb` | 1592 | **HIDL 导出**（§23 的注入点） |
+| `getIniVersion` | `hidl_string` + `_hidl_cb` | 1112 | **HIDL 导出** |
+| `sendIniContent` | `hidl_string` + `_hidl_cb` | 796 | **HIDL 导出** |
+| `runWiFiScript` | `hidl_string`, `hidl_string` | 1160 | **HIDL 导出** |
+| `sendSupplicantCommand` | `hidl_string` | 816 | **HIDL 导出** |
+| `catchSnifferLog` | `uint32`, `uint32` | 1484 | **HIDL 导出** |
+| `setConMode` | `uint32` | 204 | **HIDL 导出** |
+| `changeConnectionMode` | `uint32` | 536 | **HIDL 导出** |
+| `isWifiDriverLoaded` / `resetConnectionMode` / `setupFTMdaemon` / `compressedSnifferFile` / `cleanChildDaemonProcess` | `void` | 368/76/692/240/364 | **HIDL 导出**（无参） |
+| `executeShellCommand` | **`const char*`** | 208 | **内部辅助**（非 HIDL：HIDL 用 `hidl_string`） |
+| `loadDriver` | **`const char*, const char*`** | 192 | **内部辅助** |
+| `executeDaemonCommand` | **`const char*`** | 472 | **内部辅助** |
+| `filterModuleName` / `checkIfStringSafe` | `std::string` | 304/376 | **内部辅助** |
+| `internalSignalHandler` | `int` | 264 | 信号处理 |
+
+**判据**：HIDL 导出方法一律用 `hidl_string`/`hidl_vec`/标量；出现 `const char*` 或 `std::string` 的一定是 C++ 内部函数。
+⇒ 真正**可被 binder 调用**的是前 13 个，`executeShellCommand` 等 5 个不在接口上（只能由其它方法内部调用）。
+
+> 与 §22 的对齐：§22 记的是"vtable `@0x1a0a0`，slot2–10 = code1–9"（九类命令）。本节得到 **13 个 HIDL 方法**，
+> 两者**不矛盾**（§22 只映射了 Java 侧可达的九类），但**方法与 code 的完整对应尚未建立** —— 登记为待办，不影响 §8.1 的判据。
+
+### 8.4 G-S1 / G-S2 状态
+
+| 缺口 | 状态 |
+|---|---|
+| **G-S1**（HAL 是否把 system_server 句柄递进本域） | **闭合、否证**：无 `readStrongBinder`、不实现标准 IWifi、方法无回调入参 |
+| **G-S2**（Java 侧 `OplusWifiHalService` 如何处理回调里的字符串） | **新登记**。需要 system_server 的 Java 侧代码（`framework.jar` / `services.jar` 的 odex 反编译），本地未存 |
+| G-S3（`engineermode_app` 的 transfer 路径） | 低优先，未动 |
+
+**可证伪条件（补进 §7 第 11 条）**：
+(a) 发现该服务在任何版本里出现 `readStrongBinder`；
+(b) 发现它同时注册了 `android.hardware.wifi@x::IWifi`（那才有 `registerEventCallback` 入参）；
+(c) 发现接口里存在 `sp<...Callback>` 型入参。

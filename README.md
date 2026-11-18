@@ -13,11 +13,11 @@
 | Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22。**v2.14 探针**：`CapEff=CapBnd=0x13000`（`sys_admin` 从不在 Permitted/Bounding 内）、`/mnt/vendor/persist/wlan` 实测 `mnt_vendor_file`（`0777`）、`crash_dump` 域转换可判别成立但零收益（§24.9） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
-> **📌 审阅入口（v2.19 · 本轮提交审核）**
+> **📌 审阅入口（v2.20 · 本轮提交审核）**
 > 五份材料：`HANDOVER.md` **§25 / §26 / §27 / §28**、`DIAG_DRIVER_AUDIT.md`、`WIFI_DATA_CONSUMER_AUDIT.md`、`SYSTEM_SERVER_BINDER_AUDIT.md`（均在 `artifacts_adb/binder_audit/`）。
 > 结论四条：`/dev/diag` **入口层否证**；Wi-Fi 可写面**消费不构成提权通道**；`system_server` 通道**在"取句柄"处断开**；**root 脚本消费 persist 配置 = 内核面，不是域逃逸**。
-> v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调（见结论 5）。
-> 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.19）](#审阅须知v219) 的「本轮自我更正」。
+> v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调；v2.20 **闭合 G-S1** —— 从 HAL 二进制的 `.gnu_debugdata` 解出 19 个方法签名，证明它**不接收任何 binder 句柄**。
+> 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.20）](#审阅须知v220) 的「本轮自我更正」。
 > **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.19）](#审阅须知v219)。**
 
 ---
@@ -34,7 +34,7 @@
 | **OPPO Wi-Fi 私有事务**（非内核面） | **成立且已利用**（root 服务、shell 可达、字符串进入 `sh -c`、以 uid=0 执行均已实测） | **卡点已移到 SELinux 域逃逸**：`oplus_wifi_service` 域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` ⇒ 不能装 `su`、改 `/system`、读任意 `/data` | **是**（uid=0 已证；可用 root 未证） |
 | **P2 七服务审计**（非内核面） | 不成立（**7/7 全部否证**） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 判不可达**（service_manager 类型；全策略仅 `oplus_kevents` 能 call 其宿主域，shell 零权限） |
 | **root 脚本消费 persist 配置**（v2.18 提出，v2.19 实测下调） | **无新能力（已实测）** | `wifiserver` = `/odm/bin/init.oppo.wifi.sh`（`user root`，`late_start` oneshot）。它检查 `/mnt/vendor/persist/WCNSS_qcom_cfg.ini`（顶层）——**实测该路径不存在**（真文件在 `persist/wlan/`），分支是死的；即便活着，其 `cp` 的源与目标（`targetFile=/mnt/vendor/persist/wlan/…`）**都在本域可写的 `mnt_vendor_file` 内**，等于在我们自己的两个可写位置之间搬运 ⇒ **不提供新能力**。同一脚本读 `bin_version` 只进 `[ -gt ]` 数值比较（实测两边都是 `200`），**不构成注入** |
-| **`system_server` Binder 通道**（v2.17 新增面） | **在取句柄处断开** | 本域对 AIDL 注册表 `servicemanager` **零规则**：无 `binder call`、无 `service_manager find`，`domain` 属性也无全局授予 ⇒ `system_server (binder call)` 只对已持有句柄生效，而句柄拿不到。评审列的三类服务层判定（`checkCallingPermission` / uid==1000 / uid==0）**到不了**。唯一残余 = HAL 回调（G-S1） |
+| **`system_server` Binder 通道**（v2.17 新增面，v2.20 补全） | **在取句柄处断开（双向）** | ① 本域对 AIDL 注册表 `servicemanager` **零规则**：无 `binder call`、无 `service_manager find`，`domain` 属性也无全局授予；② `binder call` 只对已持有句柄生效；③ **HAL 侧也不递句柄**（v2.20）：该服务只注册 `IOppoWifiService`、19 个方法无句柄入参、不导入 `readStrongBinder`。⇒ 评审列的三类服务层判定（`checkCallingPermission` / uid==1000 / uid==0）**到不了**。残余：3 个 `_hidl_cb` 构成**反向数据通道**（HAL→system_server 回传 status+字符串），风险落在 Java 侧处理器 = G-S2 |
 | **Wi-Fi 可写面消费者**（v2.16 新增面） | **不构成提权通道** | 连接门（`connectto` 只有 `init`）、执行门（可写类型 `execute` 域数 = 0）、触发门（触发属性属 `system_prop`）**三道全封**；且消费者域全部无 `system_server` binder，唯一有该通道的是本域 ⇒ 跨域是 DAC 降级（uid 0 → 1010/1000）。本机 supplicant/hostapd 无 `-c`，`fstman` 未部署 |
 | **`/dev/diag`**（diagchar，v2.15 新增面） | **入口层无缺陷** | 42 槽 ioctl（22 有效/20 `-EINVAL`）、**入口三函数逐路径复核穷尽、脚本口径 55/55 拷贝点定长或显式封顶**、`write()` 三条路径长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**、形态与上游**修复后** diag 一致。余量：DCI 解析子树未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** |
 
@@ -258,7 +258,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 
 ---
 
-## 审阅须知（v2.19）
+## 审阅须知（v2.20）
 
 本节是给外部复核者的**靶面说明**：列出五条结论、各自的判据强度、累计自我更正、建议优先攻击的点，以及"什么才算推翻"。
 
@@ -270,7 +270,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 | 2 | `plat_hwservice_contexts` 读不到是**策略约束**而非遗漏 | 该路径标签 `hwservice_contexts_file`；5 份 CIL 全量核对后只有 `hwservicemanager` 持有 read/getattr | **强**（纯策略文本，可 grep 复算） |
 | 3 | **Wi-Fi 可写面消费不构成提权通道** | 三道前置门（连接/执行/触发）逐条封死；消费者域 binder 目标全量核对后**只有本域持有 `system_server`** | **中—强**。弱点在**枚举完备性**：消费者集合取自 §24.5 的读方列表**且依赖"本机导入哪份 rc"（G-W5，未证）**——若漏域或 rc 选错，本结论需重评 |
 | 5 | **root 脚本消费 persist 配置 = 无新能力（实测闭合）** | `init.oppo.wifi.sh` 检查 `/mnt/vendor/persist/WCNSS_qcom_cfg.ini`（顶层）→ 实测**不存在**（真文件在 `persist/wlan/`）；且其 `cp` 两端都在本域可写的 `mnt_vendor_file` 内 | **强（已实测）**。连"新能力"都不成立；只剩"内核驱动如何解析该 ini"这个纯内核问题（§25 类），且需动 persist（禁写） |
-| 4 | **`system_server` 通道在"取句柄"处断开** | 本域对 `servicemanager` **零规则**（无 `binder call`、无 `service_manager find`，`domain` 属性亦无全局授予）；`binder call` 只对已持有句柄生效 | **强**（纯策略，可 grep 复算）。弱点：**只覆盖"按名字取服务"这一路**；"别人递句柄"（HAL 回调，G-S1）未审 |
+| 4 | **`system_server` 通道在"取句柄"处断开** | ①本域对 `servicemanager` **零规则**（无 `binder call`、无 `service_manager find`）；②`binder call` 只对已持有句柄生效；③**HAL 侧也不递句柄**——二进制只注册 `IOppoWifiService`、无句柄入参、不导入 `readStrongBinder` | **强**（策略可 grep、二进制可复算）。残余：`_hidl_cb` 反向数据通道（G-S2，Java 侧） |
 
 ### 本轮自我更正（v2.17）
 
