@@ -124,9 +124,12 @@ executeDriverCommand(String v7):
 ### 3.3 两条分支的实际行为
 
 - **iwpriv 分支**（`0x9a60`，历史测试实际走的）：
-  拼 `/odm/bin/iwpriv wlan0 setMonChan <to_string(int)>` → 调 `sub_9f64` regex 校验 →
+  ~~拼 `/odm/bin/iwpriv wlan0 setMonChan <to_string(int)>`~~ → 调 `sub_9f64` regex 校验 →
   命中黑名单或解析失败 ⇒ `-3`；否则 `system()` 执行固定模板命令 ⇒ status 0。
   `myft -h` 无黑名单字符 ⇒ 命令拼装成功 ⇒ status 0（被 Java 判 isSuccess，但执行的是 iwpriv 固定命令）。
+  > **⚠️ v2.12 更正（见 `WIFI_P1_ROOT_COMMAND_AUDIT.md` §2.2）**：本分支实际是
+  > `cmd = "/odm/bin/iwpriv " + <整条原始入参>`（`0x9b38 c_str → 0x9d58 append(cmd,len)`），
+  > **不做整数转换**；`wlan0 setMonChan <to_string(u32)>`（`@0x6b6d` / `0xae8c`）属 **slot3 `catchSnifferLog`**。
 - **myftm 分支**（`0x9b7c`，本次新识别，历史从未走到）：
   ```
   0x9bf4 x21 = sp+0x125            ; 入参[5:]（跳过 "myftm"）原样指针
@@ -172,11 +175,15 @@ executeDriverCommand(String v7):
 | 前缀 | 分支 | 生效命令 | 参数约束 | 结果 |
 |---|---|---|---|---|
 | `myftm…`（5 B 精确匹配） | myftm `0x9b7c` | `/vendor/bin/myftm ` + 入参[5:]（无引号/转义/过滤） | **注入面静态开放**：shell 元字符可被解析；L3 未上机验证 | status 0/-4/-5 |
-| 其它（含 `myft `） | iwpriv `0x9a60` | `/odm/bin/iwpriv wlan0 setMonChan <int>` | regex `[@#$%&*^:;?|]+` 拦截；参数经 `to_string(int)` | status 0/-3/-4/-5 |
+| 其它（含 `myft `） | iwpriv `0x9a60` | `/odm/bin/iwpriv ` + **整条入参**（无转换） | regex `[@#$%&*^:;?|]+` 拦截——**但缺 `\n`/反引号/`<`/`>`**（§22.2）⇒ 同样可穿越 | status 0/-3/-4/-5 |
 | 空串 | — | 无 | `c_str()==NULL` | status -2 `EMPTY_PARAMETER` |
 
-同族接口（同样 root，固定模板，未逐一深挖）：`sendSupplicantCommand`(slot7→`wpa_cli`)、
-`runWiFiScript`(slot8)、`catchSnifferLog`(slot3→`tar … && rm -rf`)、`changeConnectionMode`(slot2→写 `con_mode`)。
+> **v2.12 更正**：上表 iwpriv 行的"`setMonChan <int>` + 经 `to_string(int)`"已作废，见 `WIFI_P1_ROOT_COMMAND_AUDIT.md` §2.2。
+
+同族接口（v2.12 已逐一审计，见 `WIFI_P1_ROOT_COMMAND_AUDIT.md`）：`sendSupplicantCommand`(slot7→`wpa_cli`，regex 过滤)、
+`runWiFiScript`(slot8，前缀校验+regex)、`catchSnifferLog`(slot3→`tar … && rm -rf`，int 入参)、
+`changeConnectionMode`(slot2→`con_mode`，int 入参)、`setupFTMdaemon`(slot6→固定串)、
+`sendIniContent`/`getIniVersion`(slot9/10→固定路径写 / 任意路径读)。**除 `executeDriverCommand` 外均无 shell 可达路径。**
 
 ---
 

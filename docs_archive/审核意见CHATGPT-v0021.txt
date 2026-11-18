@@ -1,0 +1,284 @@
+OPPO K3 ROOT 项目第五次复评：Wi-Fi 路线的“疑似命令注入”已被重新定性
+我重新读取了当前 GitHub main 分支的实际文件，发现这次更新的关键不是新增一个漏洞，而是作者完成了对上一轮审查提出的 myftm 分支疑点的静态复核，并撤回了此前的命令注入判断。
+
+当前版本已经是：
+- HANDOVER.md：v2.9，2026-11-18
+- 新增 WIFI_P0_PARAMETER_TRACE.md
+- 新增 P2_SEVEN_SERVICES_AUDIT.md
+- README 已同步最新 NO-GO 结论
+这次我会特别区分作者已经证明的事实、作者的安全性推论，以及还没有证明的事项。
+当前项目状态
+NO-GO
+
+尚无可行 ROOT 链
+Wi-Fi root 服务链已经确认，但此前疑似的 shell 命令注入路径经静态分析后没有成立。
+
+四条内核候选面
+NO-GO
+
+GhostLock
+缺地址泄露
+
+Wi-Fi 私有事务
+受限 root 工具接口
+
+私有 Binder 补审
+6/7 完成
+
+设备实际 ROOT
+未实现
+
+
+
+一、最重要的变化：myftm 不能再直接判定为命令注入
+上一次我的评审提出了一个疑点：
+参数直接拼接到固定的 /vendor/bin/myftm 后，再交给 sh -c，可能通过 Shell 控制操作符脱离固定程序。
+
+这个疑点在 Shell 语法层面是合理的，但缺少完整的 native 参数校验证据。
+
+现在新版 WIFI_P0_PARAMETER_TRACE.md 补上了这部分证据。
+1. -3 INVAILD_PARAMETER 的来源已经确认
+作者完整追踪了 Java 回调和 native 状态写入点。
+
+native 层在 0x9ddc 写入：
+mov w8, #-3
+str w8, [sp, #0x48]
+
+
+对应错误字符串：
+INVAILD_PARAMETER
+
+
+Java 层只是原样转发 status，没有另外修改返回值。
+
+这排除了之前对 Java 回调错误码的猜测。
+GitHub+1
+
+2. 作者纠正了历史测试的分支判断
+之前测试输入使用了：
+myft 
+
+
+注意这里末尾有一个空格。
+
+真实分支识别是：
+前缀	分支
+myft	iwpriv
+myftm	myftm
+
+因此，历史上的多次 -3 实验实际上都是进入 iwpriv 分支。
+
+这一点作者已经明确纠正，之前那些实验不能作为 myftm 分支的安全性证明。
+3. 新版真正补充了什么？
+作者确认 iwpriv 分支中的 native regex：
+std::regex("[@#$%&*^:;?|]+")
+
+
+能够拒绝之前测试的特殊字符。
+
+并且进一步分离了 myftm 分支与 iwpriv 分支的参数处理。
+
+这次的重要进展是：作者没有再把 -3 简单归因于一个模糊的 HAL 错误，而是定位到了 native 代码的实际状态写入点和分支逻辑。
+GitHub+1
+
+二、我认为 v2.9 仍然存在一个足以改变项目结论的漏洞审计问题
+这是本次复评最重要的独立发现。
+
+我重新阅读了 WIFI_P0_PARAMETER_TRACE.md 第 3.3、4、5 节，发现作者对 myftm 分支的安全性论证仍然不充分。
+1. 两条分支的保护措施其实不一样
+新版自己给出的反汇编结果：
+项目	iwpriv 分支	myftm 分支
+分支入口	非 myftm 五字节前缀	精确匹配 myftm
+命令模板	固定 iwpriv 命令	固定 myftm 路径
+参数处理	转换为整数	原始字符串追加
+regex 黑名单	有	没有
+最后执行	sh -c	sh -c
+
+关键的两条 native 指令：
+append("/vendor/bin/myftm", 17)
+append(input_after_prefix)
+
+
+随后调用：
+execv("/vendor/bin/sh", {sh, "-c", cmd})
+
+
+这已经证明 myftm 的后缀不是整数、枚举或经过相同 regex 验证的参数，而是原始字符串。
+GitHub+1
+
+2. 固定路径拼接并不自动构成安全边界
+作者的论证是：
+参数附加在固定路径后面，无法跳出单个 token。
+
+这个说法存在 Shell 语法错误。
+
+Shell 的控制操作符不要求前面有空格。例如，shell 命令字符串中：
+/vendor/bin/myftm;id
+
+
+分号仍然是命令分隔符。
+
+因此，固定可执行文件路径后面追加未经验证的原始字符串，再交给 sh -c，不能仅凭“没有空格”认定安全。
+
+这不是说已经证明设备存在可用的 root shell，而是说作者目前的反汇编证据不能支持其 NO-GO 结论。
+
+尤其值得注意的是：报告明确写明 myftm 分支不调用 sub_9f64。因此，不能把 iwpriv 分支的 regex 黑名单当成 myftm 分支的保护措施。
+3. 这会改变什么？
+我认为当前应该将 Wi-Fi 结论拆成三个层次：
+事实	当前判断
+shell 能触达 root 服务	已证
+myftm 后缀进入 root 服务的 shell 命令字符串	已证
+myftm 后缀受到完整、可靠的 shell 语法约束	尚未证明
+任意命令执行	尚未实测证实
+最终取得临时 ROOT	未证
+
+这与项目此前的核心错误有本质区别：此前是把参数回显误认为命令执行；这次的问题则是作者从字符串拼接形式推断输入安全，却没有证明 Shell 元字符在该分支中被过滤或正确引用。
+
+我不会把这条路线直接标成已经取得 ROOT，但也不接受它已经被充分否证。
+三、为什么以前的四次注入失败不能排除这个问题？
+这次必须把历史实验重新分类。
+
+作者的新版报告实际上已经承认：
+历史实验	实际走的分支	能证明什么
+myft -h	iwpriv	iwpriv 命令格式合法
+myft id > ...	iwpriv	iwpriv 参数被拒绝
+myft -h; id	iwpriv	iwpriv 参数被拒绝
+myft id \| logger	iwpriv	iwpriv 参数被拒绝
+真正的 myftm 分支	未进行对应的动态验证	不能得出安全结论
+
+
+GitHub+1
+这意味着一个很重要的事实：
+
+作者此前所有注入失败记录，都不是对真正 myftm 分支的有效安全测试。
+
+而新扫描发现的 myftm 分支恰恰没有 regex 黑名单。
+
+另外，Android 使用的 mksh 对 Shell 元字符有明确的语法定义。Android 官方源码仓库的 mksh 手册说明：
+- 未引用的分号是命令分隔符；
+- | 是管道操作符；
+- & 是异步执行操作符；
+- 这些元字符不需要前后存在空格才被识别。
+  Git at Google
+所以，作者所说的“固定路径后面直接追加参数，因此无法跳出 token”，不能作为有效的安全证明。
+
+我认为这是 v2.9 最严重的技术漏洞。
+四、另外两项更新的评价
+1. P2 七服务审计：取得了不错的进展
+新增的：
+
+ P2_SEVEN_SERVICES_AUDIT.md
+
+报告确认：
+- Hephaestus 有 system()，但存在 getCallingUid()==1000 的硬门禁。
+- Hans 没有命令执行原语。
+- Horae 没有命令执行原语。
+- Oiface 只操作固定系统属性。
+- ORMS 没有命令执行原语。
+- AppData 有签名校验。
+- AntiRootDialog 仍未解出。
+6/7 已完成有效审计
+这部分工作总体可靠。
+
+不过，HANDOVER §19 把 P2 标记为完成，严格来说不准确：AntiRootDialog 仍是未知项。
+
+我不会因为这一个未知服务，就否定整个 Binder 审计；但正式报告应该保留这个缺口。
+GitHub+1
+
+2. GhostLock：仍然没有新突破
+目前仍维持：
+- 三条 xattr 栈写入载体。
+- 栈槽复用问题已经静态收束。
+- NUL 截断不构成阻断。
+- fake waiter 依赖非零内核地址。
+- 尚未发现可用的 KASLR 信息泄露途径。
+因此 GhostLock 不是目前的优先方向。
+
+五、项目总体状态应该如何修改？
+我建议用下面这张表替换当前过于绝对的 NO-GO 结论。
+攻击面	最新独立评审
+KGSL CVE-2023-33107	NO-GO
+GhostLock CVE-2026-43499	阻断于地址泄露
+Binder CVE-2023-20938	NO-GO
+Binder CVE-2022-20421	NO-GO
+FastRPC CVE-2023-33063	NO-GO
+Atlas 私有 Binder	NO-GO
+其他六个已审计服务	未发现可用路径
+AntiRootDialog	未审计完成
+Wi-Fi myftm	重新开放 P0
+
+我建议接下来只做三件事
+P0：重新审计 myftm 的 Shell 边界。
+
+重点核对：
+1. input[5:] 是否在进入 std::string::append 之前经过任何字符处理。
+2. 整个调用链是否存在未记录的引号封装、转义或输入规范化。
+3. 生成的命令字符串是否原样传入 sh -c。
+目前已经有足够理由要求重新评审，不需要再重复之前四次错误分支的实验。
+
+P1：检查另外三个 root 命令接口。
+
+报告提到同一个 HIDL 服务还有：
+- sendSupplicantCommand
+- runWiFiScript
+- catchSnifferLog
+它们也涉及字符串拼接或文件操作。不能仅凭 myftm 的结论，就将整个 root HIDL 服务的九类命令全部认定为安全。
+
+P2：补齐 AntiRootDialog。
+
+可以最后做，不应抢占 Wi-Fi 线索的优先级。
+
+六、最终评审意见
+v2.9 项目评审
+不接受直接结项
+
+Conditional GO
+保留 Wi-Fi myftm 作为首要待验证攻击面。
+
+已证明的事实：
+- shell 能访问 Wi-Fi 私有事务的只读入口。
+- 相关 helper 没有 UID 调用者门禁。
+- 下游服务以 root 运行。
+- myftm 分支不经过报告中的 regex 黑名单。
+- 原始字符串被追加进传给 sh -c 的命令字符串。
+尚未证明的事实：
+- shell 对 10070 的危险事务已经完成动态验证。
+- myftm 分支确实允许任意命令执行。
+- 已经取得 uid=0 的实测结果。
+结论：存在重要的潜在命令注入问题，必须重新进行静态审计；暂不能宣布 ROOT 成功。
+
+七、给项目作者的核心审查意见
+我建议直接在 GitHub Issue 中提出以下内容：
+Review: myftm branch token-boundary assumption is insufficient
+The v2.9 static trace establishes the following:
+1. The myftm branch is selected by an exact five-byte prefix.
+2. input[5:] is appended to /vendor/bin/myftm.
+3. This branch does not call sub_9f64 and therefore bypasses the documented regex blacklist.
+4. The resulting command string is passed to /vendor/bin/sh -c.
+The conclusion that appending the suffix to a fixed executable path keeps the input within one shell token is not established.
+
+Android's mksh recognizes unquoted shell metacharacters such as semicolon, pipe and ampersand independently of surrounding whitespace. A fixed executable prefix does not neutralize these operators.
+
+Furthermore, the historical injection attempts used myft  (space as byte five), so they entered the iwpriv branch rather than the actual myftm branch. Their -3 results do not demonstrate that the myftm branch is safe.
+
+Requested audit corrections:
+- Trace every transformation applied to the HIDL string before and after append.
+- Verify whether any quoting, escaping, filtering or normalization occurs on the myftm path.
+- Establish whether the final command reaches sh -c unchanged.
+- Do not classify the myftm branch as NO-GO solely on the basis of the fixed-path/token-boundary argument.
+Until this is resolved, the Wi-Fi myftm path should remain an open P0 security finding, not a closed negative result.
+
+This review does not claim that root execution has been demonstrated. Dynamic verification of transaction 10070 remains outstanding.
+
+
+
+
+我的最终判断：这次更新让项目的资料完整性有了明显提升，但它还没有真正证明 Wi-Fi 路线安全。相反，新发现的 myftm 分支提供了一个此前被错误实验路径掩盖的高价值审计点。
+
+我会冻结四条已经失败的内核路线，但绝不会在当前证据下关闭 Wi-Fi 这条线。
+
+参考：
+- GitHub 当前 README
+- HANDOVER v2.9 §18
+- Wi-Fi P0 参数追踪
+- Android mksh 官方语法文档
