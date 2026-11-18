@@ -22,10 +22,12 @@ public class FtmProbe {
             if (b == null) return;
             int code = args.length > 0 ? Integer.parseInt(args[0]) : 10069;
             String token = args.length > 1 ? args[1] : "android.net.wifi.IOplusWifiManager";
-            System.out.println("CODE=" + code + " TOKEN=" + token);
+            String arg = args.length > 2 ? args[2] : null;
+            System.out.println("CODE=" + code + " TOKEN=" + token + " ARG=" + arg);
             Parcel d = Parcel.obtain();
             Parcel r = Parcel.obtain();
             d.writeInterfaceToken(token);
+            if (arg != null) d.writeString(arg);
             boolean ok = b.transact(code, d, r, 0);
             System.out.println("TRANSACT=" + ok);
             r.setDataPosition(0);

@@ -3,7 +3,7 @@
 | 项 | 值 |
 |---|---|
 | 版本 | **v2.6（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 更正块 + §15 = GhostLock 复核与静态收束，**§16 = OPPO Wi-Fi 私有事务面（root 服务实证 + 可达性实测否定）**。下次会话从本文件 + `GHOSTLOCK_RESCAN.md` + `GHOSTLOCK_NUL_ANALYSIS.md` + `F16_WIFI_FTM_TRACE.md` 直接接手 |
-| 状态 | **整体结论出现实质变化（2026-11-18，待最终实验）。Wi-Fi 私有事务面：真客户端验证 `getFTMState()` 从 shell（uid 2000）调用成功（`INT=0`），对照证明唯一校验是公开的接口描述符、**无 uid 门禁**；下游为 `user root` 的 HIDL 服务且入参直通 `sh -c`（静态已证）。**此前"shell 不可达"是 `service call` 工具造成的假阴性，已作废**（§16.9 / `F16_WIFI_FTM_TRACE.md` §11）；四个内核面维持原有 no-go 判定**
+| 状态 | **结论已实质翻转（2026-11-18 09:40，S1/S2 完成）**：从 shell（uid 2000）经公开接口描述符调用 `wifi` 私有事务 tx10070，传入的字符串被 **uid 0** 的 `OplusWifiHalService.executeDriverCommand` 接收（logcat 逐字回显 + completed successfully），静态已证该入参进入 `sh -c`。**存在未解 BL 的 root 命令执行路径**；按授权边界未执行任何 payload/回显验证。四个内核面维持原判定 |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14、§15 全程只读 |
@@ -51,7 +51,7 @@
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
-| **OPPO Wi-Fi 私有事务**（非内核面）| 成立（root HIDL 服务 + 入参直通 `sh -c`，已证） | **已从 shell 实测可达**（真客户端 tx10069 返回 `INT=0`）；唯一校验是公开描述符，无 uid 门禁。此前"不可达"系 `service call` 工具假阴性，已作废 | §16 / §16.9 |
+| **OPPO Wi-Fi 私有事务**（非内核面）| **成立且已验证到 root 命令构造**：tx10069/10070 从 shell 可达，无 uid 门禁；tx10070 的字符串被 uid 0 服务接收并进入 `sh -c` | 最后一步（payload 回显）按授权边界未执行 | §16 / §16.9 / §16.10 |
 
 ### 1.3 主要资产与代价
 
@@ -957,3 +957,30 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 
 **这条链取代 GhostLock 成为项目主线索**：不再需要内核地址泄露，也不再需要 KGSL / 两个 binder CVE / FastRPC。
 下一步必须先取得明确授权，且只做无副作用探测；详见 `F16_WIFI_FTM_TRACE.md` §11。
+
+### 16.10 终局 S1/S2：字符串被 root 服务接收（2026-11-18 09:40）
+
+用户授权"做到 S2"。判据先登记（`F16_WIFI_FTM_TRACE.md` §12.1），只用一个无害命令串 `myft -h`。
+
+**S1 结果**：
+
+```
+FtmProbe 10070 android.net.wifi.IOplusWifiManager 'myft -h'
+→ TRANSACT=true ; REPLY=00000000 01000000 ; INT=1
+logcat:
+  D OplusWifiHalService: entering executeDriverCommand(myft -h)
+  D OplusWifiHalService: executeDriverCommand(myft -h) completed successfully.
+  D OplusWifiHalService: leaving executeDriverCommand(myft -h) with result =
+```
+
+返回码随命令串变化（10069→0，10070→1），且服务端日志**逐字回显我们传入的字符串**并报告成功。
+结合 §7.4 的逐指令证据（入参 → 命令缓冲 → `std::string::append` → `execv("/vendor/bin/sh", {sh,-c,cmd})`），
+**"用户可控字符串 → root 上下文命令执行"这条能力在本机成立**。
+
+**S2 已执行：停手。** 未跑第二条命令、未跑任何 payload（`id`/`whoami`/写文件/反弹 shell 均无）、
+未构造回显型命令、未观察 `sh -c` stdout；设备侧探针 `ftmprobe.jar` 已清理，`/data/local/tmp` 恢复为空。
+
+**项目结论**：原目标"在不解 BL 的前提下是否存在临时 ROOT 路径"——答案由 no-go 改为
+**"存在一条未解 BL 的 root 命令执行路径；最后一步的现场回显因授权边界未执行"**。
+四个内核面（KGSL / GhostLock / 两个 binder CVE / FastRPC）维持原判定，但不再是必需路径。
+**本文件不构成可操作的提权利用说明**；对外披露应先走厂商协调渠道。

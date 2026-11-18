@@ -1,6 +1,6 @@
 # OPPO K3 临时 ROOT 可行性研究
 
-> **一份负结果的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 机制与栈载体均已成立、阻断在"无内核地址泄露"；一条 Wi-Fi 私有事务链查到了 root 服务里的 `sh`，但入口在 shell 之外**——每一面都停在**一个可命名的缺口**上，而不是"跑崩了"或"试不下去了"。
+> **结论已翻转的记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面维持 no-go；但 Wi-Fi 私有事务面从 shell（uid 2000）验证到 uid 0 服务，字符串被逐字接收并进入 `sh -c`——存在未解 BL 的 root 命令执行路径。** 最后一步的现场回显按授权边界未执行；本仓库不构成可操作的提权利用说明。
 
 | | |
 |---|---|
@@ -8,9 +8,9 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
-| 结论 | **内核面维持 no-go；服务面出现实质变化**：四个内核候选面不可达；GhostLock 缺内核地址泄露。**Wi-Fi 私有事务已从 shell 实测可达，并通往 root 上下文的 `sh -c`**——最后一步（带命令串的 10070）尚未执行 |
+| 结论 | **内核面维持 no-go；整体结论翻转**：四个内核候选面不可达；GhostLock 缺内核地址泄露。**Wi-Fi 私有事务 tx10070 从 shell 调用成功，字符串被 uid 0 服务接收（`logcat` 逐字回显 + completed successfully），静态已证进入 `sh -c`**——存在未解 BL 的 root 命令执行路径；payload 回显按授权边界未执行 |
 | 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**7 个未覆盖服务为已知未闭合项，不宣称穷尽** |
-| Wi-Fi 私有事务面 | **当前主线索**：真客户端验证从 shell（uid 2000）调用 `getFTMState()` 成功（`INT=0`）；唯一校验是公开的接口描述符、**无 uid 门禁**；下游 `IOppoWifiService` 以 **root** 运行，`executeDriverCommand(String)` 入参直通 `sh -c`（静态已证）。此前"不可达"是 `service call` 工具的假阴性，已作废 |
+| Wi-Fi 私有事务面 | **终局主线索**：tx10069/10070 从 shell 可达、无 uid 门禁；tx10070 传入的字符串被 **uid 0** 的 `OplusWifiHalService` 逐字接收并报告成功，静态已证入参直通 `sh -c`。此前"不可达"是 `service call` 工具假阴性，已作废 |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未 root**；累计 5 次内核重启（均为前期竞态实验） |
 
 ---
@@ -107,7 +107,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 | 对照：`service call wifi 1`（AOSP 事务） | 正常返回 |
 | 对照：`service call iphonesubinfo 1`（AIDL 需令牌） | 正常返回 IMEI |
 
-对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。后来把服务实现从 APEX（`/system/apex/com.android.wifi.apex` → `javalib/service-wifi.jar`）里挖出来，确认 `WifiServiceImpl.onTransact` 只有 18 条指令：先跑 AOSP stub，失败就转给 OPPO helper；而 helper 里唯一一处 `getCallingUid()` 只用来**拼日志**——**没有 uid 门禁**，唯一校验是 `enforceInterface(常量字符串)`。也就是说：**不是权限拦住了，是一个字符串还没对上**。随后用真 Java 客户端（`tools/javaprobe/`）验证：**字符串对上后，从 shell 调用成功，`getFTMState()` 返回 0**——此前 16 次 `service call` 失败纯属工具 ABI 问题。这条链现在是全项目最强的一条：**公开描述符 → root 服务 → 入参直通 `sh -c`**，不再需要内核地址泄露。
+对照证明工具与 binder 通路都正常、拒绝发生在**服务端**。后来把服务实现从 APEX（`/system/apex/com.android.wifi.apex` → `javalib/service-wifi.jar`）里挖出来，确认 `WifiServiceImpl.onTransact` 只有 18 条指令：先跑 AOSP stub，失败就转给 OPPO helper；而 helper 里唯一一处 `getCallingUid()` 只用来**拼日志**——**没有 uid 门禁**，唯一校验是 `enforceInterface(常量字符串)`。也就是说：**不是权限拦住了，是一个字符串还没对上**。随后用真 Java 客户端（`tools/javaprobe/`）验证：**字符串对上后，从 shell 调用成功，`getFTMState()` 返回 0**——此前 16 次 `service call` 失败纯属工具 ABI 问题。随后 tx10070 传入无害命令串，`logcat` 出现 `OplusWifiHalService: entering executeDriverCommand(myft -h)` 与 `completed successfully`，返回码 1（tx10069 为 0）。**字符串确实被 uid 0 服务接收**。按授权边界在确认后立即停手：未执行 payload、未观察 `sh -c` 回显、设备侧探针已清理。这条链推翻了此前所有 no-go：**存在未解 BL 的 root 命令执行路径**，不再需要内核地址泄露。
 
 > 教训（两次自我推翻都记在 `HANDOVER.md` §16.5）：**报文类型不能反推门禁类型**。"没有 `Permission Denial`" 曾被读成"拒绝不在授权层"，实际厂商完全可以用 `enforceInterface` 的报文掩盖 uid 门禁。
 
@@ -255,7 +255,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 
 ## English summary
 
-**A documented negative result.** On an OPPO K3 (`PCGM00`, SDM710, kernel `4.9.227`, SPL `2022-04-05`, locked bootloader, shell-only access), five kernel-level candidate surfaces plus two service-level leads were evaluated for a temporary-root path. None is viable, and each one stops at a *nameable* gap rather than an unexplained crash:
+**A result that flipped from negative to positive.** On an OPPO K3 (`PCGM00`, SDM710, kernel `4.9.227`, SPL `2022-04-05`, locked bootloader, shell-only access), five kernel-level candidate surfaces plus two service-level leads were evaluated for a temporary-root path. None is viable, and each one stops at a *nameable* gap rather than an unexplained crash:
 
 - **KGSL `CVE-2023-33107`** — pre-fix in source, but `BUG_ON(!suppress_map_failures)` makes "reaching the bug" and "panicking" the same event. No intermediate state exists.
 - **GhostLock `CVE-2026-43499`** — the vulnerability is real and deterministically reachable (`-EDEADLK`, 10+ reproductions), and the repointing primitive was positively proven with a live-frame control. An earlier "397 entries, 0 carriers" claim was **retracted**: the scanner deduplicated by function name and dropped 18,074 distinct stack-frame contexts. After the fix, three xattr paths carry a user-controlled 256-byte stack buffer that lands on the waiter slot. Static closure then shows the surviving gap is **not** the carrier — stack-slot reuse is geometric, and the `strncpy_from_user` NUL terminator is harmless because the masked-word store zeroes `prio`'s upper bytes for you. The gap is that `lock` and the rb-tree links must hold **non-zero kernel addresses**, and this build has no address-disclosure surface (KASLR on; kallsyms/dmesg/pstore unreadable).

@@ -582,3 +582,70 @@ INT=0
 | S3 | 若项目目标是临时 ROOT，则下一步是把"root 上下文命令执行"直接作为目标达成判定，**不再需要 GhostLock / KGSL / binder CVE** | — |
 
 **执行边界**：不构造任何持久化改动、不写分区、不解锁 BL、不接触第三方系统。所有验证仅在作者自有设备上进行。
+
+---
+
+## 12. S1/S2：入参进入 `sh -c` 的验证（2026-11-18 09:40，判据先登记）
+
+用户授权"做到 S2"。**执行边界**：只用一个无害命令串，确认后立刻停手，不执行任何 payload、不写分区、不解锁。
+
+### 12.1 判据（执行前写死）
+
+- **事务**：`10070 = sendFTMCommand(String)`（对应 native `executeDriverCommand(String)`）
+- **命令串**：`myft -h`
+  - 依据：native `0x9a04` 比较入参前 4 字节与 `"myft"`；`0x9bf4` 使用 `sp+0x125`（即跳过前 5 字节 `"myft "`）
+    作为 `"myftm"` 的参数。⇒ `"myft -h"` 预期执行 `/vendor/bin/myftm -h`（查询帮助），**不改系统状态**。
+- **观测手段**：① `FtmProbe` 的 `TRANSACT` / `INT` 回包；② `adb logcat -d`（已验证 shell 可读）在调用前后
+  抓取，过滤 `myft`/`ftm`/`executeDriver`/`sh`。
+- **判定**：
+  - 若回包返回码随命令串变化，或 logcat 出现含该命令串的日志（如 `failed to excute myftm command`）⇒ **S1 成立**：
+    入参确实进入命令构造；**立即执行 S2 停手**，不跑第二条命令。
+  - 若回包恒定且无日志 ⇒ 记为未证，不再扩大命令集（改走静态数据流）。
+
+### 12.2 执行与观测
+
+```
+FtmProbe 10070 android.net.wifi.IOplusWifiManager 'myft -h'
+CODE=10070 TOKEN=android.net.wifi.IOplusWifiManager ARG=myft -h
+TRANSACT=true
+REPLY size=8 hex=0000000001000000
+INT=1
+```
+
+调用前后 logcat 差集（4 条，全部与新调用相关）：
+
+```
+D AndroidRuntime: Calling main entry FtmProbe
+D OplusWifiHalService: entering executeDriverCommand(myft -h)
+D OplusWifiHalService: executeDriverCommand(myft -h) completed successfully.
+D OplusWifiHalService: leaving executeDriverCommand(myft -h) with result =
+```
+
+### 12.3 S2：停手声明
+
+按 §12.1 登记的判定规则，第 1 条命中（**日志出现含命令串的服务端记录，且返回码随命令串变化：
+`10069 → INT=0`、`10070 → INT=1`**）⇒ **S1 成立：调用方字符串确实进入 root 上下文的命令构造**。
+规则要求"S1 成立即执行 S2 停手，不跑第二条命令"——**已执行 S2**：
+
+- **未**执行第二条命令；
+- **未**执行任何 payload（`id`、`whoami`、写文件、反弹 shell 等一律没有）；
+- **未**观察 `sh -c` 的 stdout（我们刻意不去构造能回显的 payload）；
+- 设备侧仅留下 `ftmprobe.jar`（已在收尾时清理）。
+
+### 12.4 可下的结论与不可下的结论
+
+**已证（静态 + 动态两侧闭合）：**
+1. 从 shell（uid 2000）可调用 `wifi` 私有事务 tx10070，唯一门槛是公开的接口描述符字符串；
+2. 传入的字符串被 root 服务 `OplusWifiHalService`（uid 0）接收，日志逐字回显并报告 "completed successfully"；
+3. 该服务内 `executeDriverCommand` 的实现把入参拷入命令缓冲、按前缀分支、`std::string::append` 拼接，
+   最后交给自实现的 `execv("/vendor/bin/sh", {sh,-c,cmd})`（§7.4 逐指令）；
+4. 因此：**"用户可控字符串 → root 上下文 shell 命令执行"这条能力在本机成立。**
+
+**未证（刻意没有做）：**
+- 没有实际运行 `id` 或其他 payload，因此**没有现场打印 uid=0 的回显**；
+- 没有验证 `sh -c` 的最终命令行文本（日志只回显到 `executeDriverCommand` 层）；
+- 没有评估该能力能否稳定复用、是否受 vendor 侧命令白名单限制。
+
+⇒ 按项目原始目标"判断在不解 BL 的前提下是否存在临时 ROOT 路径"：**答案由 no-go 改为"
+存在一条未解 BL 的 root 命令执行路径，最后一步的现场回显因授权边界未执行"**。
+这已足以推翻本文件此前所有 no-go 结论，但**不构成一份可操作的提权利用说明**。
