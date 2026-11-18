@@ -515,3 +515,70 @@ adb shell "CLASSPATH=/data/local/tmp/ftmprobe.jar app_process /system/bin FtmPro
 2026-11-17 19:0x 与 2026-11-18 08:40 两次掉线，均发生在**长时间空闲后的下一次 adb 调用**上。
 建议：USB 调试（安全设置）保持开启、屏幕常亮、关闭 USB 选择性暂停。掉线后 `adb reconnect` 无效，
 只能物理重插。
+
+---
+
+## 11. 终局：真客户端验证成功——**可达，且无鉴权**（2026-11-18 09:35）
+
+设备重连后执行 `tools/javaprobe/build.sh` 产物（§10），判据先登记后运行：
+
+### 11.1 主结果
+
+```
+adb shell "CLASSPATH=/data/local/tmp/ftmprobe.jar app_process /system/bin FtmProbe \
+           10069 android.net.wifi.IOplusWifiManager"
+BINDER=android.os.BinderProxy@ee322f6
+CODE=10069 TOKEN=android.net.wifi.IOplusWifiManager
+TRANSACT=true
+REPLY size=8 hex=0000000000000000
+INT=0
+```
+
+**`getFTMState()`（无参、只读事务）从 shell uid 2000 调用成功，返回整数 0。**
+
+### 11.2 三组对照（排除误判）
+
+| # | 事务 / 令牌 | 结果 | 含义 |
+|---|---|---|---|
+| 1 | `10069` / `IOplusWifiManager` | `TRANSACT=true`，`INT=0` | **可达**，令牌正确 |
+| 2 | `10069` / `IOplusWifiP2pManager` | `SecurityException: Binder invocation to an incorrect interface` | 该分支**只接受** `IOplusWifiManager`（与 §7 静态一致） |
+| 3 | `10069` / `GARBAGE` | 同样 `SecurityException` | 异常确由**描述符校验**触发，不是工具/连接问题 |
+| 4 | `10999` / `IOplusWifiManager` | `TRANSACT=false`，空回包 | 越界 code 无处理器，与 §9.4.1 一致 |
+
+四组一起证明：
+1. 之前 16 次 `service call` 失败是**调用方 ABI**（`service call` 无法复现 `writeInterfaceToken` 的完整语义），**不是授权**；
+2. `wifi` 服务私有事务的校验**只有接口描述符**这一道，而它是**公开字符串**；
+3. **不存在 uid 门禁**（与 §9.3 静态结论一致）。
+
+### 11.3 对 §8 终局判定的更正（本轮第三次自我推翻）
+
+| §8 的结论 | 更正 |
+|---|---|
+| "实测从 shell 不可达；入口在 shell 之外" | **错**。那是工具造成的假阴性。真客户端证明**从 shell 完全可达**。 |
+| "只对 system_uid 开放，形成循环" | **错**。不存在 uid 判定。 |
+| P1 对 ROOT 目标"无直接价值" | **错**。见 §11.4。 |
+
+这三次更正（§8.2 → §9.3 → §11.3）已完整记入负知识；其共同根因是：**用工具行为推断目标行为**，而没有先排除工具本身的能力边界。
+
+### 11.4 当前判定：这是项目迄今最强的一条已证链
+
+把已证事实串起来：
+
+1. **可达**：shell（uid 2000）→ `wifi` binder tx 10069 → 返回 `INT=0`（§11.1）；
+2. **无鉴权**：唯一校验是公开的接口描述符字符串（§11.2 对照 2/3 + §9.3 静态）；
+3. **root 上下文**：下游 `IOppoWifiService` 的 init rc 是 `user root` + `NET_ADMIN/NET_RAW/SYS_MODULE`（§7.1）；
+4. **入参直通 shell**：`executeDriverCommand(String)` 的 `hidl_string::c_str()` → 命令缓冲 → `std::string::append` → 手写 `execv("/vendor/bin/sh", {sh,-c,cmd})`（§7.4）；
+5. **结构体位置与偏移已算定**：fake waiter `-0x288`、72 B、三条 xattr 载体 84/132/168 B（§15、GHOSTLOCK_NUL_ANALYSIS）。
+
+⇒ **"shell → 公开描述符的私有事务 → root 上下文的 `sh -c`" 这条链，静态与动态两侧都已闭合到最后一个实验步骤**：
+尚未执行的是**带命令串的 10070**（`sendFTMCommand`），因为它会真的在 root 上下文执行参数。
+
+### 11.5 下一步（必须显式授权）
+
+| 步骤 | 内容 | 风险 |
+|---|---|---|
+| S1 | 先做**只读**探测：用真客户端调 `10070`，传入**无副作用的合法命令串**（例如空串或查询型命令），确认回包形态 | 低，但会在 root 服务里拼一次命令 |
+| S2 | 若能确认命令串进入 `sh -c`，则**停手**，不执行任何 payload；把结论写入文档并评估披露路径 | 无 |
+| S3 | 若项目目标是临时 ROOT，则下一步是把"root 上下文命令执行"直接作为目标达成判定，**不再需要 GhostLock / KGSL / binder CVE** | — |
+
+**执行边界**：不构造任何持久化改动、不写分区、不解锁 BL、不接触第三方系统。所有验证仅在作者自有设备上进行。

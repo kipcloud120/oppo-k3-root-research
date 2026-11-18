@@ -3,7 +3,7 @@
 | 项 | 值 |
 |---|---|
 | 版本 | **v2.6（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 更正块 + §15 = GhostLock 复核与静态收束，**§16 = OPPO Wi-Fi 私有事务面（root 服务实证 + 可达性实测否定）**。下次会话从本文件 + `GHOSTLOCK_RESCAN.md` + `GHOSTLOCK_NUL_ANALYSIS.md` + `F16_WIFI_FTM_TRACE.md` 直接接手 |
-| 状态 | **整体 no-go。** 四个内核面判定不可达；GhostLock「载体已闭合、缺一次内核地址泄露」；P1 Wi-Fi 私有事务面「root HIDL 服务 + 无调用者鉴权 + 入参直通 `sh -c`」已证；**外层分派已定位到 `service-wifi.jar` 的 `WifiServiceImpl.onTransact`，且确认无 uid 门禁、唯一校验是接口描述符**；描述符仍未匹配（剩 1 个候选待设备重连验证）（§5.2.4 + §15 + §16 + `F16_WIFI_FTM_TRACE.md` §9）
+| 状态 | **整体结论出现实质变化（2026-11-18，待最终实验）。Wi-Fi 私有事务面：真客户端验证 `getFTMState()` 从 shell（uid 2000）调用成功（`INT=0`），对照证明唯一校验是公开的接口描述符、**无 uid 门禁**；下游为 `user root` 的 HIDL 服务且入参直通 `sh -c`（静态已证）。**此前"shell 不可达"是 `service call` 工具造成的假阴性，已作废**（§16.9 / `F16_WIFI_FTM_TRACE.md` §11）；四个内核面维持原有 no-go 判定**
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14、§15 全程只读 |
@@ -24,7 +24,7 @@
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
 | Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证；**7 个未覆盖服务为已知未闭合项**）|
-| Wi-Fi 私有事务面（最接近"可用"的一条）| **§16**（root HIDL 服务 + 入参直通 `sh -c` 已证；**11 次只读探测证明 shell 不可达**）|
+| Wi-Fi 私有事务面（当前主线索）| **§16 + §16.9**（root 服务 + 入参直通 `sh -c` 已证；**真客户端从 shell 调用成功**，此前"不可达"已作废）|
 
 **三条硬规则**
 
@@ -51,7 +51,7 @@
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
-| **OPPO Wi-Fi 私有事务**（非内核面）| 成立（root HIDL 服务 + 入参直通 `sh -c`，已证） | **入口在 shell 之外**：`wifi` 服务的 `code≥10069` 只对 system_uid 开放；11 次只读探测 + 2 组对照全部被服务端 `enforceInterface` 拒绝 | §16 |
+| **OPPO Wi-Fi 私有事务**（非内核面）| 成立（root HIDL 服务 + 入参直通 `sh -c`，已证） | **已从 shell 实测可达**（真客户端 tx10069 返回 `INT=0`）；唯一校验是公开描述符，无 uid 门禁。此前"不可达"系 `service call` 工具假阴性，已作废 | §16 / §16.9 |
 
 ### 1.3 主要资产与代价
 
@@ -935,3 +935,25 @@ python tools/sdat2img.py <transfer.list> out.dat vendor.img
 
 **判定：门禁是"接口描述符"而非 uid（静态证据一致），但"可达"仍记为未证**——没有一次成功调用就不算。
 详见 `F16_WIFI_FTM_TRACE.md` §9。
+
+### 16.9 终局：真客户端验证成功，此前"不可达"作废（2026-11-18 09:35）
+
+用 `tools/javaprobe/build.sh` 构建的真 Java 客户端（`app_process` 运行，从 shell uid 2000 发起）：
+
+```
+FtmProbe 10069 android.net.wifi.IOplusWifiManager
+→ TRANSACT=true ; REPLY 8B ; INT=0
+```
+
+对照：`10069`+错误令牌/`GARBAGE` → `enforceInterface` 抛错；越界 `10999` → `TRANSACT=false`。
+
+**结论（推翻 §8 与 §16.4/§16.5）：**
+1. **从 shell 完全可达**；此前 16 次 `service call` 失败是**调用方 ABI**（无法复现 `writeInterfaceToken`），
+   不是授权，也不是 uid 门禁；
+2. 唯一校验是公开的接口描述符字符串；
+3. 与 §16.2/§16.3/§16.8 的静态链合并后，
+   **"shell → 公开描述符私有事务 → root 上下文 `sh -c`" 全链已闭合到最后一个实验步骤**
+   （尚未执行 tx `10070` = `sendFTMCommand`，因为它会真的在 root 上下文执行命令串）。
+
+**这条链取代 GhostLock 成为项目主线索**：不再需要内核地址泄露，也不再需要 KGSL / 两个 binder CVE / FastRPC。
+下一步必须先取得明确授权，且只做无副作用探测；详见 `F16_WIFI_FTM_TRACE.md` §11。
