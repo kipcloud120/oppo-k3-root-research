@@ -1,0 +1,56 @@
+diag_cmd_register_tbl                      FROM REG     @0xffffff800860028c  len<-mov x2, x20  <<< 复核
+diag_copy_to_user_log_mask                 TO   REG     @0xffffff8008619dd8  len<-mov x2, x27  <<< 复核
+diag_copy_to_user_msg_mask                 TO   REG     @0xffffff8008619b18  len<-mov x2, x25  <<< 复核
+diag_dbgfs_write_debug                     FROM REG     @0xffffff800861f5fc  len<-mov x2, x20  <<< 复核
+diag_ioctl_dci_event_status                FROM CONST   @0xffffff80085fd7b8  len<-mov w2, #0xa
+diag_ioctl_dci_event_status                TO   CONST   @0xffffff80085fd808  len<-mov w2, #0xa
+diag_ioctl_dci_health_stats                FROM CONST   @0xffffff80085fd5ac  len<-mov w2, #0x1c
+diag_ioctl_dci_health_stats                TO   CONST   @0xffffff80085fd5f4  len<-mov w2, #0x1c
+diag_ioctl_dci_log_status                  FROM CONST   @0xffffff80085fd6a8  len<-mov w2, #0xa
+diag_ioctl_dci_log_status                  TO   CONST   @0xffffff80085fd6f8  len<-mov w2, #0xa
+diag_ioctl_dci_support                     FROM CONST   @0xffffff80085fd4ac  len<-mov w2, #6
+diag_ioctl_dci_support                     TO   CONST   @0xffffff80085fd4f4  len<-mov w2, #6
+diag_ioctl_get_real_time                   FROM CONST   @0xffffff80085fe6f0  len<-mov w2, #8
+diag_ioctl_get_real_time                   TO   CONST   @0xffffff80085fe94c  len<-mov w2, #8
+diag_ioctl_hdlc_toggle                     FROM CONST   @0xffffff80085fec60  len<-mov w2, #1
+diag_ioctl_peripheral_drain_immediate      FROM CONST   @0xffffff80085feb40  len<-mov w2, #1
+diag_ioctl_set_buffering_mode              FROM CONST   @0xffffff80085fe9ec  len<-mov w2, #4
+diag_ioctl_vote_real_time                  FROM CONST   @0xffffff80085fe56c  len<-mov w2, #7
+diag_md_copy_to_user                       TO   CONST   @0xffffff800860efd0  len<-mov w2, #4
+diag_md_copy_to_user                       TO   REG     @0xffffff800860f04c  len<-mov x2, x23  <<< 复核
+diag_md_copy_to_user                       TO   CONST   @0xffffff800860f208  len<-mov w2, #4
+diag_md_copy_to_user                       TO   REG     @0xffffff800860f280  len<-mov x2, x23  <<< 复核
+diag_md_copy_to_user                       TO   CONST   @0xffffff800860f3e0  len<-mov w2, #4
+diag_user_process_dci_apps_data            FROM REG     @0xffffff8008603218  len<-mov x2, x23  <<< 复核
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fce1c  len<-mov w2, #0x28
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fce94  len<-mov w2, #0x14
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fcf4c  len<-mov w2, #4
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fcfa8  len<-mov w2, #0xe
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fd054  len<-mov w2, #4
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fd0a8  len<-mov w2, #4
+diagchar_compat_ioctl                      TO   CONST   @0xffffff80085fd120  len<-mov w2, #2
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fd1bc  len<-mov w2, #4
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fd228  len<-mov w2, #0x14
+diagchar_compat_ioctl                      FROM CONST   @0xffffff80085fd270  len<-mov w2, #0xc
+diagchar_compat_ioctl                      TO   CONST   @0xffffff80085fd3e8  len<-mov w2, #2
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff620  len<-mov w2, #0x30
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff67c  len<-mov w2, #0x14
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff734  len<-mov w2, #4
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff790  len<-mov w2, #0xe
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff83c  len<-mov w2, #4
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff890  len<-mov w2, #4
+diagchar_ioctl                             TO   CONST   @0xffffff80085ff908  len<-mov w2, #2
+diagchar_ioctl                             FROM CONST   @0xffffff80085ff9a4  len<-mov w2, #4
+diagchar_ioctl                             FROM CONST   @0xffffff80085ffa10  len<-mov w2, #0x14
+diagchar_ioctl                             FROM CONST   @0xffffff80085ffa58  len<-mov w2, #0xc
+diagchar_ioctl                             TO   CONST   @0xffffff80085ffbd0  len<-mov w2, #2
+diagchar_read                              TO   CONST   @0xffffff800860078c  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff80086008e8  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff8008600958  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff80086009e8  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff8008600a68  len<-mov w2, #1
+diagchar_read                              TO   CONST   @0xffffff8008600acc  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff8008600c00  len<-mov w2, #4
+diagchar_read                              TO   CONST   @0xffffff8008600c44  len<-mov w2, #4
+diagchar_read                              TO   REG     @0xffffff8008600d44  len<-mov x2, x23  <<< 复核
+# 含拷贝的函数数: 18  扫描符号数: 301

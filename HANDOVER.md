@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.14**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径**。下次会话**从 §17 开始**，再按需查 §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.15**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"**。下次会话**从 §17 开始**，再按需查 §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -40,7 +40,7 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定（v2.14，术语按审核意见 v003 三分）**：
+**判定（v2.15，术语按审核意见 v003 三分）**：
 
 | 术语 | 含义 | 本机状态 |
 |---|---|---|
@@ -52,6 +52,9 @@
 加载模块、属性→init 执行）各被策略断链，唯一可达的域转换 `crash_dump` 零收益。四个内核候选面仍判定不可达；
 GhostLock 仍阻断在"无内核地址泄露"，且已非主线。
 
+**v2.15 追加**：审核意见 v004 指出的第六个面 `/dev/diag` 已完成入口层审计（§25）——**未发现可用缺陷**，
+且该路线与 GhostLock 撞同一面墙（有 bug 也需要内核地址，而本域无泄露口）⇒ 维持冻结，不重开主线。
+
 ### 1.2 逐面结论
 
 | 面 | 机制是否成立 | 卡点 | 章节 |
@@ -61,6 +64,7 @@ GhostLock 仍阻断在"无内核地址泄露"，且已非主线。
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
+| **`/dev/diag`**（diagchar，v2.15 新增面）| **入口层：无缺陷** | 42 槽 ioctl 里 22 个有效、20 个 `-EINVAL`；**入口三函数逐路径复核穷尽；脚本口径 55/55 拷贝点全部定长或显式封顶**（8 个变长逐个给出上界出处）；`write()` 三条命令路径的长度门都收敛到 `diag_mempools[].item_size`；**无 `mmap`**；形态与上游**修复后** diag 一致。余量：DCI 解析子树（G1）未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** | §25 |
 | **OPPO Wi-Fi 私有事务**（非内核面）| **成立并已利用**：tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **L3 已达（§23）**：入参含 `\n` 或反引号即绕过 11 字符黑名单（§22），`sh -c` 在 `u:r:oplus_wifi_service:s0` 域内以 **uid=0** 执行任意命令，两次复现。**卡点移到域逃逸**：该域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` | §23 / §22 / §20 |
 
 ### 1.3 主要资产与代价
@@ -507,6 +511,7 @@ ENOTTY（未实现）3833
    重开条件：**先静态确定 `-3 INVAILD_PARAMETER` 的来源与合法命令格式表**（§16.11 / §17 P0）。
    ⚠️ **不要再猜令牌、不要再用 `service call` 试**（16 次证明是工具 ABI 问题，非授权）；
    **也不要再用元字符试注入**（全部失败且导致 HAL 崩溃）。
+   > **本条已关闭**：§18 定性 `-3`、§20 重开 myftm 分支、§22 定位黑名单缺口、§23 上机取得 uid=0（两次复现）。仅作历史判据保留。
 7. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
 8. **【2026-11-18 v2.14 新增：域逃逸路的可证伪条件】** 出现下列任一条，§24 的"无逃逸"结论即失效，须重评：
    (a) 策略更新后某域对 `wifi_vendor_data_file` / `mnt_vendor_file` / `fuse` / `sdcardfs` 获得 **`execute`**
@@ -516,6 +521,11 @@ ENOTTY（未实现）3833
        （现成范式见 `odm/init.vendor.oppo.connectivity.rc`，但其触发属性不在本域可写类型内）；
    (d) 出现"读方把可写配置文件当命令/路径消费"的**二进制级证据**（§24 只审策略、未审解析逻辑）；
    (e) 出现 shell（非 init）可触发的、`crash_dump_exec` 之外的域转换。
+9. **【2026-11-18 v2.15 新增：`/dev/diag` 的可证伪条件】** 满足任一条才重开 diag（§25 §8.2）：
+   (a) 拿到与本机同源的 diag 源码（`msm-4.9` 分支，且 `diagchar_core.c`/`diagfwd_*.c` 与二进制对得上）⇒ 可做逐行对照；
+   (b) 出现影响 `diag_process_single_dci_pkt` 下游的公开漏洞，且 opcode 集合与本机一致（**0x93/0x94/0x98/0x9a**）；
+   (c) 出现**新的内核地址泄露原语**（本域或更低域）⇒ "有 bug 也用不上"这一条失效。
+   **不重开**：盲目发 ioctl 试错误码、fuzz 驱动、竞态实验（入口层长度门已闭合，期望收益≈0，代价是内核 panic）。
 
 ---
 
@@ -1660,7 +1670,7 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 |---|---|---|
 | R1 | `/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini` 可写（无专属标签 ⇒ `mnt_vendor_file`；init `chmod 0666`；WLAN 驱动配置入口） | **禁止写实验**：跨重启持久化，违反 §11 约定 |
 | R2 | 属性类型过粗（相机 / 显示 / vold 序列号 / modem dump 同在 `vendor_oppo_prop`） | 记录为厂商策略缺陷，不据此构造实验 |
-| R3 | `/dev/diag` 全 ioctl + root + `diag` 组 | **新登记的内核面**（此前 §1.2 五面清单未含），主线已放弃内核原语，不评估 |
+| R3 | `/dev/diag` 全 ioctl + root + `diag` 组 | **v2.15 已审计（§25）**：入口三函数逐路径复核穷尽 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态 ⇒ **入口层否证**；余量仅 DCI 解析子树（G1） |
 | R4 | `vendor_file: module_load` + `SYS_MODULE` | 只能加载既有 `.ko`，不构成新面 |
 
 ### 24.9 探针结果（判据先登记、后执行；2026-11-18 12:31，用户授权）
@@ -1795,3 +1805,116 @@ oplus_kevents  (binder (call))
 | `tools/sepolicy_domain_audit.py` | 改为纳入 5 份 CIL + 各分区 contexts |
 | `tools/prop_trigger_audit.py` | 新增（属性 × init 触发器交叉） |
 | `tools/wifi_exec.py` | 新增（单事务执行器，含 `adb shell` 单字符串踩坑说明） |
+
+---
+
+## 25. 增补：`/dev/diag` 内核接口审计（2026-11-18，纯离线；响应审核意见 v004 P0）
+
+> 完整报告 **`artifacts_adb/binder_audit/DIAG_DRIVER_AUDIT.md`**；原始矩阵 `diag/copy_matrix.txt`。
+> **全程离线**：只用 `firmware_F16/vmlinux.elf`；**0 次上机、0 次 ioctl**。
+
+### 25.1 结论
+
+**未发现可用缺陷。** 入口层（`open`/`read`/`write`/`ioctl`/`compat_ioctl`）的每一次用户态拷贝要么**定长**、
+要么**有显式上界**，且前置内联 `access_ok`、后置 `__check_object_size`；**`/dev/diag` 没有 `mmap`**（符号不存在）。
+R3 由"新攻击面、未审计"降级为「**入口层否证；余量 = 解析子树 + 与 GhostLock 相同的泄露墙**」。
+
+**第二层判读（比第一层更重要）**：即便日后在 diag 找到内存破坏，本项目也用不上——diag 能给的是内核读写，
+而我们连内核地址都拿不到（§23.9：`kallsyms`/`kcore`/`dmesg` 被 MAC 拒、`/proc/modules` 基址恒 0、
+`perf_event_paranoid=3`）。⇒ **diag 路线双重封闭：入口层硬化 + 缺泄露原语。**
+
+### 25.2 方法与规模
+
+| 项 | 值 |
+|---|---|
+| 源 | `firmware_F16/vmlinux.elf`（4.9.227-perf+ 同源；`.kernel` + `.kernel2`） |
+| 扫描域 | `diag*` 函数 **301** 个 |
+| 命中 | **18 个含拷贝的函数 / 56 个拷贝点**；其中 **8 个**长度为寄存器来源（逐个判界），48 个为常量 |
+| 判据 | ①回溯 `w2/x2` 最后一次写：`mov w2,#imm` ⇒ CONST，否则 REG 并人工复盘 ②分派表按 `adrp+add+ldrh+adr+add+br` 解 |
+| 工具 | `tools/kfn.py`（函数级反汇编）、`tools/kcopy.py`（拷贝点上下文）、`tools/klen_scan.py`（全量长度来源扫描） |
+
+### 25.3 `file_operations`
+
+| 操作 | 判定 |
+|---|---|
+| `open` | **无 capability 门禁**；客户端表上限 **0x31**（49），超出 `-ENOMEM` |
+| `read` | 13 处 `copy_to_user`：12 处定长（4/1 B），1 处为内部响应缓冲已填充长度 |
+| `write` | 4 字节命令头 + 载荷；`count ≤ 3` 直接 `-EBADMSG` |
+| `ioctl` | **42 槽**，**22 有效**、**20 个 → `-EINVAL`**（默认分支不触碰用户指针） |
+| `compat_ioctl` | 10 个拷贝点**全部定长**（0x28/0x14/4/0xe/4/4/2/4/0x14/0xc），与原生结构体尺寸镜像 |
+| **`mmap`** | **符号不存在** ⇒ 无"用户态直映内核缓冲"原语 |
+
+### 25.4 八个变长拷贝的判界（摘要）
+
+| 位置 | 上界出处 | 判定 |
+|---|---|---|
+| `diag_cmd_register_tbl` | `ubfx #0x1d,#3` 强制 `count < 2^29` ⇒ `count*8` 不回绕；`kmalloc` 与 `copy` 同源同值 | ✅ |
+| `diag_user_process_dci_apps_data` | `len ≥ 1` ∧ **`len ≤ diag_mempools[0].item_size`** ∧ `access_ok` ∧ `__check_object_size`；`diagmem_alloc` 内再判一次 | ✅ |
+| `diag_copy_to_user_msg_mask` / `log_mask` | 复制前 `cmp ≤ [entry+0x18]`（容量域），再判累计偏移 ≤ 用户 buf_len | ✅ 双向 |
+| `diagchar_read` / `diag_md_copy_to_user` ×2 | 内部缓冲已填充长度，非用户参数 | ✅ |
+| `diag_dbgfs_write_debug` | debugfs 写；**本域不可达** | ⚠️ 不可达 |
+
+### 25.5 `write()` 三条路径的长度门（全部收敛到池尺寸）
+
+| 命令字 | 门 | 
+|---|---|
+| `0x40` | `len ≤ diag_mempools[2].item_size`（`+0x8c`） |
+| `0x80` | `len ≤ 0x4004` **且** `diagmem_alloc` 内 `size ≤ item_size` |
+| `0x400` / `0x100|0x200|0x300` | `len ≤ diag_mempools[0].item_size` |
+
+`diagmem_alloc(driver,size,pool)`：5 项 × 0x34 步长表；`size != 0 && size > item_size` ⇒ 拒绝。
+⇒ **不存在"用户给长度、驱动按固定缓冲拷"的错配**。
+
+### 25.6 post-fix 的 5 条形态判据
+
+① `count` 高位检查（`ubfx #0x1d,#3`）② 每条拷贝前内联 `access_ok`（55/55 无遗漏）
+③ `__check_object_size`（FORTIFY 形态，说明不是 2016 年旧实现）④ `size ≤ item_size` 双判 ⑤ 无 `mmap`。
+> **纪律**：本节只做**形态**对照，**不给任何具体 CVE 编号、不做跨机型移植断言**（审核意见 v004 第二节的提醒成立）。
+
+### 25.7 覆盖度缺口（不得外推为"穷尽"）
+
+| # | 未审 | 何时回来 |
+|---|---|---|
+| G1 | **DCI 报文解析子树**：`diag_process_apps_dci_read_data` → `diag_process_single_dci_pkt`（首字节 0x93/0x94/0x98/0x9a 再分派）及下游。**这是唯一可能藏逻辑/解析缺陷的地方**（长度已封顶，内容未审） | 出现引用该解析器的公开漏洞，或拿到同源源码 |
+| G2 | mask 表 set/get 配对不变量 | set 侧已有三门（`log_code ≥ 8`、`num_items ≥ 1`、`±0xc8` 区间冲突），未发现绕过 |
+| G3 | `diag_md_*` 生命周期 | 仅 `copy_to_user`，方向安全 |
+| G4 | `diag_dbgfs_*` | debugfs 不可达 |
+
+### 25.8 对审核意见 v004 的逐条回应
+
+| 审核意见 | 处置 |
+|---|---|
+| 第七节 P0：审计 ioctl 分派 / 用户数据复制 / 长度验证 / 权限边界 | **完成（二进制级）**。源码不可得，故以 `vmlinux.elf` 为权威源，并在 §25.6 声明形态判据的效力边界 |
+| "其他 Qualcomm 设备上的 diag 漏洞不能直接移植到 K3" | 接受：未引用任何 CVE 编号、未做移植断言 |
+| "不建议未经分析就进行设备侧 ioctl 实验" | 遵守：本轮 0 次上机 |
+| 第八节"若 diag 无问题可正式 NO-GO" | **部分支持**：diag 入口层已否证，但 G1 + 消费面 P1 未穷尽 ⇒ 现在下整体 NO-GO 仍早一步 |
+| 第六节三项更正（版本号 / README 新旧结论并存 / 第二次 uid=0 证据独立归档） | ①②已修（版本表 v2.15、README 同步 7/7）；③ 已于 v2.14 落地（`P1_L3_EVIDENCE.txt` F 节）。**②的 README 部分在本轮一并清理**，见 §25.10 |
+
+### 25.9 P2 状态：`plat_hwservice_contexts` 覆盖度（**未闭合，如实登记**）
+
+审核意见 v004 第七节 P2 要求"完成 platform 侧 `hwservice_contexts` 的缺失核实，避免把未读取的策略部分误称为穷尽审计"。**核实结果：确实读不到，且不是"漏看"。**
+
+| 事实 | 证据 |
+|---|---|
+| 物料里只有 **vendor 侧** | `.build/sepolicy/vendor_hwservice_contexts` 存在；**没有** `plat_hwservice_contexts` |
+| 设备上该文件对被 shell **连 `stat` 都不允许** | `ls -l /system/etc/selinux/` 中该行显示 `-????????? ? ? ? ?`（`getattr` 被拒），同目录其余 8 个文件均 `-rw-r--r-- root root` 正常列出 |
+| 读取直接失败 | `head`/`wc` → `Permission denied`（DAC 上该文件为 root 600，shell 非属主） |
+
+**推断（标明为推断）**：该文件被单独打了高敏标签（同目录其它文件可读），因此受限 root 域也未必能 `getattr`。
+**影响**：§24.10 第 4 项"`plat` 侧 `hwservice_contexts` 未穷尽"**成立且必须保留**；不得把 §24 的策略审计称为"穷尽"。
+
+**闭合方式（需授权，只读）**：用 §23 的事务通道以 `oplus_wifi_service` 域执行一次
+`cat /system/etc/selinux/plat_hwservice_contexts > /data/vendor/wifi/…`（或仅打印前 N 行到 logcat），
+属**只读**、不改设备状态。**未执行——按 §23 约定，上机动作需用户逐次授权。**
+
+### 25.10 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `artifacts_adb/binder_audit/DIAG_DRIVER_AUDIT.md` | **新增**：`/dev/diag` 入口层完整审计（10 节） |
+| `artifacts_adb/binder_audit/diag/copy_matrix.txt` | **新增**：301 符号 / 56 拷贝点原始矩阵 |
+| `tools/kfn.py` | **新增**：函数级反汇编（符号解、跳转表、xrefs；处理 capstone 负 imm） |
+| `tools/kcopy.py` | **新增**：拷贝点 ±10 条上下文 |
+| `tools/klen_scan.py` | **新增**：全量"长度是常量还是寄存器"扫描 |
+| `README.md` | 同步 7/7 与 antirootdialog 闭合，去掉"6/7、未完成"的并存表述；补 v2.15 结论行 |
+| `HANDOVER.md` | 版本表 v2.15；§1.1/§1.2 增 diag 面；§7 增第 9 条；§24.8 R3 状态更新；本 §25（含 §25.9 P2 未闭合登记） |

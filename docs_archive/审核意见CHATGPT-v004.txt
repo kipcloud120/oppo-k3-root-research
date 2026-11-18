@@ -1,0 +1,350 @@
+OPPO K3 ROOT 项目第七次复评：直接 SELinux 域逃逸路线基本被封死，但发现了新的内核攻击面
+这次更新非常关键，但方向与上一次不同。
+
+我重新检查了 GitHub 当前 main 的 README、HANDOVER §24、SELINUX_DOMAIN_AUDIT.md 和 P2_SEVEN_SERVICES_AUDIT.md。
+
+这次新增的工作主要有三项：
+1. 对 oplus_wifi_service 完成五份 SELinux 策略的完整静态审计。
+2. 实测进程真实 capability，排除了之前理论上存在的 CAP_SYS_ADMIN。
+3. 修正 AntiRootDialog 的判断，七个私有 Binder 服务的 shell 可达性审计全部闭合。
+但同时发现一个非常值得注意的新攻击面：root Wi-Fi 服务能够访问 /dev/diag，具有完整 ioctl 权限。
+
+我的最终判断是：
+OPPO K3 PCGM00 / F.16
+部分成功，完整 ROOT 未实现
+
+受限 UID 0 已实现
+v2.14 新审计没有找到普通 SELinux 域逃逸路径，但揭示了新的内核驱动攻击面及跨域数据消费缺口。
+
+Wi-Fi → UID 0 命令执行
+成功
+
+常规 SELinux 域逃逸
+未找到可行路径
+
+GhostLock
+缺内核地址
+
+AntiRootDialog
+shell 不可达
+
+/dev/diag 内核攻击面
+新发现，未审计
+
+完整可用 ROOT
+未实现
+
+
+一、最大的新进展：SELinux 域逃逸审计完成
+新增文件：
+
+SELINUX_DOMAIN_AUDIT.md
+
+作者这次做的不是简单查询几个 allow 规则，而是对设备运行的 SELinux 策略进行系统性整理。
+1. 这次修正了之前的一个重要遗漏
+第一版只读取了三份 CIL 策略文件。
+
+这次发现运行时策略实际由五份 CIL 组成，遗漏了：
+- system_ext_sepolicy.cil
+- product_sepolicy.cil
+补齐后重新运行分析工具：
+24,657
+allow 规则总数
+
+五份 CIL
+
+
+307
+适用于 Wi-Fi 域
+
+含属性继承
+
+
+89
+所属策略属性
+
+含嵌套属性
+
+
+0
+可写类型上的 execute 规则
+
+全策略检查结果
+
+
+
+值得肯定的是，补齐两份策略后，关键否定结论依然成立。
+
+这比单纯说“没有找到漏洞”有更高的证明价值。
+GitHub+2
+
+2. 作者关闭了五类常见逃逸路径
+路线	最新分析	结果
+写入文件，再由高权限域执行	所有可写类型均没有 execute 授权	关闭
+CAP_SYS_ADMIN 挂载覆盖	capability 缺失，策略也不允许 mount	关闭
+加载自定义内核模块	有 module_load，但不能写入 vendor_file	关闭
+修改属性触发 init 执行	11 条命中触发器都没有 start/exec	关闭
+自动切换 SELinux domain	只有 crash_dump 转换，但没有有效收益	暂时关闭
+
+这里最重要的是 CAP_SYS_ADMIN。
+
+此前容易产生一种误解：
+既然是 UID 0，能不能直接 mount 覆盖系统分区？
+
+现在作者实测了：
+实际能力集已确认
+CapInh: 0000000000013000
+CapPrm: 0000000000013000
+CapEff: 0000000000013000
+CapBnd: 0000000000013000
+CapAmb: 0000000000013000
+
+
+0x13000 对应：
+- NET_ADMIN
+- NET_RAW
+- SYS_MODULE
+没有 CAP_SYS_ADMIN，而且 Bounding 集中也没有。
+
+因此，即使后续获得 capset 能力，也不能简单把缺失的 CAP_SYS_ADMIN 提上来。
+
+再加上 SELinux 不允许 mount/remount，这条常见路线基本被双重封闭。
+GitHub+1
+
+
+我的评价：这是本次更新最扎实的负结果。
+
+二、一个更值得关注的新发现：/dev/diag
+新的内核攻击面
+这次我认为最值得进一步研究的地方，并不是作者已经关闭的五条域逃逸路线，而是审计过程中主动登记的 R3 风险。
+
+策略允许：
+(allow oplus_wifi_service diag_device
+    (chr_file (ioctl read write open ...)))
+
+
+结合进程身份：
+uid=0(root)
+group wifi system vendor_qti_diag net_admin
+
+
+意味着当前受限 root 服务具备：
+- 打开 /dev/diag
+- 读写设备
+- 调用 ioctl
+的权限。
+
+这不是 GhostLock，也不是之前研究的 KGSL、Binder 或 FastRPC。
+
+它涉及高通的 DIAG/diagchar 驱动接口。
+
+为什么值得注意？
+
+/dev/diag 是内核与诊断用户空间之间的接口，包含一组复杂的 ioctl 和数据处理逻辑。仓库也明确把它登记为此前五条内核路线之外的新攻击面，并指出该类驱动历史上出现过内存安全漏洞。
+GitHub+2
+
+我的判断
+这是目前最值得重新打开的内核研究方向。
+
+但需要控制预期：
+问题	当前状态
+/dev/diag 可以访问吗？	已有策略和身份依据
+ioctl 权限存在吗？	已确认
+目标内核实现是否有未修复漏洞？	未审计
+是否能获得任意内核读写？	未证明
+能否绕过 SELinux domain？	未证明
+
+我建议先进行匹配目标 4.9.227-perf+ 的驱动源码静态审计，检查 ioctl 分派、用户数据复制、长度验证和权限边界。
+
+尤其要注意：其他 Qualcomm 设备上的 diag 漏洞不能直接移植到 K3。
+
+这条路线可能重新打开内核提权研究，但现在还不能叫做新的 CVE 利用候选。
+
+三、还有一个没有解决的方向：高权限组件如何消费 Wi-Fi 域可写的数据？
+这是本次更新中最容易被忽略、但我认为长期价值很高的研究点。
+
+SELinux 阻止其他域直接执行 Wi-Fi 服务写入的文件。
+
+但：
+
+不能执行文件，不代表不能读取并解析文件。
+
+这两者是不同的安全边界。
+
+作者在 §24.10 已经诚实列出几个未穷尽项目：
+写入位置	读取方	尚未完成的工作
+/data/vendor/wifi	wcnss_service、hostapd、fstman、usage_hidl 等	配置解析逻辑审计
+/mnt/vendor/persist	rild、ueventd、self_init、其他 HAL	二进制解析逻辑审计
+vendor_oppo_prop	包括 system_server	属性值消费逻辑审计
+HIDL 注册面	hwservicemanager	platform 侧映射尚未完整核实
+
+
+GitHub+2
+最值得注意的两个具体问题
+1. WCNSS_qcom_cfg.ini
+
+路径：
+/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini
+
+
+作者发现：
+- 文件属于 mnt_vendor_file。
+- init 设置了 0666 权限。
+- Wi-Fi root 服务有写权限。
+- 它是 WLAN 驱动/固件的配置入口。
+这个文件可能被更高权限的驱动或系统组件消费。
+
+但它是跨重启持久化配置，作者明确禁止对它进行写测试。
+
+我完全赞同这一限制。接下来应当先静态检查消费者的解析逻辑，不应该为了验证假设而修改设备配置。
+
+2. vendor_oppo_prop 属性范围过宽
+
+它不只覆盖 Wi-Fi 属性，还涉及：
+- 相机
+- 显示
+- vold 序列号
+- modem dump
+其中 system_server 也是该属性类型的读取方。
+
+目前未发现属性值被高权限组件直接解释为命令或可执行路径，因此不能认定有漏洞。
+
+但这里存在一个很清晰的研究课题：
+
+Wi-Fi 域写入低信任数据，system_server 或其他高权限组件读取后，是否可能产生逻辑层面的权限混淆？
+
+这比继续寻找一个不存在的 mount 授权更值得投入。
+GitHub+1
+
+
+四、AntiRootDialog：这次终于可以关闭了
+此前这个服务是最后一个没有完整审计的私有 Binder 服务。
+
+本次作者补充读取了 system_ext 和 product 两份策略后，发现了之前的概念错误：
+
+anti_root_dialog_service 不是 SELinux domain，而是一个 service_manager 类型。
+
+真正的宿主：
+com.coloros.exsystemservice
+
+
+运行域：
+color_system_service_app
+
+
+策略显示：
+- color_system_service_app 可以注册、查找这个服务。
+- oplus_kevents 可以查找这个服务。
+- 全策略中能够对 color_system_service_app 执行 Binder call 的域只有 oplus_kevents。
+- shell 没有对应的 service_manager:find 和 Binder call 权限。
+因此，这个服务虽然内部实现没有完整反编译，但从 shell 入口考虑，已经可以判定为不可达。
+GitHub+1
+
+七个服务的 shell 可达性审计：7/7 闭合
+注意，这不意味着 AntiRootDialog 的内部代码已经完整逆向，而是对当前 shell 攻击路径完成了否证。
+
+五、GhostLock 是否还有研究价值？
+我的意见没有改变。
+
+现在已经有了更强的证据：
+
+即使进入 oplus_wifi_service，以 UID 0 执行命令，仍然：
+- 读取不到 /proc/kallsyms。
+- 读取不到 /proc/kcore。
+- 读取不到 /dev/kmsg。
+- 读取不到 KGSL/WLAN 内核 section 地址。
+- /proc/modules 中的模块基址仍为 0。
+而 GhostLock 仍然需要有效的内核对象地址。
+
+因此，Wi-Fi root 服务并没有解决 GhostLock 的地址泄露问题。
+GitHub+1
+
+建议继续冻结 GhostLock
+
+六、我认为这次更新仍有三个问题需要纠正
+研究结论总体不错，但文档和证据管理存在明显不一致。
+1. HANDOVER 版本号没有同步
+文件头仍标注 v2.13，但已经新增 v2.14 的 §24。
+
+建议统一修改到 v2.14。
+2. README 同时保留新旧结论
+README 顶部概述仍写：
+- 七服务只审计 6/7。
+- AntiRootDialog 尚未完成。
+但后面的结论表已经写 7/7，全策略审计也已完成。
+
+这属于明显的版本同步问题。
+GitHub+2
+
+3. 第二次 UID 0 实测证据应该独立归档
+HANDOVER §24.12 记录了第二次 P1UID2 的 uid=0 输出，但目前公开的汇总证据文件 P1_L3_EVIDENCE.txt 我能直接看到的还是第一条完整 uid=0 回显。
+
+建议把两次原始日志各自独立保存并链接，避免将 Java 层 HIDL 返回记录误当成第二份 native 执行证明。
+GitHub+1
+
+
+这不会推翻已经有的 UID 0 实测结果，但能进一步提高项目可复现性。
+
+七、下一阶段应该如何分配研究资源？
+我会重新安排优先级。
+P0：/dev/diag 驱动静态审计
+最高优先级
+
+这是本次发现的新内核入口。
+
+先从匹配的内核源码中确认 diagchar ioctl 的处理路径、数据结构、用户输入边界和现有安全修复情况。不建议未经分析就进行设备侧 ioctl 实验。
+
+P1：高权限配置消费者审计
+高优先级
+
+检查 /data/vendor/wifi 和相关 vendor 属性的高权限读取者，关注配置解析和权限混淆。
+
+特别是 system_server、wcnss_service 和 self_init 的数据处理逻辑。
+
+P2：hwservice_manager 完整性
+补充工作
+
+完成 platform 侧 hwservice_contexts 的缺失核实，避免将尚未读取的策略部分误称为穷尽审计。
+
+继续冻结
+
+KGSL、两个 Binder 内核 CVE、FastRPC、GhostLock。
+
+不写入持久化 WLAN 配置，不做有风险的 crash_dump 附加，不进行盲目竞速实验。
+
+八、最终评审：这一次究竟离完整 ROOT 更近还是更远？
+我的判断是：更清楚了，但没有直接更接近完整 ROOT。
+
+过去项目的主要问题是，不知道 UID 0 为什么无法成为完整 ROOT。
+
+现在原因已经相当明确：
+- Wi-Fi 服务缺少 DAC_OVERRIDE。
+- 实际 capability 只有三个。
+- SELinux 也没有授予常见的文件执行、挂载和域转换路径。
+- GhostLock 地址泄露依然不可用。
+这实际上消除了很多没有希望的研究方向。
+
+但 /dev/diag 的发现，以及高权限组件对低信任数据的消费问题，留下了两个新的可研究方向。
+最终评级
+Partial Success
+
+目标	判断
+BL 锁定下取得 UID 0 命令执行	达成
+通过原 Wi-Fi 域直接获得完整 ROOT	NO-GO
+常规 SELinux 域逃逸	目前无可行链
+/dev/diag 内核攻击面	值得新一轮评审
+其他高权限数据消费者	尚未审计
+持久化 ROOT	未达成
+
+
+我的最终建议：不要再把项目命名为“五个内核漏洞能否提权”的研究。它现在已经进入第二阶段——OPPO 厂商 root 服务的跨域信任边界与 Qualcomm DIAG 内核接口审计。
+
+如果 /dev/diag 后续没有可利用问题，同时共享数据消费者也没有解析缺陷，那么对于这台 PCGM00 F.16，在不解锁 BL 的条件下追求完整 ROOT，就有充分理由正式 NO-GO。
+
+这次真正值得继续的，是这两个剩余攻击面，而不是重新折腾已经闭合的五条老路线。
+
+本次核心资料：
+- HANDOVER.md §24：SELinux 域边界审计
+- SELINUX_DOMAIN_AUDIT.md
+- P2_SEVEN_SERVICES_AUDIT.md
+- GitHub 当前 README

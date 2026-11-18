@@ -1,6 +1,6 @@
 # OPPO K3 临时 ROOT 可行性研究
 
-> **一份负结果加上一次突破的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 阻断在"无内核地址泄露"；但 Wi-Fi 私有事务面在第 5 轮审计 + 外部复评 + 上机验证后被打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18 12:07，两次复现）。** 该 root 处于 SELinux 域 `oplus_wifi_service` 内、受 MAC 限制，**属"受限 root 命令执行"，尚非可用 root**；剩余缺口已从"内存破坏"变成"域逃逸"。七个未覆盖服务审计 6/7（antirootdialog 未完成）。曾有一次"结论翻转"误判，已撤回（§16.11）；本次 L3 与那次误判无关，用的是从未尝试过的 `\n`/反引号载荷。
+> **一份负结果加上一次突破的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 阻断在"无内核地址泄露"；但 Wi-Fi 私有事务面在第 5 轮审计 + 外部复评 + 上机验证后被打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18 12:07，两次复现）。** 该 root 处于 SELinux 域 `oplus_wifi_service` 内、受 MAC 限制，**属"受限 root 命令执行"，尚非可用 root**；剩余缺口已从"内存破坏"变成"域逃逸"。域逃逸静态审计的结论是**该域内无任何可达逃逸路径**（v2.14 / §24）；第七个服务 antirootdialog 已闭合为**不可达**，七服务覆盖 **7/7**；外部复评指出的第六个内核面 `/dev/diag` 已完成入口层审计，**入口层逐路径复核穷尽、55/55 拷贝点判界闭合、无 mmap、post-fix 形态 ⇒ 入口层否证，且与 GhostLock 撞同一面"无内核地址泄露"的墙**（v2.15 / §25）。曾有一次"结论翻转"误判，已撤回（§16.11）；本次 L3 与那次误判无关，用的是从未尝试过的 `\n`/反引号载荷。
 
 | | |
 |---|---|
@@ -25,9 +25,10 @@
 | **binder** `CVE-2022-20421` | 成立（pre-fix 形态确证） | 本机是 **ticket spinlock**，公开技术依赖 qspinlock；原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | 部分 |
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
 | **OPPO Wi-Fi 私有事务**（非内核面） | **成立且已利用**（root 服务、shell 可达、字符串进入 `sh -c`、以 uid=0 执行均已实测） | **卡点已移到 SELinux 域逃逸**：`oplus_wifi_service` 域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` ⇒ 不能装 `su`、改 `/system`、读任意 `/data` | **是**（uid=0 已证；可用 root 未证） |
-| **P2 七服务审计**（非内核面） | 不成立（6/7 定性） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验 | 否（antirootdialog 实现未解出） |
+| **P2 七服务审计**（非内核面） | 不成立（**7/7 全部否证**） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 判不可达**（service_manager 类型；全策略仅 `oplus_kevents` 能 call 其宿主域，shell 零权限） |
+| **`/dev/diag`**（diagchar，v2.15 新增面） | **入口层无缺陷** | 42 槽 ioctl（22 有效/20 `-EINVAL`）、**入口三函数逐路径复核穷尽、脚本口径 55/55 拷贝点定长或显式封顶**、`write()` 三条路径长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**、形态与上游**修复后** diag 一致。余量：DCI 解析子树未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** |
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**，**`/dev/diag` 入口层审计（否证）在 §25**。
 
 ---
 
@@ -117,8 +118,10 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 > **⚠️ v2.10 外部复评更正（§20，来源 `审核意见CHATGPT-v002.txt`）**：上面"myftm 非任意命令执行"的断言**已撤销**——它混淆了 shell 参数分隔与控制操作符。逐指令重建 SSO 结构证实 myftm 分支命令为 `/vendor/bin/myftm <原始尾串>`，**无引号/转义/过滤**，`sh -c` 会解析 `;` `|` `&&` `$()` 等操作符（`0x9c08` 的 `0x22` 是 SSO 长度字节 17<<1，**不是引号**）。⇒ **myftm 注入面静态开放，Wi-Fi P0 重开、待授权验证 L3；仍无 ROOT 成功证据，整体 no-go 不翻转。** 复评结论为 Conditional GO：只针对 myftm 定向复审，不新增 CVE、不急着上机。
 
 **P2 七服务收束（§19）**：6/7 定性。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 未完成（复评为新 P1）**。
+> **状态更新（v2.14 / §24.13）**：该缺口已闭合——`anti_root_dialog_service` 是 service_manager 类型而非域，宿主域 `color_system_service_app` 全策略只有 `oplus_kevents` 能 `binder call`，shell 零权限 ⇒ **判不可达，七服务覆盖 7/7**。上句为 v2.11 时的历史状态。
 
 **复评后新 P0/P1 执行（§21）**：新 P0 补齐静态证据——Java/HIDL 传输全程无过滤；`/vendor/bin/myftm` 是 getopt 工厂工具、system 命令硬编码，但**挡不住外层 `sh -c` 的 `;`**，故 myftm 注入面开放判定维持、L3 仍待授权上机。新 P1 解包 antirootdialog 仍未闭合，新增线索表明它是 native 守护进程（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。**整体 no-go / Conditional GO 不变。**
+> **两处更正**：① antirootdialog 的"native 守护进程 / 独立域"线索**作废**——实测是 APK 宿主（`com.coloros.exsystemservice`）+ service_manager 类型，判不可达（§24.13）；② "L3 待授权"已完成，2026-11-18 12:07 上机取得 uid=0（§23）。
 
 **同族接口与过滤边界（§22）**：把 vtable 的九个槽位全部落地成一张表后，有两个结论：
 
@@ -259,9 +262,8 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
    `\n`/反引号绕过 11 字符黑名单，`sh -c` 以 `uid=0` 执行（§23）。**主缺口转为 SELinux 域逃逸**：
    需要 `allow oplus_wifi_service …:file write` 的落点，或该域可写且被更高权限域消费的路径。
    ⚠️ 仍**不得**表述为"已 root / 可用 root"——域限制已实测（§23.4）。
-7. **【Binder·新 P1】** antirootdialog 解包仍未闭合（§21）：apk/odex/vdex 均无该类；
-   新线索显示它是 **native 守护进程**（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。
-   闭合需完整 factory 镜像或设备只读拉取（需授权）。hephaestus 的 `uid==1000` 门禁否证可靠。详见 §19/§20/§21。
+7. **【Binder·P1，已闭合】** antirootdialog 判**不可达**（§24.13）：`anti_root_dialog_service` 是 **service_manager 类型**而非独立域，宿主为 `com.coloros.exsystemservice`（域 `color_system_service_app`）；全策略中能对该域 `binder call` 的只有 `oplus_kevents`，**shell 零权限**。七服务覆盖度 **7/7**。判定的性质是"策略不给路径"，不是"实现拿不到所以不知道"。
+8. **【`/dev/diag`，v2.15 已审计】** 入口层**未发现可用缺陷**：42 槽 ioctl（22 有效/20 `-EINVAL`）、入口三函数逐路径复核穷尽、55/55 拷贝点定长或显式封顶（8 个变长逐个给出上界出处）、`write()` 三条路径的长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**。重开条件：同源源码、或出现影响 `diag_process_single_dci_pkt` 下游（opcode `0x93/0x94/0x98/0x9a`）的公开漏洞、或出现新的内核地址泄露原语。**不重开**：盲目 ioctl 试错、fuzz、竞态实验（期望收益≈0，代价是 panic）。详见 `HANDOVER.md` §25。
 
 ---
 
@@ -289,9 +291,10 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 - **FastRPC `CVE-2023-33063`** — doubly closed for shell: `O_RDWR` denied by SELinux, and all seven implemented ioctls return `EPERM` on a read-only fd.
 - **OPPO Wi-Fi private transaction** (non-kernel) — **this one worked.** `executeDriverCommand(String)` reaches `vendor.oplus.hardware.wifi@1.1-service` (init rc: **`user root`**), which ships a hand-rolled `execv("/vendor/bin/sh", {sh,-c,cmd})` with nine call sites. The private transaction is reachable from shell (proved with a real Java client: the only gate is a public descriptor string), and the sole input filter is a **11-character regex class** (`@ # $ % & * ^ : ; ? |`) applied after the raw string is appended to `/odm/bin/iwpriv `. It does not cover **newline, backtick, `<` or `>`** — so a payload such as `x
 log -t P1UID `id`` is accepted and `/vendor/bin/sh -c` executes it as **`uid=0(root)`**, `context=u:r:oplus_wifi_service:s0`, reproduced twice on device (2026-11-18 12:07). That domain is MAC-confined (cannot read `/data/system`, `selinuxfs`, `proc_security`), so this is **confined root command execution, not a usable root shell** — the remaining gap is SELinux domain escape, not memory corruption. Raw logs: `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt`, write-up: `HANDOVER.md` §23.
-- **Seven un-audited private services** (non-kernel) — P2 audited 6/7. The only one with `system(caller_string)` (hephaestus) is gated by a native `getCallingUid()==1000` check that rejects shell (uid 2000); the rest have no command-execution primitive or carry signature checks. `IAntiRootDialog`'s implementation remains un-extracted (the sole gap). No shell-reachable root path.
+- **Seven private services** (non-kernel) — P2 audited **7/7, all negatively closed**. The only one with `system(caller_string)` (hephaestus) is gated by a native `getCallingUid()==1000` check that rejects shell (uid 2000); the rest have no command-execution primitive or carry signature checks. `anti_root_dialog_service` turned out to be a *service_manager type*, not a domain: only `oplus_kevents` may `binder call` its host domain (`color_system_service_app`), and shell holds neither `find` nor `call` — **unreachable by policy**, not merely un-extracted. No shell-reachable root path.
+- **`/dev/diag` (diagchar)** — a sixth kernel surface raised by review, audited statically against the 4.9.227 binary. **The entry layer is clean**: 42 ioctl slots (22 handled, 20 return `-EINVAL`), **all user-copy sites in the three entry functions are fixed-size or explicitly bounded** (all 8 variable-length ones traced to a concrete upper bound), all three `write()` command classes converge on `diag_mempools[].item_size`, there is **no `mmap`**, and the code carries the post-fix shape (`count >> 29` guard, inline `access_ok`, `__check_object_size`). Remaining depth is the DCI parser sub-tree (opcodes `0x93/0x94/0x98/0x9a`) — and, decisively, **any kernel bug here would still hit the same wall as GhostLock: this domain has no address disclosure**, so even a perfect memory-corruption primitive would have nothing to point at.
 
-The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and — deliberately — **23 previously "certain" conclusions that were later falsified by this project's own experiments or external review** — including several cases where the author's own reasoning (or a too-eager "no-go" closure) was the thing that broke.
+The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and — deliberately — **25 previously "certain" conclusions that were later falsified by this project's own experiments or external review** — including several cases where the author's own reasoning (or a too-eager "no-go" closure) was the thing that broke.
 
 Start with [`HANDOVER.md`](HANDOVER.md).
 
