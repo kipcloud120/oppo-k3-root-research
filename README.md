@@ -1,6 +1,6 @@
 # OPPO K3 临时 ROOT 可行性研究
 
-> **一份负结果的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与三条服务面线索（Wi-Fi 私有事务、七服务审计）。**四个内核面判定不可达；GhostLock 机制与栈载体均已成立，但阻断在"无内核地址泄露"；Wi-Fi 私有事务可从 shell 触达 root 服务，但 `-3` 归因于 native regex 黑名单 + 固定命令模板、未回显 uid=0；七个未覆盖私有服务经 P2 审计 6/7 定性，无一提供 shell 可达的提权路径。** 每一面都停在**一个可命名的缺口**上。曾有一次"结论翻转"的误判，已由用户指出并撤回（见 `HANDOVER.md` §16.11）。
+> **一份负结果的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索（Wi-Fi 私有事务、七服务审计）。**四个内核面判定不可达；GhostLock 机制与栈载体均已成立，但阻断在"无内核地址泄露"；Wi-Fi 私有事务可从 shell 触达 root 服务，`-3` 归因仅限 iwpriv 分支，而 myftm 分支经外部复评证实注入面静态开放、Wi-Fi P0 重开、待授权验证；七个未覆盖服务审计 6/7（antirootdialog 未完成）。** 每一面都停在**一个可命名的缺口**上。整体维持 no-go，但复评结论为 Conditional GO——继续针对 myftm 定向复审。曾有一次"结论翻转"误判，已撤回（§16.11）。
 
 | | |
 |---|---|
@@ -9,8 +9,8 @@
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
 | 结论 | **no-go**。四个内核候选面不可达；GhostLock 缺内核地址泄露。Wi-Fi 私有事务可从 shell 调、入参被 uid 0 服务接收，**但所有注入均被 `INVAILD_PARAMETER` 拒绝，未回显 `uid=0`，不构成临时 ROOT** |
-| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 7 服务中 6 个**（见 `HANDOVER.md` §19）：hephaestus 唯一有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；antirootdialog 实现未解出为唯一缺口 |
-| Wi-Fi 私有事务面 | 从 shell 可达到 uid 0 服务的 `executeDriverCommand`（唯一门槛是公开描述符），**但注入被参数校验拒绝**：`-3 INVAILD_PARAMETER` 已静态归因于 native regex 黑名单 `[@#$%&*^:;?|]+` + 固定命令模板；历史注入串前缀是 `myft `（非真实的 `myftm`），从未进 myftm 分支。无 uid=0 回显，此前"实锤"为误判已撤回 |
+| 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 6/7**（见 `HANDOVER.md` §19）：hephaestus 有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；**antirootdialog 未完成**，复评为新 P1 |
+| Wi-Fi 私有事务面 | 从 shell 可达到 uid 0 服务的 `executeDriverCommand`（唯一门槛是公开描述符）。`-3 INVAILD_PARAMETER` 仅限 iwpriv 分支的 regex 黑名单；**v2.10 复评重开 myftm 分支**：逐指令证实 cmd=`/vendor/bin/myftm <原始尾串>`，无引号/转义/过滤，`sh -c` 会解析 shell 元字符 ⇒ 注入面静态开放、待授权验证，仍无 uid=0 回显。见 §20 |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未 root**；累计 5 次内核重启（均为前期竞态实验） |
 
 ---
@@ -24,7 +24,7 @@
 | **binder** `CVE-2023-20938` | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间：`is_failure=1 且 failed_at=0` 时清理循环执行 0 次 | — |
 | **binder** `CVE-2022-20421` | 成立（pre-fix 形态确证） | 本机是 **ticket spinlock**，公开技术依赖 qspinlock；原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | 部分 |
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
-| **OPPO Wi-Fi 私有事务**（非内核面） | 部分成立（root 服务、shell 可达、字符串被接收已证；入参直通任意命令**否证**） | **native regex 黑名单 + 固定命令模板**：`-3 INVAILD_PARAMETER` 由 `sub_9f64` 的 `std::regex("[@#$%&*^:;?|]+")` 拒；myftm 前缀为 5 字节、命令恒为 `/vendor/bin/myftm<参数>`，无法跳出固定模板 | 否（受限 root 工具接口） |
+| **OPPO Wi-Fi 私有事务**（非内核面） | 成立（root 服务、shell 可达、字符串被接收已证；myftm 分支注入面静态开放） | **v2.10 重开**：`-3`/regex 仅限 iwpriv 分支；myftm 分支 cmd=`/vendor/bin/myftm <原始尾串>`，无引号/转义/过滤，`sh -c` 解析 shell 元字符。L3 待授权上机验证 | 是（注入面开放，未证提权） |
 | **P2 七服务审计**（非内核面） | 不成立（6/7 定性） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验 | 否（antirootdialog 实现未解出） |
 
 完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P1/P2 的收束分别在 §18 / §19。
@@ -82,7 +82,7 @@ d = 0x110 + Σ(调用链帧)          # 到缓冲区的深度
 
 ---
 
-### 5. 一个 root 服务里的 `sh`：shell 可达，但命令面是受限的
+### 5. 一个 root 服务里的 `sh`：shell 可达，myftm 分支注入面重开
 
 审计一条线索：`OplusWifiHalService.executeDriverCommand(String)` 有 `system()` 但命令模板硬编码（atlas 同款结论）。这次不同——它不是终点，而是链条中间：
 
@@ -112,9 +112,11 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 
 > 教训（三次自我推翻都记在 `HANDOVER.md` §16）：**报文类型不能反推门禁类型，参数回显不能当执行证据**。"没有 `Permission Denial`" 曾被读成"拒绝不在授权层"；`entering executeDriverCommand(...)` 这条入参回显曾被当成"命令已执行"——两次都错。
 
-**P0 静态收束（§18）**：`-3 INVAILD_PARAMETER` 由 native `0x9ddc` 写入，根因是 `sub_9f64` 构造 `std::regex("[@#$%&*^:;?|]+")` 对命令串做黑名单校验；Java 侧 `onValues` 只是 3 指令 lambda 壳、无码表。更关键的是更正了分支判据：进入 myftm 分支需前 5 字节恰为 `myftm`（`0x9a38/0x9a4c` 比较第 5 字节 `'m'`），而历史 4 个注入串全是 `myft `（空格），**从未进 myftm 分支**，走的是 iwpriv 分支（拼 `/odm/bin/iwpriv wlan0 setMonChan <int>` + regex 校验）。myftm 分支命令恒为 `/vendor/bin/myftm<参数>`，是受限 root 工具接口，非任意命令执行。
+**P0 静态定性（§18）**：`-3 INVAILD_PARAMETER` 由 native `0x9ddc` 写入，根因是 `sub_9f64` 的 `std::regex("[@#$%&*^:;?|]+")`；Java 侧 `onValues` 只是 3 指令 lambda 壳、无码表。分支判据更正：进入 myftm 分支需前 5 字节恰为 `myftm`，历史 4 个注入串全是 `myft `（空格），走的是 iwpriv 分支。
 
-**P2 七服务收束（§19）**：审计 atlas 之外 7 个未覆盖私有服务，6/7 定性。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；antirootdialog 实现未解出为缺口。**全局维持 no-go。**
+> **⚠️ v2.10 外部复评更正（§20，来源 `审核意见CHATGPT-v002.txt`）**：上面"myftm 非任意命令执行"的断言**已撤销**——它混淆了 shell 参数分隔与控制操作符。逐指令重建 SSO 结构证实 myftm 分支命令为 `/vendor/bin/myftm <原始尾串>`，**无引号/转义/过滤**，`sh -c` 会解析 `;` `|` `&&` `$()` 等操作符（`0x9c08` 的 `0x22` 是 SSO 长度字节 17<<1，**不是引号**）。⇒ **myftm 注入面静态开放，Wi-Fi P0 重开、待授权验证 L3；仍无 ROOT 成功证据，整体 no-go 不翻转。** 复评结论为 Conditional GO：只针对 myftm 定向复审，不新增 CVE、不急着上机。
+
+**P2 七服务收束（§19）**：6/7 定性。唯一有 `system(可控串)` 的 hephaestus 被 native `getCallingUid()==1000` 硬门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 未完成（复评为新 P1）**。
 
 ---
 
@@ -126,7 +128,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 | 判据形式 | 全部可证伪：帧深区间 `[0x288, 0x2BE]`、连续非零前缀 `81/129/161 B`、`off_end` 三元式形态、spinlock 指令序列、`EPERM` 实测、**可达性二元探测（含对照组）** |
 | 失败可解释 | 每一处失败都能指出"缺哪一环"，而不是"崩了" |
 | 工具化 | 帧计算、载体扫描（含自我推翻的修正版）、NUL 语义取证、符号重建、补丁形态比对均已脚本化，可离线复跑 |
-| 负知识 | 主动记录 **22 条**曾被自己认定为"确定"、后被实验或复审推翻的结论及推翻依据（`HANDOVER.md` §6 / §15.6 / §16.5 / §18 / §19），含本项目自己写的扫描器的漏报、"报文类型可以反推门禁类型"与"参数回显等于执行证据"等误判 |
+| 负知识 | 主动记录 **23 条**曾被自己认定为"确定"、后被实验或外部复审推翻的结论及推翻依据（`HANDOVER.md` §6 / §15.6 / §16.5 / §18 / §19 / §20），含扫描器漏报、"报文类型反推门禁类型"、"参数回显等于执行证据"、以及 v2.10 被外部复评推翻的"myftm 参数无法跳出固定 token" |
 
 ---
 
@@ -239,12 +241,12 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 3. 设备 **SPL 或内核构建变化** → 帧几何、binder 形态、全部符号偏移同时失效，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 任一 → 可定位 panic 精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线。
-6. **【Wi-Fi 私有事务面】** 出现能**绕过 native regex 黑名单 `[@#$%&*^:;?|]+` 与固定命令模板**的新构造
-   （例如让入参跳出 `/vendor/bin/myftm<参数>` 这个 token 边界）→ 才可能把该 root 服务的 `sh -c` 作为第二段接上。
-   ⚠️ 该事务**从 shell 完全可达**（真客户端已证，`getFTMState()` 返回 0），**唯一门槛是公开的接口描述符**；
-   不要再猜令牌、也不要再试 shell 元字符（全部 `INVAILD_PARAMETER`）。详见 §18。
-7. **【P2 七服务面】** 出现能绕过 hephaestus native `uid==1000` 门禁的入口，或补齐 antirootdialog 的
-   odex/vdex 实现（当前唯一缺口）并发现新的可达命令面。详见 §19。
+6. **【Wi-Fi myftm 分支·新 P0】** 当前就是重开状态（§20）：myftm 分支 cmd=`/vendor/bin/myftm <原始尾串>`
+   无引号/转义/过滤、`sh -c` 解析 shell 元字符 ⇒ 注入面静态开放。**下一步先补静态证据**：确认 Java/HIDL
+   传输层与 `/vendor/bin/myftm` 自身是否另有统一过滤；之后若申请授权上机，唯一判据是现场 `uid=0` 回显。
+   ⚠️ 历史 `INVAILD_PARAMETER` 只来自 iwpriv 分支（`myft ` 空格前缀），**不能据此认为 myftm 安全**。
+7. **【Binder·新 P1】** 补齐 antirootdialog 的 odex/vdex 实现（最后 1/7 缺口），确认身份/鉴权/敏感操作。
+   hephaestus 的 `uid==1000` 门禁否证可靠，不因复评改变。详见 §19/§20。
 
 ---
 
@@ -270,10 +272,10 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 - **binder `CVE-2023-20938`** — not introduced in this build (`off_end_offset` sits between `44d8047f1d87` and `32e9f56a96d8`).
 - **binder `CVE-2022-20421`** — pre-fix, but this device uses a **ticket spinlock**, so the public qspinlock-based primitive degrades to "add `0x00010001` to a 4-byte word whose halves must be equal".
 - **FastRPC `CVE-2023-33063`** — doubly closed for shell: `O_RDWR` denied by SELinux, and all seven implemented ioctls return `EPERM` on a read-only fd.
-- **OPPO Wi-Fi private transaction** (non-kernel) — the deepest lead of the project. `executeDriverCommand(String)` reaches `vendor.oplus.hardware.wifi@1.1-service`, whose init rc is **`user root`**; the binary ships a hand-rolled `execv("/vendor/bin/sh", {sh,-c,cmd})` with nine call sites. The private transaction **is reachable from shell** (a real Java client proved it: `getFTMState()` returned 0; the only gate is a public interface-descriptor string). But the "arbitrary command execution" claim was **retracted**: P0 static analysis traced `-3 INVAILD_PARAMETER` to a native `std::regex("[@#$%&*^:;?|]+")` blacklist plus fixed command templates (`/odm/bin/iwpriv wlan0 setMonChan <int>` or `/vendor/bin/myftm<arg>`); the caller's string cannot escape the template. The real myftm prefix is 5 bytes — all historical injection strings used `myft ` (a space) and never entered that branch. No `uid=0` was ever echoed.
+- **OPPO Wi-Fi private transaction** (non-kernel) — the deepest lead of the project. `executeDriverCommand(String)` reaches `vendor.oplus.hardware.wifi@1.1-service`, whose init rc is **`user root`**; the binary ships a hand-rolled `execv("/vendor/bin/sh", {sh,-c,cmd})` with nine call sites. The private transaction **is reachable from shell** (a real Java client proved it: `getFTMState()` returned 0; the only gate is a public interface-descriptor string). `-3 INVAILD_PARAMETER` is attributable to a native regex blacklist in the **iwpriv branch only** (all historical injection strings used `myft ` with a space and never entered the myftm branch). A v2.10 external review **overturned** the earlier claim that the myftm branch was safe: instruction-level reconstruction shows `cmd = "/vendor/bin/myftm " + input[5:]` with **no quoting, escaping, or filtering**, so `sh -c` interprets shell control operators (`; | && $()`). **The myftm injection surface is statically open and re-opened as top priority**; no `uid=0` has been echoed, L3 remains unproven, and overall status stays no-go (review verdict: Conditional GO).
 - **Seven un-audited private services** (non-kernel) — P2 audited 6/7. The only one with `system(caller_string)` (hephaestus) is gated by a native `getCallingUid()==1000` check that rejects shell (uid 2000); the rest have no command-execution primitive or carry signature checks. `IAntiRootDialog`'s implementation remains un-extracted (the sole gap). No shell-reachable root path.
 
-The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and — deliberately — **22 previously "certain" conclusions that were later falsified by this project's own experiments or review** — including several cases where the author's own reasoning was the thing that broke.
+The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and — deliberately — **23 previously "certain" conclusions that were later falsified by this project's own experiments or external review** — including several cases where the author's own reasoning (or a too-eager "no-go" closure) was the thing that broke.
 
 Start with [`HANDOVER.md`](HANDOVER.md).
 
