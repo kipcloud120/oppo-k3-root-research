@@ -26,9 +26,10 @@
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
 | **OPPO Wi-Fi 私有事务**（非内核面） | **成立且已利用**（root 服务、shell 可达、字符串进入 `sh -c`、以 uid=0 执行均已实测） | **卡点已移到 SELinux 域逃逸**：`oplus_wifi_service` 域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` ⇒ 不能装 `su`、改 `/system`、读任意 `/data` | **是**（uid=0 已证；可用 root 未证） |
 | **P2 七服务审计**（非内核面） | 不成立（**7/7 全部否证**） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验；**antirootdialog 判不可达**（service_manager 类型；全策略仅 `oplus_kevents` 能 call 其宿主域，shell 零权限） |
+| **Wi-Fi 可写面消费者**（v2.16 新增面） | **不构成提权通道** | 连接门（`connectto` 只有 `init`）、执行门（可写类型 `execute` 域数 = 0）、触发门（触发属性属 `system_prop`）**三道全封**；且消费者域全部无 `system_server` binder，唯一有该通道的是本域 ⇒ 跨域是 DAC 降级（uid 0 → 1010/1000）。本机 supplicant/hostapd 无 `-c`，`fstman` 未部署 |
 | **`/dev/diag`**（diagchar，v2.15 新增面） | **入口层无缺陷** | 42 槽 ioctl（22 有效/20 `-EINVAL`）、**入口三函数逐路径复核穷尽、脚本口径 55/55 拷贝点定长或显式封顶**、`write()` 三条路径长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**、形态与上游**修复后** diag 一致。余量：DCI 解析子树未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** |
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**，**`/dev/diag` 入口层审计（否证）在 §25**。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**，**域逃逸 P0 静态审计（无出口）在 §24**，**`/dev/diag` 入口层审计（否证）在 §25**，**Wi-Fi 可写面消费者审计（不构成提权通道）在 §26**。
 
 ---
 
@@ -263,7 +264,8 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
    需要 `allow oplus_wifi_service …:file write` 的落点，或该域可写且被更高权限域消费的路径。
    ⚠️ 仍**不得**表述为"已 root / 可用 root"——域限制已实测（§23.4）。
 7. **【Binder·P1，已闭合】** antirootdialog 判**不可达**（§24.13）：`anti_root_dialog_service` 是 **service_manager 类型**而非独立域，宿主为 `com.coloros.exsystemservice`（域 `color_system_service_app`）；全策略中能对该域 `binder call` 的只有 `oplus_kevents`，**shell 零权限**。七服务覆盖度 **7/7**。判定的性质是"策略不给路径"，不是"实现拿不到所以不知道"。
-8. **【`/dev/diag`，v2.15 已审计】** 入口层**未发现可用缺陷**：42 槽 ioctl（22 有效/20 `-EINVAL`）、入口三函数逐路径复核穷尽、55/55 拷贝点定长或显式封顶（8 个变长逐个给出上界出处）、`write()` 三条路径的长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**。重开条件：同源源码、或出现影响 `diag_process_single_dci_pkt` 下游（opcode `0x93/0x94/0x98/0x9a`）的公开漏洞、或出现新的内核地址泄露原语。**不重开**：盲目 ioctl 试错、fuzz、竞态实验（期望收益≈0，代价是 panic）。详见 `HANDOVER.md` §25。
+8. **【Wi-Fi 可写面消费者，v2.16 已审计】** 结论 **不构成提权通道**：三条前置门全封死（本域 `connectto` 只有 `init`；可写类型上 `execute` 的域数 = 0；`sys.oplus.wifi.dump.trigger` 属 `system_prop` 无 `set`）；**且跳板方向反了**——读这些路径的 hostapd / supplicant / wcnss_service / fstman / autochmod **全部无 `system_server` binder**，唯一持有该通道的是本域。本机 supplicant 与 hostapd **均无 `-c <config>`**（配置走 ctrl/HIDL），唯一带 `-c` 的 `fstman` 在 atoll 未部署。重开条件：出现 `-c` 指向可写路径 / 消费者域获得 `system_server`·`vold` 的 `binder call` / 可写类型获得 `execute` / 消费者解析器出现公开漏洞。详见 `HANDOVER.md` §26。
+9. **【`/dev/diag`，v2.15 已审计】** 入口层**未发现可用缺陷**：42 槽 ioctl（22 有效/20 `-EINVAL`）、入口三函数逐路径复核穷尽、55/55 拷贝点定长或显式封顶（8 个变长逐个给出上界出处）、`write()` 三条路径的长度门全收敛到 `diag_mempools[].item_size`、**无 `mmap`**。重开条件：同源源码、或出现影响 `diag_process_single_dci_pkt` 下游（opcode `0x93/0x94/0x98/0x9a`）的公开漏洞、或出现新的内核地址泄露原语。**不重开**：盲目 ioctl 试错、fuzz、竞态实验（期望收益≈0，代价是 panic）。详见 `HANDOVER.md` §25。
 
 ---
 

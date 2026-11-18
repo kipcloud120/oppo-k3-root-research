@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.15**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"**。下次会话**从 §17 开始**，再按需查 §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.16**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"**。下次会话**从 §17 开始**，再按需查 §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -64,6 +64,7 @@ GhostLock 仍阻断在"无内核地址泄露"，且已非主线。
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
+| **Wi-Fi 可写面消费者**（v2.16 新增面）| **不构成提权通道** | 三条前置门全封死：连接（本域 `connectto` 只有 `init`，hostapd 控制口在我们可写目录里也连不上）、执行（可写类型上 `execute` 的域数 = 0）、触发（`sys.oplus.wifi.dump.trigger` 属 `system_prop`，无 `set`）。**且跳板方向反了**：读这些路径的域（hostapd/supplicant/wcnss_service/fstman/autochmod）**全部无 `system_server` binder**，唯一有的是本域 ⇒ 跨域是 DAC 降级。本机 supplicant/hostapd **均无 `-c <config>`**，唯一带 `-c` 的 `fstman` 在 atoll 未部署 | §26 |
 | **`/dev/diag`**（diagchar，v2.15 新增面）| **入口层：无缺陷** | 42 槽 ioctl 里 22 个有效、20 个 `-EINVAL`；**入口三函数逐路径复核穷尽；脚本口径 55/55 拷贝点全部定长或显式封顶**（8 个变长逐个给出上界出处）；`write()` 三条命令路径的长度门都收敛到 `diag_mempools[].item_size`；**无 `mmap`**；形态与上游**修复后** diag 一致。余量：DCI 解析子树（G1）未穷尽 + 与 GhostLock 同一面"无内核地址泄露"的墙 ⇒ **有 bug 也用不上** | §25 |
 | **OPPO Wi-Fi 私有事务**（非内核面）| **成立并已利用**：tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **L3 已达（§23）**：入参含 `\n` 或反引号即绕过 11 字符黑名单（§22），`sh -c` 在 `u:r:oplus_wifi_service:s0` 域内以 **uid=0** 执行任意命令，两次复现。**卡点移到域逃逸**：该域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` | §23 / §22 / §20 |
 
@@ -526,6 +527,13 @@ ENOTTY（未实现）3833
    (b) 出现影响 `diag_process_single_dci_pkt` 下游的公开漏洞，且 opcode 集合与本机一致（**0x93/0x94/0x98/0x9a**）；
    (c) 出现**新的内核地址泄露原语**（本域或更低域）⇒ "有 bug 也用不上"这一条失效。
    **不重开**：盲目发 ioctl 试错误码、fuzz 驱动、竞态实验（入口层长度门已闭合，期望收益≈0，代价是内核 panic）。
+10. **【2026-11-18 v2.16 新增：Wi-Fi 消费面的可证伪条件】** 满足任一条才重开（§26.6）：
+   (a) 本机 rc 中 `hostapd`/`wpa_supplicant` 出现 `-c <我们可写的路径>`（当前二者都不带 `-c`）；
+   (b) `fstman` 在本机型启用且其 `-c /data/vendor/wifi/fstman.ini` 生效（当前：atoll 无该服务定义）；
+   (c) 某消费者域获得 `system_server`/`vold`/`installd` 的 `binder call`（当前全为 0）；
+   (d) 某可写类型获得 `execute`（同第 8 条 (a)）；
+   (e) 出现影响上述消费者**配置解析器**的公开漏洞，且该消费者在本机运行。
+   **不重开**：往 `/data/vendor/wifi` 写"像配置"的文件做试探、改 `persist` 下任何内容。
 
 ---
 
@@ -1932,3 +1940,90 @@ R3 由"新攻击面、未审计"降级为「**入口层否证；余量 = 解析�
 | `tools/klen_scan.py` | **新增**：全量"长度是常量还是寄存器"扫描 |
 | `README.md` | 同步 7/7 与 antirootdialog 闭合，去掉"6/7、未完成"的并存表述；补 v2.15 结论行 |
 | `HANDOVER.md` | 版本表 v2.15；§1.1/§1.2 增 diag 面；§7 增第 9 条；§24.8 R3 状态更新；§24.10 第 4 项闭合；本 §25（含 §25.9 P2 离线闭合） |
+
+---
+
+## 26. 增补：Wi-Fi 可写面的高权限消费者审计（2026-11-18；响应审核意见 v004 P1）
+
+> 完整报告 **`artifacts_adb/binder_audit/WIFI_DATA_CONSUMER_AUDIT.md`**。
+> 口径：**策略 CIL + 197 份 init rc + 设备运行态**三源交叉。仅两次 `adb shell` **只读**查询
+> （`ls -l /system/etc/selinux/`、`ps -A`）；**未 push、未写属性、未改任何文件**。
+> **二进制级解析器审计未做**，登记为 G-W1。
+
+### 26.1 结论
+
+**消费面不构成提权通道。** 三条前置门（连接 / 执行 / 触发）全部被策略封死；
+更关键的是**跳板方向是反的**——在只读这些路径的全部域中，**唯一持有 `system_server` binder 通道的是本域自己**。
+跨域收益是 DAC 降级（uid 0 → 1010/1000），唯一例外是 supplicant 的 `keystore` 通道，而它不构成 ROOT。
+
+### 26.2 三条前置门
+
+| 门 | 判定 | 证据 |
+|---|---|---|
+| **连接** | 封死 | 本域 `unix_stream_socket connectto` 目标只有 `init` 一个。hostapd 的全局控制口 `-g /data/vendor/wifi/hostapd/global` **虽在我们可写的目录里**，我们仍连不上 |
+| **执行** | 封死 | 两个可写文件类型上持有 `execute` 的域数 = **0**（§24.5）⇒ `openssl_engine=` 之类"让消费者 dlopen 我们的 .so"在第一步断链（dlopen 需文件 `execute`） |
+| **触发** | 封死 | 唯一"属性 → root 执行脚本"范式的触发属性 `sys.oplus.wifi.dump.trigger` 是 `system_prop`，本域无 `set`（§24.6） |
+
+### 26.3 两个直接落地的负结果（最省事的判死）
+
+1. **`wpa_supplicant` 与 `hostapd` 在本机都没有 `-c <config>`**：
+   `-O/data/vendor/wifi/wpa/sockets -dd -g@android:wpa_wlan0` / `-dd -g /data/vendor/wifi/hostapd/global`
+   ⇒ 配置经 ctrl/HIDL 传入，**不存在"改配置文件让它们按我们的意图工作"这条路径**。
+2. 唯一带 `-c /data/vendor/wifi/fstman.ini`（正是我们可写的路径）的 `fstman`，
+   **在 `atoll`（本机型）的 rc 里没有服务定义，`ps` 也没有该进程** ⇒ 实例死亡。
+   （这条本来是最像"我们写配置 → 高权限消费者解析"的实例，但它没部署。）
+
+### 26.4 决定性判据：跳板方向反了
+
+| 域 | binder 可达目标 | `system_data_file` 写 |
+|---|---|---|
+| `hal_wifi_hostapd_default` | **无任何 binder 规则** | 0 |
+| `hal_wifi_supplicant_default` | `hwservicemanager`、`keystore`、`wifi_keystore_service_server` | 0 |
+| `wcnss_service` | `hwservicemanager`、`vndservicemanager`、`vendor_per_mgr` | 0 |
+| `fstman` | `hwservicemanager` | 0 |
+| `vendor_autochmod` | **无任何 binder 规则**（仅 `connectto init`） | 0 |
+| **`oplus_wifi_service`（本域）** | **`system_server`（call/transfer）**、`hwservicemanager` | 0 |
+
+⇒ 本机"低信任数据被高权限组件消费"的实际形态是：**我们（uid 0、能呼 system_server）写数据 →
+uid 1010/1000、呼不到 system_server 的域去读**。所谓信任边界的"高权限一侧"本就是我们。
+
+**唯一例外（防止过度否定）**：`hal_wifi_supplicant_default` 独有 `keystore` 通道，本域没有。
+但该域无 `system_data_file` 写权、无 `system_server`/`vold` binder ⇒ 进不去 `/data/system`、
+装不了 `su`、改不了 `/system`，**不构成 ROOT**。
+
+### 26.5 缺口（不得外推）
+
+| # | 内容 |
+|---|---|
+| G-W1 | 消费端**解析器**的内存安全缺陷（未做二进制级审计；这是本面唯一残余风险类，0day 级） |
+| G-W2 | `vendor_oppo_prop` 55 条前缀的**值语义**（策略层已确认无"值被当命令/路径解释"，值语义未逐条审计） |
+| G-W3 | `mnt_vendor_file` 的二进制解析（`rild`/`self_init` 读 `persist` 下的 modem/NV 数据；该类路径**禁写**，只能静态看） |
+| G-W4 | 197 份 rc 覆盖多机型，**未逐份确认 sdm710 实际生效的那一份**（已用 `atoll` + `ps` 交叉过滤） |
+
+### 26.6 判定与可证伪条件
+
+**判定**：`本机能写 → 消费者会读 → 读后能越权` 三步中，**第二步与第三步均否证**。
+收益上限 = 同层域内代码执行 + DAC 降级 ⇒ **这条路拿不到完整 ROOT**。
+
+**重开条件（进 §7 主清单第 10 条）**：①本机 rc 中 `hostapd`/`wpa_supplicant` 带 `-c <我们可写的路径>`；
+②`fstman` 在本机型启用且 `-c` 落在 `wifi_vendor_data_file`；③某消费者域获得 `system_server`/`vold`/`installd` 的 `binder call`；
+④某可写类型获得 `execute`；⑤出现影响上述消费者**配置解析器**的公开漏洞且该消费者在本机运行。
+
+**不重开**：往 `/data/vendor/wifi` 写"像配置"的文件做试探；改 `persist` 下任何内容（跨重启持久化）。
+
+### 26.7 对审核意见 v004 第四节 P1 的回应
+
+| 审核意见 | 处置 |
+|---|---|
+| 检查 `/data/vendor/wifi` 与 vendor 属性的高权限读取者 | **完成**（三源交叉，§26.2–26.4） |
+| 关注"配置解析" | **本机无文件配置消费实例**（§26.3 两个负结果） |
+| 关注"权限混淆" | **跳板方向反了**（§26.4） |
+| 特别看 `system_server` / `wcnss_service` / `self_init` | `system_server`：作为 `vendor_oppo_prop` 读方只读值（G-W2 未逐条）；`wcnss_service`：`system` 身份、无 `system_server` binder；`self_init`：读 `mnt_vendor_file`，该类路径禁写（G-W3） |
+| 先静态、不要为验证假设改设备配置 | **遵守**：零写入 |
+
+### 26.8 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `artifacts_adb/binder_audit/WIFI_DATA_CONSUMER_AUDIT.md` | **新增**（8 节） |
+| `HANDOVER.md` | 本 §26；版本表 v2.16；§1.2 增消费面一行；§7 增第 10 条 |
