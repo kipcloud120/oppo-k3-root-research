@@ -1,6 +1,6 @@
 # OPPO K3 临时 ROOT 可行性研究
 
-> **一份负结果的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索（Wi-Fi 私有事务、七服务审计）。**四个内核面判定不可达；GhostLock 机制与栈载体均已成立，但阻断在"无内核地址泄露"；Wi-Fi 私有事务可从 shell 触达 root 服务，其命令拼接点无引号/转义，而唯一的入参过滤（11 字符黑名单）缺 `\n`、反引号与重定向符 ⇒ 注入面静态开放、Wi-Fi P0 重开、待授权验证；七个未覆盖服务审计 6/7（antirootdialog 未完成）。** 每一面都停在**一个可命名的缺口**上。整体维持 no-go，但复评结论为 Conditional GO——继续针对 Wi-Fi 命令拼接面定向复审。曾有一次"结论翻转"误判，已撤回（§16.11）。
+> **一份负结果加上一次突破的完整记录**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与两条服务面线索。**四个内核面判定不可达；GhostLock 阻断在"无内核地址泄露"；但 Wi-Fi 私有事务面在第 5 轮审计 + 外部复评 + 上机验证后被打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18 12:07，两次复现）。** 该 root 处于 SELinux 域 `oplus_wifi_service` 内、受 MAC 限制，**属"受限 root 命令执行"，尚非可用 root**；剩余缺口已从"内存破坏"变成"域逃逸"。七个未覆盖服务审计 6/7（antirootdialog 未完成）。曾有一次"结论翻转"误判，已撤回（§16.11）；本次 L3 与那次误判无关，用的是从未尝试过的 `\n`/反引号载荷。
 
 | | |
 |---|---|
@@ -8,10 +8,10 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，**`Seccomp: 0`** |
-| 结论 | **no-go**。四个内核候选面不可达；GhostLock 缺内核地址泄露。Wi-Fi 私有事务可从 shell 调、入参被 uid 0 服务接收，命令串裸拼进 `sh -c`、过滤仅 11 字符黑名单（缺 `\n`/反引号/`<`/`>`）⇒ **静态注入面开放，但从未回显 `uid=0`，提权未证**，不构成临时 ROOT |
+| 结论 | **受限 root 已达成，可用 root 未达成。** 四个内核候选面不可达；Wi-Fi 私有事务面已打通：从 shell 发 tx 10070、载荷含 `\n` 或反引号即绕过 11 字符黑名单，`sh -c` 以 **`uid=0(root)`**、域 `u:r:oplus_wifi_service:s0` 执行任意命令（2026-11-18 12:07，两次复现）。**但该域受 SELinux 限制**（读不到 `/data/system`、`selinuxfs`、`proc_security`）⇒ 尚非可用 root，缺口是域逃逸 |
 | 私有 Binder 面 | atlas 线索 5/5 闭合、确定否证；**P2 补审 6/7**（见 `HANDOVER.md` §19）：hephaestus 有 `system()` 面但被 native `uid==1000` 门禁挡住 shell，其余无命令面/带签名校验；**antirootdialog 未完成**，复评为新 P1 |
-| Wi-Fi 私有事务面 | 从 shell 可达到 uid 0 服务的 `executeDriverCommand`（唯一门槛是公开描述符）。**v2.10**：myftm 分支 cmd=`/vendor/bin/myftm <原始尾串>`，无引号/转义/过滤 ⇒ 注入面静态开放。**v2.12**：iwpriv 分支同样是裸拼整条入参，而 regex 黑名单只覆盖 11 个字符（**缺 `\n`、反引号、`<`、`>`**）⇒ 注入面**不依赖 myftm 前缀**；同族另三个接口经全镜像检索确认无 Java 调用方（或仅 int 入参），不增加攻击面。L3（`uid=0` 回显）仍未证。见 §22 / §20 |
-| 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未 root**；累计 5 次内核重启（均为前期竞态实验） |
+| Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22 |
+| 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
 ---
 
@@ -24,10 +24,10 @@
 | **binder** `CVE-2023-20938` | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间：`is_failure=1 且 failed_at=0` 时清理循环执行 0 次 | — |
 | **binder** `CVE-2022-20421` | 成立（pre-fix 形态确证） | 本机是 **ticket spinlock**，公开技术依赖 qspinlock；原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | 部分 |
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
-| **OPPO Wi-Fi 私有事务**（非内核面） | 成立（root 服务、shell 可达、字符串被接收、进入 `sh -c` 已证） | **入参过滤不完整**：regex 黑名单只含 `@#$%&*^:;?\|`，缺换行、反引号与重定向符 ⇒ iwpriv 分支可穿越；myftm 分支完全无过滤。L3（`uid=0`）待授权上机 | 是（注入面开放，未证提权） |
+| **OPPO Wi-Fi 私有事务**（非内核面） | **成立且已利用**（root 服务、shell 可达、字符串进入 `sh -c`、以 uid=0 执行均已实测） | **卡点已移到 SELinux 域逃逸**：`oplus_wifi_service` 域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` ⇒ 不能装 `su`、改 `/system`、读任意 `/data` | **是**（uid=0 已证；可用 root 未证） |
 | **P2 七服务审计**（非内核面） | 不成立（6/7 定性） | hephaestus 的 `system(可控串)` 被 native `getCallingUid()==1000` 门禁挡住 shell(2000)；其余无命令原语或带签名校验 | 否（antirootdialog 实现未解出） |
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、结论层次、工具路径与禁止重复的动作都在那里；P0/P2 收束在 §18/§19，外部复评与重开在 §20，复评后新 P0/新 P1 的执行结果在 §21，同族九类命令映射与过滤缺口在 §22，**上机取得受限 root（L3）在 §23**。
 
 ---
 
@@ -82,7 +82,7 @@ d = 0x110 + Σ(调用链帧)          # 到缓冲区的深度
 
 ---
 
-### 5. 一个 root 服务里的 `sh`：shell 可达，myftm 分支注入面重开
+### 5. 一个 root 服务里的 `sh`：从"被拦住"到 `uid=0`（六轮审计的完整弧线）
 
 审计一条线索：`OplusWifiHalService.executeDriverCommand(String)` 有 `system()` 但命令模板硬编码（atlas 同款结论）。这次不同——它不是终点，而是链条中间：
 
@@ -127,7 +127,10 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 
 同时更正一处旧记录：iwpriv 分支**不做**整数转换（`to_string(int)` 与 `setMonChan` 模板属 `catchSnifferLog`），它是把整条原始入参裸拼后只靠 regex 把关。
 
-> 以上均为静态推演；真机上仍**没有一次 `uid=0` 回显**，L3 须授权后以最小副作用方式验证。
+> 以上在 v2.12 时是静态推演。**v2.13 已上机证实**：载荷 `x\nlog -t P1UID `id`` 让 `sh -c` 以
+> `uid=0(root)`、域 `u:r:oplus_wifi_service:s0` 执行，两次复现；`\n` 与反引号确实穿越了过滤器。
+> 但该域被 MAC 限制（读不到 `/data/system`、`selinuxfs`、`proc_security`），**所以这是"受限 root 命令执行"，
+> 不是可用 root**。原始日志见 `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt` 与 `HANDOVER.md` §23。
 
 ---
 
@@ -139,7 +142,7 @@ Java: android.net.wifi.OplusWifiManager → ServiceManager.getService("wifi")
 | 判据形式 | 全部可证伪：帧深区间 `[0x288, 0x2BE]`、连续非零前缀 `81/129/161 B`、`off_end` 三元式形态、spinlock 指令序列、`EPERM` 实测、**可达性二元探测（含对照组）** |
 | 失败可解释 | 每一处失败都能指出"缺哪一环"，而不是"崩了" |
 | 工具化 | 帧计算、载体扫描（含自我推翻的修正版）、NUL 语义取证、符号重建、补丁形态比对均已脚本化，可离线复跑 |
-| 负知识 | 主动记录 **23 条**曾被自己认定为"确定"、后被实验或外部复审推翻的结论及推翻依据（`HANDOVER.md` §6 / §15.6 / §16.5 / §18 / §19 / §20），含扫描器漏报、"报文类型反推门禁类型"、"参数回显等于执行证据"、以及 v2.10 被外部复评推翻的"myftm 参数无法跳出固定 token" |
+| 负知识 | 主动记录 **25 条**曾被自己认定为"确定"、后被实验或外部复审推翻的结论及推翻依据（`HANDOVER.md` §6 / §15.6 / §16.5 / §18 / §19 / §20），含扫描器漏报、"报文类型反推门禁类型"、"参数回显等于执行证据"、以及 v2.10 被外部复评推翻的"myftm 参数无法跳出固定 token" |
 
 ---
 
@@ -252,10 +255,10 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 3. 设备 **SPL 或内核构建变化** → 帧几何、binder 形态、全部符号偏移同时失效，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 任一 → 可定位 panic 精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线。
-6. **【Wi-Fi 命令拼接面·新 P0】** 注入面静态开放（§20/§21/§22）。§22 把过滤器本身也证伪了：
-   黑名单只有 11 个字符，**缺换行/反引号/重定向符**，故注入面不依赖 `myftm` 前缀，iwpriv 分支亦可穿越。
-   **下一步须用户授权上机**，唯一判据是现场 `uid=0` 回显；建议最小验证 `x\nid`（只写 `/data/local/tmp`、单次调用）。
-   ⚠️ 历史 `INVAILD_PARAMETER` 只说明 `;`/`|` 被拦，**不能据此认为该面安全**。
+6. **【Wi-Fi 命令拼接面·已打通】** ✅ 2026-11-18 12:07 上机达成：
+   `\n`/反引号绕过 11 字符黑名单，`sh -c` 以 `uid=0` 执行（§23）。**主缺口转为 SELinux 域逃逸**：
+   需要 `allow oplus_wifi_service …:file write` 的落点，或该域可写且被更高权限域消费的路径。
+   ⚠️ 仍**不得**表述为"已 root / 可用 root"——域限制已实测（§23.4）。
 7. **【Binder·新 P1】** antirootdialog 解包仍未闭合（§21）：apk/odex/vdex 均无该类；
    新线索显示它是 **native 守护进程**（`/data/oplus/kevent` + `send_pid_to_kernel` + 独立 SELinux domain）。
    闭合需完整 factory 镜像或设备只读拉取（需授权）。hephaestus 的 `uid==1000` 门禁否证可靠。详见 §19/§20/§21。
@@ -284,7 +287,8 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 - **binder `CVE-2023-20938`** — not introduced in this build (`off_end_offset` sits between `44d8047f1d87` and `32e9f56a96d8`).
 - **binder `CVE-2022-20421`** — pre-fix, but this device uses a **ticket spinlock**, so the public qspinlock-based primitive degrades to "add `0x00010001` to a 4-byte word whose halves must be equal".
 - **FastRPC `CVE-2023-33063`** — doubly closed for shell: `O_RDWR` denied by SELinux, and all seven implemented ioctls return `EPERM` on a read-only fd.
-- **OPPO Wi-Fi private transaction** (non-kernel) — the deepest lead of the project. `executeDriverCommand(String)` reaches `vendor.oplus.hardware.wifi@1.1-service`, whose init rc is **`user root`**; the binary ships a hand-rolled `execv("/vendor/bin/sh", {sh,-c,cmd})` with nine call sites. The private transaction **is reachable from shell** (a real Java client proved it: `getFTMState()` returned 0; the only gate is a public interface-descriptor string). `-3 INVAILD_PARAMETER` is attributable to a native regex blacklist, but that blacklist covers only eleven characters (`@ # $ % & * ^ : ; ? |`) — **newline, backtick, `<` and `>` pass through**, so validation does not keep the string inside one shell token, and the injection surface does **not** depend on the `myftm` prefix (a v2.10 review already overturned the "safe token" claim for the myftm branch; v2.12 shows the *filtered* iwpriv branch is bypassable too, and that it performs no integer conversion). The other eight vendor commands were mapped slot by slot: `runWiFiScript` and `sendSupplicantCommand` have **no Java caller at all**, `catchSnifferLog` takes only `(int,int)`, and `getIniVersion` is an unreachable arbitrary root file read. **The injection surface is statically open**; no `uid=0` has ever been echoed, L3 remains unproven, and overall status stays no-go (review verdict: Conditional GO).
+- **OPPO Wi-Fi private transaction** (non-kernel) — **this one worked.** `executeDriverCommand(String)` reaches `vendor.oplus.hardware.wifi@1.1-service` (init rc: **`user root`**), which ships a hand-rolled `execv("/vendor/bin/sh", {sh,-c,cmd})` with nine call sites. The private transaction is reachable from shell (proved with a real Java client: the only gate is a public descriptor string), and the sole input filter is a **11-character regex class** (`@ # $ % & * ^ : ; ? |`) applied after the raw string is appended to `/odm/bin/iwpriv `. It does not cover **newline, backtick, `<` or `>`** — so a payload such as `x
+log -t P1UID `id`` is accepted and `/vendor/bin/sh -c` executes it as **`uid=0(root)`**, `context=u:r:oplus_wifi_service:s0`, reproduced twice on device (2026-11-18 12:07). That domain is MAC-confined (cannot read `/data/system`, `selinuxfs`, `proc_security`), so this is **confined root command execution, not a usable root shell** — the remaining gap is SELinux domain escape, not memory corruption. Raw logs: `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt`, write-up: `HANDOVER.md` §23.
 - **Seven un-audited private services** (non-kernel) — P2 audited 6/7. The only one with `system(caller_string)` (hephaestus) is gated by a native `getCallingUid()==1000` check that rejects shell (uid 2000); the rest have no command-execution primitive or carry signature checks. `IAntiRootDialog`'s implementation remains un-extracted (the sole gap). No shell-reachable root path.
 
 The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and — deliberately — **23 previously "certain" conclusions that were later falsified by this project's own experiments or external review** — including several cases where the author's own reasoning (or a too-eager "no-go" closure) was the thing that broke.

