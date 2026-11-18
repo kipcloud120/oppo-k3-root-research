@@ -2,8 +2,8 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.7（交接版）**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），**§17 = 新对话接手清单与下一步优先级**。下次会话**从 §17 开始**，再按需查 §16 / §15 / §14 |
-| 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、`executeDriverCommand` 的入参被 uid 0 服务接收，**但所有注入尝试均被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0，不构成临时 ROOT 实锤**（§16.11）；此前"结论翻转"系误判，已撤回 |
+| 版本 | **v2.8**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8 新增 §18 = P0 静态定性（`-3` 归因 = native regex 黑名单 + 固定命令模板；更正 myftm 前缀判据），P0/P1 已完成**。下次会话**从 §17 开始**，再按需查 §18 / §16 / §15 / §14 |
+| 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、入参被 uid 0 服务接收，**但所有注入均被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0，不构成临时 ROOT 实锤**（§16.11）。**§18（P0 静态）已定性 `-3` = native regex 黑名单 `[@#$%&*^:;?|]+` + 固定命令模板；myftm 分支前缀判据更正为 5 字节；判定为受限 root 工具接口，非任意命令执行** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
 | 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空（§16 的实验探针已清理）；shell `id` 仍为 uid 2000；崩溃的 HAL 已自动重启。累计 5 次内核重启（均在前期竞态实验期） |
@@ -24,7 +24,7 @@
 | 只想避坑 | §6 负知识清单 + §10 方法论 |
 | GhostLock 现状（唯一活面）| **§15**（剩余两项的静态收束）→ §5.2.4 更正块 → §7 第 2 条 |
 | Binder 服务面 | §14（五轮审计：28/35 覆盖、atlas 线索 5/5 闭合否证；**7 个未覆盖服务为已知未闭合项**）|
-| Wi-Fi 私有事务面（当前主线索）| **§16 + §16.9**（root 服务 + 入参直通 `sh -c` 已证；**真客户端从 shell 调用成功**，此前"不可达"已作废）|
+| Wi-Fi 私有事务面（当前主线索）| **§18 → §16 + §16.11**（P0 已定性 `-3` = native regex 黑名单 + 固定命令模板，myftm 前缀判据更正；"入参直通任意命令/实锤"已撤回，维持 no-go）|
 
 **三条硬规则**
 
@@ -51,7 +51,7 @@
 | **binder** CVE-2023-20938 | **不成立**（漏洞未引入） | `off_end_offset` 形态处于 `44d8047f1d87 … 32e9f56a96d8` 之间，`is_failure=1 且 failed_at=0` 时循环 0 次 | §5.3 |
 | **binder** CVE-2022-20421 | 成立（pre-fix 形态确证） | 本机为 **ticket spinlock**，公开技术依赖 qspinlock；本机原语退化为"对两半相等的 4 字节字加 `0x00010001`"，并带 `wfe` 死等风险 | §5.3 |
 | **FastRPC** CVE-2023-33063 | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux `EACCES`；只读 fd 上 7 个已实现 ioctl 全 `EPERM` | §5.4 |
-| **OPPO Wi-Fi 私有事务**（非内核面）| tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **注入被 `INVAILD_PARAMETER` 拒绝，无 uid=0 回显，"实锤"已撤回**（§16.11） | §16 / §16.11 |
+| **OPPO Wi-Fi 私有事务**（非内核面）| tx10069/10070 从 shell 可达，字符串被 uid 0 服务接收 | **`-3` 归因 = native regex 黑名单 + 固定命令模板；注入被拒、无 uid=0 回显，"实锤"已撤回**（§16.11 / §18） | §18 / §16 / §16.11 |
 
 ### 1.3 主要资产与代价
 
@@ -466,6 +466,8 @@ ENOTTY（未实现）3833
 | "ion 可作喷堆" | **作废** | `0664`，shell 只有读权限 |
 | "没有 `Permission Denial` ⇒ 拒绝不在授权层"（Wi-Fi 面中途判断，§16.5） | **作废** | 11 次探测全部得到 `Binder invocation to an incorrect interface`，但对照实验证明工具与通路正常、拒绝发生在服务端；厂商可以用 `enforceInterface` 的报文掩盖 uid 门禁 ⇒ **报文类型不能反推门禁类型** |
 | "Wi-Fi 私有事务只差一次正确调用"（同上） | **作废** | 穷尽所有可获得的描述符组合（单令牌 4 种 / 双令牌 4 种排列 / 无参）后仍全部失败；外层分派所在的 `com.android.server.wifi` 实现类不在任何已解出 jar 中 |
+| "`executeDriverCommand` 前缀判据是 4 字节 `myft`，历史注入串进了 myftm 分支"（§7.7 / §16.11，2026-11-18 P0 前） | **更正** | native `0x9a38/0x9a4c` 还比较第 5 字节 `'m'`，真实前缀是 5 字节 `myftm`；历史 4 个注入串全是 `myft `（空格），走的是 iwpriv 分支。见 §18.3 |
+| "`-3 INVAILD_PARAMETER` 的码表在 Java 层 `onValues`" | **更正** | `uD6hk53bOimZNTzE924fVOYf3t8.onValues` 是 3 指令 lambda 壳，无码表；`-3` 在 native `0x9ddc` 写入，根因是 regex 黑名单。见 §18.2 |
 
 ---
 
@@ -652,6 +654,8 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 > 判定"栈槽复用"是几何确定性、NUL 截断不阻断，**缺口因此从"载体/时机"换成"缺一次内核地址泄露"**。
 > 结论仍是 no-go，但理由完全换过了：**不是"没找到能把数据写进去的办法"，而是"数据能写进去，但不知道往哪写"**。
 > 若继续，不要重复同类构造，只看 §7 第 2 条的两类触发条件。
+> **Wi-Fi 面 P0（§18，2026-11-18）已静态收束：`-3` = native regex 黑名单 + 固定命令模板；更正 myftm 前缀为 5 字节
+> （历史注入串全是 `myft `，从未进 myftm 分支）。判定为"受限 root 工具接口"，非任意命令执行，整体 no-go 不翻转；P0/P1 闭合，不建议上机重试。**
 
 ---
 
@@ -1007,7 +1011,9 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 
 ### 17.3 下一步优先级（按推荐顺序）
 
-**P0 — 静态定性 `-3 INVAILD_PARAMETER`（最高优先，纯离线）**
+> **2026-11-18 更新：P0 与 P1 均已由 §18 完成（纯离线）。原计划留在下方供追溯，勾选状态以 §18 为准。**
+
+**~~P0 — 静态定性 `-3 INVAILD_PARAMETER`（最高优先，纯离线）~~ ✅ 已完成，见 §18**
 
 目标：搞清失败发生在哪一层、合法命令格式是什么。步骤：
 
@@ -1019,7 +1025,7 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
    （工具真执行了 vs 仅参数格式合法）；
 4. 产出：`-3` 的确定性归因 + 合法命令格式表。
 
-**P1 — 审固定命令集的实际权限（静态）**
+**~~P1 — 审固定命令集的实际权限（静态）~~ ✅ 已完成（并入 §18）：9 类命令全为固定模板 + 受限参数，iwpriv 参数经 `to_string(int)`、myftm 参数附加在固定路径后 ⇒ 受限 root 工具接口**
 
 `.rodata` 已列 9 类命令：`iwpriv wlan0 setMonChan <int>`、`ftmdaemon`、`myftm`、`wpa_cli`、
 `ifconfig wlan0 up`、`tar … && rm -rf`、`con_mode` 写入、`tcpdump_vendor`、`mkdir -m 777`。
@@ -1047,6 +1053,7 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 |---|---|
 | 主文档 | `HANDOVER.md`（本文件，唯一权威） |
 | Wi-Fi 全证据 | `artifacts_adb/binder_audit/F16_WIFI_FTM_TRACE.md`（§7 静态链 / §9 外层分派 / §11 可达 / §12 撤回）|
+| Wi-Fi P0 归因 | `artifacts_adb/binder_audit/WIFI_P0_PARAMETER_TRACE.md`（`-3` 逐层归因 / myftm 前缀更正 / 合法命令格式表）|
 | GhostLock 静态 | `artifacts_adb/binder_audit/GHOSTLOCK_NUL_ANALYSIS.md` |
 | GhostLock 载体 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md` |
 | Binder 审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md` |
@@ -1067,3 +1074,47 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 - 上机前先 `adb devices`；任何写操作/命令注入都需用户明确授权；
 - 判据先登记再运行，运行后原文追加到对应文档；
 - 崩溃的 HAL 会自动重启，但每次崩溃都产生 tombstone 噪声，避免重复触发。
+
+---
+
+## 18. 增补：P0 静态定性 `-3 INVAILD_PARAMETER`（2026-11-18，纯离线，§17.3 P0/P1 收束）
+
+> 完整逐指令证据见 `artifacts_adb/binder_audit/WIFI_P0_PARAMETER_TRACE.md`。本轮只分析两个已入库二进制
+> （native HAL + `oppo-wifi-service.dex`），**未连设备、无写操作、无重启**。
+
+### 18.1 结论
+
+**`-3` 由 native 侧写入并通过 HIDL 回调透传给 Java；归因是 regex 黑名单校验 + 固定命令模板。
+Java 层 `uD6hk53bOimZNTzE924fVOYf3t8` 只是 3 条指令的 lambda 壳，无码表。** 整体 no-go 不翻转。
+
+### 18.2 `-3` 的完整归因链
+
+| 层 | 结论 | 证据 |
+|---|---|---|
+| Java | `onValues(int,String)` → `setResult(status,value)` 原样转发，无码表；`entering executeDriverCommand(<s>)` 在 **Result 构造函数**里打印 = 入参回显，非执行证据 | dex 反汇编：`uD6hk…` 3 条指令；`isSuccess()` 仅认 status==1 |
+| native | `-3` 写入点 `0x9ddc`，伴随字符串 `INVAILD_PARAMETER@0x697b`，经 `blr [vtable+0x30]` 回调 | slot5 `0x992c` 反汇编 |
+| 根因 | `sub_9f64 @0x9f64` 构造 `std::regex("[@#$%&*^:;?|]+")`（`0x6dcb`，14 B）对命令串做 `regex_search`，命中返回 false ⇒ `-3` | `0x9fc4`/`0x9fe4`/`0xa024` |
+
+native 状态码表：`0`=命令已拼装执行；`-2`=空参数；**`-3`=regex 命中/参数非法**；`-4`=文件不存在；`-5`=执行失败。
+
+### 18.3 关键更正：myftm 前缀判据（推翻 §7.7 的记录）
+
+`0x9a04/0x9a34` 比较前 4 字节 `"myft"`，`0x9a38/0x9a4c` 比较**第 5 字节 `'m'`**，`0x9a5c cbz` 才进 myftm 分支。
+⇒ **进入 myftm 分支的充要条件是前 5 字节恰为 `myftm`**（§7.7 记的"前缀 myft"漏了第 5 字节，已更正）。
+
+**历史 4 次注入串全是 `myft `（第 5 字节空格），从未进 myftm 分支**，实际走 iwpriv 分支
+（`0x9a60`：拼 `/odm/bin/iwpriv wlan0 setMonChan <to_string(int)>` + regex 校验）。这解释了全部日志：
+`myft -h`（无黑名单字符）→ 命令拼装成功 → status 0；含 `;`/`|` 的串 → regex 命中 → `-3`。
+
+### 18.4 固定命令模板（P1 并入本轮）
+
+- **iwpriv 分支**：命令固定 `/odm/bin/iwpriv wlan0 setMonChan <整数>`，入参经 `to_string(int)`，regex 黑名单拦截元字符。
+- **myftm 分支**（`0x9b7c`，历史从未走到）：命令恒为 `/vendor/bin/myftm` + 入参[5:]，追加在固定路径后；
+  **不调 regex**，但同样无法跳出单个 token。两条分支的 `system()` 都是 `0x95b4` =
+  `execv("/vendor/bin/sh",{sh,-c,cmd})`。
+- ⇒ **受限 root 工具接口，不是任意命令执行**；无 `uid=0` 回显，L3 不成立（§17.2）。
+
+### 18.5 下一步
+
+P0/P1 已闭合，**不建议上机重试**：命令模板固定 + regex 黑名单 + token 边界三重约束，现有判据下无法构造可执行新命令。
+重开条件：出现能绕过 token 边界或 regex 的新构造（§7 第 6 条）。P2（七个未覆盖私有服务）仍未启动，纯静态可与本轮并行。
