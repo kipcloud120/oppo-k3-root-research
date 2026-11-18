@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.17**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判**。下次会话**从 §17 开始**，再按需查 §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.18**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判；v2.18=§28 设备在环实测 —— `ro.hardware=qcom` ⇒ 生效 rc 是 `init.wlan.qcom.rc`（G-W5 闭合）；以 `init.svc.*` 重建生效服务集：hostapd/fstman/triggerwifidump **均未定义**，发现两个漏掉的 root 消费者（`wifiserver` 脚本、`wifisar`）**。下次会话**从 §17 开始**，再按需查 §28 / §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -42,7 +42,7 @@
 
 **目标**：在不解 BL 的前提下取得 OPPO K3 的**临时 ROOT**（运行时 uid=0，重启即失）。官方"深度测试"/持久 root 出口（A 线）已按用户决定移除。
 
-**判定（v2.17，术语按审核意见 v003 三分）**：
+**判定（v2.18，术语按审核意见 v003 三分）**：
 
 | 术语 | 含义 | 本机状态 |
 |---|---|---|
@@ -535,7 +535,9 @@ ENOTTY（未实现）3833
    (b) 本域获得 `hal_fstman_hwservice` 的 `hwservice_manager find`，或对 `fstman` 域的 `binder call`（当前二者皆无）；
    (c) 某消费者域获得 `system_server`/`vold`/`installd` 的 `binder call`（当前全为 0）；
    (d) 某可写类型获得 `execute`（同第 8 条 (a)）；
-   (e) 出现影响上述消费者**配置解析器**的公开漏洞，且该消费者在本机运行。
+   (e) 出现影响上述消费者**配置解析器**的公开漏洞，且该消费者在本机运行（**须先用 `init.svc.*` 确认它在本机真的被定义**，v2.18 纪律）；
+   (f) `sys.oplus.wlan.sar_idx` 变成本域可写的属性类型（当前是 `system_prop`，本域只有 `vendor_oppo_prop` 的 `set`）⇒ `wifisar` 可触发；
+   (g) `init.oppo.wifi.sh` 出现把 persist 内容用于**命令位置**（当前只用于 `[ -gt ]` 数值比较）的写法。
    **不重开**：往 `/data/vendor/wifi` 写"像配置"的文件做试探、改 `persist` 下任何内容。
 11. **【2026-11-18 v2.17 新增：`system_server` 通道的可证伪条件】** 满足任一条才重开（§27.6）：
    (a) 本域出现可用的 `servicemanager` 通道（`binder call` 或 `service_manager find`，当前 0 条规则）；
@@ -1663,6 +1665,8 @@ service oppo_wifi_service /odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
 - **关键否定**：11 条里无 `start` / `exec`。本机确有"属性 → root 执行脚本"的现成范式
   （`sys.oplus.wifi.dump.trigger=1 → start triggerwifidump` → `/vendor/bin/sh /odm/bin/init.vendor.wifi.autochmod.sh`），
   但其触发属性属 `system_prop`、`ctl.start` 属 `ctl_start_prop`，**本域都没有 `set`** ⇒ 范式对本域关闭。
+  > **v2.18 实测补充**：`init.svc.triggerwifidump` 在本机为 `[]`（**未定义**）⇒ 上述"现成范式"是 **rc 文本形态、运行态不存在**（§28.2）。
+  > 作为"对本域关闭"的论证仍成立且更强；但**不得**再用它当"本机存在该范式"的证据。
 
 ### 24.7 域转换枚举（唯一一条，零收益）
 
@@ -1958,6 +1962,19 @@ R3 由"新攻击面、未审计"降级为「**入口层否证；余量 = 解析�
 > （`ls -l /system/etc/selinux/`、`ps -A`）；**未 push、未写属性、未改任何文件**。
 > **二进制级解析器审计未做**，登记为 G-W1。
 
+### 26.0 v2.18 实测更正（设备在环，见 §28）
+
+本节以下内容建立在「rc 文本」上。v2.18 用 `init.svc.*` 实测后，**三处依据必须替换、一处集合不完备**：
+
+| 原依据 | 实测 | 处置 |
+|---|---|---|
+| 用 `init.wlan.atoll.rc` 判断本机部署 | `ro.hardware=qcom` ⇒ 生效文件是 **`init.wlan.qcom.rc`** | **依据作废**（结论不变） |
+| `hostapd` 无 `-c`、不可达 | `init.svc.hostapd = []` ⇒ **本机根本没定义该服务** | 依据作废；结论"不可达"更强 |
+| `fstman` 未部署 | `init.svc.fstman = []` ⇒ **确未定义** | **结论对、原依据错**，现由实测支持 |
+| 消费者集合 = §24.5 读方列表 | 漏了 **`wifiserver`（root 脚本，开机跑）** 与 **`wifisar`（root 二进制，属性触发）** | **集合不完备**，见 §28.3 |
+
+**教训（已进 §28.2）**：`rc 文本 ≠ 生效集合`。凡"某服务会读/会跑"的判断，一律先用 `getprop init.svc.<name>` 校验。
+
 ### 26.1 结论
 
 **消费面不构成提权通道。** 三条前置门（连接 / 执行 / 触发）全部被策略封死；
@@ -2128,3 +2145,113 @@ uid 1010/1000、呼不到 system_server 的域去读**。所谓信任边界的"�
 | `artifacts_adb/binder_audit/DIAG_DRIVER_AUDIT.md` | §0 第二层判读收窄（不可推广到非指针型缺陷） |
 | `HANDOVER.md` | 本 §27；版本表 v2.17；§26.3/26.5/26.6 更正；§7 增第 11 条；§1.1/§1.2 同步 |
 | `README.md` | 「审阅须知」升到 v2.17；责任使用章节去掉"所有结论是负结果"与"不构成任意命令执行"两处过时表述 |
+
+---
+
+## 28. 增补：G-W5 实测闭合 + 生效服务集重建（2026-11-18，设备在环，全部只读）
+
+> 设备在线（`adb devices` = `3b883b98 device`）。本轮只做**只读**查询：`getprop`、`getprop init.svc.*`、
+> `ls`（多处被 MAC 拒）、脚本来自本地 `odm` 解包（`.build/vendor/x/odm/bin/init.oppo.wifi.sh`）。**零写入、零重启。**
+
+### 28.1 G-W5 闭合：生效的是 `init.wlan.qcom.rc`，不是任何 `*atoll*`
+
+| 属性 | 值 |
+|---|---|
+| `ro.hardware` | **`qcom`** |
+| `ro.board.platform` | **`sdm710`** |
+| `ro.boot.hardware` | `qcom` |
+| `ro.product.board` | `sdm710` |
+| `ro.soc.model` | （空） |
+
+⇒ `init.wlan.*.rc` 的导入由 `ro.hardware` 决定 = **`qcom`**，即 **`init.wlan.qcom.rc`**（本仓库已有该文件）。
+**`init.wlan.atoll.rc` 与本机无关**；§26 用 atoll 当锚点**确定是错的**（评审 v0041 第四节的质疑成立）。G-W5 **闭合**。
+
+### 28.2 纪律升级：**rc 文本 ≠ 生效集合**，一律以 `init.svc.*` 为准
+
+用 `getprop init.svc.<name>` 实测（`[]` = 该服务**根本未定义**；`stopped` = 已定义未运行）：
+
+| 服务 | `init.svc.*` | 含义 |
+|---|---|---|
+| `wpa_supplicant` | **running** | 在跑 |
+| `cnss-daemon` | **running** | 在跑 |
+| `wificond` | **running** | 在跑（system 侧，§26 未列） |
+| `wifidisplayhalservice` | **running** | 在跑（§26 未列） |
+| `wifiserver` | **stopped** | 已定义，已跑完（oneshot） |
+| `wifisar` | **stopped** | 已定义，未触发 |
+| `wifidriverlog_on` | **stopped** | 已定义 |
+| **`hostapd`** | **`[]`** | **未定义** |
+| **`fstman` / `fstman_wlan0`** | **`[]`** | **未定义** |
+| **`triggerwifidump`** | **`[]`** | **未定义**（但同文件的 `clearWifiDumpFile` = stopped） |
+
+**三条后果**：
+
+1. **§26 关于 `hostapd` 的分析是对一个不存在的实例做的**（结论"不可达"不变，但依据作废）。
+2. **`fstman`「未部署」这个结论是对的，但当时给的理由（atoll rc 里没有）是错的**——现在由 `init.svc.fstman = []` **实测**支持。
+   这是本项目"**结论对、依据错**"的第 N 例，按纪律两边都记下来。
+3. `triggerwifidump` 在设备上**未定义** ⇒ §24.6 里"现成范式 `sys.oplus.wifi.dump.trigger → start triggerwifidump`"**在本机不存在**
+   （它是 rc 文本里的形态，不是运行态事实）。该范式作为"对本域关闭"的论证依然成立（更成立了），但**不能用它当"本机存在该范式"的证据**。
+
+### 28.3 新发现：两个 root 侧消费者被 §26 漏掉
+
+| 服务 | 程序 | 身份 | 触发 | 是否在 §26 集合中 |
+|---|---|---|---|---|
+| `wifiserver` | **`/odm/bin/init.oppo.wifi.sh`** | `user root` | `class late_start`，oneshot，**开机即跑** | **漏** |
+| `wifisar` | `/system/vendor/bin/wifisar` | `user root` | `on property:sys.oplus.wlan.sar_idx=*`，`disabled` | **漏** |
+
+⇒ §26 的消费者集合**不完备**（它只取了 §24.5 的"读 `wifi_vendor_data_file` / `mnt_vendor_file` 的域"，
+而这两个是**按属性/开机触发的 root 服务**，不在那份读方列表里）。这一条必须记进 §26 的缺口。
+
+### 28.4 `init.oppo.wifi.sh` 全文审计（1036 行，本地可得）
+
+**读的、且我们可写的东西**：
+
+| 行 | 内容 | 用法 | 判定 |
+|---|---|---|---|
+| 55 / 327 | `persist_version=`cat /mnt/vendor/persist/bin_version`` | 仅用于 `[ $system_version -gt $persist_version ]`（70/334/555） | **不构成注入**：`sh` 不对变量内容做二次元字符解析；全文无 `eval`、无 `$( )`、无 `$(( ))` 使用该值（算术展开只用于 `dev_idx`/`ven_idx` 自增） |
+| 530 | `if [ -s /mnt/vendor/persist/WCNSS_qcom_cfg.ini ]` | **`cp` 到 `$targetFile` + `chmod 666` + `rm` 源文件** | **R1 升级：存在 root 侧消费路径**（见下） |
+| 544 | `head -1 "$targetFile" \| grep OppoVersion \| cut -d= -f2` | 数值比较 | 同上，不构成注入 |
+
+**`insmod` / `rmmod` / `modprobe` 全 0 命中** ⇒ 不走内核模块加载路径。
+
+**R1 的性质变更（重要）**：§24 把 `/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini` 记为"可写但禁写"的**理论**风险。
+本脚本证明存在一个**根进程在开机时把它复制成 WLAN 驱动配置**的实际消费路径
+（`cp /mnt/vendor/persist/WCNSS_qcom_cfg.ini $targetFile; chmod 666`）。
+但要注意它的落点：这**不是**"把数据交给高权限用户态域"，而是**把数据交给内核 WLAN 驱动/固件的配置解析器**。
+⇒ 它属于**内核面**（与 §25 的 diag 同类），不属于域逃逸；且需要写 `persist`（违 §24 R1 禁令、跨重启持久化）。
+
+### 28.5 判定
+
+| 问题 | 答案 |
+|---|---|
+| 生效 rc 是 atoll 那组吗？ | **不是**，是 `init.wlan.qcom.rc`（G-W5 闭合） |
+| hostapd / fstman 在本机定义了吗？ | **都没有**（`init.svc.*=[]`）；§26 的相关依据作废、结论保留 |
+| §26 的消费者集合完备吗？ | **不完备**：漏了 `wifiserver`（root 脚本）与 `wifisar`（root 二进制） |
+| 新增的两个 root 消费者能提权吗？ | **不能**：`wifisar` 的触发属性 `sys.oplus.wlan.sar_idx` 是 `system_prop`（本域只有 `vendor_oppo_prop` 的 `set`）；`wifiserver` 只在开机跑一次且其输入只进数值比较 |
+| 那 R1 的路径算提权吗？ | **不算**：落点是内核 WLAN 驱动配置解析器 = 内核面，不是高权限用户态域；且需写 persist（禁写） |
+| 对整体结论有影响吗？ | **无**：域逃逸（§24）、diag（§25）、消费面（§26）、system_server 通道（§27）四条否定不变；但 §26 的**依据**需要按本节替换 |
+
+### 28.6 缺口与可证伪条件
+
+| # | 缺口 | 闭合方式 |
+|---|---|---|
+| **G-W6** | `/mnt/vendor/persist/` 的实际内容（`WCNSS_qcom_cfg.ini`、`bin_version`、`bdwlan.bin` 是否存在） | shell 侧 `ls` 全部 `Permission denied`（`mnt_vendor_file` 的 `getattr` 被拒）。需以 `oplus_wifi_service` 域做一次**只读** `ls -l`/`stat`（**待授权**） |
+| G-W7 | `wifisar` 二进制的内容（读什么、写什么） | `/system/vendor/bin/wifisar` 的 `getattr` 对 shell 被拒；本地未存该二进制，需只读 `adb pull`（**待授权**） |
+
+**重开条件**：①`sys.oplus.wlan.sar_idx` 变成本域可写的属性类型；②`init.oppo.wifi.sh` 出现把 persist 内容用于**命令位置**（非数值比较）的写法；③persist 里的 ini 被证实能左右 WLAN 驱动的内存安全（那是 §25 类内核面，另立）。
+
+**不重开**：往 persist 写测试内容（违 §24 R1）；改 `sys.*` 属性试触发。
+
+### 28.7 对 v0041 第四节 P1 的回应
+
+| 评审意见 | 处置 |
+|---|---|
+| "atoll 与 SDM710 存在潜在目标匹配问题，必须有证据说明 atoll 的 rc 是这台机器实际采用的" | **完全成立**。实测 `ro.hardware=qcom` ⇒ 生效文件是 `init.wlan.qcom.rc`；atoll 系列与本机无关。G-W5 闭合 |
+| "否则 fstman 未部署、实际消费者集合、高权限读取者的判断仍存在覆盖缺口" | **两点都兑现**：fstman 的结论由 `init.svc` 实测支持（但依据换了）；消费者集合**重新按生效服务重建**，并发现两个漏项（§28.3） |
+| "建议列为 v2.17 的优先修订项" | 已在 v2.18 完成（本轮） |
+
+### 28.8 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `HANDOVER.md` | 本 §28；版本表 v2.18；§26 增实测更正块；§7 第 10 条补 (f)；§24.6 范式标注为"rc 文本形态、运行态不存在" |
+| `README.md` | 审阅须知升 v2.18；自我更正表增两行；结论一览增"root 脚本消费 persist ini = 内核面"一行 |

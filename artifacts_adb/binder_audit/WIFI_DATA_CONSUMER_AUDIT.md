@@ -62,6 +62,12 @@
 
 ## 4. 逐消费者登记（含"本机是否真在跑"）
 
+> **v2.18 实测更正（设备在环，见 `HANDOVER.md` §28）**：
+> 下表原本基于 rc 文本。实测 `init.svc.*` 后：**`hostapd`、`fstman`、`fstman_wlan0`、`triggerwifidump` 在本机全部未定义（`[]`）**；
+> 生效平台是 `ro.hardware=qcom`（不是 atoll）。同时**发现两个漏项**：`wifiserver`（`/odm/bin/init.oppo.wifi.sh`，root，开机跑）
+> 与 `wifisar`（root，属性触发）——**本表集合不完备**，补登见 `HANDOVER.md` §28.3。
+> 结论方向不变（更不可达），但**判据必须以 `init.svc.*` 为准**。
+
 | 消费者 | 域 | 身份（rc 原文） | 本机运行 | 配置来源 | 判定 |
 |---|---|---|---|---|---|
 | `hostapd` | `hal_wifi_hostapd_default`（`typetransition init hal_wifi_hostapd_default_exec →`） | `user wifi` / `group wifi net_raw net_admin` / caps **NET_ADMIN NET_RAW** / `disabled` + `oneshot` | **否**（SoftAP 未开） | `-dd -g /data/vendor/wifi/hostapd/global`，**无 `-c`** ⇒ 配置走 ctrl/HIDL，非文件 | 不可达（连接门） |
