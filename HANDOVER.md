@@ -2,11 +2,11 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.6（交接版）**，2026-11-17；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 更正块 + §15 = GhostLock 复核与静态收束，**§16 = OPPO Wi-Fi 私有事务面（root 服务实证 + 可达性实测否定）**。下次会话从本文件 + `GHOSTLOCK_RESCAN.md` + `GHOSTLOCK_NUL_ANALYSIS.md` + `F16_WIFI_FTM_TRACE.md` 直接接手 |
+| 版本 | **v2.7（交接版）**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），**§17 = 新对话接手清单与下一步优先级**。下次会话**从 §17 开始**，再按需查 §16 / §15 / §14 |
 | 状态 | **整体 no-go（未翻转）。** 四个内核面判定不可达；GhostLock 载体已闭合、缺内核地址泄露。Wi-Fi 私有事务面：从 shell 可调、`executeDriverCommand` 的入参被 uid 0 服务接收，**但所有注入尝试均被 `INVAILD_PARAMETER` 拒绝，未回显 uid=0，不构成临时 ROOT 实锤**（§16.11）；此前"结论翻转"系误判，已撤回 |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
-| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空；§14、§15 全程只读 |
+| 设备终态 | `PCGM00_11_F.16` 未变；**未刷写、未解锁、未改分区、未 root**；`/data/local/tmp` 为空（§16 的实验探针已清理）；shell `id` 仍为 uid 2000；崩溃的 HAL 已自动重启。累计 5 次内核重启（均在前期竞态实验期） |
 | Binder 面审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md`（五轮：atlas 线索 5/5 闭合、确定否证）；**厂商二进制与系统镜像不入库** |
 | GhostLock 复核 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md`（扫描器判重 bug 证实；3 条 xattr 栈覆盖候选）→ **`GHOSTLOCK_NUL_ANALYSIS.md`（剩余两项的静态收束：栈复用为几何确定性；NUL 不阻断；缺口 = 内核地址知识）** |
 
@@ -487,11 +487,10 @@ ENOTTY（未实现）3833
 3. 设备 **SPL 或内核构建发生变化** ⇒ 帧几何、binder 形态、全部符号偏移同时改变，须整体重跑（**故建议关闭 OTA**）。
 4. 取得 **pstore / dmesg / last_kmsg** 中任一个 ⇒ 可定位 GhostLock panic 的精确点，判断是否为 vendor 差异。
 5. GhostLock 上游出现**非栈复用**的利用路线（例如改用 `sched_setattr` 之外的链遍历入口）。
-6. **出现任意 `system`（uid 1000）上下文的代码执行点** ⇒ 可把 `executeDriverCommand`
-   （root HIDL 服务、入参直通 `sh -c`，`F16_WIFI_FTM_TRACE.md` §7）作为**第二段**接上，直接得到 root 命令执行。
-   ⚠️ **该事务号已实测从 shell 不可达**（11 次探测 + AOSP/IMEI 两组对照，全部返回
-   `Binder invocation to an incorrect interface`）⇒ **不要再猜令牌**，那是死路（§8 已记负知识）。
-   只在"拿到 system 上下文"或"解出 `com.android.server.wifi` 实现类"时重开这一条。
+6. **Wi-Fi 私有事务面**：从 shell 可达已证（真客户端 `app_process`，§16.9），但注入被参数校验拒绝。
+   重开条件：**先静态确定 `-3 INVAILD_PARAMETER` 的来源与合法命令格式表**（§16.11 / §17 P0）。
+   ⚠️ **不要再猜令牌、不要再用 `service call` 试**（16 次证明是工具 ABI 问题，非授权）；
+   **也不要再用元字符试注入**（全部失败且导致 HAL 崩溃）。
 7. binder 服务面（236 个服务，含 10+ OPPO 私有服务）出现**具体线索**（某个 `onTransact` 分支疑似缺权限校验）⇒ 走静态审计，不盲试 `service call`。**【2026-11-17 已执行，见 §14】** 结果：审计了 28/35 个私有服务，atlas 线索追到 native 反汇编后基本否证，未发现"无鉴权 + 命令注入"可达分支；该面判定从"未审计"更新为"已审计、no-go"。
 
 ---
@@ -633,7 +632,8 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 | — | 补丁窗口扫描 + binder | 20938 未引入；20421 pre-fix 但 ticket 锁无原语；FastRPC 双重封闭 |
 | 14 | Binder 私有服务审计（五轮） | 覆盖 2/35 → 28/35；atlas 结构与 CVE-2026-70386 同构，但命令模板硬编码 ⇒ **线索 5/5 闭合否证**；7 项未闭合（§14） |
 | 15 | 审核意见 v001 响应（静态） | 判重 bug 复核 → 3 条 xattr 候选；**栈复用=几何确定性、NUL 不阻断 ⇒ 缺口改为"无地址泄露"**（§15） |
-| 16 | Wi-Fi 私有事务面追溯（设备在环） | OTA → vendor.img → **内嵌 `euclid/odm.img`** 解出 `@1.1-service`；rc 为 `user root`；入参直通 `sh -c`（已证）；**11 次只读探测证明 shell 不可达**（§16） |
+| 16 | Wi-Fi 私有事务面追溯（设备在环） | OTA → vendor.img → **内嵌 `euclid/odm.img`** 解出 `@1.1-service`；rc 为 `user root`；真客户端证明 shell 可达、无 uid 门禁；**但注入全被 `INVAILD_PARAMETER` 拒绝，"实锤"已撤回**（§16.11） |
+| 17 | 误判撤回（用户指出） | 两次过度声称（"shell 不可达"→"结论翻转"→"临时 ROOT 实锤"）均撤回；根因：把参数回显当执行证据、把参数拒绝当 SELinux 问题（§16.11） |
 
 ---
 
@@ -643,9 +643,10 @@ python tools/f16_rtmux_49_layout.py  # 4.9 结构体布局（离线可复跑）
 > binder 内核 CVE 停在"ticket spinlock 只给 `+0x00010001`"，FastRPC 停在"驱动对只读 fd 一律 `EPERM`"——
 > 这三面是本机权限模型与代码形态共同决定的 no-go。Binder 服务面（§14）：atlas 线索 5/5 闭合否证，
 > **7 个未覆盖服务仍是开口，不宣称穷尽**。
-> **Wi-Fi 私有事务面（§16）是全项目最接近"可用"的一条，也是最干净的一次否定**：`executeDriverCommand`
-> 的入参确实进 `sh -c`、服务确实是 `user root`，但那个事务号只对 system_uid 开放——拿 system 本身就要 root，
-> 循环。**结论：线索真实、危害真实、入口在 shell 之外。**
+> **Wi-Fi 私有事务面（§16）是最曲折的一条：三次结论、两次撤回。** 最终状态：shell（uid 2000）
+> 可调用私有事务、`executeDriverCommand` 的入参被 uid 0 服务接收——**但所有注入均被 `INVAILD_PARAMETER`
+> 拒绝，未回显 `uid=0`**。此前"入口在 shell 之外"与"已获临时 ROOT"均为误判，已撤回（§16.11）。
+> 它是"有 root 权限的私有命令接口"，不是"已证明的提权路径"。
 > ⚠️ **GhostLock 的判定在 2026-11-17 经过两次更正，现在是终态（§15）**：第一次更正推翻了"全扫 0 命中"
 > （扫描器判重 bug 漏报 18,074 个不同栈上下文），找到 3 条 xattr 栈覆盖候选；第二次更正在纯静态层面
 > 判定"栈槽复用"是几何确定性、NUL 截断不阻断，**缺口因此从"载体/时机"换成"缺一次内核地址泄露"**。
@@ -981,3 +982,88 @@ FtmProbe 10069 android.net.wifi.IOplusWifiManager
 
 现场已清理：设备探针删除、`/data/local/tmp` 为空、`shell id` 仍为 uid 2000、崩溃的 HAL 已自动重启。
 详见 `F16_WIFI_FTM_TRACE.md` §12。
+
+---
+
+## 17. 新对话接手清单（2026-11-18 09:48，交接版 v2.7）
+
+> **从这里开始读。** 前面的章节是证据库，本节是当前状态与下一步。
+
+### 17.1 一句话状态
+
+**整体 no-go。** 四个内核面维持原判定；Wi-Fi 私有事务面经三轮反复后收敛为：
+**shell 可调用 → 字符串被 root 服务接收 → 注入被参数校验拒绝 → 无 uid=0 回显**。
+两次"结论翻转/实锤"均为误判，已在 §16.11 撤回。**设备终态干净，可随时开新对话继续。**
+
+### 17.2 三个结论层次（后续判断必须严守）
+
+| 层次 | 当前证据 | 状态 |
+|---|---|---|
+| L1 字符串被 root 服务接收 | logcat `entering executeDriverCommand(<s>)` 逐字回显；服务 rc 为 `user root` | **已证** |
+| L2 命令被执行 | 服务端 `completed successfully` + 可观察副作用 | **未证**（`myft -h` 的"成功"仅证明参数格式合法） |
+| L3 提权成立 | 现场回显 `uid=0(root)`，调用方仍为 shell uid 2000 | **未证，且多次尝试失败** |
+
+**规则：L1 成立不得推出 L2/L3。** 本次误判就是把 L1 当 L3。
+
+### 17.3 下一步优先级（按推荐顺序）
+
+**P0 — 静态定性 `-3 INVAILD_PARAMETER`（最高优先，纯离线）**
+
+目标：搞清失败发生在哪一层、合法命令格式是什么。步骤：
+
+1. 本地已有两个关键二进制（均在 `.build/`，不入库）：
+   - `.build/vendor/x/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service`（native，115,408 B）
+   - `artifacts_adb/binder_audit/dex/oppo-wifi-service.dex`（Java 侧 `OplusWifiHalService`）
+2. 查 `uD6hk53bOimZNTzE924fVOYf3t8.onValues(int, String)` 里哪个码对应 `INVAILD_PARAMETER`、由哪层写入；
+3. 逆向 native slot5 `0x992c`：确认 `0x9a04` 比较 `"myft"` 后的分支，以及 `myft -h` 返回成功的真实含义
+   （工具真执行了 vs 仅参数格式合法）；
+4. 产出：`-3` 的确定性归因 + 合法命令格式表。
+
+**P1 — 审固定命令集的实际权限（静态）**
+
+`.rodata` 已列 9 类命令：`iwpriv wlan0 setMonChan <int>`、`ftmdaemon`、`myftm`、`wpa_cli`、
+`ifconfig wlan0 up`、`tar … && rm -rf`、`con_mode` 写入、`tcpdump_vendor`、`mkdir -m 777`。
+逐个确认哪些 segment 来自调用方字符串。若只有整型/枚举进入 ⇒ 受限 root 工具接口，不构成任意命令执行；
+若 `iwpriv` 参数串可控 ⇒ 仍有驱动层攻击面。
+
+**P2 — 七个未覆盖私有服务（用户此前的 P1）**
+
+`IAntiRootDialog`/`IHephaestus`/`IHoraeService`/`IOIfaceService`/`IHansComunication`/
+`IOppoAppDataService`/`OplusResourceManagerService`。实现 apk 在 system 镜像里，
+复用 `tools/ext4_find_offset.py` 定位后按 §14 atlas 同格式审计。纯静态，可与 P0 并行。
+
+**冻结**：KGSL、两个 binder 内核 CVE、FastRPC、GhostLock，无新原语不动。
+
+### 17.4 明确禁止重复的动作
+
+1. **不要再猜令牌 / 用 `service call` 试**——16 次探测已证是调用方 ABI 问题，真客户端已解决；
+2. **不要再试 shell 元字符注入**——`;` `>` `|` `$()` 全部 `INVAILD_PARAMETER`，且导致 HAL 崩溃产生 tombstone；
+3. **不要用"参数回显"当执行证据**——这是本次误判的直接根因；
+4. **不要在 L3 未达时写"实锤""翻转"**——实锤三条件见 §16.11 / §17.2。
+
+### 17.5 工具与物料清单（新对话可直接用）
+
+| 用途 | 路径 |
+|---|---|
+| 主文档 | `HANDOVER.md`（本文件，唯一权威） |
+| Wi-Fi 全证据 | `artifacts_adb/binder_audit/F16_WIFI_FTM_TRACE.md`（§7 静态链 / §9 外层分派 / §11 可达 / §12 撤回）|
+| GhostLock 静态 | `artifacts_adb/binder_audit/GHOSTLOCK_NUL_ANALYSIS.md` |
+| GhostLock 载体 | `artifacts_adb/binder_audit/GHOSTLOCK_RESCAN.md` |
+| Binder 审计 | `artifacts_adb/binder_audit/AUDIT_REPORT.md` |
+| 真客户端探针 | `tools/javaprobe/{FtmProbe.java, build.sh, android/os/*.java}`；`bash tools/javaprobe/build.sh` 一键构建 |
+| 便携 JDK + D8 | `.build/jdk/jdk-11.0.20+8/` + `.build/jdkpkg/r8.jar`（gitignored，已就绪） |
+| OTA 条目定位 | `tools/ota_entry_range.py`；下载 `tools/dl_range.py` |
+| 镜像→文件 | `tools/ext4_find_offset.py`（偏移反查路径，找到 APEX 里的 jar 就靠它） |
+| dex 定位 | `tools/find_service_reg.py`；反汇编 `artifacts_adb/binder_audit/deep_method.py` |
+| NUL 取证 | `tools/gl_nul_analysis.py` |
+
+** Git 状态**：`main` 分支，最新提交 `1b51b4c`（撤回误判），已推送 `origin`。
+** 大文件**：`vendor.img`(2.09 GiB)、`euclid/odm.img`(166 MiB)、`system.img` 等全在 `.build/` 与
+`artifacts_adb/binder_audit/rootbin/`，均 gitignored。若磁盘紧张可删，可重下（vendor 区间 584 MiB）。
+
+### 17.6 设备与运营约定
+
+- 设备 PCGM00_11_F.16 当前**在线**（`3b883b98`），但多次在长时间空闲后掉线，需物理重插；
+- 上机前先 `adb devices`；任何写操作/命令注入都需用户明确授权；
+- 判据先登记再运行，运行后原文追加到对应文档；
+- 崩溃的 HAL 会自动重启，但每次崩溃都产生 tombstone 噪声，避免重复触发。

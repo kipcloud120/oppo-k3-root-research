@@ -26,7 +26,7 @@
 | **FastRPC** `CVE-2023-33063` | 面存在 | 对 shell **双重封闭**：`O_RDWR` 被 SELinux 拒（`EACCES`）；只读 fd 上 7 个已实现 ioctl 全部 `EPERM` | 否 |
 | **OPPO Wi-Fi 私有事务**（非内核面） | 成立（root 服务 + 入参进 `sh -c`，已证） | **入口在 shell 之外**：私有事务号只对 system_uid 开放；对照实验证明工具与通路正常、拒绝在服务端 | — |
 
-完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**（§1 结论、§15 GhostLock 现状、§16 Wi-Fi 私有事务面）。
+完整论证、证据与可复算数字见 **[`HANDOVER.md`](HANDOVER.md)**。**新对话请从 §17「接手清单」开始**——当前状态、下一步优先级（P0 静态定性 `-3`）、工具路径与禁止重复的动作都在那里。
 
 ---
 
