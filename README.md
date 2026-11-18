@@ -261,9 +261,9 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 
 ---
 
-## 审阅须知（v2.21）
+## 审阅须知（v2.23）
 
-本节是给外部复核者的**靶面说明**：列出五条结论、各自的判据强度、累计自我更正、建议优先攻击的点，以及"什么才算推翻"。
+本节是给外部复核者的**靶面说明**：列出六条结论、各自的判据强度、累计自我更正、建议优先攻击的点，以及"什么才算推翻"。
 
 ### 待审结论与判据强度
 
@@ -274,6 +274,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 | 3 | **Wi-Fi 可写面消费不构成提权通道** | 三道前置门（连接/执行/触发）逐条封死；消费者域 binder 目标全量核对后**只有本域持有 `system_server`** | **中—强**。弱点在**枚举完备性**：消费者集合取自 §24.5 的读方列表**且依赖"本机导入哪份 rc"（G-W5，未证）**——若漏域或 rc 选错，本结论需重评 |
 | 5 | **root 脚本消费 persist 配置 = 无新能力（实测闭合）** | `init.oppo.wifi.sh` 检查 `/mnt/vendor/persist/WCNSS_qcom_cfg.ini`（顶层）→ 实测**不存在**（真文件在 `persist/wlan/`）；且其 `cp` 两端都在本域可写的 `mnt_vendor_file` 内 | **强（已实测）**。连"新能力"都不成立；只剩"内核驱动如何解析该 ini"这个纯内核问题（§25 类），且需动 persist（禁写） |
 | 4 | **`system_server` 通道在"取句柄"处断开** | ①本域对 `servicemanager` **零规则**（无 `binder call`、无 `service_manager find`）；②`binder call` 只对已持有句柄生效；③**HAL 侧也不递句柄**——二进制只注册 `IOppoWifiService`、无句柄入参、不导入 `readStrongBinder` | **强**（策略可 grep、二进制可复算）。残余：`_hidl_cb` 反向数据通道（G-S2，Java 侧） |
+| 6 | **FastRPC（`CVE-2023-33063`）在 uid 0 域下同样封闭，且比 shell 更封闭** | 标签层：`/dev/adsprpc-smd*` = `qdsp_device`/`xdsp_device`（设备 `ls -lZ` 与 `file_contexts` 一致）；策略层：本域 `chr_file` 权限并集 **∅**（direct + 89 属性 + 目标侧属性展开 + 18 条 `allowx` 全核）；运行层：域内 `open` 读/写两向 `denied`，附 `{ read }`/`{ write }` 两条 AVC，另设 `/dev/diag` 同类正对照 | **强（已实测）**。判据强度依赖两点：①正对照通过（已验证 `diag_open_ok`）；②无 `dontaudit` 遮蔽（已验证唯一一条不适用）。弱点：`ioctl` 语义因 open 前置失败而不可达 ⇒ 该层仍是 shell 身份的旧结论 |
 
 ### 本轮自我更正（v2.17）
 
@@ -288,6 +289,8 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 | 用 rc 文本判断"某服务在本机存在/会读" | **纪律作废**：v2.18 实测 `init.svc.*` 显示 `hostapd`/`fstman`/`triggerwifidump` **均未定义**（`[]`），而 rc 文本里有定义 ⇒ **rc 文本 ≠ 生效集合**，一律以 `init.svc.*` 为准 | 设备实测（§28.2） |
 | §26 消费者集合 = §24.5 读方列表 | **不完备**：漏了 `wifiserver`（`/odm/bin/init.oppo.wifi.sh`，root，开机跑）与 `wifisar`（root，属性触发） | 设备实测（§28.3） |
 | §28.4 "root 脚本把 persist ini 复制成驱动配置 ⇒ R1 升级" | **再降级（同日两次翻转）**：实测该脚本检查的顶层路径**不存在**，且 `cp` 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **不提供任何新能力** | 授权探针（§28.9） |
+| `/dev/adsprpc-smd-secure` 记为 `0640`、写打开"被 SELinux 拒" | **更正**：实测 `0644`；且 shell 下的 `EACCES` 无法区分 DAC 与 SELinux，因为 shell 无 `system` 组、DAC 本就只给 `r--`。换 uid 0 身份后（DAC 放行读写）重测，确认是 SELinux 拒 | 审核 v005 补证（§32.2） |
+| `sepolicy_domain_audit.py` 的属性闭包可直接采信 | **已修正**：成员名同时是 type 与 attribute 时（`shell`/`bluetooth`/`sensors`…）该成员被丢弃，经其继承的规则漏计。本域数字不变（89 属性/307 条），但同名域此前被**低估**（`shell`：131 属性/1,012 条） | 自查（§32.8） |
 
 ### 请重点攻击的四点
 
@@ -296,6 +299,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 3. **"别人递句柄"这一路是否成立**（决定结论 4 的边界）。若 OPPO Wi-Fi HAL 的某个 HIDL 方法接收 system_server 托管的回调对象，则该回调句柄**可能**带一个"显式允许 `ROOT_UID`"的方法（G-S1）。请指名接口与方法。
 4. **`init.oppo.wifi.sh` 是否有我们漏掉的命令位置**（决定结论 5 的边界）。全文 1036 行、本地可得；我们只确认 `persist_version` 进的是 `[ -gt ]`。若你能指出它被用在命令位置（或某个 `$(( ))` / `eval` 里），结论 5 即升级为提权候选。
 5. **是否还有未被枚举的攻击面**。这是唯一无法由内向外证伪的问题：本项目已覆盖 4 个内核面 + `/dev/diag` + Wi-Fi 私有事务 + 7 个私有 Binder 服务 + 域逃逸 + 可写面消费者 + `system_server` 句柄来源。**若存在第八类面，请指名。**
+6. **FastRPC 的封闭性是否成立**（结论 6）。可攻击点有两个：①指出本域对 `qdsp_device`/`xdsp_device` 所属**任一属性**的 `chr_file open` 授权行（`grep` 5 份 CIL 即可）；②在 `u:r:oplus_wifi_service:s0` 下成功 `open("/dev/adsprpc-smd", O_RDWR)` 或 `O_RDONLY` 并给回显。任一成立即推翻。另请注意：本域**不在** `appdomain`，所以"shell 能打开的节点，root 域不一定能打开"——这一方向常被直觉搞反（§32.5）。
 
 ### 复现（全部离线，不需要设备）
 
@@ -324,6 +328,18 @@ python tools/wifi_exec.py --tag GW6A --cmd 'log -t GW6A `ls -m /mnt/vendor/persi
 python tools/wifi_exec.py --tag GW6E --cmd 'log -t GW6E R-`ls -m /mnt/vendor/persist/wlan/`'
 python tools/wifi_exec.py --tag GW6F --cmd 'log -t GW6F R-`ls -m /mnt/vendor/persist/WCNSS_qcom_cfg.ini`'
 python tools/wifi_exec.py --tag GW6B --cmd 'log -t GW6B R-`cat /mnt/vendor/persist/bin_version`'
+# 结论 6：FastRPC 二层静态判定（标签 + 策略 + dontaudit + allowx），应为 NO-GO / 并集 ∅
+python tools/fastrpc_domain_gate.py --domain oplus_wifi_service --cil .build/sepolicy
+# 结论 6：对照——shell 经 appdomain 反而有 open/ioctl（用来验证"按域算不按 uid 算"）
+python tools/fastrpc_domain_gate.py --domain shell --cil .build/sepolicy
+# 结论 6 的运行期（需设备）：正对照 + 读/写两向
+python tools/wifi_exec.py --tag FRPCID --cmd 'log -t FRPC_ID `id`'
+python tools/wifi_exec.py --tag FRPCD --cmd 'if true < /dev/diag
+then
+log -t FRPC_D0 diag_open_ok
+else
+log -t FRPC_D0 diag_open_denied
+fi'
 ```
 
 > 前置物料（`firmware_F16/vmlinux.elf`、`.build/sepolicy/`）不入库，见 `firmware_F16/README.md` 的本地重建步骤；

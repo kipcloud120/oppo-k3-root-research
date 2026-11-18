@@ -1,0 +1,28 @@
+域 oplus_wifi_service ｜ 策略 allow 语句 24657 ｜ 所属属性 89
+
+== L1 标签层 ==
+  /dev/adsprpc-smd                 -> u:object_r:qdsp_device:s0
+  /dev/adsprpc-smd-secure          -> u:object_r:xdsp_device:s0
+
+== L2 策略层（chr_file，目标侧已展开属性）==
+  qdsp_device：并集=∅
+         open=False ioctl=False write=False read=False ｜ direct=0 via=0 via目标属性=0
+         目标所属属性: base_typeattr_711, dev_type, mlstrustedobject
+  xdsp_device：并集=∅
+         open=False ioctl=False write=False read=False ｜ direct=0 via=0 via目标属性=0
+         目标所属属性: base_typeattr_711, dev_type
+
+== 对照：全策略中对该类型有 open 权的源 ==
+  qdsp_device：显式域 17 个 ['adsprpcd', 'cdsprpcd', 'chre', 'hal_camera_default', 'hal_fingerprint_oppo', 'hal_neuralnetworks_default', 'hbtp', 'mediacodec', 'mm-qcamerad', 'oppo_hal_oppoalgoprocessservice', 'oppoalgo_daemon', 'remosaic_daemon', 'sensors', 'thermal-engine', 'vendor_dspservice', 'vendor_scve', 'vendor_vppservice']
+     属性 9 个，本域为其成员的：无
+  xdsp_device：显式域 14 个 ['adsprpcd', 'cdsprpcd', 'chre', 'factory', 'hal_camera_default', 'hal_fingerprint_oppo', 'hal_neuralnetworks_default', 'hbtp', 'mediacodec', 'mm-qcamerad', 'oppo_hal_oppoalgoprocessservice', 'sensors', 'vendor_dspservice', 'vendor_vppservice']
+     属性 10 个，本域为其成员的：无
+
+== L3 遮蔽层 ==
+  crash_dump -> dev_type (read,write) 适用于本域=False
+
+== ioctl xperm（allowx）==
+  涉及该类型的 allowx 共 18 条，其中适用于本域 0 条
+
+判定：NO-GO
+JSON: .build/sepolicy/fastrpc_gate.json

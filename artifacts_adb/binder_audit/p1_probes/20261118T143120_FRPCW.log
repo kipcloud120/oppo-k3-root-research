@@ -1,0 +1,52 @@
+--------- beginning of main
+11-18 14:31:19.737  8291  8291 D OplusUtils: OplusUtils [83]: 
+11-18 14:31:19.739  8291  8291 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-18 14:31:19.730  8291  8291 W app_process: type=1400 audit(0.0:17098): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-18 14:31:19.749  8291  8291 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-18 14:31:19.753  8291  8291 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-18 14:31:19.753  8291  8291 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-18 14:31:19.753  8291  8291 I AndroidRuntime: Using default boot image
+11-18 14:31:19.753  8291  8291 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-18 14:31:19.753  8291  8291 I AndroidRuntime: Leaving lock profiling enabled
+11-18 14:31:19.753  8291  8291 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-18 14:31:19.740  8291  8291 W app_process: type=1400 audit(0.0:17099): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 14:31:19.740  8291  8291 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-18 14:31:19.740  8291  8291 W app_process: type=1400 audit(0.0:17102): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-18 14:31:19.873  8291  8291 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-18 14:31:19.873  8291  8291 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-18 14:31:19.916  8291  8291 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-18 14:31:19.927  8291  8291 D AndroidRuntime: Calling main entry FtmProbe
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: entering executeDriverCommand(x
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: if true <> /dev/adsprpc-smd
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: then
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_ok
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: else
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_denied
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: fi
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: ls -l /dev/adsprpc-smd
+11-18 14:31:19.952  1755  1838 D OplusWifiHalService: log -t FRPC_W2 stat_done)
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: executeDriverCommand(x
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: if true <> /dev/adsprpc-smd
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: then
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_ok
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: else
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_denied
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: fi
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: ls -l /dev/adsprpc-smd
+11-18 14:31:19.955  1755  1838 D OplusWifiHalService: log -t FRPC_W2 stat_done) completed successfully.
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: leaving executeDriverCommand(x
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: if true <> /dev/adsprpc-smd
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: then
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_ok
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: else
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: log -t FRPC_W1 smd_rdwr_denied
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: fi
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: ls -l /dev/adsprpc-smd
+11-18 14:31:19.956  1755  1838 D OplusWifiHalService: log -t FRPC_W2 stat_done) with result =  
+11-18 14:31:19.958  8291  8291 D AndroidRuntime: Shutting down VM
+11-18 14:31:20.017  8308  8308 I FRPC_W1 : smd_rdwr_denied
+11-18 14:31:20.063  8313  8313 I FRPC_W2 : stat_done
+11-18 14:31:20.530  1755  2474 D OppoWifiClientModeImpl: Adjust rssi from -26 to -42
+11-18 14:31:20.908  4689  4734 D HoraeHelper: getAllShellTemps tSize : 4
+11-18 14:31:20.910  4689  4734 D HoraeHelper: Thermal length:1
+11-18 14:31:21.035  2337  2360 D HoraeHelper: skinThermal:27.293

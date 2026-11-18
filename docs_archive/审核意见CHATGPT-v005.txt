@@ -1,0 +1,392 @@
+OPPO K3 ROOT 项目 v2.22：公开资料交叉验证报告
+这次我按你的真正意图做了外部交叉验证：不只是读取 GitHub，而是拿项目的核心结论与 Qualcomm、Google Android Security Bulletin、Google Project Zero、Linux Kernel CVE 公告、NVD、CISA 和 Android 官方安全文档进行对照。
+
+我的总体结论：
+公开信息与项目结论的一致性
+总体吻合
+
+较高
+项目对 SELinux、Binder、KGSL、GhostLock 的主要技术判断有公开资料支持。
+
+但我发现一个值得补充验证的地方：FastRPC CVE-2023-33063 在获得受限 UID 0 以后，是否仍然对 Wi-Fi root 服务域不可达？
+
+有一个重要前提：公开资料可以验证漏洞机制、影响平台和 Android 安全模型，但不能替代对 PCGM00 F.16 的本机反汇编、运行时策略及实验记录的验证。
+
+一、先确认目标设备是否与公开资料匹配
+项目结项报告给出的设备基线：
+项目	项目记录
+型号	OPPO K3 PCGM00 / OP4679
+SoC	Qualcomm SDM710
+GPU	Adreno 616
+Android	11
+Kernel	4.9.227-perf+
+SPL	2022-04-05
+固件	PCGM00_11_F.16
+
+公开资料能够支持这套硬件身份：
+- 2019 年 OPPO K3 发布资料将 PCGM00 与 Snapdragon 710 对应。
+  Gizmochina+1
+- Qualcomm 官方产品页面确认 Snapdragon 710 使用 Adreno 616 GPU。
+  Qualcomm
+- 第三方设备数据库记录 PCGM00、Android API 30、Linux 4.9.227-perf+ 和 SDM710。这个来源可以独立佐证，但不是 OPPO 官方固件证明。
+  specdeviceinfo
+- 第三方固件资料存在 PCGM00_11_F.16 固件记录。
+  欧加真ROM下载站
+硬件身份吻合
+需要区分： F.16 中实际运行的 kernel binary、2022-04 SPL、Bootloader 锁定状态和 AVB 状态，仍然应以项目的设备取证为准。公开规格网站无法独立证明这些运行时事实。
+
+二、最重要的交叉验证：Qualcomm 两个 CVE 确实覆盖 Snapdragon 710
+这里出现了一个非常有意思的结果。
+
+项目最早考虑的 KGSL 和 FastRPC 两条路线，并不是凭空选择的。公开资料确实把 Snapdragon 710 列入了对应 CVE 的受影响平台。
+1. CVE-2023-33107：KGSL 整数溢出
+Google Project Zero 对这个漏洞进行了详细根因分析。
+
+公开研究确认：
+- 漏洞涉及 Qualcomm Adreno GPU 的 KGSL。
+- 入口是 KGSL_IOCTL_GPUOBJ_IMPORT。
+- SVM 区间处理存在整数溢出。
+- 可以造成 IOMMU 页表映射状态错误。
+- 研究者演示了通过错误映射和任务结构破坏取得内核读写能力的利用链。
+  0-days In-the-Wild
+NVD 将其列为 Qualcomm 高危漏洞，受影响产品清单包含 Snapdragon 710 Mobile Platform。
+nvd.nist.gov
+
+
+更严重的是，公开安全公告确认它并非只有理论风险：
+- 2023 年 12 月 Android Security Bulletin 将它列为 Qualcomm Display 高危漏洞。
+- 公告提示存在有限、定向利用迹象。
+- 加拿大网络安全中心也记录 CISA 已将该漏洞标记为遭到利用。
+  source.android.com+2
+这意味着项目选择它作为候选攻击面是正确的。
+
+但项目的本机结论是：
+F.16 中缺陷代码仍然存在，但进入关键映射错误路径时，BUG_ON(!suppress_map_failures) 会触发 panic，而不是返回可供利用的中间状态。
+
+这个结论与 Project Zero 公布的根因并不矛盾。
+
+Project Zero 分析的是一个能够利用错误 PTE 处理继续完成后续步骤的代码形态；项目声称自己的 F.16 构建存在不同的运行期保护行为。两者需要针对本机二进制分别判断。
+GitHub+1
+
+评审：公开漏洞与项目的本机 NO-GO 判断相容
+我的建议是保留原文措辞：
+
+CVE 存在，本机构建 pre-fix，但当前已验证的利用链会触发 panic。
+
+不要改写成“Snapdragon 710 不受 CVE-2023-33107 影响”。
+2. CVE-2023-33063：FastRPC / DSP Services
+公开 NVD 资料描述的是：
+在 HLOS 向 DSP 发起远程调用时，DSP Services 存在内存破坏问题。
+
+其 CVSS 3.1 分数为 7.8 High，弱点类别为 Use-After-Free，并且被收录进 CISA Known Exploited Vulnerabilities。
+nvd.nist.gov+1
+
+
+Qualcomm 来源的受影响产品资料聚合列表也将 Snapdragon 710 列为受影响平台。
+Threat Intelligence Index
+
+
+加拿大网络安全中心同样记录了 CISA 对 CVE-2023-33063 的实际利用确认。
+Canadian Centre for Cyber Security
+
+
+这与项目的候选选择高度吻合。
+
+项目在普通 shell UID 2000 下得到的测试结果是：
+测试	结果
+/dev/adsprpc-smd 只读打开	成功
+O_RDWR 打开	SELinux 拒绝
+已实现的 7 个 ioctl	EPERM
+secure 节点	打开受限
+
+
+GitHub
+但是，我发现一个值得补充验证的细节：
+
+这个测试最初针对 shell UID 2000，而项目后来已经获得了另一种身份：UID 0、GID 1010/1000/2901/3005，SELinux 域为 oplus_wifi_service。
+
+这两种身份的 DAC 和 SELinux 权限不相同。
+
+项目的 SELinux 审计列出了 Wi-Fi 域允许访问的字符设备，其中明确包含 /dev/diag，但没有看到 adsprpc 设备类型的对应授权。
+GitHub+1
+
+
+因此，现有策略证据倾向于支持 FastRPC 仍被封闭，但我建议项目将其写成：
+普通 shell 下 FastRPC 已实测封闭；受限 UID 0 Wi-Fi 域的设备节点访问由 SELinux 策略限制，最好另附明确的设备标签及访问拒绝证据。
+
+这不是推翻项目结论，而是让它经得起更严格的第三方审查。
+评审：整体吻合，但建议补一项身份切换后的验证
+
+三、Binder 两个 CVE：公开利用条件支持项目的区分
+1. CVE-2023-20938
+这是 Android Binder 驱动的 Use-After-Free。
+
+Google Android Red Team 在 2024 年发布了详细分析，说明他们如何利用该漏洞从不可信应用取得 root。
+
+但 Google 对这一公开利用案例明确限定了受影响范围：
+- GKI Kernel 5.4
+- GKI Kernel 5.10
+相关补丁分别进入 2023 年 2 月和 7 月 Android Security Bulletin。
+Android Offensive Security Blog
+
+
+OPPO K3 F.16 使用的是厂商修改的 4.9.227-perf+，并非上述 GKI 5.4/5.10 构建。
+
+项目还通过本机 Binder 反汇编确认，漏洞利用所依赖的 off_end_offset 语义没有引入到目标代码中。
+GitHub+1
+
+评审：项目的 NO-GO 判断与公开研究吻合
+但要注意：Google 说明的是其研究的这个漏洞及利用范围，不能把它扩大为“所有 4.9 Binder 驱动都不存在类似漏洞”。
+2. CVE-2022-20421
+这条路线比较有代表性。
+
+MITRE 对 CVE 的描述确认：Binder 的 binder_inc_ref_for_node() 存在 Use-After-Free，可能造成未授权本地提权。
+cve.mitre.org
+
+
+JSOF 的公开研究则展示了如何利用这个 UAF：
+- 使用 queued spinlock。
+- 建立内核指针低位破坏原语。
+- 最终实现内核任意读写。
+- 在三星 Galaxy S21 Ultra、S22 和 Pixel 6 上演示成功。
+论文同时明确指出，其方法假设 queued spinlock，而 Android 从 Kernel 4.19 起默认使用这一实现。
+0xkol.github.io
+
+
+这与 K3 项目的区别正好对应：
+项目	公开利用目标	OPPO K3
+内核实现	queued spinlock	ticket spinlock
+核心原语	清零内核指针低位	两半相等的 4 字节字加 0x00010001
+利用结果	类型混淆、任意读写	不具备相同原语
+
+项目的反汇编结果与论文中的利用前提不同，因此不能直接移植这份 PoC。
+GitHub+1
+
+评审：公开利用机制支持项目冻结原路线
+不过，我赞同项目使用的严谨措辞：
+
+本机 pre-fix，但公开 qspinlock 利用链不适用。
+
+这比宣称该 CVE 在 K3 上完全不存在更准确。
+
+四、GhostLock：公开资料反而证明项目没有低估漏洞
+这一项我特别进行了交叉核对。
+
+Linux Kernel 官方 CVE 公告由 Greg Kroah-Hartman 发布：
+
+CVE-2026-43499 · rtmutex
+
+公开根因：
+- remove_waiter() 在 futex proxy-lock rollback 路径中错误地使用 current。
+- 对 waiter 的 pi_lock 处理不正确。
+- pi_blocked_on 留下悬空指针。
+- 后续 rt_mutex_adjust_prio_chain() 处理了错误的 waiter。
+漏洞最早引入于 Linux 2.6.39，修复进入多个后续 stable kernel 分支。
+Git at Google
+
+
+Red Hat 也明确指出，这个缺陷位于 rtmutex.c 的 PI futex 路径，可能造成权限提升或拒绝服务；没有使用实时调度或 PI futex 的环境，暴露程度较低。
+Red Hat Customer Portal
+
+
+这与项目的调查形成了相当好的对应：
+判断	公开资料	项目
+旧内核是否可能包含缺陷	是	本机 pre-fix
+是否涉及 PI futex	是	已确认可进入路径
+是否存在 UAF 机制	是	实机实验复现相关状态
+是否自动意味着能 ROOT	否	还需要有效利用结构
+是否需要地址信息	取决于利用链	当前 fake waiter 路线需要有效内核地址
+
+项目此前发现了三条 xattr 栈覆盖候选，修正了扫描器漏报，进一步确认 NUL 截断不再是主要阻断，最终把困难定位到 fake waiter 需要真实内核对象地址。
+GitHub+1
+
+
+这里还有一个重要的公开证据：
+
+CVE 修复并非局限在一个 Android 手机内核版本，而是被回移植到了多个 stable 分支。这也说明不能简单根据 4.9.227 这个版本号就断言漏洞一定存在或一定不存在。
+
+项目使用本机 ELF 反汇编确认 pre-fix，实际上比单凭内核版本号可靠得多。
+评审：机制判断吻合，当前利用链 NO-GO 合理
+我仍然保留一个限定：
+
+无内核地址泄露，否证的是目前这条依赖有效内核指针的 GhostLock 利用链；不是数学上证明所有可能的 GhostLock 利用方式都不成立。
+
+五、受限 UID 0 不能成为完整 ROOT：与 Android 官方模型完全一致
+这一项有非常直接的官方资料。
+
+Android Open Source Project 的 SELinux 文档明确写道：
+SELinux applies mandatory access control to all processes, including processes running with root/superuser privileges and Linux capabilities.
+
+Android 使用默认拒绝原则，未明确允许的操作会被拒绝。在 Enforcing 模式下，违规访问会被阻止。
+source.android.com
+
+
+这正好支持项目所描述的状态：
+uid=0(root)
+gid=1010(wifi)
+context=u:r:oplus_wifi_service:s0
+
+
+Linux UID 为 0，不代表能够访问所有 Android 系统资源。
+
+项目额外测量的 capability：
+CapEff = 0x13000
+CapBnd = 0x13000
+
+
+只包含：
+- NET_ADMIN
+- NET_RAW
+- SYS_MODULE
+不包含 CAP_SYS_ADMIN，也不包含 CAP_DAC_OVERRIDE。
+
+这与 Android 的 SELinux + Linux capabilities 双重安全模型完全一致。
+GitHub+2
+
+
+因此：
+
+项目没有把 UID 0 误当作完整 ROOT，这个核心判断完全正确。
+
+六、v2.22 中 /dev/diag 和文件消费者结论，公开信息能验证到什么程度？
+这部分必须谨慎。
+
+公开资料能够确认 Qualcomm 有复杂的内核诊断、GPU 和 DSP 接口，也能确认 DIAG/FastRPC 等组件属于重要的安全边界。
+
+但没有找到能够直接证明 OPPO K3 F.16 的 diagchar 入口实现不存在越界的独立公开研究。
+
+项目自己的报告显示：
+- 使用目标固件对应的 vmlinux.elf。
+- 扫描 301 个 diag* 符号。
+- 识别 55 个拷贝点。
+- 逐一检查长度来源。
+- 无 mmap 入口。
+- 没有进行设备侧 ioctl 破坏性实验。
+更重要的是，项目自己明确把 DCI 内容解析树列为未审计，而不是宣称整个 diag 驱动绝对安全。
+GitHub+1
+
+
+Wi-Fi 文件消费者审计也有类似情况：
+
+项目通过策略、init rc 和运行时服务列表排除了大部分可行的跨域执行路线，但它承认部分二进制解析器没有完成反编译。
+GitHub+1
+
+
+我的评价：
+- 作为本机、本固件范围内的攻击路径否证：合理。
+- 作为所有潜在 DIAG 或配置解析漏洞不存在的证明：不成立。
+- 作为结束本轮研究的投资决策：可以接受。
+
+七、有一个公开信息会让项目的 CVE 结论更加值得重视：目标 SPL 太旧
+这是我认为外部资料带来的一个重要补充。
+
+Android 2023 年 12 月安全公告：
+- 将 CVE-2023-33063 列为 Qualcomm Kernel 高危漏洞。
+- 将 CVE-2023-33107 列为 Qualcomm Display 高危漏洞。
+- 指出这几个漏洞存在有限、定向利用迹象。
+- 指明 2023-12-05 或更高安全补丁级别解决公告中的相关问题。
+  Android Open Source Project+2
+而项目 F.16 的 SPL 是：
+
+2022-04-05
+
+这相差约 20 个月。
+
+这意味着不能简单因为手机是 Snapdragon 710，就认为这些漏洞已经得到修复。
+
+当然，Qualcomm 补丁可以被 OEM 单独回移植，安全补丁级别也不完全等同于每一段二进制代码的版本。因此，仍要以本机 KGSL 和 FastRPC 驱动实际代码为准。
+
+这也恰恰说明项目采用固件二进制逆向，而不是仅靠 SPL 判断漏洞存在，是正确的研究方法。
+
+八、公开信息与 v2.22 的最终对应表
+我把这次查到的结果汇总如下：
+项目判断	公开资料是否支持	我的评价
+K3 使用 Snapdragon 710	确认	硬件身份吻合
+KGSL CVE-2023-33107	Qualcomm/NVD 列入受影响范围	本机 panic 阻断需要本地证据
+FastRPC CVE-2023-33063	Qualcomm/NVD 资料列入受影响范围	shell 路径受限，但建议补 Wi-Fi 域验证
+Binder CVE-2023-20938	Google 公开利用重点为 GKI 5.4/5.10	与 K3 的 4.9 区别吻合
+Binder CVE-2022-20421	公开利用依赖 qspinlock	与本机 ticket spinlock 差异吻合
+GhostLock CVE-2026-43499	Linux 官方确认漏洞机制	本机 pre-fix、利用链缺地址合理
+UID 0 不等于完整 ROOT	AOSP 官方明确支持	完全吻合
+Wi-Fi root 服务命令执行	没找到独立公开的 K3 对应案例	依赖项目自己的实机证据
+SELinux 完整域逃逸 NO-GO	与公开 Android 安全模型一致	本机策略结论仍需内部证据
+DIAG 入口无可用缺陷	没找到覆盖本机 F.16 的独立报告	只能认可项目限定范围内的否证
+持久 ROOT NO-GO	无公开资料能证明绝对不可能	只能限定为本机已审计路径
+
+最关键的外部来源：
+安全漏洞与利用研究
+
+Google Project Zero
+
+CVE-2023-33107 KGSL 根因分析
+阅读研究报告
+
+
+
+Android Security Bulletin
+
+2023 年 12 月 Qualcomm 漏洞公告
+阅读安全公告
+
+
+
+Google Android Red Team
+
+CVE-2023-20938 Binder 利用分析
+阅读利用分析
+
+
+
+Linux Kernel CVE 公告
+
+CVE-2026-43499 GhostLock 官方根因
+阅读官方公告
+
+
+
+Android SELinux 官方文档
+
+Root 进程仍受 MAC 限制
+阅读安全模型
+
+
+
+九、我给 v2.22 的最终独立评审意见
+我的判断分为三个层次：
+第一层：公开漏洞研究
+吻合度高
+
+Qualcomm CVE、Google Binder 研究、GhostLock 官方修复记录，都能支持项目选择候选攻击面的合理性，以及对公开利用链适用条件的区分。
+
+第二层：本机设备分析
+技术逻辑合理
+
+项目没有把受影响的芯片直接等同于可以提权的手机，也没有把漏洞代码存在等同于 PoC 可用。
+
+这正是本机逆向分析应有的严谨程度。
+
+第三层：完整 ROOT 结项
+有条件认可
+
+受限 UID 0 已有本机实测，但完整 ROOT 和持久 ROOT 没有实现。外部资料不能独立证明这些负结果，更不能证明所有未知漏洞都不存在。
+
+我建议作者只补一个重要项目
+FastRPC 在 oplus_wifi_service 身份下的访问封闭证据。
+
+原因是：
+- Snapdragon 710 确实在公开受影响平台范围内。
+- CVE-2023-33063 有公开的实际利用记录。
+- 项目后来已经取得了受限 UID 0。
+- 原先的 FastRPC 实验主要针对 shell UID 2000。
+虽然现有 SELinux 策略分析没有显示该域获得 adsprpc 设备访问权限，但最好将设备标签、完整 CIL 授权情况和目标服务身份下的拒绝结果明确关联起来。
+
+这只是一个针对现有结论的证据补强，并没有发现可用的新 FastRPC 提权链。
+最终结论
+我认可 v2.22 的核心结项结论，公开资料没有发现任何足以直接推翻它的证据。
+
+不过，我会把结论写得比“这台 K3 不可能 ROOT”更严格：
+在 OPPO K3 PCGM00、PCGM00_11_F.16、Android 11、Linux 4.9.227-perf+、SPL 2022-04-05、Bootloader 保持锁定的限定条件下，已经实现通过厂商 Wi-Fi 服务从 shell 触发受限 UID 0 命令执行；在已审计的内核漏洞、Binder 服务、SELinux 域权限、DIAG 入口和跨域数据消费路径中，没有找到能够进一步获得完整可用或持久 ROOT 的可复现利用链。
+
+这与公开的 Android 安全模型和 Qualcomm 漏洞资料相符。
+
+最后的评级：公开资料支持项目的主要判断，v2.22 可以结项；FastRPC 的受限 UID 0 身份补充验证，是我认为最值得留下的最后一项审查建议。

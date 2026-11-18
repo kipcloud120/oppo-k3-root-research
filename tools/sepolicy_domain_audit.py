@@ -177,10 +177,13 @@ class Policy:
                 for sub in expr[1:]:
                     names |= flatten(sub)[0]
             for m in names:
+                # 修正（2026-11-18）：CIL 中同一名字可能既是 type 又是 attribute
+                # （shell / bluetooth / sensors / mediaserver …）。旧实现只对 attr 展开、
+                # 不入结果集，导致这类成员被静默丢弃，经由它们继承的 allow 被漏计。
+                # 正确语义：先计入成员集，若它本身也是属性则继续展开。
+                result.add(m)
                 if m in self.attrs:
                     walk(m)
-                else:
-                    result.add(m)
 
         walk(attr)
         self._closure[attr] = result

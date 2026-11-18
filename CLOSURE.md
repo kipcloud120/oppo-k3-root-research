@@ -7,7 +7,7 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定（`flash.locked=1`）、AVB `green`、dm-verity `enforcing`、A-only |
 | 唯一入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| 判定版本 | `HANDOVER.md` v2.21 |
+| 判定版本 | `HANDOVER.md` v2.23 |
 | 判定范围 | **本机、本固件、不解 BL**。不是"任何条件下不可能"，也不是"任何设备不可能" |
 
 ---
@@ -60,10 +60,13 @@
 | GhostLock `CVE-2026-43499` | 机制成立（`-EDEADLK` 10+ 次确定性复现）、栈载体已闭合，但 fake waiter 的 `lock`/rb 链接**必须填非零内核地址**，而本机无任何泄露通道 |
 | binder `CVE-2023-20938` | 漏洞未引入（`off_end_offset` 形态落在引入前） |
 | binder `CVE-2022-20421` | pre-fix 确证，但本机是 **ticket spinlock**，公开技术依赖 qspinlock，原语退化并带 `wfe` 死等 |
-| FastRPC `CVE-2023-33063` | 对 shell 双重封闭：`O_RDWR` 被 SELinux 拒；只读 fd 上 7 个 ioctl 全 `EPERM` |
+| FastRPC `CVE-2023-33063` | 对 shell 双重封闭：`O_RDWR` 被 SELinux 拒；只读 fd 上 7 个 ioctl 全 `EPERM`。**v2.23 换 uid 0 身份重测：本域对该二类型权限并集为 ∅，open 读/写两向均被拒（`permissive=0`）⇒ 特权域下更封闭**（§32） |
 
 **关键实证**：拿到 uid=0 之后重新测了 19 条探针——`kallsyms`/`kcore`/`dmesg`/`sections` 全被 MAC 拒，
 `/proc/modules` 基址恒 `0`，`perf_event_paranoid=3`（§23.9）。**"有 root 就能拿地址"这个直觉是错的。**
+
+同向的第二份证据在设备节点面：对 `/dev/adsprpc-smd`，**shell 能只读 `open`、`ioctl` 可达**（经 `appdomain`），
+而 uid 0 的 `oplus_wifi_service` **连 `open` 都被拒**（§32.5）。⇒ **权限按域算，不按 uid 算。**
 
 ### 2.3 `/dev/diag` 内核接口 —— 入口层否证
 
@@ -138,6 +141,9 @@
 2. **入口层复核的穷尽性**。`diag` 的"入口三函数逐路径复核"是人工的；若漏一条分支，结论 2.3 的强度下降。
 3. **"依赖内核指针"这一限定**。它把 §2.2/§2.3 的否证范围收窄了；若有**非指针型**内核缺陷可用，则这两条不覆盖。
 4. **rc 与运行态的偏差**。v2.16 曾用 rc 文本推断部署情况，被 v2.18 实测推翻。同类推断若仍残留在未见章节，可能还有错。
+5. **策略工具的闭包精度**。v2.23 发现 `sepolicy_domain_audit.py` 对"同名既是类型又是属性"的成员会漏计，
+   已修正。凡此前用该脚本评估**名字与属性同名的域**（`shell`/`bluetooth`/`sensors`…）得出的权限面，
+   应视为**下界**——即"权限比记录的多"，这对否证型结论是**不利**方向（§32.8）。
 
 ---
 

@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| 版本 | **v2.22**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判；v2.18=§28 设备在环实测 —— `ro.hardware=qcom` ⇒ 生效 rc 是 `init.wlan.qcom.rc`（G-W5 闭合）；以 `init.svc.*` 重建生效服务集：hostapd/fstman/triggerwifidump **均未定义**，发现两个漏掉的 root 消费者（`wifiserver` 脚本、`wifisar`）；v2.19=§28.9 G-W6 探针 —— `WCNSS_qcom_cfg.ini` 实在 `persist/wlan/`，脚本检查的顶层路径不存在、且 cp 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **R1 降级为"不提供新能力"**、G-W6 闭合；v2.20=§29 G-S1 闭合 —— HAL 带 `.gnu_debugdata`（315 符号/92 函数），19 个方法签名全部可得；只注册 `IOppoWifiService`、无句柄入参、不调 `readStrongBinder` ⇒ **不接收任何 binder 句柄**，但发现 3 个 `_hidl_cb` 构成**反向数据通道**（重登记为 G-S2）；v2.21=§30 G-S2 收敛 —— Java 侧 `OplusWifiHalService` 对回传串**只拼日志+存字段**，28 个方法里 0 个危险 API，上一跳消费方缺物料（G-S2b）；**v2.22=§31 收口判定 —— 根目录新增 `CLOSURE.md`（一页判定 + 四条方向否证索引 + "没做且认为不值得做"清单 + 自我声明的最可能错处）**。下次会话**从 §17 开始**，再按需查 §31（收口）/ §30 / §29 / §28（含 §28.9 探针）/ §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
+| 版本 | **v2.23**，2026-11-18；v2 重写替代 v1 的 13 轮增补式长文。§14 = Binder 五轮审计，§5.2 + §15 = GhostLock 复核与静态收束，§16 = Wi-Fi 私有事务面（含 §16.11 **误判撤回**），§17 = 接手清单。**v2.8=§18 P0 静态定性；v2.9=§19 P2 六服务；v2.10=§20 外部复评重开 myftm；v2.11=§21 执行复评的新 P0/新 P1；v2.12=§22 同族九类命令全映射 + regex 黑名单缺口 + 更正 iwpriv 无整数转换；v2.13=§23 上机执行 —— L3 达成：受限域内 uid=0 命令执行已证；v2.14=§24 域逃逸 P0 静态审计 —— 五条候选全部断链，无逃逸路径；v2.15=§25 `/dev/diag` 内核接口审计 —— 入口层三函数逐路径复核 + 55/55 拷贝点判界闭合、无 mmap、post-fix 形态，判定"入口层否证"；v2.16=§26 Wi-Fi 可写面消费者审计 —— 三条前置门全封死 + 跳板方向反了（唯一能呼 system_server 的是本域），判定"消费面不构成提权通道"；v2.17=§27 system_server Binder 通道可达性 —— 本域对 servicemanager **零权限**，通道在"取句柄"处断开；并撤回 §26 的 atoll 锚点与 fstman「未部署」两处误判；v2.18=§28 设备在环实测 —— `ro.hardware=qcom` ⇒ 生效 rc 是 `init.wlan.qcom.rc`（G-W5 闭合）；以 `init.svc.*` 重建生效服务集：hostapd/fstman/triggerwifidump **均未定义**，发现两个漏掉的 root 消费者（`wifiserver` 脚本、`wifisar`）；v2.19=§28.9 G-W6 探针 —— `WCNSS_qcom_cfg.ini` 实在 `persist/wlan/`，脚本检查的顶层路径不存在、且 cp 两端都在本域可写的 `mnt_vendor_file` 内 ⇒ **R1 降级为"不提供新能力"**、G-W6 闭合；v2.20=§29 G-S1 闭合 —— HAL 带 `.gnu_debugdata`（315 符号/92 函数），19 个方法签名全部可得；只注册 `IOppoWifiService`、无句柄入参、不调 `readStrongBinder` ⇒ **不接收任何 binder 句柄**，但发现 3 个 `_hidl_cb` 构成**反向数据通道**（重登记为 G-S2）；v2.21=§30 G-S2 收敛 —— Java 侧 `OplusWifiHalService` 对回传串**只拼日志+存字段**，28 个方法里 0 个危险 API，上一跳消费方缺物料（G-S2b）；**v2.22=§31 收口判定 —— 根目录新增 `CLOSURE.md`（一页判定 + 四条方向否证索引 + "没做且认为不值得做"清单 + 自我声明的最可能错处）**；v2.23=§32 FastRPC 面在 `oplus_wifi_service`（uid 0）身份下的封闭性 —— 响应审核意见 v005 的唯一 P0，三层判据 + 正对照实测（`FASTRPC_DOMAIN_GATE.md`），并修正 `sepolicy_domain_audit.py` 的属性闭包缺陷。下次会话**从 §17 开始**，再按需查 §31（收口）/ §30 / §29 / §28（含 §28.9 探针）/ §27 / §26 / §25 / §24 / §23 / §22 / §20 / §18 / §16 / §15 / §14 |
 | 状态 | **Wi-Fi 面 L3 已达成（2026-11-18 12:07）：从 shell 可让 root 服务以 `uid=0` 执行任意命令**，域 `u:r:oplus_wifi_service:s0`，两次复现（§23）。**但这是被 SELinux 限制的 root**：读不到 `/data/system`、`selinuxfs`、`proc_security`、`shell_data_file`（§23.3）⇒ **"临时 ROOT（运行时 uid=0 命令执行）"已达成；"可自由读写的 root / 可用 root shell"未达成，缺的是域逃逸**。四个内核面仍不可达（未再触碰）；GhostLock 仍缺内核地址泄露但与当前主线无关。历史链路：`-3` 归因仅限 iwpriv 分支（§20）、myftm 分支裸拼（§20）、黑名单只覆盖 11 字符（§22）——**这三步都必须保留，它们是 §23 的前提** |
 | 原件 | `docs_archive/HANDOVER_v1_2026-11-17_full.md`（v1 全文 3368 行，含全部过程推理，**仅备查**） |
 | 唯一入口 | 本文件。数值以本文件为准；v1 与 `docs_archive/` 的其余文档一律视为历史证据，不得引用其数值 |
@@ -443,6 +443,12 @@ ENOTTY（未实现）3833
 `EPERM` 发生在 NULL 解引用之前，且同一 fd 上 `ioctl(fd,0)` 返回 `ENOTTY`（LSM 无法按 cmd 区别放行）⇒ **`EPERM` 来自驱动自身**（fd 模式位或能力检查）。
 
 ⇒ **双重封闭：写通道被 SELinux 拒；已实现 ioctl 在只读 fd 上被驱动以 `EPERM` 拒。不存在可行组合。**
+
+> **v2.23 扩展（§32）**：上表是 **shell（uid 2000）** 的结论。拿到 uid 0 之后重测，
+> 结论**收紧**：`oplus_wifi_service` 对该二类型的 `chr_file` 权限并集为 **∅**，
+> `open()` 读、写两向均被 SELinux 拒（`permissive=0`），⇒ 特权域下**连只读 fd 都拿不到**，
+> 比 shell 更封闭。同时更正：`-secure` 节点实测为 `0644`（原记 `0640`）。
+> 详见 §32 与 `artifacts_adb/binder_audit/FASTRPC_DOMAIN_GATE.md`。
 
 ---
 
@@ -2418,3 +2424,123 @@ mStatus = status;  mValue = value;                     // 仅存字段
 
 **范围限定**：本判定只覆盖"本机、本固件（`PCGM00_11_F.16` / `4.9.227-perf+` / SPL `2022-04-05`）、不解 BL"。
 不是"任何条件下不可能"。设备一旦 OTA 或换固件，§7 第 3 条即触发重评。
+
+---
+
+## 32. 增补：FastRPC 面在 `oplus_wifi_service` 身份下的封闭性（2026-11-18 14:30–14:32，设备在环，只读；响应审核意见 v005 的唯一 P0）
+
+> 独立报告：`artifacts_adb/binder_audit/FASTRPC_DOMAIN_GATE.md`。
+> v005 的措辞是"现有策略证据**倾向**支持 FastRPC 仍被封闭，建议补明确的设备标签及访问拒绝证据"——
+> 本轮把它从"倾向"做成"实测"。
+
+### 32.1 一句话结果
+
+**CVE-2023-33063 的利用前置（拿到一个可读写或可 ioctl 的 adsprpc fd）在 `oplus_wifi_service` 下不成立：
+该域对 `qdsp_device` / `xdsp_device` 的 `chr_file` 权限并集为 ∅，`open()` 的读、写两个方向均被 SELinux 拒（`permissive=0`）。**
+
+### 32.2 为什么这条必须换身份重测：DAC 门变了
+
+§5.4 的 `open(O_RDWR) == EACCES` 是在 shell 下得到的，而 `EACCES` **无法区分"DAC 拒"与"SELinux 拒"**。
+身份换成 §23 的 uid 0 之后，DAC 侧的门换了方向：
+
+```
+crw-rw-r-- 1 system system u:object_r:qdsp_device:s0  224,0 /dev/adsprpc-smd         # 0664
+crw-r--r-- 1 system system u:object_r:xdsp_device:s0  224,1 /dev/adsprpc-smd-secure  # 0644
+```
+
+| 身份 | 组 | 对 `smd`(0664) 的 DAC 结果 |
+|---|---|---|
+| shell(2000) | 无 `system` | 仅 `r--` ⇒ 写打开在 DAC 层即被拒 |
+| `oplus_wifi_service`(0) | 含 `1000(system)` | 组位 `rw` ⇒ **DAC 放行读写** |
+
+⇒ 对 `smd` 而言 **SELinux 是唯一的门**，必须单独测。（`-secure` 即使 SELinux 放行，`0644` + 无 `CAP_DAC_OVERRIDE` 仍挡住写。）
+
+> **更正**：§5.4 记 `-secure` 为 `0640`，实测 **`0644`**。
+
+### 32.3 静态：三层判据（`tools/fastrpc_domain_gate.py`，新增）
+
+策略规模不变：5 份 CIL / 24,657 条 allow / 本域所属属性 89。
+
+| 层 | 检查 | 结果 |
+|---|---|---|
+| L1 标签 | `file_contexts` vs 设备 `ls -lZ` | `smd → qdsp_device`、`-secure → xdsp_device`，两侧一致 |
+| L2 策略 | direct + 89 个所属属性 + **目标侧属性展开**（`dev_type`/`base_typeattr_711`/`mlstrustedobject`）+ `allowx` xperm | 并集 **∅**；涉及该类型的 18 条 `allowx` 中适用于本域 **0** 条 |
+| L3 遮蔽 | 全策略 `dontaudit ... chr_file` 命中该类型者 | 仅 `crash_dump → dev_type`，**不适用于本域** |
+
+对照（同一份策略里规则确实存在，只是不含本域）：`qdsp_device` 上有 `open` 的显式域 17 个、属性 9 个；`xdsp_device` 上显式域 14 个、属性 10 个。**本域不是其中任何一个属性的成员。**
+
+### 32.4 运行期：正对照 + 四探针
+
+判据**执行前登记**：先用本域对策略显式授权的同类字符设备做正对照，正对照不过则本轮作废。
+
+| # | 探针 | 域内返回值 | AVC |
+|---|---|---|---|
+| 0a | `true < /dev/null` | `ctrl_ok` | — |
+| 0b | `true < /dev/diag`（同类设备，本域被显式授予 9 项权限） | **`diag_open_ok`** | — |
+| 1 | `true < /dev/adsprpc-smd` | `smd_rdonly_denied` | `denied { read }` |
+| 2 | `true < /dev/adsprpc-smd-secure` | `secure_rdonly_denied` | `denied { read }` |
+| 3 | `echo -n > /dev/adsprpc-smd`（O_WRONLY） | `wronly_denied` | `denied { write }` |
+| 4 | `true <> /dev/adsprpc-smd`（O_RDWR） | `denied`（两次） | 无独立记录（§32.6） |
+
+AVC 原文：
+
+```
+avc: denied { read }  name="adsprpc-smd"        tcontext=u:object_r:qdsp_device:s0 tclass=chr_file permissive=0
+avc: denied { read }  name="adsprpc-smd-secure" tcontext=u:object_r:xdsp_device:s0 tclass=chr_file permissive=0
+avc: denied { write } name="adsprpc-smd"        tcontext=u:object_r:qdsp_device:s0 tclass=chr_file permissive=0
+```
+
+三条均 `scontext=u:r:oplus_wifi_service:s0`；执行者同一事务内回显 `uid=0(root) gid=1010(wifi) groups=…,1000(system),…`。
+
+**正对照 0b 是关键**：同一个域、同一个对象类、同一套测量方法，对 `/dev/diag` 返回 `ok` ⇒ 探针 1–4 的 `denied` 不是假阴性。
+
+### 32.5 结构性发现：**提权之后这个面反而更小**
+
+| 身份 | 域 | `qdsp_device` 权限 | 能力 |
+|---|---|---|---|
+| uid 2000 | `shell` | `getattr ioctl lock map open read`（经 `appdomain`） | 可只读 open；`ioctl` 可达；写被拒 |
+| uid 0 | `oplus_wifi_service` | **∅** | open 全方向被拒 |
+
+`shell ∈ appdomain`，平台基线 `(allow appdomain qdsp_device (chr_file (ioctl read getattr lock map open watch watch_reads)))` 把读通道与 ioctl 通道给了应用域；`oplus_wifi_service` **不在** `appdomain`。
+
+这同时把 §5.4 的两个旧观测解释干净：`ioctl(fd,0)=ENOTTY` 是因为 `ioctl` **被授予**（穿过了 LSM 钩子进驱动）；`open(O_RDWR)=EACCES` 是因为 `write` **未**授予。
+
+⇒ **负知识（新增，必须遵守）**：**"从 shell 拿到 uid 0"不等于权限变大**。域属性归属的差异会反向吃掉 DAC 的增益；凡涉及设备节点/文件的判定，**必须按域算，不能按 uid 算**。
+
+### 32.6 一处日志学异常（如实记录）
+
+`O_RDWR`（`<>`）两次返回 denied，但**没有独立 AVC**，而 `O_WRONLY` 有。两种可能：内核 AVC 缓存/审计去重；或 open 在 `read` 检查处即失败，`write` 未被单独求值。
+
+不影响判定：读、写各有一次独立且带 AVC 的测量，`O_RDWR` 需同时满足二者，只能更严。
+
+### 32.7 缺口与可证伪条件
+
+| 缺口 | 性质 | 什么条件才重开 |
+|---|---|---|
+| ioctl 语义面 | open 前置即失败，本域**无法到达**任何 ioctl | 出现"本域对该节点有 open 授权"的策略差异（如 OTA 后 CIL 变更） |
+| 相邻 DSP 面（`ssr_device`/`ramdump_device`/`qce_device`/`tee_device`/通用 `device`） | 同法核算为 **0 权限**，但只做了策略层，未逐个上机 | 任一类型在本域取得 `open` |
+| 非指针型缺陷 | 与本轮口径无关（本项目否证的是"依赖内核指针"的利用） | 出现引用 adsprpc 且不依赖地址泄露的公开技术 |
+
+**构成推翻**：给出 `(allow oplus_wifi_service <qdsp_device 所属属性> (chr_file (open)))` 的实际策略行，或一段在 `u:r:oplus_wifi_service:s0` 下成功 `open("/dev/adsprpc-smd", O_RDWR)` 的回显。
+
+### 32.8 工具修正：`sepolicy_domain_audit.py` 的属性闭包缺陷
+
+原实现对"成员名**同时是 type 与 attribute**"（`shell`/`bluetooth`/`sensors`/`mediaserver` …，Android 策略里很常见）的成员会**丢弃**该成员、只做展开，导致经它继承的规则被漏计。已修正（`result.add(m)` + 继续展开）。
+
+影响评估：
+
+- **本域数字不变**（`oplus_wifi_service` 不与任何属性同名）：89 属性 / 307 条适用 allow，与 §24 一致；
+- 对照域 `shell` 由少量变为 **131 属性 / 1,012 条 allow** ⇒ 旧实现**低估**了 shell 的权限面。
+- **口径修正**：凡以往用该脚本评估"名字与属性同名的域"（shell、bluetooth、sensors…）的结论，一律视为**下界**。
+
+### 32.9 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `tools/fastrpc_domain_gate.py` | 新增：三层判定（标签/策略/遮蔽）+ 对照持有人 |
+| `tools/sepolicy_domain_audit.py` | 修正属性闭包的 type/attribute 同名丢弃缺陷 |
+| `artifacts_adb/binder_audit/FASTRPC_DOMAIN_GATE.md` | 新增：本轮独立报告 |
+| `artifacts_adb/binder_audit/fastrpc_gate_output.txt` | 新增：静态判定原文 |
+| `.build/sepolicy/fastrpc_gate.json` | 新增：结构化结果 |
+| `artifacts_adb/binder_audit/p1_probes/20261118T1430*–1432*` | 新增 8 份运行期日志（身份、两个正对照、四个探针） |
+| 设备 | `/data/local/tmp` 已清空（jar 与载荷已删）；无写入、无 ioctl、无持久化、无重启 |
