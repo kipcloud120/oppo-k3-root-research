@@ -66,7 +66,7 @@
 |---|---|---|---|---|---|
 | `hostapd` | `hal_wifi_hostapd_default`（`typetransition init hal_wifi_hostapd_default_exec →`） | `user wifi` / `group wifi net_raw net_admin` / caps **NET_ADMIN NET_RAW** / `disabled` + `oneshot` | **否**（SoftAP 未开） | `-dd -g /data/vendor/wifi/hostapd/global`，**无 `-c`** ⇒ 配置走 ctrl/HIDL，非文件 | 不可达（连接门） |
 | `wpa_supplicant` | `hal_wifi_supplicant_default`（`typetransition init hal_wifi_supplicant_default_exec →`） | `user wifi` | **是**（pid 6399） | `-O/data/vendor/wifi/wpa/sockets -dd -g@android:wpa_wlan0`，**无 `-c`** ⇒ 无文件配置路径 | 不可达（无文件消费） |
-| `fstman` | `fstman`（`typetransition init fstman_exec →`） | `user wifi` / `group wifi` | **否** | `-c /data/vendor/wifi/fstman.ini` ← **这是唯一"我们可写、且确为配置文件"的实例** | **本机不成立**：`atoll` 的 rc 中无 `fstman` 服务，`ps` 也没有该进程 |
+| `fstman` / `fstman_wlan0` | `fstman`（`typetransition init fstman_exec →`） | `user wifi` / caps **NET_ADMIN NET_RAW** / `disabled` + `oneshot` | **否**（探测时） | `-c /data/vendor/wifi/fstman.ini` ← **唯一"我们可写、且确为配置文件"的实例**（`vendor.qti.hardware.fstman@1.0-service.rc`） | **仍不可达，但理由要改（v2.17）**：二进制**存在**（`ls -l /vendor/bin/fstman` → *Permission denied* 而非 *No such file*）、服务定义**存在**（HIDL `IFstManager`）；本域对该 hwservice **无 `find`**、对 `fstman` 域**无 `binder call`** ⇒ 触发门 |
 | `cnss-daemon` / `wcnss_service` | `wcnss_service` | `user system` / `group system inet net_admin wifi` / caps NET_ADMIN | 未见进程 | NV/persist 数据 | 不可达（连接门）；且其身份与域均不高于本域 |
 | `oplus.usage-1-0`（transmessage） | 其 HAL 域 | `user system` / `group system wifi` | 未见进程 | `/mnt/vendor/persist` 等 | 同上 |
 | `vendor_autochmod`（`init.vendor.wifi.autochmod.sh`） | `vendor_autochmod`（`typetransition init wifi_vendor_autochmod_exec process`） | `user root` / 脚本由 init 直接执行 | 按需 | 脚本内容在 `/odm`（只读） | 不可达（触发门）；其域只有 `vendor_data_file` 写 + `sysfs` 写 |
@@ -76,7 +76,14 @@
 
 1. `wpa_supplicant` 与 `hostapd` 在本机**都没有 `-c <config>`**（rc 原文），配置经 ctrl/HIDL 传入
    ⇒ **"改配置文件让 supplicant/hostapd 按我们的意图工作"这条最常被担心的路径，在本机不存在**。
-2. 唯一带 `-c /data/vendor/wifi/fstman.ini` 的 `fstman`，**在本机型（atoll）上既无服务定义也无进程** ⇒ 实例死亡。
+2. ~~唯一带 `-c /data/vendor/wifi/fstman.ini` 的 `fstman`，在本机型（atoll）上既无服务定义也无进程 ⇒ 实例死亡。~~
+   **【v2.17 更正：本条撤回，两处都错】**
+   (a) **平台锚点错**：本机 SoC 是 **SDM710**；`atoll` 在公开 Qualcomm 命名里对应 SM7125/720G 一系（评审 v0041 第四节指出）。
+   用 `init.wlan.atoll.rc` 判定本机部署情况属**未经证实的机型映射**；正确依据是 `ro.hardware` 决定导入哪一份 = **G-W5**。
+   (b) **"无服务定义/无进程"→"未部署"错**：`ls -l /vendor/bin/fstman` 返回的是 *Permission denied*（`fstman_exec` 的 getattr 被 MAC 拒），**不是 No such file**；
+   且 `vendor.qti.hardware.fstman@1.0-service.rc` 明确定义了 `fstman` 与 `fstman_wlan0`（`-c /data/vendor/wifi/fstman.ini`，HIDL `IFstManager`，`disabled`+`oneshot`）。
+   ⇒ 正确结论：**实例存在、探测时未运行，但本域无法触发**——本域 `hwservice_manager find` 只对 `oplus_wifi_hal_service` 生效（§25.9），对 `hal_fstman_hwservice` **无权限**；
+   对 `fstman` 域也**无 `binder call`**。**触发门仍然成立，但机制是"名字查找 + binder"，不是"未部署"。**
 
 ---
 
@@ -116,7 +123,8 @@
 | G-W1 | **消费端解析器的内存安全缺陷** | 未做二进制级审计（需要逐个反编译 supplicant/hostapd/cnss-daemon 的 ini/bin 解析器）。这是本面**唯一**的残余风险类，且属 0day 级 |
 | G-W2 | `vendor_oppo_prop` 的**值语义** | 55 条前缀中含相机/显示/vold serialno/modem dump；`system_server` 是读方。已确认无"属性值被当命令/路径解释"的**策略层**证据（§24.6），但**值语义**未逐条审计 |
 | G-W3 | `mnt_vendor_file` 的二进制解析 | `rild`/`self_init` 读 `persist` 下的 modem/NV 数据；写该类路径跨重启持久化（§24 R1 **禁止写实验**），只能静态看解析器 |
-| G-W4 | 本机实际生效的 rc 子集 | 197 份 rc 覆盖多机型（atoll/bengal/kona/…）。本报告已用 `atoll` 与设备 `ps` 交叉过滤，但**未逐份确认哪一份是 sdm710 生效版本** |
+| G-W4 | 本机实际生效的 rc 子集 | 197 份 rc 覆盖多机型（atoll/bengal/holi/kona/lahaina/lito/msmnile…）。**v2.17 更正：先前用 `atoll` 当本机锚点是错的**——本机 SoC 为 SDM710，`atoll` 公开对应 SM7125/720G 一系 |
+| **G-W5** | **SDM710 实际导入的 rc 是哪一份** | 依据是 `ro.hardware`，不是机型名。需一次只读查询：`getprop ro.hardware` + `ls /vendor/etc/init/hw/`。**本轮设备离线（`adb devices` 返回空），未执行** ⇒ 这是评审 v0041 的 P1，也是本报告结论 3 唯一剩余的依据缺口 |
 
 ---
 
@@ -127,7 +135,7 @@
 | 问题 | 答案 |
 |---|---|
 | 我们能写高权限消费者读的配置吗？ | **部分能**（`/data/vendor/wifi/**`、`/mnt/vendor/persist/**`） |
-| 消费者会按我们的意图改变行为吗？ | **否**——本机 supplicant/hostapd 无 `-c`；唯一带 `-c` 的 `fstman` 未部署 |
+| 消费者会按我们的意图改变行为吗？ | **否**——supplicant/hostapd 无 `-c`；唯一带 `-c` 的 `fstman` **存在但不可触发**（无 hwservice find / 无 binder call，v2.17 更正） |
 | 能让消费者执行我们的代码吗？ | **否**（可写类型上 `execute` = 0） |
 | 能借消费者跳到更高域吗？ | **否**（消费者域均无 `system_server`/`vold` binder；唯一有该通道的是本域） |
 | 收益上限是什么？ | **DAC 降级**（uid 0 → 1010/1000） + 同层域内代码执行 |
@@ -138,7 +146,7 @@
 满足任一条才重开本面：
 
 1. 本机 rc 实际生效版本中，`hostapd` 或 `wpa_supplicant` **带 `-c <我们可写的路径>`**（当前二者都没有）；
-2. `fstman` 在本机型被启用，且其 `-c` 路径落在 `wifi_vendor_data_file`（当前 atoll 无该服务）；
+2. 本域获得 `hal_fstman_hwservice` 的 `hwservice_manager find` **或** 对 `fstman` 域的 `binder call`（当前二者皆无）；
 3. 某消费者域获得 `system_server` / `vold` / `installd` 的 `binder call`（当前均为 0）；
 4. 某可写类型获得 `execute`（当前 0 个域持有，见 §24.5）；
 5. 出现影响上述消费者**配置解析器**的公开漏洞，且该消费者在本机运行。
