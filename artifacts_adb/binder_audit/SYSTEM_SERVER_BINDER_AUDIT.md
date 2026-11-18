@@ -202,3 +202,62 @@ logcat 里 `OplusWifiHalService: … with result = <我们的串>` 就是它。
 (a) 发现该服务在任何版本里出现 `readStrongBinder`；
 (b) 发现它同时注册了 `android.hardware.wifi@x::IWifi`（那才有 `registerEventCallback` 入参）；
 (c) 发现接口里存在 `sp<...Callback>` 型入参。
+
+---
+
+## 9. G-S2：反向通道的 Java 侧落点（2026-11-18，纯离线）
+
+> 物料：`artifacts_adb/binder_audit/jars/sys_ext/oppo-wifi-service.jar`（系统内 `/system/system_ext/...` 的 wifi 服务 jar），
+> 类 `Lcom/oplus/server/wifi/OplusWifiHalService;`。工具：androguard 4.1.4（纯 Python，无需 dex2jar）。
+
+### 9.1 HAL 回调在 Java 侧的落点：**只有日志 + 存字段**
+
+`OplusWifiHalService$OplusWifiServiceResult.setResult(int, String)` 的完整字节码：
+
+```java
+logCompletion(mMethodName, status);                       // access$700
+Log.d(TAG, "leaving " + mMethodName + " with result = " + value);
+mStatus = status;
+mValue  = value;                                          // 仅存字段
+```
+
+`logCompletion(String cmd, int status)`：
+
+```java
+if (status == 0) Log.d(TAG, cmd + " completed successfully.");
+else             Log.w(TAG, cmd + " failed: " + status);
+```
+
+⇒ HAL 回传的字符串在本层的作用是：**拼进 `Log.d` 的消息**（StringBuilder 拼接，**不是格式串**）+ **存进 `mValue` 供 `getResult()` 返回**。
+**没有** `File` / `Runtime` / `ProcessBuilder` / `SystemProperties` / `Intent` / 网络调用。
+
+### 9.2 类内危险 API 扫描：**0 命中**
+
+对 `OplusWifiHalService` 全部 28 个方法做 xref-to 扫描，目标包含
+`Ljava/io/*`、`Ljava/lang/Runtime;`、`Ljava/lang/ProcessBuilder;`、`Landroid/os/SystemProperties;`、
+`Landroid/content/Intent;`、`Ljava/net/*` —— **一个都没有**。
+
+⇒ 该类在 system_server 内的行为是"转发 + 记录 + 存结果"，不含任何命令/路径/属性写入能力。
+
+### 9.3 未闭合的一跳：谁消费 `getResult()`
+
+在本仓库持有的全部 jar（`framework.jar`/`services.jar`/`oplus-services.jar`/`oplus-framework.jar`/
+`coloros-internal-services.jar`/`sys_ext/*`）中，**除 `oppo-wifi-service.jar` 自身外没有任何类引用 `OplusWifiHalService`**
+（二进制 grep："OplusWifiHalService" 只在该 jar 命中 18 次）。
+
+⇒ 调用方（把 `getResult()` 拿去做什么的那一跳）**不在物料中**。登记为 **G-S2b**，
+闭合需要 `service-wifi.jar` 的 OPPO 扩展部分或 `oplus-services.jar` 的对应版本。
+
+### 9.4 G-S2 判定
+
+| 问题 | 答案 |
+|---|---|
+| HAL 回传的字符串能进 system_server 吗 | **能**（`_hidl_cb` 事务） |
+| 在 `OplusWifiHalService` 里被怎么用 | **拼日志 + 存字段 + 作为返回值**（§9.1） |
+| 该层有命令/路径/属性注入吗 | **没有**（§9.2，0 命中） |
+| 再往上一跳呢 | **未知**（§9.3，物料缺失，G-S2b） |
+| 因此这条通道能提权吗 | **在本层不能**；上一跳未证，但已无"system_server 内直接执行"的落点 |
+
+**为什么不再往下追**：`getResult()` 的消费方即使存在，也仍然在 Java 层的普通数据流里；
+本报告口径（SELinux + 二进制/字节码）能给的判据已给完。再往上是"某个 Android 服务如何用这个字符串"，
+属常规应用层审计，且需要缺失的物料 —— **不属于本轮"信任边界"问题**。

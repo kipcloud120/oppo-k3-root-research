@@ -13,11 +13,11 @@
 | Wi-Fi 私有事务面 | **已利用成功**。路径：`tx10070 → helper(空权限) → HIDL → /odm/bin/iwpriv <载荷> → sh -c`。**v2.12** 证明过滤器只有 11 个字符（缺 `\n`、反引号、`<`、`>`）；**v2.13 上机验证**：载荷 `x\nlog -t P1UID `id`` 回显 `uid=0(root) gid=1010(wifi) … context=u:r:oplus_wifi_service:s0`，两次复现。同族另三接口无 Java 调用方，不增加攻击面。见 §23 / §22。**v2.14 探针**：`CapEff=CapBnd=0x13000`（`sys_admin` 从不在 Permitted/Bounding 内）、`/mnt/vendor/persist/wlan` 实测 `mnt_vendor_file`（`0777`）、`crash_dump` 域转换可判别成立但零收益（§24.9） |
 | 设备终态 | 系统未变，**未刷写、未解锁、未改分区、未装持久化文件**；`/data/local/tmp` 已清空；累计 5 次内核重启（均为前期竞态实验，本轮 0 次） |
 
-> **📌 审阅入口（v2.20 · 本轮提交审核）**
+> **📌 审阅入口（v2.21 · 本轮提交审核）**
 > 五份材料：`HANDOVER.md` **§25 / §26 / §27 / §28**、`DIAG_DRIVER_AUDIT.md`、`WIFI_DATA_CONSUMER_AUDIT.md`、`SYSTEM_SERVER_BINDER_AUDIT.md`（均在 `artifacts_adb/binder_audit/`）。
 > 结论四条：`/dev/diag` **入口层否证**；Wi-Fi 可写面**消费不构成提权通道**；`system_server` 通道**在"取句柄"处断开**；**root 脚本消费 persist 配置 = 内核面，不是域逃逸**。
-> v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调；v2.20 **闭合 G-S1** —— 从 HAL 二进制的 `.gnu_debugdata` 解出 19 个方法签名，证明它**不接收任何 binder 句柄**。
-> 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.20）](#审阅须知v220) 的「本轮自我更正」。
+> v2.18 用设备实测**闭合了 G-W5** 并重建生效服务集（`ro.hardware=qcom` ⇒ `init.wlan.qcom.rc`；`hostapd`/`fstman`/`triggerwifidump` 本机**均未定义**）；v2.19 用 5 条只读探针**闭合 G-W6**，并把 R1 的"root 消费路径"实测下调；v2.20 **闭合 G-S1** —— 从 HAL 二进制的 `.gnu_debugdata` 解出 19 个方法签名，证明它**不接收任何 binder 句柄**；v2.21 **收敛 G-S2** —— HAL 回传串在 Java 侧只进日志与字段，该类 28 个方法对 `java.io`/`Runtime`/`ProcessBuilder`/`SystemProperties`/`Intent`/`java.net` **0 命中**。
+> 累计**撤回/收窄自己的判断六处**，见[审阅须知（v2.21）](#审阅须知v221) 的「本轮自我更正」。
 > **请重点攻击的五个点、复现命令、推翻口径，见[审阅须知（v2.19）](#审阅须知v219)。**
 
 ---
@@ -258,7 +258,7 @@ adb shell "chmod 755 /data/local/tmp/g3c_v7; timeout 25 /data/local/tmp/g3c_v7"
 
 ---
 
-## 审阅须知（v2.20）
+## 审阅须知（v2.21）
 
 本节是给外部复核者的**靶面说明**：列出五条结论、各自的判据强度、累计自我更正、建议优先攻击的点，以及"什么才算推翻"。
 
