@@ -476,3 +476,42 @@ public boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
 
 **结论的先验概率**：由于 helper 内确实没有 uid 判断，"描述符即唯一门限"与静态证据一致；
 但**在拿到一次成功调用之前，仍然只能记为"未证"**——这条纪律本轮已经吃过两次教训（§8.2）。
+
+---
+
+## 10. 真客户端工具链（2026-11-18 08:25–08:40）：已建成，待设备
+
+§9 的结论是"动态验证被调用方 ABI 卡住"。要绕开它，唯一办法是用**真实的 Java 客户端**发包，
+而本机没有 Java 运行时。本轮把这条缺环补上了，**但设备在推送前第二次掉线**（`no devices/emulators found`）。
+
+### 10.1 已建成的东西（全部在 `.build/`，不入库）
+
+| 组件 | 说明 |
+|---|---|
+| Microsoft OpenJDK 11.0.20 | `aka.ms/download-jdk/...zip`，187,093,013 B，解压到 `.build/jdk/` |
+| r8 / D8 | `dl.google.com/dl/android/maven2/...`，21,188,014 B，`.build/jdkpkg/r8.jar` |
+| `tools/javaprobe/FtmProbe.java` | 18 行客户端：`ServiceManager.getService("wifi")` → `writeInterfaceToken(token)` → `transact(code)` → 打印回包十六进制与 `readInt()` |
+| `tools/javaprobe/android/os/*.java` | 3 个编译期桩（`IBinder`/`Parcel`/`ServiceManager`），只用于通过 javac；运行时解析到设备真类 |
+| `tools/javaprobe/build.sh` | 一键：javac 桩 → 编译客户端 → D8 → 打包 `classes.dex` → 输出 `ftmprobe.jar`（2.8 KB dex） |
+
+**已验证可复现**：`bash tools/javaprobe/build.sh` 在本机跑通，产物 `.build/jdkpkg/ftmprobe.jar`。
+
+### 10.2 待执行的一条命令（设备一回来就跑）
+
+```bash
+adb push .build/jdkpkg/ftmprobe.jar /data/local/tmp/
+adb shell "CLASSPATH=/data/local/tmp/ftmprobe.jar app_process /system/bin FtmProbe \
+           10069 android.net.wifi.IOplusWifiManager"
+```
+
+判据（先登记）：
+- 打印 `INT=<n>` ⇒ **可达**，且证明 `service call` 的失败是 ABI/parcel 构造问题；
+- 打印 `EX java.lang.SecurityException: Binder invocation to an incorrect interface` ⇒ 该分支确实校验描述符，
+  则把 token 换成 `IOplusWifiP2pManager` 复跑一次（脚本已参数化）；
+- 打印 `EX java.lang.SecurityException: Permission Denial...` ⇒ 存在调用者检查（与静态结论冲突，需重查）。
+
+### 10.3 设备侧稳定性问题（记录，避免重复浪费）
+
+2026-11-17 19:0x 与 2026-11-18 08:40 两次掉线，均发生在**长时间空闲后的下一次 adb 调用**上。
+建议：USB 调试（安全设置）保持开启、屏幕常亮、关闭 USB 选择性暂停。掉线后 `adb reconnect` 无效，
+只能物理重插。
