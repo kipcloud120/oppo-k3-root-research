@@ -33,6 +33,11 @@ artifacts_adb/binder_audit/rootbin/_p2/
 # ---- 第三方完整利用代码：不重新分发，只在文档中引用出处 ----
 src_ref/poc_ex.c
 src_ref/*.b64
+# v007 预研克隆的 PCKM00 参考项目（第三方 GPL 代码，仅本地只读比对，不入库）
+ref_pc/
+# 真机探针的交叉编译产物（只推 .c 源码，二进制体积大且平台相关）
+live_probe/timer_probe
+live_probe/collision_probe
 
 # ---- 会话/编辑器临时文件 ----
 .workbuddy/

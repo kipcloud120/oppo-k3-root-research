@@ -1,58 +1,56 @@
-# 接手摘要（2026-11-18 18:45，v2.24+）
+# 接手摘要（v3.0 · 2026-11-19 · GhostLock 重开）
 
-> 一页式入口。完整证据在 `HANDOVER.md` §1–§37、一页判定在 `CLOSURE.md`、审阅入口在 `README.md`「审阅须知（v2.24）」。
+> 一页式入口。完整证据在 `HANDOVER.md`（v3 章节 §38–§42 + 历史 §1–§37）；分层判定在 `CLOSURE.md`；审阅入口在 `README.md`。
+> 历史版本（v2.24+，2026-11-18）已归档到 `docs_archive/HANDOVER_v2.24_2026-11-18_full.md` 等，数值不可引用。
 
-## 1. 当前结论（三层，不可混用）
+## 1. 当前结论（四层，不可混用）
 
 | 层次 | 状态 |
 |---|---|
-| Root UID 命令执行 | **已达成**：shell → tx10070 → `\n`/反引号绕过黑名单 → `sh -c` 以 `uid=0`、域 `u:r:oplus_wifi_service:s0` 执行（§23，两次复现） |
-| 可用 root | **未达成**：该域读不到 `/data/system`、`selinuxfs`、`proc_security`；无可执行写面、无 `mount`、无域转换（§24，v2.24+ 重算仍为 0） |
-| 持久 ROOT | **未达成**，且按约定不做任何持久化写入 |
+| Wi-Fi 域内 Root UID 命令执行 | **已达成**（2026-11-18，`\n`/反引号绕过黑名单 → `sh -c` 以 `uid=0`、域 `u:r:oplus_wifi_service:s0` 执行，两次复现，§23） |
+| 可用 root（脱离 SELinux 域） | **未达成**；域逃逸静态审计无路径（§24），FastRPC 在 uid 0 域下反而更封闭（§32） |
+| 持久 ROOT | **未达成**，按约定不做任何持久化写入 |
+| **GhostLock 内核地址泄露** | **v3 新进展：futex 哈希侧信道真机实测可用**（110× 信号），端到端可得 mm_struct 线性地址 / KASLR slide；**但拿不到 fake waiter 需要的地址类型** |
 
-**总体**：BL 锁定条件下 NO-GO 维持。四条方向的断点：SELinux 域、内核能力集（SELinux 侧反而放行）、无内核地址泄露、"触发"步失败（不是"通道"缺失）。
+**总体**：BL 锁定条件下可用 ROOT 仍为 NO-GO。**但 GhostLock 从"冻结/收口"重开为活跃研究路径**——因为其此前的唯一阻断理由"无内核地址泄露"已被部分推翻（侧信道实测可用）。这是**研究路径重开，不是结论翻转为 go**：可用 root 仍未达成。
 
-## 2. v2.24+ 本轮做了什么（按章节）
+## 2. v3 本轮做了什么（2026-11-19）
 
 | 节 | 内容 | 结果 |
 |---|---|---|
-| §33 | 重写 CIL 求值（`tools/cil_policy.py`，28 用例）并回归历史结论 | 两个独立缺陷：`not` 语义 + 版本名合并；**antirootdialog 否证作废**（策略可达）；`module_load` 的墙是内核签名 |
-| §34 | 域级重算 + G-A1 闭合 + 配置依赖 | 四条核心否证维持；**§26 前提作废**（消费者有 `system_server` binder，断点改为"无法触发"）；antirootdialog 实现为单 `int` 事务、无 sink ⇒ 7/7 以"无能力"闭合 |
-| §35 | 私有服务面重测 | shell 可 `find` **228/235** 服务、**36/36** OPPO 私有服务；`binder:call` 也通铺 ⇒ 门槛移到方法级鉴权；44 行初筛无新路径 |
-| §36 | G-P1 闭合 | `power_monitor` / `usage` 的 Stub 无鉴权但可控串未流向 sink；`Runtime` 是假阳性、`SystemProperties.set` 在 `dump()` |
-| §37 | 三个 native 服务补审 | hans 有 netlink `sendto` 但调用链未闭合（保留观察）；horae 的 `getCallingUid` 返回值被丢弃；oiface 无可控路径 |
+| §38 | 审核意见 v007 方案评估 | 方向对（补地址泄露）但入口排序错——boot_id 是后置技术 |
+| §39 | 可行性评估（符号级） | 三条路线逐项判定；boot_id/ashmem 前提缺失，KernelSnitch 条件成立 |
+| §40 | 双方向预研 | 方向A：KernelSnitch 4.14→4.9 哈希逐字节兼容、采样可控（脚本 `tools/ksnitch_local_check.py`）；方向B：fake waiter 硬门槛精确化为"可控 rt_mutex 内核地址"（`artifacts_adb/WAITER_ADDRESS_ANALYSIS.md`） |
+| §41 | **真机实测（用户授权）** | `cntvct_el0` EL0 可读（19.2 MHz）；futex 碰撞侧信道 **110× 信号**、命中真实碰撞——**KernelSnitch 全链端到端可行**（`live_probe/LIVE_PROBE_RESULT.md`） |
+| §42 | 重开判定 | 地址按类型分三档：(① mm_struct/slide 可得；② 可控 rt_mutex 堆地址 无堆喷原语；③ W 线程栈基址 无侧信道)。GhostLock 需要的 ②/③ 仍缺 ⇒ 路径重开但缺口明确 |
 
-**重要口径变化**（引用旧结论时必须更正）：
+**关键口径变化**（引用旧结论时必须更正）：
 
-- ❌ "shell 对 anti_root_dialog 零权限 / 不可达" → ✅ 策略可达，但实现无能力。
-- ❌ "模块加载被策略断链" → ✅ 策略放行、能力具备，墙是 `CONFIG_MODULE_SIG_FORCE=y`（`CLOSURE.md` §8 配置依赖）。
-- ❌ "读可写路径的域都没有 `system_server` binder" → ✅ hostapd/supplicant/fstman 都有；结论靠"无法触发"维持。
-- ❌ "旧脚本算出的 89 属性/307 allow 是本域基线" → ✅ 新基线 **775/347**；旧数字可由 A 口径逐位复算。
+- ❌ "GhostLock 阻断在'无内核地址泄露'" → ✅ **部分作废**：侧信道能泄露 ① 类地址（mm_struct/slide）；但 fake waiter 需要的 ②/③ 类仍无泄露。
+- ❌ "§7 第2条(a) 任一可用内核地址泄露即重开" → ✅ **需按类型细分**：① 类不足，②/③ 类才算触发。
+- ❌ "KernelSnitch 4.14→4.9 需整体重做、输出精度未知" → ✅ **推翻**：哈希逐字节兼容、采样秒级、真机成立。
+- ❌ "VMAP_STACK 无关" → ✅ **本机实测 `!VMAP_STACK`**，栈在线性映射区，但 futex key 不含栈地址 ⇒ 仍够不着栈。
 
 ## 3. 下一步（按性价比）
 
-1. **hans netlink 调用链**（§37 唯一"差一步"）：找到 `0x416c` 的调用点，证明参数来自 Parcel 并到达 `sendto` 载荷。需要完整反编译/符号物料。
-2. **`diag` DCI 解析子树**（G1）：需同源 `msm-4.9` 内核源码；与 GhostLock 撞同一面"无地址泄露"的墙。
-3. **OTA 后全量重算**：与"关闭 OTA"的建议冲突；若发生则 §7 第 3 条触发，全部偏移/形态/策略作废。
+1. **[最高优先，纯离线]** 找 K3 上"把可控数据写到已知内核地址"的原语（走 ② 堆路径的前提）——这是把 slide 兑现为可用地址的本质缺口。
+2. **[高优先，纯离线]** 调研 4.9 / `!VMAP_STACK` 下针对 order-2 连续页栈地址（③）的泄露面；futex 哈希侧信道已证不行。
+3. **[可证伪条件]** 出现"以内核栈地址（thread_info / task_struct.stack）为键、用户可观测"的新侧信道 ⇒ 直接闭合 ③。
+4. **[不做]** boot_id / ashmem 后置实现（前置写原语不存在）；GhostLock 端到端 PoC（参考项目自报 ~97% panic，且本机 panic 文本不可读）。
 
-**不建议**：重复已验证的注入实验、盲试 `service call`、再用旧 `sepolicy_domain_audit.py`（v2.23）算权限。
-
-## 4. 工具入口
+## 4. 工具与物料入口
 
 ```bash
-python tools/cil_selftest.py                 # 28/28 语义自检
-python tools/sepolicy_domain_audit.py --domain oplus_wifi_service --top 20
-python tools/sepolicy_domain_audit.py --query shell,anti_root_dialog_service,service_manager
-python tools/sepolicy_regression.py          # A/B/C 三口径回归
-python tools/conclusion_recheck.py           # 否证重算
-python tools/svc_registrar_index.py --any-string   # 服务名 → 注册点
-python tools/svc_impl_triage.py              # 鉴权/sink 初筛
-python tools/native_svc_audit.py <elf> --xref getCallingUid --context 12
+python tools/ksnitch_local_check.py              # 方向A：KernelSnitch 本机闭环验证（全部断言 PASS）
+python tools/kfn.py --list 'futex|ashmem|configfs|nfulnl'   # 符号查询（只认 vmlinux.elf）
+# 真机只读探针（源码在 live_probe/，二进制不入库）：
+#   zig cc -target aarch64-linux-musl -O2 -static -o timer_probe live_probe/timer_probe.c
+#   MSYS_NO_PATHCONV=1 adb push ... /data/local/tmp/   # Git Bash 必须关路径转换
 ```
 
 ## 5. 运营约定
 
-- 设备 `PCGM00_11_F.16` 未刷写、未解锁、未改分区、未装持久化文件；`/data/local/tmp` 已清空；累计 5 次内核重启（均前期竞态实验）；本轮仅只读探针。
-- **建议关闭 OTA**。
-- 厂商二进制/镜像不入库（见 `.gitignore`）；报告与脚本可入库。
-- 新对话从 `HANDOVER.md` §17 接手清单开始，再读 §33–§37；本文件只是一页索引。
+- 设备 `PCGM00_11_F.16` 未刷写、未解锁、未改分区、未装持久化文件；真机实测**零重启**；`/data/local/tmp` 已清空。
+- **建议关闭 OTA**：SPL / 内核构建变化会使全部偏移、形态、策略判定作废。
+- 厂商二进制/镜像、第三方完整利用代码不入库（见 `.gitignore`）；报告与脚本可入库。
+- 新对话从本文件开始 → `HANDOVER.md` §42（重开判定）→ §38–§41（本轮全部证据）。
