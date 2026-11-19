@@ -59,3 +59,9 @@ live_probe/same_bucket_probe
 live_probe/calib_probe
 live_probe/transfer_probe
 live_probe/transfer2_probe
+
+# ---- 探针编译产物（aarch64 静态二进制，由 *.c 可重建）与运行日志 ----
+live_probe/*
+!live_probe/*.c
+!live_probe/*.md
+!live_probe/*.txt

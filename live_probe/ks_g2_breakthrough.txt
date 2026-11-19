@@ -1,0 +1,31 @@
+# G2 闭合证据（2026-11-19，同一次开机）
+# 恢复量：key->both.word = task->mm（线性映射地址）
+# 关键前提：线性映射被 KASLR 平移（本次约 +103 GB），此前所有窗口（PAGE_OFFSET..+8GB）均落空
+
+[数据集 A] live_probe/ks_purity_result.txt  (purity_probe, region=0x7ca8500000, inc=0x7ca8500080)
+  hits = 19（翻转测试判 18 genuine + 1 ambiguous）
+  搜索结果：全内核空间 512GB × 64B，8.59 G 候选
+    直方图 count>=1: 25,136,724   count=2: 30,505   count=3: 17   count=6: 1
+    （零假设理论值：count=1 ≈ 25.1M、count=2 ≈ 3.06万、count=3 ≈ 17.2、count>=4 ≈ 0.02）
+  唯一候选 mm = 0xffffffda42a97100   count = 6/6（搜索用前 6 个 hit）
+  全量复核：19/19 同桶（inc bucket=1305），100%
+  VALID: mm 64 字节对齐（mod 64 = 0），符合 mm_cachep SLAB_HWCACHE_ALIGN
+  VA - PAGE_OFFSET = 105.04 GB
+
+[数据集 B] live_probe/ks_e2e2_result.txt  (e2e2_probe, region=0x77be2a0000, inc=0x77be2a0080)
+  同窗口重扫（0xffffffda00000000..+8GB, 8B 网格, 前 8 hit, 阈值 6）
+    count>=1: 4,187,394（零假设 ≈ 4.19M）；最大 8（唯一）
+  唯一候选 mm = 0xffffffda434d5500   count = 8/8
+  全量复核：26/26 同桶（inc bucket=636），100%
+  VA - PAGE_OFFSET = 105.05 GB
+
+[结论]
+  1) 两个独立进程各自得到唯一解，且全量 100% 一致 ⇒ G2（mm 地址恢复）成立。
+  2) 两个 mm 相距约 17 MB，同处 +105 GB 区 ⇒ 线性映射平移量在本次开机内恒定。
+  3) 此前 v3–v7 的"零候选/污染假设"全部由窗口错位导致，撤回。
+  4) 平移量每次开机随机（KASLR），故恢复值为**本次开机**有效；方法可复用。
+
+[复现命令]
+  python tools/g2_maxmatch.py --result live_probe/ks_purity_result.txt \
+      --windows kspace:0xffffff8000000000 --phys-start 0 --phys-end 0x8000000000 \
+      --grid-bytes 64 --max-hits 6 --threshold 5 --jobs 20

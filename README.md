@@ -5,6 +5,15 @@
 > **v3.0（2026-11-19）新增**：外部审核意见 v007 指向一个同类参考项目后，我们重开了此前"冻结"的 GhostLock 路径——真机实测证明 **futex 哈希桶时序侧信道在本机可用（110× 信号）**。**但可用 root 判定不变**：侧信道给出的地址类型填不进 GhostLock 的 fake waiter，核心缺口从"没有地址"精确化为"地址类型不对 + 缺内核堆喷原语"。这是**研究路径重开，不是结论翻转为 go**。
 >
 > **v008 口径更正（2026-11-19，权威见 [`FEASIBILITY_v008.md`](FEASIBILITY_v008.md)）**：撤回"端到端可得 KASLR slide"的表述。三类地址**互相独立**：① KernelSnitch 只给 mm_struct 在线性映射（DPM）中的地址；② 到物理地址是**编译期固定常量**的确定性换算、无秘密可泄；③ `.text` 的 KASLR slide 由 `kimage_voffset`（启动期独立计算）承载，**不能由 ①/② 反推**，本机无获取它的原语。另：110× 只证明时序 oracle 存在，与 N=4 唯一性是两道独立的门。
+>
+> **v6 口径修正（2026-11-19，审核 v009 响应，见 [`HANDOVER.md`](HANDOVER.md) §46）**：v3 说的"侧信道能拿 mm_struct 地址"**已被自己的数据推翻**。原因是一个统计量错误——离线搜索脚本把"哈希值相等"当成"哈希桶相等"（设备判据是 `hash & 2047`），真 mm 因此也判 0 分，于是"零命中"不具判决力。修正后重扫 2×2.35 亿候选：**26 个 hit 的最大同桶一致数只有 3，与纯随机期望完全吻合** ⇒ hit 集不含桶归属信息。现存结论只剩：**crowd 自身所在桶的计时显著更高**；"判定某个第三方地址与本进程同桶"未获支持。
+>
+> **v7 口径再修正（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §47）**：v6 的"hit 集不纯"结论**被实测推翻**。新探针 `purity_probe` 用逐 hit 的 pause/resume **翻转重复性**判定：**18/19 是真 hit**（5/5 轮双向稳定）。另一探针 `bucket_scale_probe` 做了**模型无关**验证——把 crowd 规模 256→64→16 递减，命中地址耗时按 **3.68 倍**等比下降（同桶 plist 遍历期望 4）⇒ **"hot ⇔ 与本进程同桶"成立**，且 v6 批评的 `pausecheck` 破坏性问题确实存在但实测未造成污染。**G2 恢复仍然失败**：在指令级确认的模型下穷尽 512 GB 内核空间（64 B 粒度）与两个 8 GB 窗口（4 B 粒度），无一候选超过随机基线——当前阻塞点是一个**可证伪的模型矛盾**（§47.7），而非"判据不存在"。
+>
+> **v8 突破（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §48）**：**G1 与 G2 均已成立。** 把搜索空间从 `PAGE_OFFSET..+8 GB` 放开到整个内核 VA 空间（512 GB / 64 B 粒度，8.59 G 候选）后立即出解：两套独立设备数据各得**唯一**候选，且**全量 hit 100% 同桶**（19/19 → `mm=0xffffffda42a97100`；26/26 → `mm=0xffffffda434d5500`）。根因是 `memstart_addr` 被 KASLR 以 **1 GB** 为单位下移，本次开机约 **100–105 GB**——v5 §45.3 把 1 GB 对齐掩码 `0xffffffffc0000000` 误读为 256 GB，因而错判"平移恒为 0"，导致 v3–v7 全部搜索窗口整体错位。**边界**：mm 地址仅本次开机有效；这仍是线性映射平移、不是 `.text` 的 KASLR slide；① 类闭合**不构成提权**（②/③ 未闭合）。
+>
+> **v10 M2 否证（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §50）**：以已知 mm 为锚、依赖 buddy 分配流"时间邻接"推导 AF_UNIX skb 喷射页落点的路线（参考项目固定 delta 的移植前提）**被真机示踪实验证伪**。新增"mm 示踪粒子"方法（fork 的 fresh mm slab 页可被 futex oracle 恢复，充当分配流示踪）：两轮 9 个满命中唯一解显示相邻 fresh slab 页落点 **1.0–5.5 GiB 随机散布、与喷射规模 K 无关**。结构事实同步修正：kmalloc 缓存至 8192 为止 ⇒ 16 KB skb data 走 `kmalloc_large` 直连 buddy（每包恰一个 order-2 块）；`SO_RCVBUF` 被 rmem_max 钳制 ⇒ 每 socket 仅装 ~12 个 16 KB 包。**② 维持未闭合，NO-GO 不变。**
+
 
 | | |
 |---|---|
@@ -12,16 +21,16 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测复核一致，无 OTA） |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** 但 **GhostLock 研究路径已于 v3 重开**（侧信道实测可用），当前缺口为地址类型 ②/③（见下） |
+| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** GhostLock 路径（v8）：**① 类已闭合**——G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；盲扫成本 8.59 G 候选 @64 B ≈ 38 min/20 进程；**② 可控 rt_mutex 堆地址 / ③ 内核栈基址仍缺** |
 | 设备终态 | 未刷写、未解锁、未改分区、未装持久化文件；`/data/local/tmp` 已清空；累计 5 次内核重启（均前期实验，v3 实测零重启） |
 
 ---
 
-## 当前状态一览（v3）
+## 当前状态一览（v8）
 
-| 面 | 机制 | 卡点 / v3 状态 |
+| 面 | 机制 | 卡点 / v6 状态 |
 |---|---|---|
-| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **v3 重开**：futex 侧信道真机可用，① 类地址（mm_struct/slide）可得；**缺 ② 可控 rt_mutex 堆地址 / ③ W 线程栈基址** |
+| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **v8**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48）；**缺 ② 可控 rt_mutex 堆地址 / ③ W 线程栈基址** |
 | KGSL `CVE-2023-33107` | 成立（源码 pre-fix） | 命中缺陷即 `BUG()` panic，无中间态 |
 | binder `CVE-2023-20938` | 不成立（未引入） | — |
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
@@ -38,30 +47,31 @@
 
 ### 地址类型三档——缺的不是"任意地址"，而是特定类型
 
-| 档 | 类型 | 本机状态 | 能否填 fake waiter 的 lock/rb |
+| 档 | 类型 | 本机状态（v6） | 能否填 fake waiter 的 lock/rb |
 |---|---|---|---|
-| ① | mm_struct 线性地址（DPM 中的堆页位置） | **真机可得**（侧信道 110× 信号）；到物理地址是无秘密的确定性换算 | ❌ 不够：lock 会被解引用（trylock 写 + owner/waiters 读 + `BUG_ON`），且缺堆喷把它兑现 |
-| ①-s | KASLR slide（镜像 VA，v008 新增细分） | ❌ **拿不到**：由 `kimage_voffset` 独立承载，不能由 ① 反推（见 `FEASIBILITY_v008.md` §1） | ❌ 不够，且本机无获取原语 |
-| ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 无堆喷原语 | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
+| ① | mm_struct 线性地址（DPM 中的堆页位置） | **已闭合（本次开机）**：`0xffffffda42a97100`（19/19）与 `0xffffffda434d5500`（26/26）；盲扫 512 GB @64 B 出唯一解（§48） | ❌ 不够：解引用 + 结构校验过不了，且缺 ② 兑现 |
+| ①-s | KASLR slide（镜像 VA，v008 细分） | ❌ **拿不到**：由 `kimage_voffset` 独立承载，不能由 ① 反推（见 `FEASIBILITY_v008.md` §1） | ❌ 不够，且本机无获取原语 |
+| ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 生命周期可控（3072 对象/轮、spread 0.00%），**缺地址锚点**；`SLAB_FREELIST_RANDOM=n` ⇒ slab 内布局确定，页级邻接未证（§46.7） | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
 | ③ | W 线程内核栈基址（持有 stale waiter 者） | ❌ 无侧信道：futex key 不含栈地址；USENIX'25 栈侧信道依赖 VMAP_STACK，本机 `!VMAP_STACK` | ✅ 能（几何偏移已静态解决，缺的是拿栈基址的 oracle） |
 
 **参考项目为何能成功**：`yijiacloud/GhostLock-OPPO-PCKM00` 用 KernelSnitch 泄露的 mm_struct 地址 + AF_UNIX skb 喷射，把 payload 落到内核堆的已知地址，`lock` 指向那处受控 rt_mutex——**从不需要栈地址**。K3 缺的正是那个 skb 堆喷原语，所以同样的 slide 无法兑现。
 
-**重开判定**：GhostLock 作为活跃研究路径重开，当前阶段"① 已解决、②/③ 未解决"。**可用 root 判定不变**——②/③ 任一闭合前不构成提权。
+**v7 判定**：① 类判据已由实测确立（这是 KernelSnitch 在本机可用的前提），但**恢复环节卡在一个可证伪的模型矛盾上**（§47.7）；②/③ 仍未闭合，缺口仍是"任意一个内核堆地址锚点"。里程碑按 M1（mm 地址）/ M2（可控 rt_mutex 地址）/ M3（利用链）独立记账。**可用 root 判定不变。**
 
-### v3 关键证据
+### 关键证据（v3–v6）
 
-1. **方向 A（可移植性）**：`tools/ksnitch_local_check.py` 证明 KernelSnitch 的 jhash2 与本机逐字节兼容、全 8GB 唯一命中、0 误报、秒级成本。脚本可直接运行。
+1. **方向 A（可移植性）**：`tools/hash_emu.py`（逐指令模拟内核哈希块）+ `tools/g2_maxmatch.py --selftest` 三方对拍 300/300 一致；哈希模型、hashsize=2048、桶 stride=128B 均已二进制确认。
 2. **方向 B（硬门槛）**：`artifacts_adb/WAITER_ADDRESS_ANALYSIS.md` 逐行证明 lock 被解引用、真正门槛是"可控 rt_mutex 内核地址"，futex key 不含栈地址。
-3. **真机实测**：`live_probe/LIVE_PROBE_RESULT.md` 记录 `cntvct_el0` EL0 可读（19.2 MHz）与碰撞观测 110× 信号；零重启、临时文件清空。
-4. **综合结论**：`DUAL_TRACK_RESULT.md`、`FEASIBILITY_v007.md`。
+3. **真机实测**：`live_probe/LIVE_PROBE_RESULT_v4.md` 记录 `cntvct_el0` EL0 可读（19.2 MHz）、crowd 桶 40–125× 计时差异；零重启。
+4. **v6 定量否定**：`live_probe/ks_g2_maxmatch_result.txt` / `ks_g2_maxmatch_linepair.txt` —— 2×2.35 亿候选，两种桶约束假设下的计数谱均与二项零模型吻合，最大一致数 3（同桶）/ 4（邻行对）。
+5. **综合结论**：`DUAL_TRACK_RESULT.md`、`FEASIBILITY_v007.md`、`FEASIBILITY_v008.md`。
 
 ---
 
 ## 五个值得单独看的结果
 
 1. **符号可用性**：项目早期"镜像重排、符号不可用"的判断是错的——真实原因是解析器把 kallsyms 偏移当 base-relative。`vmlinux-to-elf` 重建后 123,784 个符号可用（§1.3 / `firmware_F16/README.md`）。教训：先怀疑工具，而不是目标。
-2. **GhostLock 的自我推翻链**：第一版"397 入口 0 载体"判死 → 外部审核指出扫描器用函数名判重漏了 18,074 个栈上下文、且漏 `strncpy_from_user` → 修正后找到 3 条 xattr 栈覆盖候选 → 静态收束证明栈复用是几何确定、NUL 不阻断 → 缺口从"载体"变成"地址" → **v3 再把"地址"细分为三档并真机验证 ① 可得**（§5.2 / §15 / §38–§42）。
+2. **GhostLock 的自我推翻链**：第一版"397 入口 0 载体"判死 → 外部审核指出扫描器用函数名判重漏了 18,074 个栈上下文、且漏 `strncpy_from_user` → 修正后找到 3 条 xattr 栈覆盖候选 → 静态收束证明栈复用是几何确定、NUL 不阻断 → 缺口从"载体"变成"地址" → v3 声称"① 地址真机可得" → **v6 用可复算统计推翻自己**：那个"可得"来自一个把桶索引当成完整哈希的脚本，修正后 2×2.35 亿候选里没有一个超过随机期望（§5.2 / §15 / §38–§46）。
 3. **ticket spinlock 把 4 字节 UAF 写降级成常数加法**：`CVE-2022-20421` pre-fix 确证，但本机无 qspinlock，公开原语退化（§5.3）。
 4. **两个"看起来能用、实际走不通"的面**：KGSL（命中即 panic）、FastRPC（读写/调用各封一半）（§5.1 / §5.4）。
 5. **一个 root 服务里的 `sh`：从被拦到 uid=0**：六轮审计 + 外部复评 + 上机验证的完整弧线；"临时 ROOT 实锤"曾误判撤回一次，最终用从未试过的 `\n`/反引号载荷达成受限 root（§16 / §20 / §23）。
@@ -114,7 +124,11 @@ firmware_F16/               # 仅说明文件：如何从自己的固件重建 v
 python -m pip install pyelftools capstone ziglang
 # 前提：自行重建 vmlinux.elf（步骤见 firmware_F16/README.md）
 
-python tools/ksnitch_local_check.py                     # v3 方向A：哈希闭环验证（全部 PASS）
+python tools/g2_maxmatch.py --selftest              # v6：哈希模型三方对拍（numpy / C 转录 / 逐指令模拟器）
+python tools/g2_maxmatch.py --jobs 20               # v6：桶索引约束全窗口 max-match（复算 §46 的否定）
+python tools/g2_maxmatch.py --line-pair --threshold 8 --jobs 20   # v6：64B 邻行对约束
+python tools/hash_emu.py                            # v6 已修：逐指令模拟哈希块，返回真实桶索引
+python tools/ksnitch_local_check.py                 # 方向A：KernelSnitch 本机闭环验证
 python tools/gl_frame_calc.py                           # 帧几何 → waiter 绝对偏移 -0x288
 python tools/gl_carrier_rescan.py --mode context --copy-extra strncpy_from_user  # 3 条 xattr 候选
 python tools/gl_nul_analysis.py                         # NUL 语义 / 72B 字节映射
@@ -127,6 +141,7 @@ python tools/kfn.py --list 'futex|ashmem|configfs|nfulnl'  # 符号查询
 ```bash
 zig cc -target aarch64-linux-musl -O2 -static -o timer_probe live_probe/timer_probe.c
 zig cc -target aarch64-linux-musl -O2 -static -pthread -o collision_probe live_probe/collision_probe.c
+zig cc -target aarch64-linux-musl -O2 -static -pthread -o purity_probe live_probe/purity_probe.c   # v6：hit 纯度甄别（翻转重复性判据）
 export MSYS_NO_PATHCONV=1                 # Git Bash 必须关闭路径转换
 adb push live_probe/collision_probe /data/local/tmp/
 adb shell '/data/local/tmp/collision_probe'

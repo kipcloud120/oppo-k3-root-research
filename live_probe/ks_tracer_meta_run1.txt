@@ -1,0 +1,51 @@
+== M2 tracer experiment ==
+slab start mm_struct            366    378    896   18    4 : tunables    0    0    0 : slabdata     21     21      0
+slab start kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 0 begin K=0 t=69661.829
+step 0 dummies 40 t=69661.834
+slab postdummy mm_struct            366    378    896   18    4 : tunables    0    0    0 : slabdata     21     21      0
+slab postdummy kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 0 sprayed 0 t=69661.843
+slab postspray mm_struct            366    378    896   18    4 : tunables    0    0    0 : slabdata     21     21      0
+slab postspray kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 0 tracerpid 27614 t=69661.851
+step 0 tracerscan D t=69708.349
+step 1 begin K=0 t=69708.350
+step 1 dummies 40 t=69708.365
+slab postdummy mm_struct            414    414    896   18    4 : tunables    0    0    0 : slabdata     23     23      0
+slab postdummy kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 1 sprayed 0 t=69708.376
+slab postspray mm_struct            414    414    896   18    4 : tunables    0    0    0 : slabdata     23     23      0
+slab postspray kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 1 tracerpid 28023 t=69708.388
+step 1 tracerscan D t=69762.185
+step 2 begin K=2048 t=69762.185
+step 2 dummies 40 t=69762.200
+slab postdummy mm_struct            450    450    896   18    4 : tunables    0    0    0 : slabdata     25     25      0
+slab postdummy kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 2 sprayed 12 t=69762.216
+slab postspray mm_struct            450    450    896   18    4 : tunables    0    0    0 : slabdata     25     25      0
+slab postspray kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 2 tracerpid 28391 t=69762.226
+step 2 tracerscan D t=69850.893
+step 3 begin K=2048 t=69850.893
+step 3 dummies 40 t=69850.907
+slab postdummy mm_struct            486    486    896   18    4 : tunables    0    0    0 : slabdata     27     27      0
+slab postdummy kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 3 sprayed 0 t=69850.918
+slab postspray mm_struct            486    486    896   18    4 : tunables    0    0    0 : slabdata     27     27      0
+slab postspray kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 3 tracerpid 28761 t=69850.928
+step 3 tracerscan D t=69939.585
+step 4 begin K=0 t=69939.585
+step 4 dummies 40 t=69939.598
+slab postdummy mm_struct            522    522    896   18    4 : tunables    0    0    0 : slabdata     29     29      0
+slab postdummy kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 4 sprayed 0 t=69939.609
+slab postspray mm_struct            522    522    896   18    4 : tunables    0    0    0 : slabdata     29     29      0
+slab postspray kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+step 4 tracerpid 29084 t=69939.628
+step 4 tracerscan D t=70028.337
+slab end mm_struct            522    522    896   18    4 : tunables    0    0    0 : slabdata     29     29      0
+slab end kmalloc-8192         918    924   8192    4    8 : tunables    0    0    0 : slabdata    231    231      0
+END t=70028.364

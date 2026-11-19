@@ -236,6 +236,10 @@ KernelSnitch 方向 A 在本机从"G1 ✅"降级为"观测机制未验证"，四
 
 ## 10. v5 增补（2026-11-19，详见 HANDOVER.md §45）
 
+> ⚠️ **本节已被 §11（v6）部分更正**：第 1 条的"G1 桶索引性成立"收窄为"仅 crowd 自身桶可观测"；
+> 第 2 条的"26 真实 hit"应为"26 个通过 pausecheck 的计时 hit"；第 4 条的"唯一剩余假设"已被定量证实。
+> 引用时以 §11 与 HANDOVER.md §46 为准。
+
 本文 §5.4"G1 降级"与 §9 一句话的表述已被后续终审**部分推翻**，引用时以本节为准：
 
 1. **G1 复活**：transfer2_probe 终审通过（修复迁移竞态后：pause 冷、迁 B/C 冷且仅当前堆积地址热、迁回 A 复热
@@ -249,3 +253,38 @@ KernelSnitch 方向 A 在本机从"G1 ✅"降级为"观测机制未验证"，四
    窗口可漏检短命 waiter）。鲁棒搜索 `tools/g2_maxmatch.py` 已就绪，本轮运行中被中止，**待重跑**。
 5. 清理清单更新（10 项）：`perf_probe spray_probe e2e_probe same_bucket_probe calib_probe transfer_probe
    transfer2_probe e2e2_probe ks_e2e_result.txt ks_e2e2_result.txt`。
+
+---
+
+## 11. v6 增补（2026-11-19，详见 HANDOVER.md §46）
+
+**§10 的第 1、4 条与本文 §5 的机制解释均需按本节更正**，引用时以本节为准：
+
+1. **"G1 桶索引性成立"→ 收窄为"仅 crowd 自身桶可观测"**。离线搜索脚本存在统计量错误（用完整 32 位哈希
+   比较，而设备判据是 `hash & 2047`），"零命中"因此不具判决力。修正后 2×2.35 亿候选全扫：
+   26 个 hit 的最大同桶一致数 = **3**（二项零模型期望 ≤3），邻行对假设下 = **4**（期望 4）。
+   ⇒ hit 集与 26 个随机地址统计上不可区分，"能判定第三方地址同桶"未获支持。
+2. **"26 真实 hit"→ 改为**"26 个通过 pausecheck 的计时 hit"，且实测彼此不同桶。
+   pausecheck 不是纯度 oracle：`measure()` 的 `FUTEX_WAKE_PRIVATE, val=1` 对污染地址是破坏性的
+   （第一次 WAKE 就唤醒它正在测量的 waiter），前热后冷是必然结果。
+3. **§5.1/§5.2 的机制解释仍成立**（计时=走到 plist 首匹配项的位置），但"回 A 复热"另有混淆项：
+   `resume_crowd()` 后 256 线程同时 re-wait 会造成短时全系统测量抬升。
+4. **新增探针** `live_probe/purity_probe.c`：逐 hit × 5 轮 pause/resume，同轮"候选/对照"比值判据，
+   resume 后等 1.5 s 让风暴衰减；输出 genuine/contaminated/ambiguous。
+5. `tools/hash_emu.py` 已修 64 位寄存器截断缺陷（此前 `bucket_of()` 返回未掩码哈希）。
+
+---
+
+## 12. v8 增补：G2 闭合（2026-11-19，详见 HANDOVER.md §48）
+
+**本文 §5、§10、§11 中关于"G1 判别性/G2 失败"的全部判断以本节为准。**
+
+1. **G1 成立**：`purity_probe` 翻转测试 18/19 genuine；`bucket_scale_probe` 把 crowd 规模
+   256→64→16 递减，命中地址耗时等比下降 3.68×（同桶 plist 遍历期望 4）。
+2. **G2 成立**：两套独立数据在放开窗口后各得唯一解，**全量 hit 100% 同桶**
+   （19/19、26/26）。证据：`live_probe/ks_g2_breakthrough.txt`。
+3. **根因**：`memstart_addr` 被 KASLR 以 1 GB 为单位下移，本次开机约 100–105 GB；
+   v3–v7 的窗口（`PAGE_OFFSET..+8 GB`）整体错位。§5.3 的"迁移实验 hit 集不随堆积地址变化"
+   与 §5.1 的"跨桶升温/热量粘滞"等反常，均可由测量噪声与窗口无关因素解释，不再作为机制反证。
+4. `/proc/zoneinfo` 实测：zone DMA `start_pfn=0x80000`（phys 2 GB）、zone Normal `0x100000`（4 GB），
+   设备 DRAM 物理区间 `[0x80000000, 0x200000000)`。

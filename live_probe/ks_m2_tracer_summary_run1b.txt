@@ -1,0 +1,11 @@
+# M2 tracer analysis — prefix=ks_tracer_run1_ K_step=[0, 0, 12, 0, 0]
+T0 mm=0xffffffdb05179880 count=25 note=ok window=W2(16GB)
+T1 mm=0xffffffdb88784380 count=18 note=ok window=W2(16GB)
+T2 mm=0xffffffdaa6b6a300 count=15 note=ok window=W2(16GB)
+T3 mm=0xffffffda64543480 count=18 note=ok window=W1(1GB)
+T4 mm=0xffffffdb9f265500 count=13 note=ok window=W2(16GB)
+d01 = 134531
+d12 = -231175
+d23 = -67978
+d34 = 322377
+VERDICT NOT CONFIRMED / INSUFFICIENT

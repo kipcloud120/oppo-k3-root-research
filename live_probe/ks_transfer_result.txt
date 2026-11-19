@@ -1,0 +1,19 @@
+hitA 0x7450a0c5e0
+hitA 0x745200c5e0
+hitA 0x7453746fb0
+hitA 0x7454043798
+hitA 0x7454b07db8
+hitA 0x7454ee0c80
+oldhit 0 1403 1
+oldhit 1 1322 1
+oldhit 2 1274 1
+oldhit 3 1298 1
+oldhit 4 1219 1
+oldhit 5 1234 1
+hitB 0x7450a0c5e0 1
+hitB 0x745200c5e0 1
+hitB 0x7453746fb0 1
+hitB 0x7454043798 1
+hitB 0x7454b07db8 1
+hitB 0x7454ee0c80 1
+summary stayed=6 nh=6 nh2=6 overlap=6

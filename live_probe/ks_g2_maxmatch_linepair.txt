@@ -1,0 +1,9 @@
+# g2_maxmatch v3 — line-pair(bucket>>1), hashsize=2048 threshold=8
+inc 00000077be2a0080
+hits 26
+phys [40000000,200000000)
+[corrected] window=0xffffffc000000000 candidates=234881024 count>=1=5892313 max=4@0xffffffc09c0a0f20
+  histogram: {0: 228988711, 1: 5820776, 2: 70963, 3: 573, 4: 1}
+[legacy] window=0xffffff8000000000 candidates=234881024 count>=1=5893232 max=4@0xffffff808ce7ab20
+  histogram: {0: 228987792, 1: 5821261, 2: 71422, 3: 545, 4: 4}
+found 0

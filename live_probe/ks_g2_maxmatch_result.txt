@@ -1,0 +1,8 @@
+# g2_maxmatch v3 — same-bucket(mask), hashsize=2048 threshold=6
+inc 0000007f7d0f0080
+hits 10
+phys [0,10000000)
+[kspace] window=0xffffffda42000000 candidates=33554432 count>=1=163243 max=10@0xffffffda42a97800
+  histogram: {0: 33391189, 1: 162889, 2: 353, 10: 1}
+  CAND count=10 mm=0xffffffda42a97800
+found 1

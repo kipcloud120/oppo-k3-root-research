@@ -3294,7 +3294,7 @@ RANDOMIZE_MODULE_REGION_FULL=y、PAGESIZE=4096 实测确认）。
 | 桶结构 | stride=**128B**（u32+u32+plist_head，两桶共享 64B cache line） | futex_init 初始化循环 `add x8,x8,#0x80`；futex_wake 有 `ldr w10,[x8,x10];cbz` waiters 快速路径 |
 | task->mm | 偏移 **0x5c8**，mm 来自 mm_cachep | copy_process：`ldr x0,[x8,#0x9c0]`(mm_cachep@0xffffff800a0229c0) → kmem_cache_alloc → `str x21,[x19,#0x5c8]` |
 | sizeof(mm_struct) | **872**（0x368）→ SLUB 步长 ALIGN(872,64)=**896**，正确结构性枚举 = 8192 对齐 × 896×j (j<36) | proc_caches_init@0xffffff8009a0b098 第 5 次 kmem_cache_create（"mm_struct"@0xffffff800961b2db，w1=0x368） |
-| KASLR 线性映射 | **滑移恒为 0**（排除） | kaslr_early_init@0xffffff8009a087d8（`memstart_offset_seed = seed>>48`，u16，strh）；arm64_memblock_init@0xffffff8009a08ff0：memstart_addr=round_down(DRAM_start,256GB)，滑移 = `((range>>30)×seed16)<<14 & ~(2^38−1)`，本配置上界 ≈2.66e11 < 2^38 ⇒ 恒 0；module_alloc_base（0xffffff80098524e0）随机与线性映射无关 |
+| KASLR 线性映射 | ~~滑移恒为 0（排除）~~ **← v8 作废**：本条把 1 GB 对齐掩码误读为 256 GB。实际平移每次开机随机，本次 ≈100–105 GB（§48.3） | kaslr_early_init@0xffffff8009a087d8（`memstart_offset_seed = seed>>48`，u16，strh）；arm64_memblock_init@0xffffff8009a08ff0：memstart_addr=round_down(DRAM_start,256GB)，滑移 = `((range>>30)×seed16)<<14 & ~(2^38−1)`，本配置上界 ≈2.66e11 < 2^38 ⇒ 恒 0；module_alloc_base（0xffffff80098524e0）随机与线性映射无关 |
 | PAGE_OFFSET | 0xffffffc000000000（再次确认） | VMALLOC_END=0xFFFFFFBEBFFF0000 反解 + futex_init `linear_region_size=0x4000000000` |
 
 ### 45.4 矛盾定位：四要素皆无错 ⇒ 单一剩余假设 = hit 集污染
@@ -3322,3 +3322,463 @@ pausecheck 证真）——**任意 mm 均不满足 27 地址严格同桶，而�
 1. 重跑 `python tools/g2_maxmatch.py`（纯离线，~15-30 分钟）；出解 ⇒ 设备端 mask-2048 预测命中率验证；无解 ⇒ 45.4 假设证伪，转 hit 逐个甄别探针（迁移法）。
 2. `/data/local/tmp` 清理（10 项清单见 `HANDOVER_RESUME.md` §5）——本轮未执行（用户指示停止）。
 3. hashsize 字节符号身份（0xffffff8009e0dfc8）未最终确认（不影响等式约束类搜索）。
+
+## §46 v6：v009 审核响应 —— G2 统计量修正 + hit 集纯度定量 + G1 判据收紧（2026-11-19，纯离线）
+
+> 审核意见 v009 的 P0 指控**成立，且后果比其描述更严重**。修正统计量后重跑全窗口：26 个 hit 的
+> 同桶一致数最大只有 3，与纯随机分布逐点吻合 ⇒ **hit 集不含可用的桶归属信息**。
+> 由此 G1 的口径从"桶索引 oracle 可用"收紧为"仅 crowd 自身桶可观测"。四层 ROOT 判定 NO-GO 不变。
+
+### 46.1 P0 指控成立：v1 把"哈希值相等"当"桶相等"
+
+| 项 | 事实 |
+|---|---|
+| 设备侧判据 | `e2e2_probe.c:hash_from()` 返回 `jhash2(...) & (hsz-1)`；vmlinux 末指令 `and x9,x10,x9`，`x10 = futex_hashsize-1`（`@0xffffff8009e0e160`） |
+| v1 脚本 | `g2_maxmatch.py`（v1）与 `g2_pair_search2.py` 用完整 32 位结果 `==` 比较；`g2_pair_search.py` 虽写 `>>1`，但仍在完整 32 位值上右移，同样要求 31 位全等 |
+| 后果 | 真 mm 只能保证**同桶**，32 位哈希几乎必然不等 ⇒ v1 对真 mm 也判 0 分，输出恒为零命中。**v5 §45.4 "三种约束搜索零命中" 的证据效力撤销**（既不能支持、也不能反驳污染假设） |
+| 量化 | 自检 semantic 段：同一区域 20000 个 32B 网格样本，与 inc 完整哈希相等 **0** 次，同桶 **13** 次（期望 9.8） |
+
+### 46.2 附带发现：`tools/hash_emu.py` 的 64 位寄存器截断缺陷（已修）
+
+v1 模拟器的 `rname()` 把全部寄存器映射到 w 视图、`rd()/wr()` 一律 `& 0xFFFFFFFF`，于是
+`ldr w10,[x10,#0x160]` 的基址被截断为 0（读不到 `futex_hashsize-1`），末尾 `and x9,x10,x9`
+实际与 `0xffffffff` 相与 ⇒ `bucket_of()` 返回**未掩码哈希**。
+
+- v5 §45.3 声称的 "300/300 对拍" 只能是**掩码前**的值对拍——混合部分确实无误，bucket 部分从未被模拟器覆盖。
+- 修复：x/w 双视图（`_is32`/`rd`/`wr` 保留位宽、新增 `M64`）、返回 `x9`。
+- 修复后 **numpy 向量化 / C 转录 / 逐指令模拟器 300/300 三方零不一致**（`python tools/g2_maxmatch.py --selftest`）。
+
+### 46.3 修正后的全窗口搜索（`tools/g2_maxmatch.py` v3，20 进程并行）
+
+输入 `live_probe/ks_e2e2_result.txt`（inc=`0x77be2a0080`，26 hit）；窗口 = 两个 PAGE_OFFSET 假设 ×
+物理区间 `[0x40000000, 0x200000000)`（7168 MiB，§45.4 的 SDM710 DRAM 区间）；32B 网格
+（mm≡0 mod 32 为 SLUB `j*896` 的超集），**234,881,024 候选/窗口**。
+
+**同桶约束**（`bucket(x,mm)` 相等，阈值 6）：
+
+| 窗口 | count=1 | count=2 | count=3 | max | 达阈值 |
+|---|---|---|---|---|---|
+| corrected `0xffffffc0…` | 2,947,316 | 18,196 | 71 | **3** | 0 |
+| legacy `0xffffff80…` | 2,946,373 | 18,233 | 59 | **3** | 0 |
+| H0 期望（Bin(26,1/2048)） | 2,945,701 | 17,988 | 70.3 | — | 0（N·P(≥4)=0.2） |
+
+**64B 邻行对约束**（`bucket>>1` 相等，用于复核 cache-line 邻桶污染假设，阈值 8）：
+
+| 窗口 | count=1 | count=2 | count=3 | count=4 | 达阈值 |
+|---|---|---|---|---|---|
+| corrected | 5,820,776 | 70,963 | 573 | 1 | 0 |
+| legacy | 5,821,261 | 71,422 | 545 | 4 | 0 |
+| H0 期望（Bin(26,2/2048)） | 5,819,870 | 71,113 | 556 | 3.1 | 0 |
+
+两种假设下的计数谱与零模型偏差均 <1.5%，**没有任何候选超过随机期望**。
+
+### 46.4 判决与口径变化
+
+- **定量结论**：在模型/网格/窗口均无错的条件下，26 个 hit 中"彼此同桶"的最大一致子集 = **3**
+  ⇒ 真 hit 数 ≤ 3；hit 集与"26 个随机地址"在统计上不可区分。
+- **G1 收紧**（本轮最重要的口径变化）：
+  - 成立：crowd 所在桶计时显著高于空桶（A 热 / 迁 B 冷 / 回 A 热，transfer2）。
+  - **未成立**：能据计时判定某个第三方地址与本进程同桶。e2e2 的 26 个 hit 恰好证明该判别力不存在。
+  - 因此 KernelSnitch 在本机不再作为 G2 的可用约束来源；v5 的 "G2 只差 hit 纯化" 表述撤回。
+- **26 vs 理论 16 的 excess 重释**：热判据的假阳率本身在 ~1/1260 量级，与"26 个 hit 全为噪声"相容，
+  不需要"部分真实碰撞"假设。
+- transfer2 的"回 A 复热"存在**唤醒风暴混淆**：`resume_crowd()` 后 256 线程同时 re-wait，会短时抬高
+  全系统测量值；该效应可单独解释"复热"，不必然是桶索引回归。
+
+### 46.5 pausecheck 不是纯度 oracle（方法学更正）
+
+`measure()` 用 `FUTEX_WAKE_PRIVATE, val=1`。对"他进程 waiter 落在该桶"的污染地址，第一次 WAKE 就
+把证据唤醒，随后 31 次复测必然变冷 ⇒ "扫描热、暂停冷" 会把污染地址判为真 hit。
+v4 §5.2 已证 `WAKE(0)` 同样唤醒首个匹配项（`mark_wake_futex` 在 `nr_wake` 判断之前），
+故**不能靠改 val 修复**，必须用"翻转重复性"判据。
+
+新增 `live_probe/purity_probe.c`（已交叉编译，aarch64 静态）：
+- 逐 hit × 5 轮 pause/resume；每轮只取翻转后**第一个样本**；
+- 同轮"候选/对照"**比值**判据（>5 判热，≤2 判冷），抵消全局漂移；
+- `resume` 后等 **1.5 s** 让唤醒风暴衰减（这是 transfer2 混淆项的修正）；
+- 输出 `genuine / contaminated / ambiguous` 三分类 + 逐轮原始值；`genuine` 子集可直接喂给 max-match。
+
+### 46.6 WAKE(0) 口径矛盾（审核 §5 附加项）确认
+
+v5 称 "WAKE(1) 计时污染已用 WAKE(0)/迁移语义修复规避" **不实**：
+已提交源码 `measure()` 仍为 `val=1`（`transfer2_probe.c:67`、`e2e2_probe.c:111`），
+且 v4 §5.2 已证 `WAKE(0)` 同样唤醒首匹配项。该表述撤回；transfer2 的效力来自**迁移语义**，与 val 无关。
+
+### 46.7 P2 层新增证据：堆布局确定性
+
+- `CONFIG_SLAB_FREELIST_RANDOM` **未开启**（`tools/device_config.txt` + 符号 `shuffle_freelist`/`randomize_freelist` 缺失，双确认）。
+- ⇒ 同一 slab 内对象布局确定、分配顺序可预测；② 类地址缺的不是"随机化"，而是**任意一个堆页锚点**。
+- 这把 ② 与 ① 收敛到同一缺口（缺一个内核堆地址），但**页级邻接能否被 groom 强制仍未证明**，
+  不得写成"已获得任意内核地址"。
+
+### 46.8 里程碑拆分（采纳审核 §3 第二层）
+
+| 里程碑 | 内容 | 状态 |
+|---|---|---|
+| M1 | 恢复 mm_struct 线性地址（G2） | **未闭合**：全窗口 0 候选，hit 集无桶一致性信号 |
+| M2 | 取得可控、结构合法的 rt_mutex 内核地址（② 类） | **未闭合**：生命周期可控，缺地址锚点 |
+| M3 | fake waiter 组装与利用链 | **未验证** |
+
+三者独立记账；M1 的进展不得用于推断 M2/M3。
+
+### 46.9 遗留与下一步
+
+1. **[需设备]** 运行 `purity_probe`（已编译就绪）→ 得 `genuine` 子集；若 ≥6 个，用该子集跑 max-match。
+2. **[纯离线]** 若 `genuine` ≤3 复现：G1 判别性判为不成立，KernelSnitch 降级为"仅 crowd 自桶可观测"，
+   主线转 M2（堆地址锚点）。
+3. **[需设备]** `/data/local/tmp` 清理（10 项，清单见 `HANDOVER_RESUME.md` §5）+ 基线复核。
+
+### 46.10 本轮文件变更
+
+| 文件 | 变更 |
+|---|---|
+| `tools/g2_maxmatch.py` | v1→v3：桶掩码判据、三方自检、32B 网格 + DRAM 物理窗口、20 进程并行、`--line-pair` 模式、结果落盘 |
+| `tools/hash_emu.py` | 修 64 位寄存器截断（x/w 双视图）；`bucket_of()` 现返回真实桶索引 |
+| `live_probe/purity_probe.c` | 新增：逐 hit pause/resume 翻转测试（比值判据 + 风暴衰减） |
+| `live_probe/ks_g2_maxmatch_result.txt` / `ks_g2_maxmatch_linepair.txt` | 新增：本轮两套搜索结果与直方图 |
+| `HANDOVER_RESUME.md` / `CLOSURE.md` / `README.md` | v6 口径：G2 未闭合、G1 判别性收紧、里程碑拆分 |
+
+## §47 v7：hit 集纯度实测 + 桶索引判据的直接验证 + G2 搜索的全空间穷尽（2026-11-19）
+
+> 本轮三件事：① 用新探针 `purity_probe` 实测 hit 集纯度——**17/18 为真**；
+> ② 用"crowd 规模递减"实验**模型无关地**证明"hot == 同桶 plist 遍历"；
+> ③ 在**已二进制验证的哈希模型**下对 G2 做全空间穷尽搜索（512GB 内核空间）——**仍未出解**。
+> 结论：**G1 的判别性由实测确立（v6 §46.4 的收紧撤回）**；**G2 的阻塞点从"hit 不纯"改写为"模型/空间假设与实测不自洽"**，
+> 这是本轮留下的唯一未解问题。四层 ROOT 判定 NO-GO 不变。
+
+### 47.1 设备基线复核与现场清理（已执行）
+
+- `uname` 与 §45.3 一致（`4.9.227-perf+ #1 Wed Mar 26 16:32:43 CST 2025`），uptime 49h，期间无重启。
+- `/data/local/tmp` 清理完成（11 项，含 v5 清单外漏记的 `transfer_result.txt`，已先取回入库为
+  `live_probe/ks_transfer_result.txt`）。设备 `ks_e2e2_result.txt` 与本地归档 md5 一致，无信息丢失。
+
+### 47.2 关键新增：`/proc/zoneinfo` 给出真实 DRAM 布局（修正 §46 的窗口假设）
+
+```
+Node 0, zone DMA     start_pfn: 524288  (= 0x80000 → phys 0x80000000)
+Node 0, zone Normal  start_pfn: 1048576 (= 0x100000 → phys 0x100000000)
+```
+⇒ **DRAM 起始为 2 GB，不是 §46/§45 假设的 1 GB**；物理区间 `[0x80000000, 0x200000000)`（6 GB）。
+`/proc/meminfo` MemTotal 5,752,016 kB 与之自洽。
+
+该发现直接推翻了 §46 的窗口起点 `W+0x40000000`：若 `memstart_addr` 取 DRAM 起点（1 GB 对齐），
+线性映射的 DRAM 段从 `PAGE_OFFSET` 起算，则 §46 的窗口漏掉了头 1 GB。v6 的"零候选"因此**不能再作为
+hit 集污染的证据**——这一点在 §47.4 的搜索中被独立排除。
+
+### 47.3 哈希模型的三处口径复核（源码 + 二进制双确认）
+
+| 项 | 结论 |
+|---|---|
+| key 布局 | `futex_wake` 中 `add x2, sp, #0x10` ⇒ key 在 `sp+0x10`；`get_futex_key` 的 `stp x23,x20,[x19]` 存 `{mm, page_base}`，`str w8,[x2,#0x10]` 存 offset。与 §45.3 一致 |
+| 种子标志位 | `key->both.offset` 的 `|= FUT_OFF_MMSHARED` 只出现在 `PageAnon` 的 **shared** 分支（二进制 `0xffffff8008162138: orr w8,w8,#2`）。私有 futex 走 `!fshared` 快路径（`0xffffff80161f24`），**不加标志位** ⇒ seed = `addr & 0xfff` |
+| 线性映射 KASLR | `arm64_memblock_init`：`ldrh seed; mul range_gb; lsl #0xe; and #0xffffffffc0000000` ⇒ **1 GB 对齐**（`0xffffffffc0000000` = `~0x3fffffff`）。本条初版被误读为「256 GB 对齐 ⇒ 恒为 0」，已由 §48.3 更正：平移实际可达 ~261 GB，本次开机 ≈100–105 GB |
+
+`g2_maxmatch.py` 据此回正（seed_flag=0），并新增 `--model/--grid-bytes/--max-hits/--seed-flag` 供变体筛查。
+
+### 47.4 G2 搜索的全空间穷尽（仍未出解）
+
+输入 `live_probe/ks_purity_result.txt`（inc=`0x7ca8500080`，19 hit，其中 18 个判 genuine）。
+
+| 尝试 | 空间 | 粒度 | 结果 |
+|---|---|---|---|
+| 同桶 / 7 GB（corrected） | 235 M | 32 B | max=3（零假设期望 ≤3） |
+| 同桶 / 7 GB（corrected） | 939 M | 8 B | max=3 |
+| 同桶 / 8 GB（[W, W+8GB)） | 1.07 G | 8 B | 双窗口均 max=3 |
+| 同桶 / 8 GB | 2.15 G | 4 B | max=3 |
+| 邻行对 `bucket>>1` | 235 M | 32 B | max=4（期望 4） |
+| 模型变体 full / pfn / swap / seed+2 | 268 M×2 | 32 B | 全部 max ≤3 |
+| **全内核空间 [0xffffff8000000000, +512GB)** | **8.59 G** | **64 B** | 见 §47.7 |
+
+所有尝试的计数谱都与二项零模型吻合（偏差 <1.5%），即"任何候选 mm 都不比随机更好"。
+
+### 47.5 直接验证：`purity_probe` 实测 hit 集纯度（17/18 为真）
+
+`live_probe/purity_probe.c`（新增）：逐 hit × 5 轮 pause/resume，**每轮只取翻转后的第一个样本**
+（`measure()` 的 `WAKE(val=1)` 对污染地址是破坏性的，重复采样会自我抹除），
+判据为同轮"候选/对照"**比值**（>5 判热、≤2 判冷），`resume` 后等 1.5 s 让唤醒风暴衰减。
+
+设备实测（`live_probe/ks_purity_result.txt`）：`region=0x7ca8500000, inc=0x7ca8500080`，
+扫描 32767 候选得 **19 hit**，`summary 18 0 1` ⇒ **18 genuine / 0 contaminated / 1 ambiguous**。
+典型值：`cold=124/543`、`hot=7875/187`（42×），5/5 轮双向稳定。
+
+⇒ v6 §46.5 对 `pausecheck` 的方法学批评成立（旧判据确实能放行污染），但**实测结果是 hit 集基本纯净**，
+与 §46.4"真 hit ≤3"的推断直接冲突。
+
+### 47.6 模型无关的判据验证：hot 是否等于"同桶 plist 遍历"
+
+`live_probe/bucket_scale_probe.c`（新增）：固定同一批 hit，把 crowd 规模按 256 → 64 → 16 递减，复测。
+
+| hit | n=256 | n=64 | n=16 | r64/r16 |
+|---|---|---|---|---|
+| 0 | 3786 | 147 | 56 | 2.62 |
+| 1 | 3666 | 140 | 35 | 4.00 |
+| 2 | 3621 | 132 | 36 | 3.67 |
+| 3 | 3587 | 147 | 35 | 4.20 |
+| 4 | 2292 | 136 | 35 | 3.89 |
+
+**mean r64/r16 = 3.68**（同桶遍历期望 4；与 crowd 规模无关期望 1）。
+⇒ 命中地址的耗时严格正比于该桶的 waiter 数，**"hot ⇔ 与本进程同桶"成立**，
+且这解释了 transfer2 的迁移结果（他桶无链可走，自然变冷）。
+
+### 47.7 由此产生的唯一未解矛盾
+
+前提 P1：18 个地址与 inc 同桶（§47.6 直接测得，非推断）。
+前提 P2：哈希 = `jhash2([mm_lo,mm_hi,page_lo,page_hi], 4, addr&0xfff) & 2047`（§47.3 指令级确认）。
+前提 P3：`mm` 位于内核空间（`current->mm`，`task+0x5c8`）。
+推论：存在唯一 mm 使 18 个等式同时成立。
+实测：在内核空间（512 GB，64 B 粒度）与两个 8 GB 窗口（4 B 粒度）内，**没有任何候选超过随机基线**。
+
+⇒ P1/P2/P3 至少有一个不成立，而 P1 已被独立实验确认、P2 已三方对拍（numpy / C 转录 / 逐指令模拟器 300/300）、
+P3 由 `task+0x5c8` 的指令级证据支持。**三者无法同时为真**是本轮留下的核心矛盾。
+
+> **✅ 本节矛盾已在同一轮内被 §48 解决**：问题不在 P1/P2，而在 P3 的**窗口**——
+> 线性映射被 KASLR 以 1 GB 为单位平移（本次 ≈100–105 GB），而 v3–v7 的所有搜索窗口都是
+> `PAGE_OFFSET .. +8 GB`。放开窗口后立即出解，且两个独立进程全量 100% 一致。
+
+### 47.8 下一步
+
+1. **[最高优先] 设备侧"预测命中集"反证**：任取候选 mm，用模型生成"应当同桶"的地址集，在设备上实测
+   其热度。该实验能在 30 秒内**证伪或认证**一个 mm 候选，也能证伪模型本身（若所有候选都失败）。
+2. **[需设备] `mm` 的实际对齐**：若 `mm_cachep` 未带 `SLAB_HWCACHE_ALIGN`，步长为 872（8 B 对齐），
+   则 64 B 网格会漏 —— 需在 8 B 粒度上重扫候选基点的小窗口（6 GB ≈ 3 min/基点）。
+3. **[纯离线] 模型输入再排查**：`key->both.ptr` 是否真的为页基址（而非页帧/`struct page*`）——
+   §47.4 的 `full`/`pfn` 变体已排除两种，其余需按二进制重新推演。
+4. **[维持]** 四层 ROOT 判定 NO-GO；`/data/local/tmp` 本轮已清理，新增探针待下次清理。
+
+## §49 v9：**端到端预测命中率验证 —— 100% 命中（MODEL+MM CONFIRMED）**（2026-11-19，同一次开机）
+
+> **结论**：§48.6-1 完成。同进程挂起式探针 `e2e_predict_probe` 把「恢复 mm → 预测必然同桶
+> 地址集 → 实测命中」做成闭环：预测 hot 集 **32/32 HOT（100.0%）**，冷对照 **32/32 cold
+> （0 误报）**，恢复自检 **16/16 同桶**。判据 `MODEL+MM CONFIRMED`。
+> 这是对 G1（桶索引 oracle）+ G2（mm 恢复）+ 哈希模型的**三方联合端到端确认**。
+
+### 49.1 方法：同进程挂起式（解决"新进程 mm 不同"的根本矛盾）
+
+1. **A 扫描**：探针自建 region(256 MB) + 256 waiter crowd，扫描 32768 页（stride 与 purity_probe
+   一致），收集 hit 后逐 hit 做 2 轮翻转纯度甄别，仅 genuine hit 落盘
+   `/data/local/tmp/ks_e2ep_result.txt`（格式兼容 `g2_maxmatch.py`）。
+2. **B 挂起**：进程不退出（mm 不变），crowd 保持在线，轮询 `/data/local/tmp/ks_hold_ans.txt`。
+3. **C 验证**：读回候选 mm 后 (a) 复核全部 genuine hit 应同桶；(b) 在**与扫描 hit 互斥**的地址中
+   预测"必然同桶"集 32 个 + 等量冷对照（`bucket_of != b0`），hot/cold 交替实测（单样本配对中值比：
+   hot > ctrl×5，cold ≤ ctrl×2）。
+
+### 49.2 实测结果（本轮数据）
+
+| 环节 | 结果 |
+|---|---|
+| 扫描/纯度 | 16 hit，**16/16 genuine**（0 污染 0 ambiguous）；oracle inc ≈ 47× baseline |
+| mm 恢复 | `g2_maxmatch.py` 窗口 `kspace:0xffffffda42000000` +256 MB、8 B 网格，**13.6 s** 唯一解 `mm=0xffffffda42a97800`，count=10/10；直方图 {2:353} 与零模型期望 ≈360 吻合，count=10 孤立 |
+| 恢复自检 | 16/16 同桶（inc bucket=655） |
+| **预测命中** | **predicted=32 hot=32 rate=100.0%，amb=0** |
+| 冷对照 | 32/32 cold，falsehot=0（frate 0.0%） |
+| 判决 | **MODEL+MM CONFIRMED** |
+
+旁证：恢复出的 mm 与 §48 数据集 A 的 `0xffffffda42a97100` 仅相距 1.7 KB，同处 +105.04 GB 区、
+64 B 对齐——同一次开机内 mm slab 区确定性（`SLAB_FREELIST_RANDOM=n`）的又一次实测。
+
+### 49.3 边界
+
+1. 仍限本次开机（uptime 51 h+，未重启）；重启后 shift 变化需重扫，但方法与判据可复用。
+2. 预测集互斥（不与扫描 hit 重叠），排除循环论证；cold 对照同规模同页域，排除页级混杂。
+3. 四层 ROOT 判定不变：**NO-GO**（① 类地址已三重闭合，②③ 未闭合，不构成提权）。
+
+### 49.4 本轮文件
+
+| 文件 | 内容 |
+|---|---|
+| `live_probe/e2e_predict_probe.c` / `e2e_predict_probe` | 同进程挂起式端到端验证探针 |
+| `live_probe/ks_e2ep_result.txt` | 完整证据：scan/verdict/recover/predhot/predcold/VERDICT |
+| `live_probe/ks_g2_maxmatch_result.txt` | 本轮 mm 恢复原始输出（13.6 s 唯一解） |
+| `live_probe/ks_hold_ans.txt` | 回填答案文件样例（`mm 0xffffffda42a97800`） |
+
+## §48 v8：**G2 闭合 —— mm_struct 地址恢复成功**（2026-11-19，纯离线 + 本轮设备数据）
+
+> **结论**：KernelSnitch 的 G1（桶索引 oracle，§47.5/§47.6 实测）与 **G2（恢复 mm_struct 地址）**
+> 在本机**均已成立**。两个独立进程分别恢复出唯一解，且**全量 hit 100% 同桶**（19/19、26/26）。
+> 此前 v3–v7 的"零候选/污染假设/判别性不成立"全部撤回，根因是**搜索窗口错位**：
+> 线性映射被 KASLR 以 1 GB 为单位平移，本次开机约 **+100–105 GB**。
+> 四层 ROOT 判定仍为 **NO-GO**（②/③ 类地址未闭合，不构成提权）。
+
+### 48.1 突破过程（一句话）
+
+把 G2 搜索从 `PAGE_OFFSET .. +8 GB` 放开到**整个内核 VA 空间 512 GB、64 B 粒度**（8.59 G 候选），
+第一批 6 个 hit 即给出唯一候选；该候选对**未参与搜索的其余 13 个 hit 也全部成立**。
+
+### 48.2 两套独立数据的结果
+
+| 数据集 | 进程/区域 | hit | 搜索 | 唯一候选 | 全量复核 |
+|---|---|---|---|---|---|
+| A `ks_purity_result.txt` | purity_probe, region=0x7ca8500000, inc=0x7ca8500080 | 19 | 512 GB×64 B，前缀 6 hit，阈值 5 | `mm=0xffffffda42a97100`，count=6/6 | **19/19 同桶**（bucket 1305） |
+| B `ks_e2e2_result.txt` | e2e2_probe, region=0x77be2a0000, inc=0x77be2a0080 | 26 | 0xffffffda00000000 起 8 GB，8 B 网格，前缀 8 hit，阈值 6 | `mm=0xffffffda434d5500`，count=8/8 | **26/26 同桶**（bucket 636） |
+
+直方图（数据集 A，8.59 G 候选）与零假设逐档吻合，且尾部只有一个孤立信号：
+
+| count | 实测 | 二项零模型期望 |
+|---|---|---|
+| ≥1 | 25,136,724 | ≈25.1 M |
+| 2 | 30,505 | ≈3.06 万 |
+| 3 | 17 | ≈17.2 |
+| ≥4 | **1（就是 count=6 的真解）** | ≈0.02 |
+
+⇒ 信号不是统计涨落：6 个约束的随机命中概率 ≈ (1/2048)^6 ≈ 1.3×10⁻²⁰。
+
+### 48.3 根因：KASLR 线性映射平移（并纠正两处此前的误读）
+
+`arm64_memblock_init`（`0xffffff8009a09144`）的平移计算：
+
+```
+ldrh  w8, [x8, #0x1ac]        ; seed = memstart_offset_seed
+cbz   x8, skip
+sub   x9, x0, x19             ; range = memblock_end_of_DRAM - memblock_start_of_DRAM
+add   x9, x9, #0x4000000000   ; + 256 GB
+lsr   x9, x9, #0x1e           ; range_gb
+mul   x8, x9, x8              ; range_gb * seed
+lsl   x8, x8, #0xe            ; << 14
+and   x8, x8, #0xffffffffc0000000
+sub   x8, x10, x8             ; memstart_addr -= shift
+str   x8, [x21, #0x4f8]
+```
+
+**关键更正**：`0xffffffffc0000000` 是 `~0x3fffffff`，即 **1 GB 对齐掩码**，
+不是 §45.3 与 §47.3 误读的"256 GB 对齐 ⇒ 平移恒为 0"。
+shift 的量级：`range_gb(≈262) × seed(≤65535) << 14`，按 1 GB 量化，上界约 261 GB。
+本次开机实测：被恢复的两个 mm 均位于 `PAGE_OFFSET + 105.0x GB`，反推 shift ∈ **[99, 105] GB**（1 GB 量化）。
+
+由此 v5 §45.3 的"KASLR 线性映射滑移恒为 0（排除）"一条**作废**——它是 v3–v7 全部 G2 失败的根因。
+
+### 48.4 判决
+
+| 项 | 状态 |
+|---|---|
+| G1 桶索引 oracle | **成立**（§47.5 翻转测试 18/19；§47.6 规模缩放 3.68×） |
+| **G2 恢复 mm 地址** | **成立（本次开机）**：两个独立进程唯一解 + 全量 100% |
+| M1（mm 地址里程碑） | **闭合**（限本次开机；方法可复用） |
+| M2（可控 rt_mutex 堆地址） | 未闭合（缺锚点；`SLAB_FREELIST_RANDOM=n` 使布局确定） |
+| M3（fake waiter 利用链） | 未验证 |
+| 四层 ROOT | **NO-GO 不变** |
+
+### 48.5 边界与注意事项（防止过度解读）
+
+1. **恢复值仅本次开机有效**：shift 每开机随机，地址不可跨重启复用；但"扫描线性映射"的方法可复用，
+   盲扫成本 = 8.59 G 候选 @64 B ≈ **38 min / 20 进程**（8 核机器约 1–2 h）。若已知 shift 的 1 GB 量化，
+   可把候选集缩到 256 个切片，秒级重扫。
+2. **这不是 `.text` 的 KASLR slide**：本次得到的是**线性映射平移**（memstart 偏移），
+   与 `kimage_voffset` 承载的镜像 VA 基址是两回事（v008 口径维持）。
+3. **不构成提权**：① 类地址只是 GhostLock 的前置条件之一，②/③ 未闭合前无可利用链。
+4. 数据集 A 的 1 个 ambiguous hit 仍计入 19（它同样满足同桶），说明 §47.5 的判据偏保守、不会误杀。
+
+### 48.6 下一步
+
+1. **[需设备]** 用恢复的 mm 做**端到端预测验证**：以 mm 预测"必然同桶"的地址集，实测命中率应≈100%
+   （即 `verify_probe` 的正确用法；需改为同进程挂起式，见 `HANDOVER_RESUME.md` §3）。
+2. **[需设备]** 把盲扫压缩为"一次扫描 + 缓存 shift"：同一次开机内后续恢复只需 1 GB 切片扫描。
+3. **[转向 M2]** 以已知 mm 为锚点，评估 AF_UNIX skb 喷射的页级邻接可行性（`SLAB_FREELIST_RANDOM=n` 已确认）。
+4. **[维持]** 四层 ROOT NO-GO；不做 GhostLock 端到端 PoC。
+
+### 48.7 本轮文件
+
+| 文件 | 内容 |
+|---|---|
+| `live_probe/ks_g2_breakthrough.txt` | 两套数据的完整闭合证据与复现命令 |
+| `live_probe/purity_probe.c` / `bucket_scale_probe.c` | 纯度甄别、判据验证（设备侧） |
+| `live_probe/verify_probe.c` | 候选 mm 的预测命中集验证（待改同进程挂起式） |
+| `tools/g2_maxmatch.py` | v3：桶掩码、三方自检、`--grid-bytes/--model/--max-hits/--seed-flag`、并行 |
+| `tools/g2_maxmatch_control.py` | 正/负向对照（A/B/C，全 PASS） |
+| `tools/hash_emu.py` | 修 64 位寄存器截断；`bucket_of()` 返回真实桶索引 |
+| `live_probe/ks_g2_maxmatch_result.txt` / `g2_kspace.log` | 512 GB 扫描原始输出 |
+
+## §50 v10：M2 评估 —— AF_UNIX skb 喷射页级邻接（时间流锚定）**证伪**（2026-11-19）
+
+> **结论先行**：以已知 mm 为锚、依赖 buddy 分配流"时间邻接"来推导喷射页落点的路线
+> （参考项目 PCKM00 固定 delta `SKB_DATA_DELTA=-0xe80` 的移植前提）**被真机数据证伪**。
+> 52h 开机、6 GB DRAM 上，相邻 fresh mm slab 页（间隔秒级、其间 300–1000 次 order-2 分配）
+> 落点相距 **1.0–5.5 GiB、方向随机、与喷射规模 K 无关**。
+> **M2 维持未闭合（新增否证）；四层 ROOT 判定 NO-GO 不变。**
+
+### 50.1 方法：mm 示踪粒子（本轮核心增量）
+
+mm_struct 是唯一可被 futex bucket oracle（G1+G2，§48/§49 已闭合）读出的堆对象——
+**fork 产生的 fresh mm slab 页就是 buddy 分配流里的"示踪粒子"**：喷射前后各放一个示踪，
+离线恢复两个 mm 的 slab 页地址，即可测量流的地址结构。
+
+**结构事实（本轮离线+设备确认，修正此前认知）**：
+
+| 项 | 事实 | 证据 |
+|---|---|---|
+| kmalloc 缓存上限 | **至 8192 为止** ⇒ `kmalloc(16384)` 走 `kmalloc_large` **直连 buddy（order-2）**，无 SLUB 中间层、无 cpu-partial 干扰；每个 skb data = 恰好一个 order-2 块 | `/proc/slabinfo`（kmalloc-8192 为最大项，4 obj/slab、pages/slab=8）+ SLUB `KMALLOC_SHIFT_HIGH=PAGE_SHIFT+1` |
+| THP | 未启用（`# CONFIG_TRANSPARENT_HUGEPAGE is not set` + sysfs 无该文件）⇒ region 触页全是 order-0，不污染事件流 | `tools/device_config.txt` + 设备实测 |
+| mm_cachep | 896 B × 18 obj/slab，pages/slab=4（**order-2**，与 skb data 同阶）；52h 开机时仅 12 个空闲对象 ⇒ 40 个 dummy fork 即可强制向 buddy 申请新 slab 页 | `/proc/slabinfo`：`mm_struct 366 378 896 18 4 : slabdata 21` |
+| 喷射上限 | `SO_RCVBUF` 无 CAP_NET_ADMIN 被 `rmem_max`（~208 KB）钳制 ⇒ **每 socket 仅容纳 ~12 个 16 KB 包**（§44.1 spray_probe"3072 个/轮"= 256 socket × 12 的由来） | run1 meta：`sprayed 12` 后 EAGAIN |
+
+**探针** `live_probe/spray_tracer_probe.c`：每步 = 40 个驻留 dummy fork（耗尽 freelist）→
+K 个 16 KB skb 喷射（kmalloc_large 直连 buddy，驻留）→ fork 示踪子进程（v9 同款
+扫描 + 翻转纯度甄别，genuine hit 落盘 `/data/local/tmp/ks_tracer<i>.txt`，驻留保持 mm）。
+另设共享 active 槽位：后扫描的示踪激活时，先前示踪的 crowd 自暂停，消除跨 crowd 交叉污染
+（run1 原始 hit 25→87 递增即此污染，run2 修复后 18/24/13/15/15）。
+
+### 50.2 实测：两轮共 9 个唯一解，delta 全部 GB 级（判决性）
+
+恢复均用 `tools/m2_tracer_analysis.py`（导入 `g2_maxmatch.scan_window`，64 B 网格；
+已知簇 1 GB 窗口失效后放宽 16 GB 宽窗，~6 min/12 jobs）。**9/9 个候选均为满命中唯一解**
+（count = 全部 genuine hit，13–25 个约束；伪阳概率 ≤ 2048^-13）。
+
+**run1（K 实测 [0,0,12,0,0]，纯对照）**——5 个示踪全部恢复：
+
+| 示踪 | mm（16 GB 窗口唯一解） | count |
+|---|---|---|
+| T0 | `0xffffffdb05179880` | 25/25 |
+| T1 | `0xffffffdb88784380` | 18/18 |
+| T2 | `0xffffffdaa6b6a300` | 15/15 |
+| T3 | `0xffffffda64543480` | 18/18 |
+| T4 | `0xffffffdb9f265500` | 13/13 |
+
+**run2（K=[0,0,768,768,0]，12.6 MB 喷射）**——T2 仅 1 genuine（喷射后时序扰动）不可恢复，其余 4 个：
+
+| 示踪 | mm | count |
+|---|---|---|
+| T0 | `0xffffffdb0d98f800` | 18/18 |
+| T1 | `0xffffffdac8e41500` | 22/22 |
+| T3 | `0xffffffda427b8a80` | 14/14 |
+| T4 | `0xffffffdb9fe92680` | 15/15 |
+
+**相邻示踪 slab 页 delta（order-2，16 KB/块；线性模型期望 |d| ≤ 300–1070 块即 5–17 MB）**：
+
+| delta | run1（K≈0） | run2 |
+|---|---|---|
+| d01 | **+134,531 块（+2.05 GiB）** | **−70,355 块（−1.07 GiB）** |
+| d12 | **−231,175 块（−3.53 GiB）** | N/A（T2 未恢复） |
+| d23 | **−67,978 块（−1.04 GiB）** | N/A |
+| d34 | **+322,377 块（+4.92 GiB）** | **+357,814 块（+5.46 GiB）** |
+
+6 组可测 delta：**量级 1.0–5.5 GiB、符号随机、与 K 无关**。9 个 mm 的分布
+`0xffffffda427b8a80 … 0xffffffdb9fe92680` 跨 ~5.5 GiB ≈ 整个 DRAM。
+⇒ **时间流锚定证伪**：本机 52h 开机、碎片化 buddy 的 order-2 空闲块全域散布，
+时间上相邻的分配在地址上完全不相关；固定 delta / 线性 delta 公式不可移植。
+
+**交叉验证**：`mm_struct` slabdata 恰按模型增长（run1：21→23→25→27→29，每步 +2；
+run2：29→30→32→33→35）⇒ 示踪粒子确为本步新申请的 fresh slab 页；`kmalloc-8192` 全程不变。
+
+### 50.3 口径更新（不撤回 §48/§49 任何结论）
+
+- **M2**：维持**未闭合**，新增否证一条——"以 mm 为锚的时间流/固定 delta 页级邻接"不可行。
+  参考项目路线（PCKM00，`MM_ORDER=3` + 固定 delta）的移植前提在本机不存在。
+- **结构性 split-pair 邻接不作为闭合依据**：buddy 劈裂语义下同块两半 ±16 KB 相邻，
+  但 fork 路径内 task_struct/内核栈/files/sighand/mm slab 多重 order-2 分配穿插，
+  (mm, skb) 确定配对公式需先做**离线 fork 分配序审计**（vmlinux 反汇编）才有候选；
+  且 skb 落点**无观测 oracle**（futex key 只含 mm 与用户页地址），任何"skb = mm+16KB"
+  类公式都无法实证验证——除非 M3（不做）或出现新 oracle。
+- G1+G2（mm 恢复）方法学再次得到强化：9 个跨 5.7 GB 的示踪全部满命中唯一解，
+  且 `mm` 与 `inc` 桶关系在恢复后 100% 自洽。
+- 设备终态：零重启（uptime 52.2 h，同一开机）；`/data/local/tmp` 已清空（先取回后删）。
+
+### 50.4 本轮文件变更
+
+| 文件 | 内容 |
+|---|---|
+| `live_probe/spray_tracer_probe.c`（+编译产物） | M2 示踪探针（socketpool/active 槽位/每步 dummy 漂洗） |
+| `live_probe/ks_tracer_run1_{0..4}.txt` / `ks_tracer_meta_run1.txt` | run1 原始数据（K≈0 对照） |
+| `live_probe/ks_tracer_run2_{0..4}.txt` / `ks_tracer_meta_run2.txt` | run2 原始数据（K=768） |
+| `tools/m2_tracer_analysis.py` | 示踪 mm 批量恢复 + delta 模型对照 |
+| `tools/m2_narrow_check.py` | 定点复扫（run1 T0 检出验证，count=25 复现） |
+| `live_probe/ks_m2_tracer_summary_run1b.txt` / `_run2.txt` / `m2_tracer_*_analysis.log` | 恢复结果与日志 |
+| `HANDOVER_RESUME.md` / `CLOSURE.md` / `README.md` | v10 口径同步 |

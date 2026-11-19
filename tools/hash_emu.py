@@ -23,9 +23,10 @@ CODE = k.read(START, END - START)
 INSNS = list(md.disasm(CODE, START))
 
 M32 = 0xFFFFFFFF
+M64 = 0xFFFFFFFFFFFFFFFF
 
 class Emu:
-    def __init__(self, mm, va, hashsize=2048):
+    def __init__(self, mm, va, hashsize=2048, seed_flag=0):
         self.r = {}
         self.mem = {}          # 32-bit words keyed by address
         # key 在栈上: sp 基准
@@ -37,7 +38,8 @@ class Emu:
         self.mem[self.SP+0x14] = (mm >> 32) & M32
         self.mem[self.SP+0x18] = page & M32
         self.mem[self.SP+0x1c] = (page >> 32) & M32
-        self.mem[self.SP+0x20] = off
+        # key->both.offset = (va % PAGE_SIZE) | FUT_OFF_MMSHARED (futex.c:629)
+        self.mem[self.SP+0x20] = off | seed_flag
         self.hashsize = hashsize
         # futex_hashsize @ 0xffffff8009e0e160, futex_queues @ 0xffffff8009e0e150
         self.mem[0xffffff8009e0e160] = hashsize
@@ -45,24 +47,37 @@ class Emu:
         self.mem[0xffffff8009e0e154] = 0xffffff80
 
     def rname(self, rid):
+        """统一到 64 位寄存器名（x0..x30 / sp），保留位宽信息由 rd/wr 处理。"""
         n = md.reg_name(rid)
-        if n == 'xzr' or n == 'wzr':
+        if n in ('xzr', 'wzr'):
             return 'wzr'
-        if n.startswith('x'):
-            return 'w' + n[1:]
+        if n == 'sp' or n == 'wsp':
+            return 'sp'
+        if n.startswith('w'):
+            return 'x' + n[1:]
         return n
 
+    def _is32(self, rid):
+        n = md.reg_name(rid)
+        return n == 'wsp' or (n.startswith('w') and n != 'wzr')
+
     def rd(self, rid):
+        """读寄存器：w 寄存器取低 32 位，x 寄存器取完整 64 位。
+
+        v1 缺陷：所有寄存器一律 & 0xFFFFFFFF，导致 `ldr w10,[x10,#0x160]` 的基址
+        被截断为 0、末尾 `and x9,x10,x9` 的掩码读不到 hashsize-1，bucket 输出错误。
+        """
         n = self.rname(rid)
         if n == 'wzr':
             return 0
-        return self.r.get(n, 0) & M32
+        v = self.r.get(n, 0)
+        return (v & M32) if self._is32(rid) else (v & M64)
 
     def wr(self, rid, val):
         n = self.rname(rid)
         if n == 'wzr':
             return
-        self.r[n] = val & M32
+        self.r[n] = (val & M32) if self._is32(rid) else (val & M64)
 
     def getmem(self, addr):
         return self.mem.get(addr & ~3, 0)
@@ -148,10 +163,10 @@ class Emu:
                 raise RuntimeError('unexpected control flow at %x: %s' % (ins.address, ins.mnemonic))
             else:
                 raise RuntimeError('unhandled mnemonic %s @ %x' % (m, ins.address))
-        return self.r.get('w9', 0)   # x9 = bucket
+        return self.r.get('x9', 0) & M32   # x9 = bucket = hash & (futex_hashsize-1)
 
-def bucket_of(mm, va, hashsize=2048):
-    return Emu(mm, va, hashsize).run()
+def bucket_of(mm, va, hashsize=2048, seed_flag=0):
+    return Emu(mm, va, hashsize, seed_flag).run()
 
 if __name__ == '__main__':
     import random
