@@ -376,6 +376,7 @@ int main(void)
         fprintf(meta, "step %d begin K=%d t=%.3f\n", step, K, now_ms() / 1000.0);
 
         /* 1) dummy fork：耗尽 mm_cachep freelist，强制新 slab 页 */
+        int d_ok = 0, d_err = 0;
         for (int d = 0; d < N_DUMMY; d++) {
             pid_t p = fork();
             if (p == 0) {
@@ -383,10 +384,13 @@ int main(void)
                 for (;;) pause();
                 _exit(0);
             }
-            if (p < 0) { perror("fork dummy"); break; }
+            if (p < 0) { d_err = errno; perror("fork dummy"); break; }
             dummy_pids[n_dummy_total++] = p;
+            d_ok++;
         }
-        fprintf(meta, "step %d dummies %d t=%.3f\n", step, N_DUMMY, now_ms() / 1000.0);
+        /* v10.1：记录实测成功数（此前恒写 N_DUMMY，见审核 v010 第 ② 条） */
+        fprintf(meta, "step %d dummies_ok %d target %d errno %d t=%.3f\n",
+                step, d_ok, N_DUMMY, d_err, now_ms() / 1000.0);
         slabinfo_snap(meta, "postdummy");
 
         /* 2) skb 喷射（驻留；每步独立 socketpool，全程持有不释放） */
@@ -420,6 +424,8 @@ int main(void)
             printf("[parent] step %d tracer scan FAILED\n", step);
             if (c == 'F') { /* 该步无数据，继续其余步骤 */ }
         }
+        /* v10.1：tracer 创建后立即取 slabinfo，直接记录"新 slab 页由谁触发" */
+        slabinfo_snap(meta, "posttracer");
         /* dummy/tracer 均驻留：不 wait、不释放（保证 delta 流单调） */
     }
 

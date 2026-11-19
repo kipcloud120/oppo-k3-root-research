@@ -24,5 +24,7 @@
 | `审核意见CHATGPT-v002…v006-2.txt` | 中间复审批次（服务面/策略引擎/入口层等 P0/P1） | 已响应，见 `HANDOVER.md` §14、§25–§37 |
 | `审核意见CHATGPT-v007.txt` | 指向同类参考项目，建议补运行时地址（boot_id / KernelSnitch / ashmem） | **已响应**：`FEASIBILITY_v007.md`、`DUAL_TRACK_RESULT.md`、`live_probe/`；`HANDOVER.md` §38–§42 |
 | `审核意见CHATGPT-v008.txt` | 收紧三类地址口径（mm 线性地址 ≠ KASLR slide）、分离 oracle/唯一性、重排研究优先级 | **已响应**：`FEASIBILITY_v008.md`（权威）、`FEASIBILITY_v007.md` §12.1 更正块、`HANDOVER.md` §43；四层判定不变 |
+| `审核意见CHATGPT-v009.txt` | 指出 G2 统计量错误（哈希值 ≠ 哈希桶）、要求 hit 集纯度定量 | **已响应**：`HANDOVER.md` §46–§49（G2 闭合、端到端 32/32） |
+| `审核意见CHATGPT-v010.txt` | 四个审计问题（唯一性断言 / dummy 计数 / 两种 order-2 不同源 / 文档版本口径）+ 建议转向 DCI 与栈地址观察面 | **已响应**：`HANDOVER.md` §52（脚本级唯一性断言、探针计数修补、口径修正）+ §51（DCI 解析子树否证）；四层判定不变 |
 
 `HANDOVER.md` §6「负知识清单」汇总了 17 条**曾被认为是确定结论、后被自己推翻**的判断，以及推翻它们的依据——比删掉这些文档更有价值，也能防止后来者重走同一条死路。

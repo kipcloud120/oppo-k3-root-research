@@ -12,7 +12,9 @@
 >
 > **v8 突破（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §48）**：**G1 与 G2 均已成立。** 把搜索空间从 `PAGE_OFFSET..+8 GB` 放开到整个内核 VA 空间（512 GB / 64 B 粒度，8.59 G 候选）后立即出解：两套独立设备数据各得**唯一**候选，且**全量 hit 100% 同桶**（19/19 → `mm=0xffffffda42a97100`；26/26 → `mm=0xffffffda434d5500`）。根因是 `memstart_addr` 被 KASLR 以 **1 GB** 为单位下移，本次开机约 **100–105 GB**——v5 §45.3 把 1 GB 对齐掩码 `0xffffffffc0000000` 误读为 256 GB，因而错判"平移恒为 0"，导致 v3–v7 全部搜索窗口整体错位。**边界**：mm 地址仅本次开机有效；这仍是线性映射平移、不是 `.text` 的 KASLR slide；① 类闭合**不构成提权**（②/③ 未闭合）。
 >
-> **v10 M2 否证（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §50）**：以已知 mm 为锚、依赖 buddy 分配流"时间邻接"推导 AF_UNIX skb 喷射页落点的路线（参考项目固定 delta 的移植前提）**被真机示踪实验证伪**。新增"mm 示踪粒子"方法（fork 的 fresh mm slab 页可被 futex oracle 恢复，充当分配流示踪）：两轮 9 个满命中唯一解显示相邻 fresh slab 页落点 **1.0–5.5 GiB 随机散布、与喷射规模 K 无关**。结构事实同步修正：kmalloc 缓存至 8192 为止 ⇒ 16 KB skb data 走 `kmalloc_large` 直连 buddy（每包恰一个 order-2 块）；`SO_RCVBUF` 被 rmem_max 钳制 ⇒ 每 socket 仅装 ~12 个 16 KB 包。**② 维持未闭合，NO-GO 不变。**
+> **v10 M2 否证（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §50）**：以已知 mm 为锚、依赖 buddy 分配流"时间邻接"推导 AF_UNIX skb 喷射页落点的路线（参考项目固定 delta 的移植前提）**被真机示踪实验证伪**。新增"mm 示踪粒子"方法（fork 的 fresh mm slab 页可被 futex oracle 恢复，充当分配流示踪）：两轮 9 个示踪的相邻 fresh slab 页落点 **1.0–5.5 GiB 随机散布**，简单固定/线性 delta 模型不成立。**K 的独立影响未测得**（run1 实际 K 仅 12 块、run2 两个 K=768 步骤的中间示踪 T2 缺失 ⇒ d12/d23 均 N/A）：现有数据否证的是"固定 delta"，不能外推为"喷射规模无影响"。结构事实同步修正：kmalloc 缓存至 8192 为止 ⇒ 16 KB skb data 走 `kmalloc_large` 直连 buddy（payload 16064 + shared_info 320 = 16384，**每包恰一个 order-2 块**）；`SO_RCVBUF` 被 rmem_max 钳制 ⇒ 每 socket 仅装 ~12 个 16 KB 包。**② 维持未闭合，NO-GO 不变。**
+>
+> **v10.1 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §51/§52，纯离线、零上机）**：响应外部审核 v010。① **唯一性升级为脚本断言**——9/9 个示踪的满命中候选数 `n_full`=1、**次高分恒为 3**（噪声地板），最优/次优相差 ≥10 个约束；两个原在 1 GB 邻域出解者已补扫 16 GB 复核，同为全局唯一（`tools/m2_unique_globals.py`）。② **`/dev/diag` DCI 解析子树静态否证**——三条回传路径均有"声明长度⇄实收长度"门 + 缓冲容量二次校验，子树内无 `copy_to_user`；余量 R1–R3。③ 探针补记 dummy 实际成功数/errno 与 `posttracer` slabinfo（待上机验证）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
 
 
 | | |
@@ -21,25 +23,25 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测复核一致，无 OTA） |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** GhostLock 路径（v8）：**① 类已闭合**——G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；盲扫成本 8.59 G 候选 @64 B ≈ 38 min/20 进程；**② 可控 rt_mutex 堆地址 / ③ 内核栈基址仍缺** |
+| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** GhostLock 路径（v10）：**① 类已闭合**——G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；盲扫成本 8.59 G 候选 @64 B ≈ 38 min/20 进程；**② 可控 rt_mutex 堆地址未闭合，且 v10 新增"时间流/固定 delta 页级邻接"否证**；**③ 内核栈基址仍缺** |
 | 设备终态 | 未刷写、未解锁、未改分区、未装持久化文件；`/data/local/tmp` 已清空；累计 5 次内核重启（均前期实验，v3 实测零重启） |
 
 ---
 
-## 当前状态一览（v8）
+## 当前状态一览（v10）
 
-| 面 | 机制 | 卡点 / v6 状态 |
+| 面 | 机制 | 卡点 / v10 状态 |
 |---|---|---|
-| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **v8**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48）；**缺 ② 可控 rt_mutex 堆地址 / ③ W 线程栈基址** |
+| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **v10.1**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪，9/9 示踪 `n_full`=1 由脚本断言）/ ③ W 线程栈基址** |
 | KGSL `CVE-2023-33107` | 成立（源码 pre-fix） | 命中缺陷即 `BUG()` panic，无中间态 |
 | binder `CVE-2023-20938` | 不成立（未引入） | — |
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
 | FastRPC `CVE-2023-33063` | 面存在 | uid 0 域下更封闭（权限并集 ∅） |
-| `/dev/diag` | 入口层无缺陷 | 55/55 拷贝点判界；DCI 子树未审，且依赖内核指针的利用被 ②/③ 缺口阻断 |
+| `/dev/diag` | 入口层无缺陷；**DCI 解析子树 v10.1 已否证**（三条回传路径均有"声明长度⇄实收长度"门） | 余量 R1–R3（`extract_dci_ctrl_pkt` 控制语义、两条非 apps 入口、长度字段功能边界）；依赖内核指针的利用仍被 ②/③ 阻断 |
 | **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限）；缺口 = 域逃逸（§24 判无路径） |
 | 私有 Binder / `system_server` / Wi-Fi 消费者 | 方法级否证 | 7/7 闭合、`system_server` 取句柄处断开、消费者三道门全封（§33–§37） |
 
-**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v3 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §38–§42（v3）。
+**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v10.1 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §52 → §51 → §50 → §49 → §48。
 
 ---
 
@@ -51,12 +53,14 @@
 |---|---|---|---|
 | ① | mm_struct 线性地址（DPM 中的堆页位置） | **已闭合（本次开机）**：`0xffffffda42a97100`（19/19）与 `0xffffffda434d5500`（26/26）；盲扫 512 GB @64 B 出唯一解（§48） | ❌ 不够：解引用 + 结构校验过不了，且缺 ② 兑现 |
 | ①-s | KASLR slide（镜像 VA，v008 细分） | ❌ **拿不到**：由 `kimage_voffset` 独立承载，不能由 ① 反推（见 `FEASIBILITY_v008.md` §1） | ❌ 不够，且本机无获取原语 |
-| ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 生命周期可控（3072 对象/轮、spread 0.00%），**缺地址锚点**；`SLAB_FREELIST_RANDOM=n` ⇒ slab 内布局确定，页级邻接未证（§46.7） | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
+| ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 生命周期可控（3072 对象/轮、spread 0.00%），**缺地址锚点**；`SLAB_FREELIST_RANDOM=n` ⇒ slab 内布局确定；**v10：页级"时间流锚定"已证伪**（示踪 delta GB 级随机，§50） | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
 | ③ | W 线程内核栈基址（持有 stale waiter 者） | ❌ 无侧信道：futex key 不含栈地址；USENIX'25 栈侧信道依赖 VMAP_STACK，本机 `!VMAP_STACK` | ✅ 能（几何偏移已静态解决，缺的是拿栈基址的 oracle） |
 
 **参考项目为何能成功**：`yijiacloud/GhostLock-OPPO-PCKM00` 用 KernelSnitch 泄露的 mm_struct 地址 + AF_UNIX skb 喷射，把 payload 落到内核堆的已知地址，`lock` 指向那处受控 rt_mutex——**从不需要栈地址**。K3 缺的正是那个 skb 堆喷原语，所以同样的 slide 无法兑现。
 
-**v7 判定**：① 类判据已由实测确立（这是 KernelSnitch 在本机可用的前提），但**恢复环节卡在一个可证伪的模型矛盾上**（§47.7）；②/③ 仍未闭合，缺口仍是"任意一个内核堆地址锚点"。里程碑按 M1（mm 地址）/ M2（可控 rt_mutex 地址）/ M3（利用链）独立记账。**可用 root 判定不变。**
+**v7 判定（历史）**：① 类判据已由实测确立（这是 KernelSnitch 在本机可用的前提），但**恢复环节卡在一个可证伪的模型矛盾上**（§47.7）；②/③ 仍未闭合，缺口仍是"任意一个内核堆地址锚点"。里程碑按 M1（mm 地址）/ M2（可控 rt_mutex 地址）/ M3（利用链）独立记账。**可用 root 判定不变。**
+
+**v10 判定**：M1 冻结为已验证工具；M2 的"mm 锚 + 时间邻接 + 固定 delta"子路线**正式关闭**（§50），保留 AF_UNIX skb 为对象生命周期研究对象；split-pair 结构邻接仅作理论线索（无 skb 落点 oracle，无法实证）。下一阶段缺口不变：**② 可控 rt_mutex 堆地址 / ③ W 线程栈基址**。
 
 ### 关键证据（v3–v6）
 

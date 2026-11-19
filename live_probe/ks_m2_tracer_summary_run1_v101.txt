@@ -1,0 +1,12 @@
+# M2 tracer analysis — prefix=ks_tracer_run1_ K_step=[0, 0, 12, 0, 0]
+T0 mm=0xffffffdb05179880 count=25 note=ok window=W2(16GB) UNIQUE-FULL | window=W2(16GB) hits=25 top=25 n_top=1 n_full=1 second=3(x68) n_ge6=1 scanned=268435456
+T1 mm=0xffffffdb88784380 count=18 note=ok window=W2(16GB) UNIQUE-FULL | window=W2(16GB) hits=18 top=18 n_top=1 n_full=1 second=3(x31) n_ge6=1 scanned=268435456
+T2 mm=0xffffffdaa6b6a300 count=15 note=ok window=W2(16GB) UNIQUE-FULL | window=W2(16GB) hits=15 top=15 n_top=1 n_full=1 second=3(x16) n_ge6=1 scanned=268435456
+T3 mm=0xffffffda64543480 count=18 note=ok window=W1(1GB) UNIQUE-FULL | window=W1(1GB) hits=18 top=18 n_top=1 n_full=1 second=3(x2) n_ge6=1 scanned=16777216
+T4 mm=0xffffffdb9f265500 count=13 note=ok window=W2(16GB) UNIQUE-FULL | window=W2(16GB) hits=13 top=13 n_top=1 n_full=1 second=3(x10) n_ge6=1 scanned=268435456
+d01 = 134531
+d12 = -231175
+d23 = -67978
+d34 = 322377
+UNIQUENESS UNIQUE-FULL 5/5 recovered
+VERDICT NOT CONFIRMED / INSUFFICIENT
