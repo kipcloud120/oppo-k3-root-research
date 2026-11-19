@@ -15,7 +15,8 @@
 > **v10 M2 否证（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §50）**：以已知 mm 为锚、依赖 buddy 分配流"时间邻接"推导 AF_UNIX skb 喷射页落点的路线（参考项目固定 delta 的移植前提）**被真机示踪实验证伪**。新增"mm 示踪粒子"方法（fork 的 fresh mm slab 页可被 futex oracle 恢复，充当分配流示踪）：两轮 9 个示踪的相邻 fresh slab 页落点 **1.0–5.5 GiB 随机散布**，简单固定/线性 delta 模型不成立。**K 的独立影响未测得**（run1 实际 K 仅 12 块、run2 两个 K=768 步骤的中间示踪 T2 缺失 ⇒ d12/d23 均 N/A）：现有数据否证的是"固定 delta"，不能外推为"喷射规模无影响"。结构事实同步修正：kmalloc 缓存至 8192 为止 ⇒ 16 KB skb data 走 `kmalloc_large` 直连 buddy（payload 16064 + shared_info 320 = 16384，**每包恰一个 order-2 块**）；`SO_RCVBUF` 被 rmem_max 钳制 ⇒ 每 socket 仅装 ~12 个 16 KB 包。**② 维持未闭合，NO-GO 不变。**
 >
 > **v10.1 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §51/§52，纯离线、零上机）**：响应外部审核 v010。① **唯一性升级为脚本断言**——9/9 个示踪的满命中候选数 `n_full`=1、**次高分恒为 3**（噪声地板），最优/次优相差 ≥10 个约束；两个原在 1 GB 邻域出解者已补扫 16 GB 复核，同为全局唯一（`tools/m2_unique_globals.py`）。② **`/dev/diag` DCI 解析子树静态否证**——三条回传路径均有"声明长度⇄实收长度"门 + 缓冲容量二次校验，子树内无 `copy_to_user`；余量 R1–R3。③ 探针补记 dummy 实际成功数/errno 与 `posttracer` slabinfo（待上机验证）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
-
+>
+> **v11 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §53/§54，纯离线、零上机）**：响应审核 v011。① **③ 类从"缺 oracle"变为"已枚举否证"**——逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、perf、BPF、tracefs、debugfs、`/sys/module/*/sections`、hung_task），唯一含 sp 的输出是 oops 寄存器 dump，而 `panic_on_oops` 按 Android 默认推断为 1（本机不可读）⇒ 不构成 oracle。② **Track C 撞到物料墙**——解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 不在镜像内（`hdd_*`/`qdf_*` 符号 0 个），需先只读拉取 `qca_cld3_wlan.ko`。③ 待授权两项 5 秒只读复核（`/proc/self/stat` 28–30 字段、`/proc/self/stack`）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
 
 | | |
 |---|---|

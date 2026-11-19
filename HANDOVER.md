@@ -3768,7 +3768,7 @@ diagchar_write → diag_user_process_dci_apps_data → diag_process_apps_dci_rea
 | # | 残余 | 说明 |
 |---|---|---|
 | R1 | `extract_dci_ctrl_pkt` 的**控制语义**（mask/状态一致性） | 数据面无拷贝；逻辑面未审 |
-| R2 | `diag_process_remote_dci_read_data` / `diag_process_dci_transaction` 两条非 apps 入口 | 共用同一分派器；入口来源（modem / transaction 表）未逐路径复核 |
+| R2 | `diag_process_remote_dci_read_data` / `diag_process_dci_transaction` 两条非 apps 入口 | 共用同一分派器；入口来源（modem / transaction 表）未逐路径复核 | **v11 部分办结**：remote 入口有显式门——`cmp w1,#0x2202; b.hs → 丢弃` 与 `len+5 ≤ 剩余`（`0x8614be8` / `0x8614bf8`）；transaction 入口的 0x93 帧由驱动侧构造（调用点前 `mov w10,#0x93`），未见来自用户载荷的独立长度字段 ⇒ 不新增攻击面，仍标"来源已定位、未逐指令复核" |
 | R3 | u16 长度字段的功能语义边界 | 功能判断，非安全结论 |
 
 ### 51.5 判定影响
@@ -3829,3 +3829,111 @@ diagchar_write → diag_user_process_dci_apps_data → diag_process_apps_dci_rea
 
 §50.2 现行表述"9/9 个候选均为满命中唯一解"在数量上被本次复算**证实**，但依据由
 "人工观察 + 概率估算"升级为"脚本断言 + 分离度量化"。是否据此改写表述，待本轮决定。
+
+---
+
+## §53 v11-A：内核栈地址可观测性（GhostLock ③）离线枚举 —— **否证**（2026-11-19，纯离线）
+
+> 响应审核 v011 的 P0（Track A）。**0 次上机**：只用 `firmware_F16/vmlinux.elf`、`kallsyms_out.txt`、
+> `artifacts_adb/k3_kernel_config.txt` 与既有实测记录。
+
+### 53.1 结论
+
+**在本机条件（`!VMAP_STACK`、`CONFIG_STACKTRACE=y`、SELinux Enforcing、`CapEff=0x13000`）下，
+没有任何"低权限可达且返回内核栈地址"的接口。** 可得的最接近物是 `%pK` 门控的**内核文本地址**
+（返回地址/符号），既不是栈基址，也不指向该线程的 16 KB 栈页。
+
+按审核 v011 给出的停止标准（"找不到任何低权限可达、能提供栈地址或等价地址关系的接口，
+就关闭该子方向"）⇒ **③ 子方向关闭**，保留两项 5 秒级只读复核（53.4），不保留理论假设。
+
+### 53.2 判定前提：栈"在窗口内"不等于"可观测"
+
+`!VMAP_STACK` ⇒ 线程栈由 buddy 的 order-2 页承载、位于线性映射区，**与 ① 类 mm 地址同区但不相关**
+（§DUAL_TRACK §3）。③ 需要的是"**指向该线程栈页的任一地址**"（拿到即可按 16 KB 对齐求基址），
+因此唯一有效的证据形式是"某个接口吐出 sp 或栈内指针"，而不是"某个接口吐出内核地址"。
+
+### 53.3 接口枚举（逐项判定）
+
+| # | 接口 | 吐出的内容 | 含栈地址? | 门 | 证据等级 |
+|---|---|---|---|---|---|
+| 1 | `/proc/<pid>/stack` | `[<%pK>] %pB` —— **返回地址（文本）** | ❌ 文本地址，且 %pK 门控 | `ptrace_may_access`；`kptr_restrict` | 镜像内该格式串**唯一存在**；`proc_pid_stack` 符号存在 |
+| 2 | `/proc/<pid>/wchan` | `%s`（符号名）或 `"0"` | ❌ 纯符号名 | 同上 + `lookup_symbol_name` | 反汇编见 `%s` 字面（`0xffffff80082c80c0`） |
+| 3 | `/proc/<pid>/syscall` | 用户态 sp/pc + 8 参数 | ❌ 用户态寄存器 | `ptrace` | 格式串 `%ld 0x%lx …` 实测 |
+| 4 | `/proc/<pid>/stat` 字段 28–30 | startstack / kstkesp / kstkeip | ⚠️ 待测（arm64 通常 0） | 世界可读 | **待 5 秒只读实测**（53.4-a） |
+| 5 | `/proc/kallsyms` | 符号值 | ❌ 文本，且值被 `kptr_restrict` 清零 | 0400 + SELinux 拒 | §23.9 实测（uid0 Wi-Fi 域亦拒） |
+| 6 | `/proc/modules` | 模块基址 | ❌ 基址恒 `0` | `kptr_restrict` | §23.9 实测 |
+| 7 | `/proc/vmallocinfo` | vmalloc 区间 + 调用者 | ❌ 栈在线性映射，不在 vmalloc | 0400 + 实测拒 | §23.9 / 表 1571 |
+| 8 | `/proc/timer_list` | 定时器函数地址 | ❌ 文本 | 实测拒绝 | 同上 |
+| 9 | `dmesg` / `/dev/kmsg` | printk 缓冲；**oops 的寄存器 dump 含 sp** | ⚠️ 仅 oops 路径；Android 默认 `panic_on_oops=1`（**本机读数被拒，属推断**）⇒ 不可用 | 实测拒绝 | §23.9 / k3_info2 |
+| 10 | `/proc/sysrq-trigger` | `sysrq-l/t` 全任务回栈（文本） | ❌ 文本 + 需 `CAP_SYS_ADMIN` | `CapEff=0x13000` 无该位 | 能力集实算 |
+| 11 | `perf_event_open` | 采样内核栈 | ❌ 返回地址，不含 sp | `perf_event_paranoid=3` | v4 **实测 EPERM** |
+| 12 | `bpf()` + `bpf_get_stackid` | stack map（返回地址数组） | ❌ 不含 sp；且需 `CAP_SYS_ADMIN` | 无 SYS_ADMIN | `BPF_SYSCALL=y`、`BPF_JIT=n`、能力集 |
+| 13 | tracefs `/sys/kernel/tracing` | 函数名/栈回溯 | ❌ 文本 | 关键文件 SELinux 拒 | k3_info3 实测（`trace` 0666，`available_tracers` 拒） |
+| 14 | debugfs `/sys/kernel/debug` | 各驱动调试（含 KGSL snapshot） | ⚠️ 潜在（vendor 自定） | **目录不可列**（SELinux） | k3_info3 实测 |
+| 15 | `/sys/module/*/sections/*` | 模块段地址 | ❌ 文本/数据段 | `kptr_restrict` + 实测拒 | §23.9 |
+| 16 | hung_task 检测器输出 | `%pS` 符号 + 工作队列 `%pf` | ❌ 无栈指针 | 需 D 状态 ≥120 s | `sched_show_task` 可见格式串 |
+
+**唯一真正含 sp 的输出是第 9 项的 oops 寄存器 dump**，而本机 `panic_on_oops` 的读数被 SELinux 拒（`/proc/sys/kernel/panic_on_oops` 不可读，
+按 Android 默认推断为 1）⇒ 触发即重启，且重启同时作废全部地址（含 ① 类），不构成可用 oracle。
+**该默认值未实测**；即便为 0，仍需先存在一个可从低权限触发的 oops（本机无已知），故结论不依赖此值。
+
+### 53.4 两项仍待只读实测（5 秒，零风险，等授权）
+
+| # | 命令 | 为什么值得测 | 若为"是"的后果 |
+|---|---|---|---|
+| a | `cat /proc/self/stat`（看第 28–30 字段） | arm64 上通常恒 0；若 `kstkesp` 非 0，需分辨它是**用户 sp** 还是 `cpu_context.sp`（后者是内核栈） | 若为内核栈指针，③ 立刻闭合——但需先证明语义，不能直接采信 |
+| b | `cat /proc/self/stack`（shell 与 Wi-Fi 域各一次） | 判定 `%pK` 是否被 `kptr_restrict` 清零、以及 SELinux 是否放行 | 若可读且未清零 ⇒ 泄露**文本地址**（slide），仍不解决 ③ |
+
+### 53.5 判定影响
+
+③ 维持**未闭合**，但性质从"缺 oracle 未知"改为"**已枚举否证**"：不是"还没找到"，
+而是"本机可达面上不存在"。四层判定不变（NO-GO）。
+
+---
+
+## §54 v11-C：厂商驱动面清单 —— **物料缺口定位**（2026-11-19，纯离线）
+
+> 响应审核 v011 的 P2（Track C）。本节只做"能不能审、审什么"的边界判定，不含漏洞结论。
+
+### 54.1 决定性事实：WLAN 主机驱动不在内核镜像内
+
+| 检查 | 结果 |
+|---|---|
+| `hdd_*` / `qdf_*` / `wlan_hdd_*` 符号（qcacld-3.0 的命名空间） | **0 个** |
+| `cfg80211_*` / `ieee80211_*`（上游无线栈） | **907 个**（在镜像内，随 SPL `2022-04-05` 的上游修复状态） |
+| `icnss_*` / `cnss_utils_*`（平台胶水层） | 在镜像内 |
+| 本地是否存在 `.ko` 物料 | `find` 全库 **无任何 .ko**；`firmware_F16/` 只有 `boot.img`/`vmlinux.elf` |
+
+⇒ **解析 `WCNSS_qcom_cfg.ini` 的代码在 `qca_cld3_wlan.ko`（loadable module）里，本仓库当前没有该二进制。**
+审核 v011 提议的"WLAN 驱动配置解析器离线审计"在现有物料下**无法开展**——这不是方法问题，是缺物料。
+
+**取得方式（只读、零风险、不产生持久化改动）**：
+```bash
+adb shell "ls -l /vendor/lib/modules/"            # 先列，确认路径与文件名
+adb pull /vendor/lib/modules/qca_cld3_wlan.ko .   # 只读拉取；随后离线 objdump
+```
+> 该操作只读厂商分区，不写设备；但按本项目约定**需先获授权**，本轮未执行。
+
+### 54.2 镜像内实际可达的厂商面（供 Track C 排序）
+
+| 面 | 镜像内? | 设备侧可达性（既有实测） | 既有审计 |
+|---|---|---|---|
+| `/dev/kgsl-3d0` | 是（kgsl） | **0666 可读写**（`k3_stage_b_round1`：open OK） | §5.5 KGSL CVE（命中即 panic）；未做系统性 ioctl 面枚举 |
+| `/dev/adsprpc-smd` | 是（fastrpc） | `r--` 可读，ioctl 全 `EPERM` | §32 已判封闭 |
+| `/dev/ion` | 是 | `r--` 可读 | 未审（fd 语义，无地址） |
+| `/dev/diag` | 是 | 需 `diag` 组/root 域 | §25 + §51（已否证） |
+| `binder`/`hwbinder` | 是 | 0666 | §14 五轮 |
+| WLAN 主机驱动 | **否（.ko）** | 经 `oplus_wifi_service` 间接 | **缺物料** |
+| 其余 `.ko`（音频/相机/触摸等） | 否 | 未知 | 未枚举 |
+
+### 54.3 建议的 Track C 排序（按"物料齐备 × 可达 × 可证伪"）
+
+| 优先 | 对象 | 前置物料 | 可证伪判据 |
+|---|---|---|---|
+| C1 | `qca_cld3_wlan.ko` 的 cfg.ini / 扫描结果解析 | **需拉取 .ko** | 找出一条"用户可控字节 → 越界/未初始化拷贝"的路径，且长度与实收不符 |
+| C2 | KGSL ioctl 面系统枚举 | 已有（镜像内） | 任一 ioctl 的 `copy_from_user` 长度未与对象尺寸绑定 |
+| C3 | 其余 vendor `.ko` 枚举 | 需拉取模块清单 | 先出清单，再谈审计 |
+
+### 54.4 判定影响
+
+Track C **未开展实证审计**，仅完成"物料与可达性边界"判定。四层判定不变。
