@@ -65,3 +65,6 @@ live_probe/*
 !live_probe/*.c
 !live_probe/*.md
 !live_probe/*.txt
+
+# 厂商内核模块（二进制不入库，按项目约定；仅本地分析用）
+vendor_ko/

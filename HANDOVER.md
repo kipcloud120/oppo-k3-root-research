@@ -3937,3 +3937,60 @@ adb pull /vendor/lib/modules/qca_cld3_wlan.ko .   # 只读拉取；随后离线 
 ### 54.4 判定影响
 
 Track C **未开展实证审计**，仅完成"物料与可达性边界"判定。四层判定不变。
+
+---
+
+## §55 v11.1：上机只读取证 + 厂商模块物料（2026-11-19 傍晚，**只读，零写入**）
+
+> 响应审核 v011 的 Track A 复核项与 Track C 物料缺口。**设备在环**（`3b883b98` / PCGM00），
+> 全程只读：`cat` / `ls` / `stat` / `adb exec-out cat`；**未 push 任何文件、未改任何配置、未重启**。
+> 设备终态：`/data/local/tmp` 为空（本轮未落地任何东西），uptime 54.7 h（与前几轮同一开机）。
+
+### 55.1 两项只读复核的实测结果（③ 的最后一公里）
+
+| 探针 | 结果 | 判读 |
+|---|---|---|
+| `/proc/self/stat` 字段 28–30（shell 域） | `startstack=549171887936`（≈`0x7ff…`，**用户态栈 VA**）、`kstkesp=0`、`kstkeip=0` | arm64 两个内核寄存器字段**恒 0** ⇒ 无 sp 泄露；与 §53 推断一致 |
+| `/proc/self/stack`（shell 域） | **Permission denied** | SELinux 直接拒，与 `kptr_restrict` 无关 ⇒ 该通道彻底关闭 |
+| `/proc/1/stack`（跨进程对照） | Permission denied | 同上 |
+| `/proc/self/wchan` | `"0"` | 与 §53 的 `lookup_symbol_name` 路径一致（无地址） |
+
+⇒ **§53 的否证由"枚举推断"升级为"本机实测"**：③ 无低权限 oracle。
+（`/proc/self/stack` 在 `oplus_wifi_service` 域未单独复测——因该域同样无 `CAP_SYSLOG`，
+且 shell 域已被拒；如需彻底闭环，可在下次上机用 `tools/wifi_exec.py` 补一条命令。）
+
+### 55.2 Track C 物料：已取回 qca_cld3_wlan.ko
+
+| 项 | 值 |
+|---|---|
+| 模块清单 | `/vendor/lib/modules/` 共 **41** 项（28 个 `audio_*` + `qca_cld3_wlan.ko` + `mpq-*` + `rdbg.ko` + `llcc_perfmon.ko` + 索引文件） |
+| 目标模块 | `qca_cld3_wlan.ko`，**14,601,726 B**，`2025-03-26 16:41`（与内核构建同日） |
+| 取回方式 | `adb pull` **失败**（sync 服务在 `vendor_file` 上 Permission denied），改用 `adb exec-out "cat …" >` 流式取回；本地大小与远端 `stat` 完全一致 |
+| ELF | `ET_REL` / `EM_AARCH64`；`vermagic=4.9.227-perf+ SMP preempt mod_unload modversions aarch64`（与内核匹配） |
+| 符号 | **未剥离**：11,849 个带尺寸函数符号；`.text` 4.23 MB、`.rodata` 0x36b68 |
+| 落盘 | `vendor_ko/`（**已加入 `.gitignore`**，厂商二进制不入库，仅本地分析） |
+
+### 55.3 首轮静态 triage（未完成，明日起点）
+
+调用链已钉死到固件加载器：
+
+```
+hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request_firmware / release_firmware
+```
+
+- **`cfg_parse` 本身不读文件**：它接收 buffer，内部 **27 处 `strlcpy`**、无 `memcpy`
+  ⇒ 形态上是"有界拷贝"，但 **27 处的 dst 尺寸尚未逐处核对**（明日工作量）。
+- **`qdf_file_read` 走 `request_firmware`**，即读取对象是 `/vendor/firmware/wlan/WCNSS_qcom_cfg.ini`
+  （**只读厂商分区**），而不是直接 `open()` `persist` 下的副本。
+- ⚠️ **由此产生一个必须复核的语义修正**：此前（§SELINUX_DOMAIN_AUDIT R1 / §28.9 W-G6）默认
+  "驱动解析 `persist/wlan` 里的 ini"。现在证据显示驱动只认 firmware 路径；
+  `persist → firmware` 之间是否存在 root 脚本的复制动作（历史审计记录里确有一条
+  `cp persist/…/WCNSS_qcom_cfg.ini → targetFile` 的分支），决定了"可写副本能否进入解析器"。
+  **这是 Track C1 的前置问题，不能跳过**。
+
+### 55.4 新增工具
+
+`tools/ko_fn.py`：ET_REL（.ko）函数级反汇编——按 `st_size` 取边界，用 `.rela.text` 的
+`CALL26/JUMP26` 解析调用目标，支持 `--list / --callers / --copy-sites / --grep`。
+（内核镜像用 `tools/kfn.py`，模块用本工具；两者不可混用：模块所有数据引用走 `MOVW_UABS_G*` 重定位，
+不是 `adrp+add`，因此字符串引用暂未解析——明日若要读格式串需补 MOVW 支持。）

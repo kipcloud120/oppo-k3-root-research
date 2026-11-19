@@ -1,16 +1,17 @@
-# 接手摘要（v11：**栈地址可观测性枚举否证 + 厂商面物料缺口**，2026-11-19）
+# 接手摘要（v11.1：**③ 实测否证 + WLAN 模块已取回**，2026-11-19）
 
-> 一页式入口。完整证据：`HANDOVER.md` §53（Track A 枚举）+ §54（Track C 边界）+
+> 一页式入口。完整证据：`HANDOVER.md` §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
 > §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
 >
-> **v11 三句话**：
-> ① **③ 从"缺 oracle 未知"变成"已枚举否证"**：逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、
+> **v11.1 三句话**：
+> ① **③ 从"缺 oracle 未知"变成"已实测否证"**：逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、
 >   perf、BPF、tracefs、debugfs、`/sys/module/*/sections`、hung_task），**唯一含 sp 的输出是 oops 寄存器
 >   dump，而 `panic_on_oops` 推断为 1（未实测）** ⇒ 触发即重启，不构成 oracle。按审核 v011 的停止标准，③ 子方向关闭。
-> ② **审核 v011 的 Track C 撞到物料墙**：解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 **不在内核镜像内**
->   （`hdd_*`/`qdf_*` 符号 0 个；`cfg80211` 907 个在镜像内属上游），本仓库无任何 `.ko` ⇒ 需先只读拉取
->   `/vendor/lib/modules/qca_cld3_wlan.ko`，本轮未执行（待授权）。
-> ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已枚举否证）。
+> ② **Track C 的物料墙已拆**：解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 不在内核镜像内
+>   （`hdd_*`/`qdf_*` 符号 0 个；`cfg80211` 907 个在镜像内属上游）。已用 `adb exec-out` 流式取回
+>   `qca_cld3_wlan.ko`（`adb pull` 被 sync 服务的 SELinux 拒）：14,601,726 B、`vermagic=4.9.227-perf+`、
+>   **符号表未剥离**，落在 `vendor_ko/`（已 gitignore）。调用链已钉到 `request_firmware`。
+> ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已实测否证）。
 
 ## 1. 当前结论（四层，不可混用）
 
@@ -30,16 +31,21 @@
 | §54.1 | WLAN 主机驱动是否在镜像内 | **不在**（0 个 `hdd_*`/`qdf_*`）⇒ 需 `.ko` 物料 |
 | §54.2–54.3 | 镜像内可达厂商面 + Track C 排序（C1 WLAN .ko / C2 KGSL ioctl / C3 其余 .ko） | C2 可立即离线开工 |
 | §51.4 R2 | DCI 非 apps 入口 | remote 侧门已确认（`len<0x2202`、`len+5 ≤ 剩余`）；transaction 侧为驱动自建帧 |
+| §55 | **上机只读取证**（设备在环，零写入） | `kstkesp/kstkeip=0`、`/proc/self/stack` 被 SELinux 拒 ⇒ ③ 实测否证 |
+| §55 | **`qca_cld3_wlan.ko` 已取回**（14.6 MB，未剥离符号） | `hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request_firmware` |
 
-## 3. 下一步（按性价比，均需先获得授权/物料）
+## 3. 下一步（明日起点）
 
-1. **[需授权 · 只读 · 5 秒]** 跑 §53.4 的两条命令——若 `kstkesp` 非 0，③ 可能立刻闭合；这是当前**唯一**
-   可能改变结论的低成本项。
-2. **[需授权 · 只读]** `adb pull /vendor/lib/modules/qca_cld3_wlan.ko`，之后离线审计 cfg.ini 与扫描结果解析
-   （Track C1，审核 v011 的 P2）。
-3. **[纯离线 · 可立即做]** KGSL ioctl 面系统枚举（C2）：镜像内有 kgsl，`/dev/kgsl-3d0` 0666 可读写；
-   判据 = "任一 ioctl 的 `copy_from_user` 长度未与对象尺寸绑定"。这是 Track C 里唯一物料齐备的面。
-4. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；不重启设备（重启作废 ① 类地址与全部示踪数据）。
+1. **[纯离线 · 已完成一半]** Track C1 首轮 triage（§55.3）：`cfg_parse` 是唯一必查点——
+   27 处 `strlcpy` 的 **dst 尺寸逐处核对**（工具 `tools/ko_fn.py SYM --copy-sites`）。
+2. **[纯离线 · 前置问题，先答再谈漏洞]** `persist/wlan/*.ini` 与 `/vendor/firmware/wlan/*.ini`
+   的关系：驱动只走 `request_firmware`，可写副本必须经 root 脚本复制才能进解析器；
+   若该复制存在且可被本域触发，才存在"可写 → 解析"链路（但写 persist 属跨重启持久化，**本项目禁止**）。
+3. **[纯离线 · 可立即做]** KGSL ioctl 面系统枚举（C2）：`/dev/kgsl-3d0` 0666；判据 =
+   任一 ioctl 的 `copy_from_user` 长度未与对象尺寸绑定。
+4. **[可选上机 · 只读]** 用 `tools/wifi_exec.py` 在 `oplus_wifi_service` 域复核 `/proc/self/stack`
+   （shell 域已拒；该域无 `CAP_SYSLOG`，预期仍拒）。
+5. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**（重启作废 ① 类地址与示踪数据）。
 
 ## 4. 工具与物料入口
 
