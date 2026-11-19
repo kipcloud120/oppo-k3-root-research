@@ -1,4 +1,4 @@
-# 判定：PCGM00 F.16 —— 可用 ROOT 为 NO-GO；GhostLock 研究路径重开（v3.0，2026-11-19）
+# 判定：PCGM00 F.16 —— 可用 ROOT 为 NO-GO；GhostLock 研究路径重开（v3.0 + v008 口径收紧，2026-11-19）
 
 | | |
 |---|---|
@@ -7,14 +7,14 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测基线复核一致，无 OTA） |
 | 唯一入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| 判定版本 | `HANDOVER.md` v3.0（含 v007 评估、双方向预研、真机实测，§38–§42） |
+| 判定版本 | `HANDOVER.md` v3.0 + v008 口径收紧（含 v007 评估、双方向预研、真机实测 §38–§42；v008 响应 §43，权威 `FEASIBILITY_v008.md`） |
 | 判定范围 | **本机、本固件、不解 BL**。不是"任何条件下不可能"，也不是"任何设备不可能" |
 
 ---
 
 ## 0. v3 一句话
 
-**这台机器能给你的上限，仍是"以 root 身份在别人写好的笼子里跑命令"——可用 root 判定不变。但笼子的一面墙（GhostLock 的"无地址泄露"）在 v3 被真机实测打开了一道缝：futex 哈希侧信道可用，能拿到 mm_struct 地址 / KASLR slide；只是这道缝通向的不是 fake waiter 需要的那间房。因此 GhostLock 从"收口冻结"重开为活跃研究路径，缺口从"没有地址"精确化为"地址类型不对 + 缺堆喷原语"。**
+**这台机器能给你的上限，仍是"以 root 身份在别人写好的笼子里跑命令"——可用 root 判定不变。但笼子的一面墙（GhostLock 的"无地址泄露"）在 v3 被真机实测打开了一道缝：futex 哈希侧信道可用，能拿到 mm_struct 在线性映射（DPM）中的地址；只是这道缝通向的不是 fake waiter 需要的那间房。因此 GhostLock 从"收口冻结"重开为活跃研究路径，缺口从"没有地址"精确化为"地址类型不对 + 缺堆喷原语"。v008 进一步收紧口径：这道缝给的是 DPM 堆页位置（+无秘密的物理换算），**不是** `.text` 的 KASLR slide（后者由 `kimage_voffset` 独立承载，本机拿不到）。**
 
 ---
 
@@ -25,7 +25,7 @@
 | Root UID 命令执行 | **达成**（2026-11-18，两次独立载荷复现，§23） |
 | 可用 root（脱离域限制的系统管理能力） | **NO-GO**（域逃逸静态无路径 §24；FastRPC 在 uid 0 域下更封闭 §32） |
 | 持久 ROOT | **NO-GO**（且全程未做任何持久化写入） |
-| GhostLock 内核地址泄露 | **部分达成**：① mm_struct/slide 真机可得（§41）；②/③ fake waiter 所需地址类型仍缺（§40/§42）⇒ **研究路径重开** |
+| GhostLock 内核地址泄露 | **部分达成**：① mm_struct 线性地址真机可得（§41）；slide 拿不到（v008 更正，`FEASIBILITY_v008.md` §1）；②/③ fake waiter 所需地址类型仍缺（§40/§42）⇒ **研究路径重开** |
 
 ---
 
@@ -37,7 +37,7 @@
 
 | 旧判据 | v3 状态 | 依据 |
 |---|---|---|
-| "本机无内核地址泄露" | **部分作废**：futex 哈希侧信道真机可用（110× 信号），端到端可得 mm_struct 线性地址 / KASLR slide | §41 实测；`live_probe/LIVE_PROBE_RESULT.md` |
+| "本机无内核地址泄露" | **部分作废**：futex 哈希侧信道真机可用（110× 信号），可得 mm_struct 线性地址（DPM 堆页位置）；**KASLR slide 拿不到**（v008 更正） | §41 实测；`live_probe/LIVE_PROBE_RESULT.md`；`FEASIBILITY_v008.md` §1 |
 | "fake waiter 的 lock/rb 需非零内核地址" | **维持并精确化**：lock 会被解引用（trylock 写 + owner/waiters 读 + `BUG_ON` 校验），需要"可控、内核可写、结构合法 rt_mutex 的内核地址" | `artifacts_adb/WAITER_ADDRESS_ANALYSIS.md` §2 |
 | "载体侧已闭合" | **维持**：xattr 三条栈覆盖候选、NUL 不阻断、栈复用几何确定 | §15 / GHOSTLOCK_NUL_ANALYSIS |
 | "`!VMAP_STACK` 无关" | **更正**：本机实测 `!VMAP_STACK`，栈在线性映射区且与 mm_struct 同区；但 futex key 不含栈地址 ⇒ 仍够不着栈 | §42 / WAITER_ADDRESS_ANALYSIS §5.5 |
@@ -96,6 +96,7 @@
 2. **②/③ 缺口的绝对性**：本轮证明 futex 侧信道够不着栈，但未穷尽 4.9 上所有可能的栈地址泄露面（见 §7 可证伪条件）。
 3. **策略工具的闭包精度**：v2.24 已兑现成实际错误（`not` 语义 + 版本名合并），修正后多条理由被更正；本域之外尚未逐个回归。
 4. **rc 与运行态偏差**：`rc 文本 ≠ 生效集合`，一律以 `init.svc.*` 为准（v2.18 纪律）。
+5. **v008 地址口径**：口径收紧由审核 v008 触发、以 `vmlinux.elf` 反汇编为据（`__primary_switched` 的 `kimage_voffset` 计算）；未在真机 dump 运行时 `kimage_voffset` 值（属上机，未授权）。若未来固件改变线性映射随机化行为，R2/R3 关系须重算。
 
 ---
 
@@ -112,4 +113,4 @@
 
 ## 6. 一句话
 
-**这台机器能给你的上限，仍是"以 root 身份在别人写好的笼子里跑命令"。v3 打开了 GhostLock 那面墙的一道缝（侧信道能拿 slide），但缝后不是你要的房间（缺 ②/③ 地址类型 + 堆喷原语）。本文封存四面墙的最新测量结果，并重开 GhostLock 这一面的继续挖掘。**
+**这台机器能给你的上限，仍是"以 root 身份在别人写好的笼子里跑命令"。v3 打开了 GhostLock 那面墙的一道缝（侧信道能拿 mm_struct 线性地址），但缝后不是你要的房间（缺 ②/③ 地址类型 + 堆喷原语）；v008 更正：这道缝也给不了 KASLR slide（`kimage_voffset` 独立承载）。本文封存四面墙的最新测量结果，并按 v008 重排优先级（堆地址边界 → 栈泄露面 → 口径收紧）继续挖掘。**

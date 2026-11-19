@@ -2,7 +2,9 @@
 
 > **一份负结果、一次突破、以及一条重开的路径**：在不解 BL 的前提下，对一台 OPPO K3（`PCGM00` / SDM710 / 内核 `4.9.227` / SPL `2022-04-05`）评估了五个内核候选面与多条服务面线索。四个内核面判定不可达；Wi-Fi 私有事务面已打通——从 shell 可让 root 服务以 `uid=0` 执行任意命令（2026-11-18，两次复现），但处于 SELinux 域限制内，**是"受限 root 命令执行"，尚非可用 root**。
 >
-> **v3.0（2026-11-19）新增**：外部审核意见 v007 指向一个同类参考项目后，我们重开了此前"冻结"的 GhostLock 路径——真机实测证明 **futex 哈希桶时序侧信道在本机可用（110× 信号）**，端到端可得 mm_struct 地址 / KASLR slide。**但可用 root 判定不变**：侧信道给出的地址类型填不进 GhostLock 的 fake waiter，核心缺口从"没有地址"精确化为"地址类型不对 + 缺内核堆喷原语"。这是**研究路径重开，不是结论翻转为 go**。
+> **v3.0（2026-11-19）新增**：外部审核意见 v007 指向一个同类参考项目后，我们重开了此前"冻结"的 GhostLock 路径——真机实测证明 **futex 哈希桶时序侧信道在本机可用（110× 信号）**。**但可用 root 判定不变**：侧信道给出的地址类型填不进 GhostLock 的 fake waiter，核心缺口从"没有地址"精确化为"地址类型不对 + 缺内核堆喷原语"。这是**研究路径重开，不是结论翻转为 go**。
+>
+> **v008 口径更正（2026-11-19，权威见 [`FEASIBILITY_v008.md`](FEASIBILITY_v008.md)）**：撤回"端到端可得 KASLR slide"的表述。三类地址**互相独立**：① KernelSnitch 只给 mm_struct 在线性映射（DPM）中的地址；② 到物理地址是**编译期固定常量**的确定性换算、无秘密可泄；③ `.text` 的 KASLR slide 由 `kimage_voffset`（启动期独立计算）承载，**不能由 ①/② 反推**，本机无获取它的原语。另：110× 只证明时序 oracle 存在，与 N=4 唯一性是两道独立的门。
 
 | | |
 |---|---|
@@ -38,7 +40,8 @@
 
 | 档 | 类型 | 本机状态 | 能否填 fake waiter 的 lock/rb |
 |---|---|---|---|
-| ① | mm_struct 线性地址 / KASLR slide / DPM 基址 | **真机可得**（侧信道 110× 信号） | ❌ 不够：lock 会被解引用（trylock 写 + owner/waiters 读 + `BUG_ON`），且缺堆喷把它兑现 |
+| ① | mm_struct 线性地址（DPM 中的堆页位置） | **真机可得**（侧信道 110× 信号）；到物理地址是无秘密的确定性换算 | ❌ 不够：lock 会被解引用（trylock 写 + owner/waiters 读 + `BUG_ON`），且缺堆喷把它兑现 |
+| ①-s | KASLR slide（镜像 VA，v008 新增细分） | ❌ **拿不到**：由 `kimage_voffset` 独立承载，不能由 ① 反推（见 `FEASIBILITY_v008.md` §1） | ❌ 不够，且本机无获取原语 |
 | ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 无堆喷原语 | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
 | ③ | W 线程内核栈基址（持有 stale waiter 者） | ❌ 无侧信道：futex key 不含栈地址；USENIX'25 栈侧信道依赖 VMAP_STACK，本机 `!VMAP_STACK` | ✅ 能（几何偏移已静态解决，缺的是拿栈基址的 oracle） |
 
@@ -82,7 +85,8 @@
 ```
 HANDOVER.md                 # 主文档：§1–§37 历史证据链 + §38–§42 v3（GhostLock 重开）
 README.md / HANDOVER_RESUME.md / CLOSURE.md   # 入口 / 一页摘要 / 分层判定
-FEASIBILITY_v007.md         # v007 方案评估 + 可行性评估
+FEASIBILITY_v007.md         # v007 方案评估 + 可行性评估（§12.1 已加 v008 更正块）
+FEASIBILITY_v008.md         # v008 响应：三类地址独立关系 + oracle/唯一性分离 + 研究重排（权威）
 DUAL_TRACK_RESULT.md        # 双方向预研综合结论
 tools/
 ├── kfn.py / klen_scan.py / kcopy.py        # vmlinux 反汇编与拷贝点判界
@@ -160,9 +164,10 @@ adb shell '/data/local/tmp/collision_probe'
 
 1. **② 堆路径**：是否存在 K3 上"把可控数据写到已知内核地址"的原语？这是把 slide 兑现为受控 rt_mutex 的前提（参考项目靠 AF_UNIX skb 喷射，K3 无）。
 2. **③ 栈路径**：4.9 / `!VMAP_STACK` 下是否存在针对 order-2 连续页栈地址的泄露面？futex 哈希侧信道已证不行，USENIX'25 TLB 侧信道依赖 VMAP_STACK（本机关闭）。
-3. **方向 A 的唯一性**：`N=4` 误报期望 ~0.65 属边缘，建议复核 `tools/ksnitch_local_check.py` 的误报模型与 hsz=1024 单档判定。
+3. **方向 A 的唯一性**：`N=4` 误报期望 ~0.65 属边缘，建议复核 `tools/ksnitch_local_check.py` 的误报模型与 hsz=1024 单档判定。**注意（v008）：这与 110× oracle 是两道独立的门——oracle 证明"能采到真碰撞"，唯一性决定"这些碰撞够不够唯一"，互不蕴含。**
 4. **侧信道实测能否放大**：本机 110× 信号是否足以支撑"在真实噪声下稳定找到碰撞"？探针用 256 线程，参考项目用 4096。
 5. **地址三档的完备性**：是否存在第 ④ 类可用地址（既非栈、非 pi_state 堆、非仅 slide）？
+6. **三类地址是否独立（v008）**：见 `FEASIBILITY_v008.md` §1 的反汇编证据；要构成推翻，须给出 `mm_va → kimage_voffset` 的可复算数学关系，而非再证一次侧信道可用。
 
 | 不构成推翻 | 构成推翻 |
 |---|---|
@@ -194,7 +199,9 @@ adb shell '/data/local/tmp/collision_probe'
 
 **A negative result, one breakthrough, and a reopened path.** On an OPPO K3 (`PCGM00`, SDM710, kernel `4.9.227`, SPL `2022-04-05`, locked bootloader, shell-only), five kernel surfaces and several service surfaces were evaluated. Four kernel surfaces are unreachable; the Wi-Fi private transaction **worked** — a shell-reachable root service executes attacker strings via `sh -c` as `uid=0` (twice reproduced), though confined to a MAC-restricted domain, so this is **confined root command execution, not a usable root**.
 
-**v3 (2026-11-19)**: after external review pointed to a sibling-device reference project, the previously frozen **GhostLock** path was **reopened**. A live probe proved the futex hash-bucket timing side-channel works on this device (110× signal), making mm_struct address / KASLR slide end-to-end obtainable. **But the usable-root verdict is unchanged**: the obtained address class (①) cannot fill the fake waiter's `lock`/rb fields; the real gap is now precisely **address type** — a controllable `rt_mutex` kernel address (②, heap-spray) or the W-thread kernel stack base (③) — neither of which this device currently provides. This is a **research-path reopening, not a verdict flip**.
+**v3 (2026-11-19)**: after external review pointed to a sibling-device reference project, the previously frozen **GhostLock** path was **reopened**. A live probe proved the futex hash-bucket timing side-channel works on this device (110× signal), making the mm_struct's linear-map address obtainable. **The usable-root verdict is unchanged**: the obtained address class (①) cannot fill the fake waiter's `lock`/rb fields; the real gap is now precisely **address type** — a controllable `rt_mutex` kernel address (②, heap-spray) or the W-thread kernel stack base (③) — neither of which this device currently provides. This is a **research-path reopening, not a verdict flip**.
+
+**v008 caliber correction (2026-11-19)**: the earlier claim of "end-to-end KASLR slide" is withdrawn. Three address relations are independent: (R1) KernelSnitch yields only the mm_struct's position in the direct physical mapping; (R2) conversion to a physical address uses compile-time constants and leaks no secret; (R3) the `.text` KASLR slide is carried by a separately boot-computed `kimage_voffset` and **cannot** be derived from R1/R2 on this arm64 kernel (binary evidence in `FEASIBILITY_v008.md` §1). The 110× signal proves the timing oracle exists, but is a separate gate from the N=4 uniqueness problem.
 
 The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and deliberately **25+ previously "certain" conclusions later falsified** by this project's own experiments or external review. Start with [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md), then [`HANDOVER.md`](HANDOVER.md) §38–§42.
 

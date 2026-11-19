@@ -343,3 +343,5 @@ KernelSnitch 的 oracle 本质是：观测 `hash(uaddr, SECRET_PTR)` 的桶占�
 > `rtmutex_common.h`、`futex.c`）与项目文档（`HANDOVER.md`、`GHOSTLOCK_NUL_ANALYSIS.md`、`ref_pc/km00`）。
 > team-lead 提供的本机 config 事实（`THREAD_INFO_IN_TASK=y`、`!VMAP_STACK`）作为 §5.5 的前提采纳，
 > 未在本分析中重新上机验证（本任务禁止连设备）。
+
+> ⚠️ **v008 术语更正（权威见 `FEASIBILITY_v008.md` §1）**：本文多处"仅能定 slide（DPM 基址）"把两个概念并列，措辞过宽。精确表述为：KernelSnitch 给的是 **DPM 线性映射中一个 mm_struct 堆页的物理位置**（R1，+无秘密的物理换算 R2）；它**给不了 `.text` 的 KASLR slide**（R3 由启动期 `kimage_voffset` 独立承载，不能由线性地址反推）。**本文的核心判定（fake waiter 需要"可控 rt_mutex 内核地址"、KernelSnitch 对硬门槛无关）不受此术语更正影响，维持。**

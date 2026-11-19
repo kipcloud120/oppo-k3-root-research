@@ -269,6 +269,13 @@ __pa(_text)        = 0x88080000 = PHYS + 0x8080000
 
 ⇒ 线性映射锚点 `PAGE_OFFSET`/`PHYS_OFFSET` 可从 PCKM00 直接继承（已由本机 DTB 独立验证）。若 KernelSnitch 给出任一线性映射地址，即可反推 slide（`__pa(_text)+slide` 的线性别名）。这是 KernelSnitch 对 K3 的**真正价值**：定 KASLR slide，而不是填 fake waiter。
 
+> ⚠️ **v008 更正（2026-11-19，权威见 `FEASIBILITY_v008.md` §1）——本段"反推 slide"的结论撤回，保留原文以记录推理演进。**
+> 外部审核 `审核意见CHATGPT-v008.txt` §4 指出此处把三种地址混为一谈，复核确认成立：
+> 1. **两套独立映射**：本机线性映射用编译期固定的 `PAGE_OFFSET=0xffffff8000000000` / `PHYS_OFFSET=0x80000000`（arm64 无 `page_offset_base`/`phys_base` 运行时变量，已查符号表）；内核镜像用启动期计算的 `kimage_voffset`（ELF 符号 @ `0xffffff8009852508`）。反汇编 `__primary_switched`@`0xffffff8009a001b8–c8` 铁证：`kimage_voffset = kimage_vaddr − x0(物理装载基址)`。二者不共享秘密。
+> 2. **R1/R2 不含 slide**：KernelSnitch 给出的是 mm_struct 在线性映射中的地址（R1）；`pa = va − PAGE_OFFSET + PHYS_OFFSET` 是无秘密的确定性换算（R2），不暴露任何随机化基址。
+> 3. **与本文 §9.2 自相矛盾**：§9.2 已正确指出 slide 来自 boot_id 回读的内核镜像 VA 泄露（且需写原语前置），互斥于本段"任一线性地址反推 slide"。按反汇编证据，**以 §9.2 为准**。
+> ⇒ 正确表述：KernelSnitch 对 K3 的价值是"DPM 中一个堆页的物理位置"，**不能反推 `.text` KASLR slide**；slide 需独立的镜像 VA 泄露，本机当前无此原语。
+
 ## 13. 修正后的最终判定
 
 | 项 | 上一轮判定 | 源码预研后 | 依据 |
@@ -279,10 +286,11 @@ __pa(_text)        = 0x88080000 = PHYS + 0x8080000
 | KernelSnitch 采样量/精度 | KPTI+HZ 使精度未知 | **部分推翻：采样量可控、hashsize 自动覆盖、计时大概率可用** | §11 |
 | KernelSnitch 输出能否填 fake waiter | （未明确） | **不能：推导链断裂** | §12 |
 | 线性映射锚点能否继承 | 部分成立 | **成立：两机常量完全相同且本机 DTB 佐证** | §12.1 |
+| ~~任一线性地址能否反推 KASLR slide~~ | — | **v008 撤回：不能**。线性映射无秘密可泄；slide 由 `kimage_voffset` 独立承载，需镜像 VA 泄露 | `FEASIBILITY_v008.md` §1 / §12.1 更正块 |
 
 **净判定（修正版）**：v007 的三条技术里，KernelSnitch 的**可实现性**比我上一轮估计的高（易移植、采样可控），但它的**用途**被我上一轮高估了——它解决的是"得到线性映射锚点 / KASLR slide"，而 K3 GhostLock 当前卡的"fake waiter 的 lock/rb 内核地址"仍未解决（§12 推导链断裂）。boot_id 与 ashmem 依旧是后置技术。
 
-**因此，对 GhostLock 重开条件（§7 第 2 条 a）的判定不变：尚未触发。** KernelSnitch 能给"可信线性映射锚点"，却给不了"fake waiter 可用的那个具体内核地址"——**本机缺的仍是第一个正确的地址，本轮的结论从"精度未知"收紧为"能定 slide、定不了 waiter"。**
+**因此，对 GhostLock 重开条件（§7 第 2 条 a）的判定不变：尚未触发。** KernelSnitch 能给"可信线性映射锚点"，却给不了"fake waiter 可用的那个具体内核地址"——**本机缺的仍是第一个正确的地址，本轮的结论从"精度未知"收紧为"能拿 mm 线性地址、定不了 waiter"。**（v008 更正："能定 slide"撤回，见 §12.1 更正块 / `FEASIBILITY_v008.md` §1。）
 
 ## 14. 建议的下一步（修正版，仍需单独授权）
 
@@ -291,4 +299,4 @@ __pa(_text)        = 0x88080000 = PHYS + 0x8080000
 3. **[中优先，单条只读指令待授权]** 设备侧只读确认 `cntvct_el0` 用户态可读性（一条 `mrs`），以关闭 §11.1 的最后不确定性——需用户明确授权才执行。
 4. **[不做]** boot_id / ashmem 的后置实现（前置写原语不存在）；任何上机 PoC（97% panic + 无 panic 文本）。
 
-**一句话（修正版）**：PCKM00 源码把上一轮的两个"未知"变确定了——KernelSnitch 好移植、采样可控，但它给的是 mm_struct 线性地址，填不进 K3 的 fake waiter；**"能定 slide、定不了 waiter"是本轮把缺口收紧到的新精度。**
+**一句话（修正版）**：PCKM00 源码把上一轮的两个"未知"变确定了——KernelSnitch 好移植、采样可控，但它给的是 mm_struct 线性地址，填不进 K3 的 fake waiter；**"能拿 mm 线性地址、定不了 waiter"是本轮把缺口收紧到的新精度。**（v008 更正：slide 拿不到，见 `FEASIBILITY_v008.md` §1。）
