@@ -1,0 +1,31 @@
+e2e start
+cntfrq=19200000 online_cpus=6
+baseline=16 inc_target=622
+hit 1 0x7e30ca6730 ticks=2288
+hit 2 0x7e30d58cc0 ticks=1572
+hit 3 0x7e30ffc1e0 ticks=2067
+hit 4 0x7e31085628 ticks=2007
+hit 5 0x7e318cc860 ticks=2201
+hit 6 0x7e32843418 ticks=2249
+hit 7 0x7e330f59a8 ticks=2221
+hit 8 0x7e331f41a0 ticks=1528
+hit 9 0x7e3327e5f0 ticks=1136
+hit 10 0x7e33add8e8 ticks=2253
+hit 11 0x7e34687638 ticks=2169
+hit 12 0x7e34767d38 ticks=2080
+pausecheck 0 0 17
+pausecheck 1 0 17
+pausecheck 2 0 17
+pausecheck 3 0 16
+pausecheck 4 0 17
+pausecheck 5 0 17
+pausecheck 6 0 17
+pausecheck 7 0 16
+pausecheck 8 0 16
+pausecheck 9 0 17
+pausecheck 10 0 17
+pausecheck 11 0 16
+realhits 12
+strictcnt 0
+recovered_mm 0000000000000000
+elapsed 1.7

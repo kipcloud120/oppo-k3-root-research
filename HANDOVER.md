@@ -3236,3 +3236,89 @@ v008 指出 README/报告把"mm_struct 线性地址 / KASLR slide / DPM 基址"�
 ### 43.4 本轮变更
 
 `FEASIBILITY_v008.md`（新增，权威）、`FEASIBILITY_v007.md`（§12.1 更正 + §13 注）、`README.md`/`HANDOVER_RESUME.md`/`CLOSURE.md`（口径三分）、`DUAL_TRACK_RESULT.md`/`LIVE_PROBE_RESULT.md`（G1/G2 分离注记）、`docs_archive/README.md`（登记）。设备零连接、零副作用。
+
+## §44 v4 真机实测：P1/P2 闭合 + G1 桶索引性证伪调查（2026-11-19）
+
+> 用户授权重新上机。权威报告：**`live_probe/LIVE_PROBE_RESULT_v4.md`**；原始数据 `live_probe/ks_e2e_result_run2.txt`；复算脚本 `tools/debug_g2_*.py`。全程纯用户态探针，零重启，无持久化；**/data/local/tmp 清理未完成（设备会话中被取走），下次连接按 v4 报告 §7 清单执行。**
+
+### 44.1 两项 v008 预留缺口正式闭合
+
+- **P2 perf（③ 类地址唯一"未定"项）→ 排除**：`perf_event_paranoid=3`，uid 2000 下 4 种配置（含纯用户态采样与 CALLCHAIN 栈采样路径）全部 EPERM（`live_probe/perf_probe.c`）。③ 的可证伪条件不变。
+- **P1 skb 生命周期可控性（设备行为缺口）→ 可控**：AF_UNIX skb 喷射 order-2（3072 个/轮）与 order-3（1792 个/轮），5+3 轮分配-停留-释放-重占 **spread=0.00%**，~50MB/s（`live_probe/spray_probe.c`）。P1 剩余缺口收窄为唯一一项：**地址可知性**（受控内容→已知内核 VA 的落点推导，无只读 oracle 可验证）。
+
+### 44.2 G1∧G2 端到端未达成，且 G1 前提存疑（重要更正）
+
+- 对未知 mm 的端到端恢复**失败**：12 个"碰撞"hit 经暂停校验后，在旧/修正窗口 × 结构性/全 32 字节网格 × 5 种哈希模型 × mask-256…**mask-8** 判据下 G2 枚举**全部零命中**（误报期望 ~0.002）。
+- 逐项独立复核均成立：哈希模型（`get_futex_key`+`futex_wait_setup`+`futex_wake` 三处反汇编逐指令确认）、**PAGE_OFFSET=0xffffffc000000000**（`is_vmalloc_addr` 常量 `VMALLOC_END=0xFFFFFFBEBFFF0000 = PAGE_OFFSET−4GB−64K` 精确反解，旧窗口 0xffffff80… 实为 modules+image+vmalloc）、网格（全超集）、判据（mask-8 对任意 pow2≥8 hashsize 为必要条件）。
+- ⇒ 崩塌的只能是观测前提。标定实验（`calib_probe.c`）：同桶加料反而**变冷**（819→528）、跨桶停靠使 inc 升温、热量粘滞漂移——4.9 源码确认 **`WAKE(0)` 也会唤醒首个匹配项（`mark_wake_futex` 在 `nr_wake` 判断之前）**，计时语义是"走到 plist 首匹配项"，非桶链长。
+- 迁移实验（`transfer_probe.c`）：堆积整体迁址后 **6/6 旧 hit 仍热、新 hit 集与旧集 100% 重合**——与桶索引模型冲突（或为 1/2048 巧合，未终审）。**`transfer2_probe.c` 已编译待执行**（含修复迁移竞态 + pause→A→B→C→A 序列）。
+- **口径降级**：v3 §41 "G1 真机成立（110×）" → "存在 ~100–125× futex 计时信号，**桶索引性未验证**；终审前不得据其构造 G2 碰撞方程"。KernelSnitch 方向 A 从"研究路径重开（G1 ✅）"回到"观测机制未验证"。四层 ROOT 判定 **NO-GO 不变**。
+
+### 44.3 文档更正（本轮实证触发）
+
+- `KSNITCH_LOCAL_CHECK.md` §五.5"896 步长是超集"**错误**（真实 mm VA 集合 = 16384 对齐 + 896×j；旧脚本"唯一命中"为自洽构造）；§二/§四 hashsize 口径改"以实测 num_possible_cpus 为准"（nproc=6）。
+- `FEASIBILITY_v008.md` §1.0/§1.2 `PAGE_OFFSET` 更正为 `0xffffffc000000000`（R2 换算式随之修正）；`memstart_offset_seed` 符号存在，PHYS_OFFSET/memstart 随机化需复核。
+- 其余见 `LIVE_PROBE_RESULT_v4.md` §6 更正清单与 §7 下次连接待办（含 transfer2 终审与 /data/local/tmp 清理）。
+
+## §45 v5 终审：G1 复活 + 内核镜像逐指令对审 + G2 矛盾定位（2026-11-19）
+
+> 设备回归后继续。本轮把 G2 零命中矛盾的排查推进到"对真实内核二进制逐指令终审"级别，四要素（模型/网格/窗口/oracle）
+> 全部二进制确认无误，矛盾收窄为单一假设（hit 集污染），鲁棒搜索脚本已就绪待重跑。**四层 ROOT 判定 NO-GO 不变。**
+
+### 45.1 transfer2_probe 终审：G1 桶索引性成立（复活）
+
+修复两处竞态后（crowd 线程指针快照判空防 SIGSEGV；先改 `g_crowd_addr` 再 WAKE 旧地址防迁移失败），
+pause→A→B→C→A 序列结果：pause 冷；迁 B/C 后旧地址冷、**仅当前堆积地址热**；迁回 A **复热 2927–6660 ticks**。
+⇒ **计时信号确为"桶索引 oracle"**，v4 §44.2 的"机制非桶索引/降级"表述撤销。
+
+### 45.2 e2e2 端到端 v2：26 真实 hit，G2 仍全零
+
+`e2e2_probe.c`（含 region/inc 持久化 + 双窗口 × 结构性/32 全网格 × mask-2048 设备端 G2 + 全量扫描统计）：
+region=0x77be2a0000，inc=0x77be2a0080，32767 候选 **26 hit（rate 1/1260）**，暂停校验 26/26 真实（全冷）。
+数据入库 `live_probe/ks_e2e2_result.txt`。G2 三组枚举（旧窗口结构性、修正窗口结构性、修正窗口全 32 网格）
+在设备端与离线侧（`tools/debug_g2_winfix.py`）均**零命中**。注意 26 > 理论期望 16（λ=16 时 P(X≥26)≈1.6%，
+λ=32（hashsize=1024）时 P(X≤26)≈25%）——该偏差成为 45.4 污染假设的旁证之一。
+
+### 45.3 本机内核二进制逐指令终审（本轮核心增量）
+
+`firmware_F16/vmlinux.elf` 版本串 `4.9.227-perf+ (root@dg02-pool07-kvm49) (clang 10.0.7) #1 SMP PREEMPT
+Wed Mar 26 16:32:43 CST 2025` 与设备 uname **完全一致** ⇒ 该 ELF 为权威镜像；另从设备拉取 `/proc/config.gz`
+解压为 `tools/device_config.txt`（VA_BITS_39=y、SLUB=y、BASE_SMALL=0、RANDOMIZE_BASE=y、
+RANDOMIZE_MODULE_REGION_FULL=y、PAGESIZE=4096 实测确认）。
+
+| 项 | 结论 | 证据（vmlinux 静态 VA） |
+|---|---|---|
+| key 布局 | `{mm@+0, page_base@+8, offset@+0x10}`，offset=addr&0xfff，page_base=addr&~0xfff | get_futex_key@0xffffff8008161d08：`and w8,w0,#0xfff`、`sub x20,x0,x8`、私有路径 `stp x23,x20,[x19]` |
+| 哈希函数 | **标准 mainline jhash2(k,4,off)**（初值 0xdeadbeef+16+seed；内联处 movz `0xdeadbeff` 为编译器折叠 0xdeadbeef+16，非厂商改动） | futex_wake@0xffffff800815dda0 / futex_requeue 内联块；逐指令模拟器 `tools/hash_emu.py` 与 numpy 双变体对拍（20/20 + 300/300） |
+| hashsize | 2048 = 256 × popcount(possible 掩码字节) | futex_init@0xffffff8009a158d8（ldrb+popcount+`lsl #8`+roundup_pow2）；futex_hashsize@0xffffff8009e0e160，futex_queues@0xffffff8009e0e150 |
+| 桶结构 | stride=**128B**（u32+u32+plist_head，两桶共享 64B cache line） | futex_init 初始化循环 `add x8,x8,#0x80`；futex_wake 有 `ldr w10,[x8,x10];cbz` waiters 快速路径 |
+| task->mm | 偏移 **0x5c8**，mm 来自 mm_cachep | copy_process：`ldr x0,[x8,#0x9c0]`(mm_cachep@0xffffff800a0229c0) → kmem_cache_alloc → `str x21,[x19,#0x5c8]` |
+| sizeof(mm_struct) | **872**（0x368）→ SLUB 步长 ALIGN(872,64)=**896**，正确结构性枚举 = 8192 对齐 × 896×j (j<36) | proc_caches_init@0xffffff8009a0b098 第 5 次 kmem_cache_create（"mm_struct"@0xffffff800961b2db，w1=0x368） |
+| KASLR 线性映射 | **滑移恒为 0**（排除） | kaslr_early_init@0xffffff8009a087d8（`memstart_offset_seed = seed>>48`，u16，strh）；arm64_memblock_init@0xffffff8009a08ff0：memstart_addr=round_down(DRAM_start,256GB)，滑移 = `((range>>30)×seed16)<<14 & ~(2^38−1)`，本配置上界 ≈2.66e11 < 2^38 ⇒ 恒 0；module_alloc_base（0xffffff80098524e0）随机与线性映射无关 |
+| PAGE_OFFSET | 0xffffffc000000000（再次确认） | VMALLOC_END=0xFFFFFFBEBFFF0000 反解 + futex_init `linear_region_size=0x4000000000` |
+
+### 45.4 矛盾定位：四要素皆无错 ⇒ 单一剩余假设 = hit 集污染
+
+模型（45.3 表）+ 网格（896≡0 mod 32、slab 页对齐 ⇒ mm≡0 mod 32，全 32 网格为超集）+ 窗口
+（SDM710 6GB：phys∈[0x40000000,0x200000000)，VA=PAGE_OFFSET+phys ⊂ 已扫 8GB）+ oracle（45.1 桶索引成立、
+pausecheck 证真）——**任意 mm 均不满足 27 地址严格同桶，而真 mm 必须满足 ⇒ 约束集必被污染**。
+唯一说得通的机制：扫描 ~4s 内**他进程短命 futex waiter 的瞬时热**（1–2 个 waiter 的桶低于阈值，多 waiter 桶
+可超阈值且在 300ms pausecheck 窗口内消散），污染了 26 个 hit 中的若干个（26 vs 期望 16 的偏差与此吻合；
+先前的 cache-line 邻桶热假设已证伪——waiter 睡眠态无持续锁流量，空链无遍历开销）。
+
+**已完成的鲁棒搜索**：`tools/g2_maxmatch.py`（对每候选 mm 统计与 inc 同桶的 hit 数；真 mm ~16–26 vs 随机 0.013，
+对污染鲁棒）——本轮运行约 12 分钟被中止（用户指示停止），无输出，**待重跑**；另有
+`g2_pair_search.py`（桶对约束）/`g2_pair_search2.py`（无+16 变体）两个已证伪分支留档。
+
+### 45.5 文档更正
+
+- `LIVE_PROBE_RESULT_v4.md` §5.4/§7 增补 §8 注记：G1 复活、模型终审结论、污染假设与 max-match 待办。
+- `KSNITCH_LOCAL_CHECK.md` §五.5 的"结构性枚举"口径修正为 **8192 对齐 × 896×j (j<36)**（sizeof(mm_struct)=872、
+  order 由 SLUB min_objects=4×(fls(8)+1)=20 ⇒ order-3/36 objects 推得；order-1 兜底用 8192 步长覆盖）。
+- `HANDOVER_RESUME.md` 升级 v5（本节索引）。
+
+### 45.6 遗留待办
+
+1. 重跑 `python tools/g2_maxmatch.py`（纯离线，~15-30 分钟）；出解 ⇒ 设备端 mask-2048 预测命中率验证；无解 ⇒ 45.4 假设证伪，转 hit 逐个甄别探针（迁移法）。
+2. `/data/local/tmp` 清理（10 项清单见 `HANDOVER_RESUME.md` §5）——本轮未执行（用户指示停止）。
+3. hashsize 字节符号身份（0xffffff8009e0dfc8）未最终确认（不影响等式约束类搜索）。

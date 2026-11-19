@@ -1,0 +1,58 @@
+region 0x77be2a0000
+inc 00000077be2a0080
+baseline 17
+inc_meas 376
+scan 32767 26
+hit 0 00000077be699fc8
+hit 1 00000077be71d3e8
+hit 2 00000077bf3ae870
+hit 3 00000077bfe2ec70
+hit 4 00000077bfed3198
+hit 5 00000077bffe7a38
+hit 6 00000077c0385728
+hit 7 00000077c0df4aa0
+hit 8 00000077c0e8bf58
+hit 9 00000077c0f0f378
+hit 10 00000077c0f30480
+hit 11 00000077c11b58a8
+hit 12 00000077c12ff2f8
+hit 13 00000077c1ebd0e8
+hit 14 00000077c213e4f0
+hit 15 00000077c23394c8
+hit 16 00000077c2926430
+hit 17 00000077c30e5228
+hit 18 00000077c3945528
+hit 19 00000077c3fe7a38
+hit 20 00000077c4583718
+hit 21 00000077c45c8940
+hit 22 00000077c46a3018
+hit 23 00000077c52a3018
+hit 24 00000077c5465e28
+hit 25 00000077c61173b8
+pausecheck 0 0 16
+pausecheck 1 0 17
+pausecheck 2 0 16
+pausecheck 3 0 16
+pausecheck 4 0 16
+pausecheck 5 0 16
+pausecheck 6 0 17
+pausecheck 7 0 17
+pausecheck 8 0 17
+pausecheck 9 0 17
+pausecheck 10 0 17
+pausecheck 11 0 16
+pausecheck 12 0 17
+pausecheck 13 0 17
+pausecheck 14 0 17
+pausecheck 15 0 16
+pausecheck 16 0 16
+pausecheck 17 0 17
+pausecheck 18 0 17
+pausecheck 19 0 16
+pausecheck 20 0 17
+pausecheck 21 0 16
+pausecheck 22 0 16
+pausecheck 23 0 16
+pausecheck 24 0 16
+pausecheck 25 0 16
+realhits 26

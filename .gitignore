@@ -49,3 +49,13 @@ Thumbs.db
 # Python 缓存
 __pycache__/
 *.pyc
+
+# ---- v4/v5 真机探针交叉编译产物（只推 .c 源码）----
+live_probe/perf_probe
+live_probe/spray_probe
+live_probe/e2e_probe
+live_probe/e2e2_probe
+live_probe/same_bucket_probe
+live_probe/calib_probe
+live_probe/transfer_probe
+live_probe/transfer2_probe
