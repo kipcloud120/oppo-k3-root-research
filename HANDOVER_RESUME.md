@@ -1,4 +1,4 @@
-# 接手摘要（v12.2 + v13/v14 分诊收口：**非 sparse 释放链自洽、I4 上机证实、K2 达成；KGSL 主线阶段性关闭；外部 CVE 与 WLAN 输入面分诊完成，四层判定仍 NO-GO**，2026-11-20）
+# 接手摘要（v12.3.1：**非 sparse 释放链自洽、I4 上机证实、K2 达成；KGSL 主线阶段性关闭；外部 CVE 与 WLAN 输入面分诊完成；R1 已按原始证据更正 Binder 10070 口径并将 hdd_driver_command 列为首选离线候选**，四层判定仍 NO-GO，2026-11-20）
 
 > 一页式入口。完整证据：`HANDOVER.md` §63（非 sparse 释放前提 + I4 上机，最新）+ §62（sparse 关判定）+ §61（v12-K1 生命周期）+ §60 + §58 + §57 + §56 + §55 + §53；**本轮三份分诊报告见 `docs_archive/` 的 `项目评审与下一步规划_v13`、`联网调研_高优先级突破方向_v14`、`CVE-2025-38352_E1形态复核`、`R0_覆盖台账`、`R1_WLAN非配置输入可达性矩阵`（均 2026-11-20）**。
 > 分层判定 `CLOSURE.md`；审阅入口 `README.md`。
@@ -6,8 +6,10 @@
 > **v13/v14 分诊收口（2026-11-20 下午，**纯离线、零上机，不改变四层判定**）**：
 > ① **v13 评审**：维持 NO-GO；KGSL/GhostLock 冻结；下一轮主线从"继续找漏洞"改为"文档同步 + 可达性优先"，即 R0（交接口径）+ R1（WLAN 非配置输入可达性矩阵）。
 > ② **v14 联网调研**：四个 CVE 候选中仅 `CVE-2025-38352`（POSIX CPU timers TOCTOU）值得登记；其余排除/降级。**任务 E1 已完成**：本机 `run_posix_cpu_timers` 无 `exit_state` 门、`posix_cpu_timer_del` lock-fail 不读 `firing`、无 task_work 缓解 ⇒ pre-fix 结构同构证实，但动态可达性未证、高 panic + 缺 `.text` slide ⇒ **不升级授权、动态默认禁止**。
-> ③ **R0 覆盖台账 + 交接口径修正已完成**（`docs_archive/R0_覆盖台账`）；**R1 WLAN 非配置输入可达性矩阵已完成**（`docs_archive/R1_WLAN非配置输入可达性矩阵`）：ioctl/FTM/cfg80211/日志/debugfs 五类面，仅 wifi uid0 域可达、shell 域仅经已终局的 Binder 私有事务，**无合格 R3 候选**。
+> ③ **R0 覆盖台账 + 交接口径修正已完成**（`docs_archive/R0_覆盖台账`）；**R1 WLAN 非配置输入可达性矩阵已完成**（`docs_archive/R1_WLAN非配置输入可达性矩阵`）：ioctl/testmode/cfg80211/日志/debugfs 五类面；**v12.3.1 更正后**（见下）——不能只建 shell 直接访问模型，§23 的受限 UID 0 子进程是独立代理主体、其域满足驱动面权限门，`0x89f1 → hdd_driver_command` 列为**首选离线审计候选**（R1 §6 已完成首轮），FTM testmode 次选；**不宣告"无 R3 候选"**，但不在当前设备做动态输入。
 > ④ 三份权威文档（`HANDOVER.md`/`HANDOVER_RESUME.md`/`CLOSURE.md`）**未改写历史正文**，仅增补本节与 §64 摘要；四层判定不变：**可用 root / 持久 ROOT 仍 NO-GO**。
+>
+> **v12.3.1 更正（2026-11-20，响应外部复审，纯离线）**：R1 初版 §2.1 误用 `F16_WIFI_FTM_TRACE.md` §12 的早期撤回，写成"所有注入均被拒绝、不产生 uid 0"——**这是事实错误，已撤回**。原始证据（`P1_L3_EVIDENCE.txt` 第 28 行 + F 节、HANDOVER §23、负知识表、`WIFI_P1_ROOT_COMMAND_AUDIT.md` §3）证明：`\n`/反引号绕过 11 字符黑名单，两次真机回显 `uid=0(root)`、域 `u:r:oplus_wifi_service:s0`（含 NET_ADMIN/NET_RAW/SYS_MODULE）⇒ **受限 UID 0 命令执行仍为已达成**。更正后的可达模型必须把该 UID 0 子进程作为**独立于 shell 的代理主体**——其域满足 WLAN 驱动面权限门。据此 R1 将 **`0x89f1 → hdd_driver_command` 重列为首选离线审计候选**（已完成首轮 §6：上界 `0x2000` + 显式 NUL + 98 项白名单 + 全路径释放），FTM testmode 为次选。**连接点未证**（用户态 iwpriv 与内核态 `0x89f1` 的绑定缺物料）；**不做动态输入**；完整 ROOT 仍 NO-GO。
 >
 > **v12.2 三句话**：
 > ① **非 sparse 释放链自洽**：新增 I10–I12 三条全称不变量在本机 `vmlinux.elf` 全部成立——

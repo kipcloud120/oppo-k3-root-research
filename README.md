@@ -46,7 +46,7 @@
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
 | FastRPC `CVE-2023-33063` | 面存在 | uid 0 域下更封闭（权限并集 ∅） |
 | `/dev/diag` | 入口层无缺陷；**DCI 解析子树 v10.1 已否证**（三条回传路径均有"声明长度⇄实收长度"门） | 余量 R1–R3（`extract_dci_ctrl_pkt` 控制语义、两条非 apps 入口、长度字段功能边界）；依赖内核指针的利用仍被 ②/③ 阻断 |
-| **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限）；缺口 = 域逃逸（§24 判无路径） |
+| **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限，两次回显 `uid=0(root)`，§23）；缺口 = 域逃逸（§24 判无路径）。**v12.3.1**：该 UID 0 子进程（域 `oplus_wifi_service`、含 NET_ADMIN/NET_RAW/SYS_MODULE）同时是 WLAN 驱动面的**间接可达主体**——`0x89f1 → hdd_driver_command` 已列为首选离线审计候选（见 `docs_archive/R1_WLAN非配置输入可达性矩阵` §6）；用户态 iwpriv ↔ 内核态 ioctl 的连接点未证，不做动态输入 |
 | 私有 Binder / `system_server` / Wi-Fi 消费者 | 方法级否证 | 7/7 闭合、`system_server` 取句柄处断开、消费者三道门全封（§33–§37） |
 
 **最终判定：[`CLOSURE.md`](CLOSURE.md)**（v12 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §61 → §60 → §58 → §53 → §52。

@@ -1,0 +1,229 @@
+0x038320  sub      sp, sp, #0x70
+0x038324  stp      x29, x30, [sp, #0x10]
+0x038328  add      x29, sp, #0x10
+0x03832c  stp      x28, x27, [sp, #0x20]
+0x038330  stp      x26, x25, [sp, #0x30]
+0x038334  stp      x24, x23, [sp, #0x40]
+0x038338  stp      x22, x21, [sp, #0x50]
+0x03833c  stp      x20, x19, [sp, #0x60]
+0x038340  mov      x19, #0
+0x038344  mov      x2, #0
+0x038348  movk     x19, #0, lsl #16
+0x03834c  movk     x2, #0, lsl #16
+0x038350  movk     x19, #0, lsl #32
+0x038354  movk     x2, #0, lsl #32
+0x038358  movk     x19, #0, lsl #48
+0x03835c  mov      x21, x0
+0x038360  ldr      x20, [x0, #0x18]
+0x038364  mov      x22, x1
+0x038368  mov      w0, #0x33
+0x03836c  movk     x2, #0, lsl #48
+0x038370  mov      w4, #0x1fd5
+0x038374  mov      w1, #8
+0x038378  mov      x3, x19
+0x03837c  bl       #0x3837c        ; -> qdf_trace_msg
+0x038380  bl       #0x38380        ; -> hdd_get_conparam
+0x038384  cmp      w0, #5
+0x038388  b.ne     #0x383b8
+0x03838c  mov      x2, #0
+0x038390  mov      w0, #0x33
+0x038394  movk     x2, #0, lsl #16
+0x038398  mov      w4, #0x1fd8
+0x03839c  movk     x2, #0, lsl #32
+0x0383a0  movk     x2, #0, lsl #48
+0x0383a4  mov      w1, #2
+0x0383a8  mov      x3, x19
+0x0383ac  bl       #0x383ac        ; -> qdf_trace_msg
+0x0383b0  mov      w23, #-0x16
+0x0383b4  b        #0x38670
+0x0383b8  mov      x0, x20
+0x0383bc  mov      x1, x19
+0x0383c0  bl       #0x383c0        ; -> __wlan_hdd_validate_context
+0x0383c4  mov      w23, w0
+0x0383c8  cbnz     w0, #0x38670
+0x0383cc  ldr      w8, [x20, #0x874]
+0x0383d0  cmp      w8, #2
+0x0383d4  b.ne     #0x383f4
+0x0383d8  mov      x2, #0
+0x0383dc  mov      w0, #0x33
+0x0383e0  movk     x2, #0, lsl #16
+0x0383e4  mov      w4, #0x1fe1
+0x0383e8  movk     x2, #0, lsl #32
+0x0383ec  movk     x2, #0, lsl #48
+0x0383f0  b        #0x383a4
+0x0383f4  ldrsw    x5, [x22, #0xc]
+0x0383f8  sub      w8, w5, #1
+0x0383fc  cmp      w8, #2, lsl #12
+0x038400  b.lo     #0x38430
+0x038404  mov      x2, #0
+0x038408  mov      w0, #0x33
+0x03840c  movk     x2, #0, lsl #16
+0x038410  mov      w4, #0x1fed
+0x038414  movk     x2, #0, lsl #32
+0x038418  mov      w1, #3
+0x03841c  movk     x2, #0, lsl #48
+0x038420  mov      x3, x19
+0x038424  bl       #0x38424        ; -> qdf_trace_msg
+0x038428  mov      w23, #-0x16
+0x03842c  b        #0x3864c
+0x038430  add      x0, x5, #1
+0x038434  mov      w2, #0x1ff3
+0x038438  mov      x1, x19
+0x03843c  bl       #0x3843c        ; -> __qdf_mem_malloc
+0x038440  cbz      x0, #0x38498
+0x038444  ldrsw    x23, [x22, #0xc]
+0x038448  mov      w2, wzr
+0x03844c  ldr      x24, [x22]
+0x038450  mov      x20, x0
+0x038454  mov      x1, x23
+0x038458  bl       #0x38458        ; -> __check_object_size
+0x03845c  mrs      x8, sp_el0
+0x038460  mov      x9, x24
+0x038464  ldr      x8, [x8, #0x40]
+0x038468  adds     x9, x9, x23
+0x03846c  csel     x8, xzr, x8, hi
+0x038470  csinv    x9, x9, xzr, lo
+0x038474  sbcs     xzr, x9, x8
+0x038478  cset     x9, ls
+0x03847c  cbz      x9, #0x384c4
+0x038480  mov      x0, x20
+0x038484  mov      x1, x24
+0x038488  mov      x2, x23
+0x03848c  bl       #0x3848c        ; -> __arch_copy_from_user
+0x038490  mov      x2, x0
+0x038494  b        #0x384c8
+0x038498  mov      x2, #0
+0x03849c  mov      w0, #0x33
+0x0384a0  movk     x2, #0, lsl #16
+0x0384a4  mov      w4, #0x1ff5
+0x0384a8  movk     x2, #0, lsl #32
+0x0384ac  mov      w1, #2
+0x0384b0  movk     x2, #0, lsl #48
+0x0384b4  mov      x3, x19
+0x0384b8  bl       #0x384b8        ; -> qdf_trace_msg
+0x0384bc  mov      w23, #-0xc
+0x0384c0  b        #0x3864c
+0x0384c4  mov      x2, x23
+0x0384c8  cbnz     x2, #0x3869c
+0x0384cc  ldrsw    x8, [x22, #0xc]
+0x0384d0  mov      x2, #0
+0x0384d4  movk     x2, #0, lsl #16
+0x0384d8  mov      w0, #0x33
+0x0384dc  movk     x2, #0, lsl #32
+0x0384e0  mov      w4, #0x2002
+0x0384e4  movk     x2, #0, lsl #48
+0x0384e8  mov      w1, #8
+0x0384ec  strb     wzr, [x20, x8]
+0x0384f0  mov      x3, x19
+0x0384f4  ldr      x5, [x21, #0xa0]
+0x0384f8  mov      x6, x20
+0x0384fc  bl       #0x384fc        ; -> qdf_trace_msg
+0x038500  cbz      x21, #0x385b4
+0x038504  cbz      x22, #0x385b4
+0x038508  mov      x0, x20
+0x03850c  mov      w1, #0x20
+0x038510  bl       #0x38510        ; -> strchrnul
+0x038514  mov      x8, #0
+0x038518  ldr      x9, [x21, #0x18]
+0x03851c  movk     x8, #0, lsl #16
+0x038520  mov      x27, xzr
+0x038524  movk     x8, #0, lsl #32
+0x038528  sub      w23, w0, w20
+0x03852c  movk     x8, #0, lsl #48
+0x038530  add      x28, x8, #0x10
+0x038534  str      x9, [sp, #8]
+0x038538  b        #0x3854c
+0x03853c  add      x27, x27, #1
+0x038540  add      x28, x28, #0x18
+0x038544  cmp      x27, #0x62
+0x038548  b.eq     #0x385ec
+0x03854c  ldur     x26, [x28, #-0x10]
+0x038550  mov      x0, x26
+0x038554  bl       #0x38554        ; -> strlen
+0x038558  mov      x24, x0
+0x03855c  cmp      w24, w23
+0x038560  b.ne     #0x3853c
+0x038564  sxtw     x25, w24
+0x038568  mov      x0, x20
+0x03856c  mov      x1, x26
+0x038570  mov      x2, x25
+0x038574  bl       #0x38574        ; -> strncasecmp
+0x038578  cbnz     w0, #0x3853c
+0x03857c  ldrb     w9, [x28]
+0x038580  ldur     x8, [x28, #-8]
+0x038584  cbz      w9, #0x38594
+0x038588  ldrb     w9, [x20, x25]
+0x03858c  cmp      w9, #0x20
+0x038590  b.ne     #0x38694
+0x038594  ldr      x1, [sp, #8]
+0x038598  mov      x0, x21
+0x03859c  mov      x2, x20
+0x0385a0  mov      w3, w24
+0x0385a4  mov      x4, x22
+0x0385a8  blr      x8
+0x0385ac  mov      w23, w0
+0x0385b0  b        #0x38644
+0x0385b4  mov      x2, #0
+0x0385b8  mov      x3, #0
+0x0385bc  movk     x2, #0, lsl #16
+0x0385c0  movk     x3, #0, lsl #16
+0x0385c4  movk     x2, #0, lsl #32
+0x0385c8  movk     x3, #0, lsl #32
+0x0385cc  mov      w0, #0x33
+0x0385d0  movk     x2, #0, lsl #48
+0x0385d4  mov      w4, #0x1fa2
+0x0385d8  movk     x3, #0, lsl #48
+0x0385dc  mov      w1, #2
+0x0385e0  bl       #0x385e0        ; -> qdf_trace_msg
+0x0385e4  mov      w23, #-0x16
+0x0385e8  b        #0x38644
+0x0385ec  ldrb     w3, [x21, #0x98]
+0x0385f0  mov      w22, #0x33
+0x0385f4  mov      w2, #0x3d
+0x0385f8  mov      w0, w22
+0x0385fc  mov      w1, w22
+0x038600  mov      w4, wzr
+0x038604  bl       #0x38604        ; -> qdf_mtrace
+0x038608  mov      x2, #0
+0x03860c  mov      x3, #0
+0x038610  movk     x2, #0, lsl #16
+0x038614  movk     x3, #0, lsl #16
+0x038618  ldr      x5, [x21, #0xa0]
+0x03861c  movk     x2, #0, lsl #32
+0x038620  movk     x3, #0, lsl #32
+0x038624  mov      w4, #0x1bd7
+0x038628  movk     x2, #0, lsl #48
+0x03862c  movk     x3, #0, lsl #48
+0x038630  mov      w0, w22
+0x038634  mov      w1, #3
+0x038638  mov      x6, x20
+0x03863c  bl       #0x3863c        ; -> qdf_trace_msg
+0x038640  mov      w23, #-0x20c
+0x038644  mov      x0, x20
+0x038648  bl       #0x38648        ; -> __qdf_mem_free
+0x03864c  mov      x2, #0
+0x038650  mov      w0, #0x33
+0x038654  movk     x2, #0, lsl #16
+0x038658  mov      w4, #0x2008
+0x03865c  movk     x2, #0, lsl #32
+0x038660  mov      w1, #8
+0x038664  movk     x2, #0, lsl #48
+0x038668  mov      x3, x19
+0x03866c  bl       #0x3866c        ; -> qdf_trace_msg
+0x038670  mov      w0, w23
+0x038674  ldp      x20, x19, [sp, #0x60]
+0x038678  ldp      x22, x21, [sp, #0x50]
+0x03867c  ldp      x24, x23, [sp, #0x40]
+0x038680  ldp      x26, x25, [sp, #0x30]
+0x038684  ldp      x28, x27, [sp, #0x20]
+0x038688  ldp      x29, x30, [sp, #0x10]
+0x03868c  add      sp, sp, #0x70
+0x038690  ret      
+0x038694  mov      w23, #-0x16
+0x038698  b        #0x38644
+0x03869c  sub      x8, x23, x2
+0x0386a0  mov      w1, wzr
+0x0386a4  add      x0, x20, x8
+0x0386a8  bl       #0x386a8        ; -> memset
+0x0386ac  mov      w23, #-0xe
+0x0386b0  b        #0x38644
