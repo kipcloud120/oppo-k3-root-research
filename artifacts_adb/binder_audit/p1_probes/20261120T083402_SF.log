@@ -1,0 +1,42 @@
+--------- beginning of main
+11-20 08:34:02.189 21358 21358 D OplusUtils: OplusUtils [83]: 
+11-20 08:34:02.191 21358 21358 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:34:02.183 21358 21358 W app_process: type=1400 audit(0.0:33420): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:34:02.201 21358 21358 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:34:02.205 21358 21358 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:34:02.205 21358 21358 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:34:02.205 21358 21358 I AndroidRuntime: Using default boot image
+11-20 08:34:02.205 21358 21358 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:34:02.205 21358 21358 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:34:02.206 21358 21358 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:34:02.203 21358 21358 W app_process: type=1400 audit(0.0:33421): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:34:02.203 21358 21358 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 08:34:02.203 21358 21358 W app_process: type=1400 audit(0.0:33424): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:34:02.327 21358 21358 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:34:02.327 21358 21358 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:34:02.366 21358 21358 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:34:02.376 21358 21358 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:34:02.404  1755  3484 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:34:02.404  1755  3484 D OplusWifiHalService: log -t SF `ls /system/etc/firmware`)
+11-20 08:34:02.407  1755  3484 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:34:02.407  1755  3484 D OplusWifiHalService: log -t SF `ls /system/etc/firmware`) completed successfully.
+11-20 08:34:02.407  1755  3484 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:34:02.407  1755  3484 D OplusWifiHalService: log -t SF `ls /system/etc/firmware`) with result =  
+11-20 08:34:02.409 21358 21358 D AndroidRuntime: Shutting down VM
+11-20 08:34:03.381 18376 18672 I DRS_LOG_ChinaTimeWindowPolicy[DRS-Scheduler-1]: [DEFAULT] time=08:34, window=BASELINE, base=5m, scale=1.00, result=5m
+11-20 08:34:03.382 18376 18672 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO triggered, next=5m, base=5m, config:5min, policy=ChinaTimeWindow(baseline 1.0x)
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: triggerPseudo() called, gate=UploadGateFacade{
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   BusinessRuleGate{mode=STANDALONE, enableNetRequest=true}
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   NetworkGate{networkReady=true, isWifi=true}
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   PerformanceGate{skipped(STANDALONE)}
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   EnvRecoveryDetector: EnvRecoveryDetector{standalone=true, state=IDLE, snapshot=EnvSnapshot{net=true, normalOk=true, rtOk=true}, lastNormalOk=true, lastRtOk=true}
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   envRecoveryListeners: 2
+11-20 08:34:03.383 18376 18672 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: }
+11-20 08:34:03.386 18376 18672 I DRS_LOG_GateStateManager[DRS-Scheduler-1]: resetCompensationBudget[Pseudo]: budget=2
+11-20 08:34:03.387 18376 18672 I DRS_LOG_ChannelTaskRunner[DRS-Scheduler-1]: [PSEUDO] upload_trigger request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795134843387, skipGateCheck=false, scheduledRun=false}
+11-20 08:34:03.387 18376 18672 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO thread scheduled, reason=loop, delay=5m
+11-20 08:34:03.388 18376 19079 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] task_start submitMode=NEW_TASK request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795134843387, skipGateCheck=false, scheduledRun=false}
+11-20 08:34:03.402 18376 19079 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1]: [PSEUDO] initial_snapshot round=1 appIdCount=0 appIds=[] wifi=true allowDcs=false
+11-20 08:34:03.408 18376 19079 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1]: [PSEUDO] final_supplement previousRound=1 knownAppIds=0 supplementedAppIds=[]
+11-20 08:34:03.409 18376 19079 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] prepare_empty hadSuccess=false loop=1
+11-20 08:34:03.409 18376 19079 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] task_finish completed=true stopReason=TASK_COMPLETED successApps=0 skippedBatches=0 appErrors=0 envScenario=null allUploaded=false newDataDuringTask=false

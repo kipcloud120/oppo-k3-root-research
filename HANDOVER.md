@@ -4135,11 +4135,15 @@ C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据�
 
 | 位置 | 机制 | 上界 |
 |---|---|---|
-| `kgsl_ioctl_helper`（legacy） | `w10 = (entry[0]>>16)&0x3fff`；`cmp w10,#0x81; b.lo` ⇒ 表项声明尺寸必须 **≤ 0x80**；随后 `cmp w10, w11`（表项 size vs `_IOC_SIZE(cmd)`）→ 不符即打印并 `brk #0x800`（WARN）后返回 | **0x80** |
+| `kgsl_ioctl_helper`（legacy） | `w10 = (entry[0]>>16)&0x3fff`、`w11 = (cmd>>16)&0x3fff`，**`csel w22, w10, w11, lo` ⇒ 长度 = min(表项, cmd)**（与 adreno 路径同构）；另有 `cmp w10,#0x81; b.lo` 的表项尺寸断言（>0x80 则 printk + `brk #0x800` + `-EINVAL`） | **min(两者)，且表项 ≤ 0x80** |
 | `kgsl_ioctl_copy_in`（`0x874cc58`） | `w8 = _IOC_SIZE(cmd)`；`w9 = (entry[0]>>16)&0x3fff`；**`csel w20, w9, w8, lo` ⇒ 长度 = min(表项 size, cmd size)**；再校验 `_IOC_WRITE` 方向位一致，然后 `__check_object_size` + copy | **min(两者)** |
 | `kgsl_ioctl_copy_out`（`0x874cd10`） | 同构（方向位用 bit31） | 同上 |
 
 这是最稳的写法：**用户声明的长度只有在小于表项声明尺寸时才生效**。
+
+> **⚠️ v11.5 更正（见 §59.3）**：本节初稿曾把 legacy helper 的 `cmp w10, w11` 读作"要求严格相等"，
+> 并称不符即 `-EINVAL`。**上机差分测试证伪**：cmd size 取 0x17/0x19/0x20（表项为 0x18）均照常进入 handler。
+> 该处实为 `csel` 取 **min**；`brk #0x800` 只用于"表项 size > 0x80"的断言分支。
 
 ### 58.2 adreno 分派表的实际尺寸（静态解析）
 
@@ -4177,3 +4181,71 @@ C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据�
 ### 58.5 设备终态
 
 纯离线，未上机；设备 `uptime` 连续、`/data/local/tmp` 为空。
+
+---
+
+## §59 v11.5：三处"可被推翻点"的上机实测（2026-11-20，只读 + 一个零副作用探针）
+
+> 审核送审前，把 §53/§56/§58 中标为"推断"的三项全部上机验证。
+> 结论：**两项被证实（并需改写表述）、一项推翻了我方自己的静态判读**。
+
+### 59.1 推断① `panic_on_oops`：**不可观测**（不是"推断为 1"）
+
+| 域 | 命令 | 结果 |
+|---|---|---|
+| shell（uid 2000） | `cat /proc/sys/kernel/panic_on_oops` | `Permission denied` |
+| `oplus_wifi_service`（uid 0） | 同上（经 `tools/wifi_exec.py`） | **SELinux 拒绝**，AVC 原文：`avc: denied { read } ... name="panic_on_oops" ... tcontext=u:object_r:proc_panic:s0 tclass=file scontext=u:r:oplus_wifi_service:s0` |
+
+⇒ **本机两个可用域都读不到该值**。原文"推断为 1"应改为"**该值本机不可观测**；
+在 oops 不可用这一点上，结论不依赖该值（仍需先有一个低权限可触发的 oops，本机无已知）"。
+副作用：这一条同时说明**攻击者也无法自检该开关**，若要赌，只能赌默认。
+
+### 59.2 推断② `request_firmware` 路径：**四条证据互相印证**
+
+| # | 证据 | 方法 |
+|---|---|---|
+| 1 | `/sys/module/wlan/parameters/fwpath` **为空** | root 域 `cat`，**无 AVC**（区别于 §59.1 的拒绝）⇒ 读成功、值为空串 |
+| 2 | 驱动模块内含字面 **`wlan/qca_cld`**（1 处）与 `WCNSS_qcom_cfg.ini`（1 处） | 离线 `strings` 统计 |
+| 3 | `/vendor/firmware/wlan/qca_cld/` 下确有 `WCNSS_qcom_cfg.ini` | root 域 `ls` |
+| 4 | `/system/etc/firmware` 无同名 wlan 目录（无 AVC、无输出） | root 域 `ls` |
+
+⇒ `fwpath` 空 ⇒ 走 `request_firmware` 默认路径 `/vendor/firmware`，而**该路径正是唯一存在该文件的地方**，
+且 `/vendor` 为 dm-verity `ro`（§56.1）。**"可写副本不进解析器"的结论成立**；
+仍未直接观测到 `request_firmware()` 的入参（无 ftrace/dmesg 权限），但四条独立事实已排除其它可能。
+
+### 59.3 推断③ KGSL `size` 字段语义：**实测推翻了我方的静态判读**
+
+探针 `live_probe/kgsl_cmdprobe.c`（静态 aarch64，零副作用：只构造非法用户指针触发 `EFAULT`）。
+基准处理器 `kgsl_ioctl_device_getproperty`（legacy 表项 cmd=`0xc0180902`，声明 size=**0x18**），
+`type=8` 分支要求 `sizebytes==16` 后 `copy_to_user(value,…)` ⇒ 进入 handler 必得 `-EFAULT`。
+
+| 发送的命令字 | 声明 size | 期望（初稿判读） | **实测** |
+|---|---|---|---|
+| `0xc0180902` | 0x18（相符） | 进入 handler → EFAULT | **EFAULT(14)** ✅ |
+| `0xc0190902` | 0x19 | 严格相等 ⇒ `-EINVAL` | **EFAULT(14)** ❌ 拒绝未发生 |
+| `0xc0170902` | 0x17 | 严格相等 ⇒ `-EINVAL` | **EFAULT(14)** ❌ |
+| `0xc0200902` | 0x20 | 严格相等 ⇒ `-EINVAL` | **EFAULT(14)** ❌ |
+| `0xc0180903` | 0x18，nr=3（表中无） | `-EINVAL/ENOTTY` | **ENOTTY(25)** ✅ |
+| `0xc0180940` | 0x18，nr=0x40 | — | **0（成功）** |
+| `0xc0180902`，`type=7` | 0x18 | handler 自身拒绝 | **EINVAL(22)** ✅ |
+
+**判读**：legacy `kgsl_ioctl_helper` 的长度不是"必须等于表项"，而是
+`w10 = entry_size; w11 = cmd_size; csel w22, w10, w11, lo` ⇒ **min(entry, cmd)**，
+因此 0x17/0x19/0x20 都照常进入 handler（长度取 min）。`brk #0x800`（WARN）+ `-EINVAL`
+只在 **`entry_size > 0x80`** 的断言分支触发——初稿把 `cmp w10,#0x81` 与 `cmp w10,w11` 两处读混了。
+
+**对结论的影响**：安全性结论**不变**（min 仍然有界，且更宽松地放行小尺寸），
+但**机制描述必须更正**——已在 §58.1 加更正块，本节省为权威版本。
+
+### 59.4 附带的两个副产品
+
+1. `cmd=0xc0180940`（nr=0x40，size 0x18）**返回 0**：说明该 ioctl 面在本机**能正常完成**一次成功调用，
+   进一步坐实"shell 可直达 KGSL"（与 `k3_stage_b_round1` 的 `DRAWCTXT_CREATE` 一致）。
+2. `type=7` 返回 `-EINVAL` 而 `type=8` 返回 `-EFAULT`：说明 handler 的 `type` 范围检查是 `[8, 0x24]`
+   （反汇编 `sub w8,w1,#8; cmp w8,#0x1c; b.hi`），与静态判读一致。
+
+### 59.5 设备终态
+
+- 探针与临时 jar 均已删除，`/data/local/tmp` 为空；
+- `uptime` 连续（较昨日 +13.6 h，与墙钟一致）⇒ **未重启**，① 类地址与示踪数据仍有效；
+- 唯一写入是 `/data/local/tmp` 的临时探针（已删），未触 `persist`、未改配置。

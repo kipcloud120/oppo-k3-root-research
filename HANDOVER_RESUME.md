@@ -1,4 +1,4 @@
-# 接手摘要（v11.4：**③ 实测否证；C1 无输入路径；C2 长度维度闭合 14/14**，2026-11-20）
+# 接手摘要（v11.5：**三项推断已上机实测；C2 机制判读已更正**，2026-11-20）
 
 > 一页式入口。完整证据：`HANDOVER.md` §58（C2 长度维度闭合）+ §57（C2 首轮）+ §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
 > §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
@@ -13,7 +13,7 @@
 >   **符号表未剥离**，落在 `vendor_ko/`（已 gitignore）。调用链已钉到 `request_firmware`。
 > ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已实测否证）。
 
-## 0. 本轮送审要点（v11.1–v11.4，对应 `HANDOVER.md` §55–§58）
+## 0. 本轮送审要点（v11.1–v11.5，对应 `HANDOVER.md` §55–§59）
 
 **三个负结果**
 
@@ -23,14 +23,13 @@
 | 2 | Track C1（WLAN 配置解析）**无可达输入** | `/vendor` dm-verity `ro` + 驱动 `fwpath` 为空（§56.1，只读实测） |
 | 3 | Track C2（KGSL）**长度维度 14/14 有界** | 逐点反汇编 + 分派表静态解析（§57/§58） |
 
-**请重点质疑的三处推断**（我方标为"未实测/推断"，若成立需撤回）
+**三处推断的上机实测结论（v11.5，见 `HANDOVER.md` §59）**
 
-1. `panic_on_oops` 推断为 1（§53.3/§55）：本机 `/proc/sys/kernel/panic_on_oops` 被 SELinux 拒读。
-   若该值实为 0，oops 路径仍需"可从低权限触发的 oops"才成立——本机无已知。
-2. `request_firmware` 的实际搜索路径：由 `fwpath` 为空**推得**回落到 `/vendor/firmware`，
-   未在运行时抓取 `request_firmware` 的入参（无 ftrace 权限）。
-3. KGSL 分派表 `size` 字段的位置（`(w0>>16)&0x3fff`）：由反汇编语义推定，
-   与实际结构体声明的一致性未用源码核对（厂商未提供源码）。
+| 推断 | 实测结果 | 处置 |
+|---|---|---|
+| `panic_on_oops` 推断为 1 | shell 与 `oplus_wifi_service`（uid 0）**均被 SELinux 拒**（`proc_panic` 标签，AVC 原文见 §59.1） | 改写为"**本机不可观测**"，结论不再依赖该值 |
+| `request_firmware` 回落 `/vendor/firmware` | 四条独立证据：`fwpath` 读成功且为空；模块含 `wlan/qca_cld` 字面；文件只存在于 `/vendor/firmware/wlan/qca_cld/`；`/system/etc/firmware` 无同名项 | **证实**（仍未直接观测 syscall 入参） |
+| KGSL `size` 字段语义 | 差分测试：cmd size 取 0x17/0x19/0x20（表项 0x18）**均进入 handler**（`EFAULT`），nr 不存在才 `ENOTTY` | **推翻我方判读**：实为 `min(entry,cmd)`，非"严格相等"；§58.1 已加更正块 |
 
 **明确未覆盖（不要外推为"已否证"）**
 
