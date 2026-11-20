@@ -50,8 +50,9 @@
 > **Track C1（WLAN 配置解析器）降级为"无可达输入路径"**——`/vendor` 为 dm-verity 只读挂载、
 > 驱动 `fwpath` 参数为空 ⇒ 只读 vendor 副本；可写的 `persist/wlan` 副本与解析器之间无消费关系。
 > `cfg_parse` 形态核对：27 处拷贝全为 `strlcpy`（dst 为结构体固定偏移），模块未导入无界 `strcpy`。
-> **Track C2（KGSL）**：54 入口 / 14 拷贝点；首轮判读（§57）6/8 REG 已由「min 钳位」或「同尺寸分配」闭合，
-> 11/13 点带 `__check_object_size`；剩 2 处待追溯。**仅覆盖长度维度，未审结构层面（索引/refcount/UAF）**。
+> **Track C2（KGSL）**：54 入口 / 14 拷贝点，**长度维度已闭合 14/14**（§58）——
+> `copy_in/out` 取 `min(_IOC_SIZE(cmd), 表项 size)`，adreno 表项最大 0x20；其余为 min 钳位/同尺寸分配/定长。
+> **未覆盖结构层面（索引 / refcount / UAF）**，那才是 KGSL 历史缺陷的集中区。
 
 ---
 

@@ -4107,3 +4107,73 @@ C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据�
 ### 57.5 设备终态
 
 本轮纯离线，未上机；设备保持 `uptime` 连续、`/data/local/tmp` 空。
+
+---
+
+## §58 v11.4：C2 长度维度**闭合**（14/14）—— KGSL ioctl 无可达长度错配（2026-11-20，纯离线）
+
+> 承接 §57.3 的两处未完成项。**结论：14 个拷贝点的长度全部被硬性夹住**，
+> 本轮范围内**不存在**"用户给长度、内核按固定尺寸"的错配。
+
+### 58.1 两处遗留项的判读
+
+**① `kgsl_ioctl_gpuobj_import` 第 2 点（`0x873df6c`）**：位于 `adreno_ioctl_helper` 的路径上，钳位完整——
+
+```
+0x873df04  ldr  w8, [x21, #8]        ; 用户字段（num/len）
+0x873df08  mov  w9, #4
+0x873df0c  cmp  w8, #4
+0x873df10  csel w8, w8, w9, lo       ; w8 = min(field, 4)
+0x873df18  mov  w24, w8
+0x873df20  add  x0, sp, #0x10        ; dst = 栈缓冲
+0x873df6c  bl   __arch_copy_from_user ; len = min(field,4)
+```
+
+⇒ **夹到 4 字节**，闭合。
+
+**② `kgsl_ioctl_helper` / `copy_in` / `copy_out` 的动态钳位**：两个层面都有界。
+
+| 位置 | 机制 | 上界 |
+|---|---|---|
+| `kgsl_ioctl_helper`（legacy） | `w10 = (entry[0]>>16)&0x3fff`；`cmp w10,#0x81; b.lo` ⇒ 表项声明尺寸必须 **≤ 0x80**；随后 `cmp w10, w11`（表项 size vs `_IOC_SIZE(cmd)`）→ 不符即打印并 `brk #0x800`（WARN）后返回 | **0x80** |
+| `kgsl_ioctl_copy_in`（`0x874cc58`） | `w8 = _IOC_SIZE(cmd)`；`w9 = (entry[0]>>16)&0x3fff`；**`csel w20, w9, w8, lo` ⇒ 长度 = min(表项 size, cmd size)**；再校验 `_IOC_WRITE` 方向位一致，然后 `__check_object_size` + copy | **min(两者)** |
+| `kgsl_ioctl_copy_out`（`0x874cd10`） | 同构（方向位用 bit31） | 同上 |
+
+这是最稳的写法：**用户声明的长度只有在小于表项声明尺寸时才生效**。
+
+### 58.2 adreno 分派表的实际尺寸（静态解析）
+
+`adreno_ioctl_helper` 的两个调用者传入的表：
+
+| 表 | 地址 | 条目 | 各条 `size` 字段 |
+|---|---|---|---|
+| native（`adreno_ioctl`） | `0xffffff8009ecf318` | 5 | `0x14 / 0x10 / 0x20 / 0x18 / 0x18` |
+| compat（`adreno_compat_ioctl`） | `0xffffff8009ee2e68` | 4 | `0x14 / 0x10 / 0x18 / 0x10` |
+
+**最大 0x20（32 B）**，远小于该路径的 0x80 栈缓冲（`memset(sp+8, 0, 0x80)`）
+⇒ `min(cmd_size, entry_size) ≤ 0x20`，且有 0x80 的余量。
+
+> 方法学备注：表项的 `func` 指针在文件里是 **0**，由 `.rela.dyn` 的 `R_AARCH64_RELATIVE` 在启动时填充，
+> 因此静态读取看不到函数名——解析表时只能信 `size` 等内联字段，不能把 0 当作"空表项"。
+
+### 58.3 汇总
+
+| 维度 | 结果 |
+|---|---|
+| 拷贝点 | 14（CONST 3 / REG 11） |
+| 长度上界 | **14/14 有界**：min 钳位 8 处、同尺寸分配 1 处、定长 3 处、min(cmd,entry) 2 处 |
+| 运行期护栏 | 11/13 取样点有 `bl __check_object_size`；其余 2 个是 4 字节定长 |
+| 结论 | **本轮未发现可达的长度错配**；C2 的"长度维度"判定结束 |
+
+### 58.4 明确未覆盖（下一阶段的前提）
+
+1. **结构层面**：`gpuobj` 的 id→对象查找、`sparse_bind` 的索引区间、refcount 与 UAF 生命周期——
+   KGSL 历史缺陷主要集中在这里，**本轮的"无长度错配"完全不构成对它们的结论**。
+2. **并发**：多线程同时 ioctl 的状态机竞争未审。
+3. **可达域已有实测**：`artifacts_adb/k3_stage_b_round1.txt` 记录 `pid=27522 uid=2000`（shell）
+   `open /dev/kgsl-3d0 OK`，且 `DRAWCTXT_CREATE(0x12)` 成功 ⇒ KGSL 对 shell 域**确实可达**，
+   这是继续做结构层面的前提（也是本项目目前少数"shell 直达厂商驱动"的面之一）。
+
+### 58.5 设备终态
+
+纯离线，未上机；设备 `uptime` 连续、`/data/local/tmp` 为空。
