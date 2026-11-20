@@ -4322,3 +4322,403 @@ C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据�
 ### 60.7 设备终态
 
 临时 jar 已删（`/data/local/tmp` 为空）；未重启；未写 `persist`；未改配置。
+
+---
+
+## §61 v12-K1：KGSL 内存对象生命周期 —— 状态机 + 不变量表 + **首个释放门缺陷候选**（2026-11-20，纯离线）
+
+> 承接审核 v012 的 P0 建议：把研究主线从 GhostLock 移到 KGSL 对象生命周期。
+> 本轮交付审核要求的 **K1（对象状态图）**，并顺带产出 K2 的一部分（id 映射与释放门）。
+> **结论：K1 的所有权（引用配对）是干净的；但"销毁前提条件"不完整——存在一个可静态证明的释放门绕过（KO-1）。**
+> 全部证据来自本机 `firmware_F16/vmlinux.elf`（与 §57/§58 同源），零上机、零写入。
+
+### 61.1 方法与证据等级
+
+| 层 | 材料 | 用法 |
+|---|---|---|
+| L1 语义 | `src_ref/kgsl_4.9/kgsl.c`（厂商 4.9 分支参考） | 建立状态机与不变量**语义**；该副本早于 SPL 2022-04，只作语义参照，不作证据 |
+| L2 形态 | 本机 `vmlinux.elf` 逐函数反汇编 | **唯一证据来源**：每个断言都落到指令地址 |
+| L3 工具 | 新增 `tools/kgsl_lifecycle.py` | 取/放点普查、`pending_free` 访问点、idr 归属图，可离线复跑 |
+
+新增工具（本轮）：`python tools/kgsl_lifecycle.py [--pending|--fn SYM]`。
+它把"谁持有引用、谁释放、id 在哪里建立/撤销"变成可复算的调用点清单，避免下一轮再从源码推断。
+
+### 61.2 结构布局（本机实测，非源码推断）
+
+| 字段 | 偏移 | 证据 |
+|---|---|---|
+| `kref refcount` | `entry+0x00` | `find_id_flags` @`0x873bd6c`：`ldxr w12,[x20]` → `stlxr w9,[x20]` |
+| `memdesc` 起点 | `entry+0x08` | `sparse_bind_range` @`0x87407a4`：`add x26,x19,#8` 后作为 `p_memdesc` 存入 bind 节点 |
+| `memdesc.gpuaddr` | `entry+0x20` | `sparse_bind_range` @`0x8740790`：`ldr x8,[x19,#0x20]; cbz` ⇒ "有 gpuaddr 则拒绝绑定" |
+| `memdesc.flags` | `entry+0x50` | `find_id_flags` @`0x873bd60`：`ldr x8,[x20,#0x50]; bics xzr,x21,x8`（flags 子集匹配） |
+| `memdesc.cur_bindings` | `entry+0x74` | `sparse_bind_range` @`0x87408e4`/`0x87408f0` 读改写 |
+| `entry->priv` | `entry+0xa8` | `gpumem_free_entry` @`0x873d300`：`ldr x8,[x0,#0xa8]` 后锁 `priv+0x20` |
+| `entry->id` | `entry+0xa0` | `detach_process` @`0x873ae5c`：`str wzr,[x19,#0xa0]`（即 `entry->id = 0`） |
+| **`pending_free`** | **`entry+0xb0`** | `find_id_flags` @`0x873bd58`：`ldr w8,[x20,#0xb0]; cbnz ⇒ 拒绝`；`gpumem_free_entry` @`0x873d310`/`0x873d344` 读改写 |
+| `bind_lock` / `bind_tree` | `entry+0x120` / `entry+0x128` | `sparse_bind_range` @`0x8740820`/`0x8740854` |
+
+**这些偏移是本轮的"锚"**：后面所有判定只依赖这些被两处以上代码交叉使用的字段，不依赖结构体声明。
+注意 `id@0xa0` 与 `pending_free@0xb0` 相邻，按偏移做启发式统计时容易混淆——
+`tools/kgsl_lifecycle.py --pending` 里的 `[x8,#0xb0]`（`priv->stats[type]`）就是已知假阳性。
+
+### 61.3 legacy 分派表全解（新证据，可复算）
+
+表基址 `0xffffff800928c200`，**86 槽 × 16 B**，`kgsl_ioctl` @`0x874cfd4` 直接传入（`mov w4,#0x56`）。
+槽内 `[0:8]` 为**命令字本身**（`(cmd>>16)&0x3fff` 即表项声明尺寸），`[8:16]` 为 handler 指针，
+由 `.rela.dyn` 的 `R_AARCH64_RELATIVE` 填充（37 条重定位 ⇒ **37 个已注册 ioctl**）。
+
+与本轮相关的六个入口：
+
+| ioctl | nr | 命令字 | 声明 size | handler |
+|---|---|---|---|---|
+| `KGSL_GPUMEM_FREE_ID` | `0x35` | `0xc0080935` | 8 | `kgsl_ioctl_gpumem_free_id` |
+| `KGSL_GPUOBJ_FREE` | `0x46` | `0x40200946` | 32 | `kgsl_ioctl_gpuobj_free` |
+| `KGSL_SPARSE_PHYS_ALLOC` | `0x50` | `0xc0200950` | 32 | `kgsl_ioctl_sparse_phys_alloc` |
+| `KGSL_SPARSE_PHYS_FREE` | `0x51` | `0x40040951` | 4 | `kgsl_ioctl_sparse_phys_free` |
+| `KGSL_SPARSE_VIRT_ALLOC` | `0x52` | `0xc0280952` | 40 | `kgsl_ioctl_sparse_virt_alloc` |
+| `KGSL_SPARSE_BIND` | `0x54` | `0x40180954` | 24 | `kgsl_ioctl_sparse_bind` |
+
+> 方法学备注（更正 §58.2 的一条限制）：表项 handler 指针在文件里**并非恒为 0**，
+> 而是由 `.rela.dyn` 给出 `r_offset` + `r_addend`；本轮据此还原了全部 37 个 handler 名。
+> §58.2 读不到 adreno 表函数名，是因为那里读的是 `.data` 原始字节而未查重定位表——
+> **该限制可解除**，adreno 表同样可解（留给 §62 复核）。
+
+### 61.4 状态机（K1 交付物）
+
+```
+        create()                    attach_process()                 commit_process()
+[S0] ─────────────► [S1 已建] ───────────────────────► [S2 已挂载] ──────────────────► [S3 已登记]
+                    kref=2                    idr 占位(NULL)                   idr[id]=entry
+                  私有无引用                  id 已分配, priv 已设               kref=1（create 额外引用已 put）
+                                              gpuaddr 可能已分配
+                                                    │
+                                                    │ find_id*（持 mem_lock）
+                                                    │ 条件：!pending_free ∧ (flags & e.flags)==flags
+                                                    ▼
+                                             [S4 已取引用] ── put ──► 回到 S3
+                                                    │
+         free 路径：set_pend(0xb0) 成功才继续        │
+                                                    ▼
+[S3] ──set_pend──► [S5 待释放 pending_free=1] ──► put ──► kref==0 ──► [S6 销毁中]
+                     仍在 idr 中，但 find_id 一律拒绝                detach_process()
+                                                                     ├ idr_remove(id); id=0
+                                                                     ├ priv->stats 扣减
+                                                                     └ put_gpuaddr(自身 gpuaddr)
+                                                                   ──► sharedmem_free()
+                                                                     ├ memdesc->ops->free（页回收 @0x874e36c）
+                                                                     └ sg_free_table + kfree(sgt)
+                                                                   ──► kfree(entry)
+```
+
+三条并发语义（本轮只做静态确认，动态留 K3）：
+
+1. `set_pend` 是**唯一赢家**语义：`gpumem_free_entry` @`0x873d310` 读 `0xb0`、@`0x873d344` 写 1，
+   失败返回 `-EBUSY`（@`0x873d324` 的 `mov x0,#-0x10`）。
+2. `find_id_flags` 的 `pending_free` 检查与 `kref_get_unless_zero` **在同一把 `priv->mem_lock` 内**
+   （@`0x873bd14` 上锁 / @`0x873bdb8` 解锁）⇒ 不存在"检查通过后被并发置 pend"的窗口。
+3. `detach_process` 在 `priv->mem_lock` 内 `idr_remove` 并置 `id=0`，因此 id 复用只发生在对象彻底销毁之后，
+   **id→对象映射本身不产生别名**。
+
+### 61.5 不变量表（K1 的判定形式）
+
+| # | 不变量 | 语义来源 | 二进制核对 | 判定 |
+|---|---|---|---|---|
+| I1 | `idr_alloc(NULL)` 占位，`commit` 前 id 不可命中 | `attach_process` | `kgsl_mem_entry_attach_process` 内 `idr_alloc`，随后 `idr_replace` | ✅ 成立 |
+| I2 | 命中必须持 `mem_lock`、`!pending_free`、flags 子集匹配，且返回**带引用** | `find_id_flags` | `0x873bcf0`–`0x873bdc0` 全函数 | ✅ 成立 |
+| I3 | 释放先 `set_pend`，仅赢家继续；败者 `-EBUSY` | `gpumem_free_entry` | `0x873d2e8`–`0x873d348` | ✅ 成立 |
+| I4 | id 只在 `detach_process` 撤销，且置 `id=0` | `detach_process` | `0x873ae18` | ✅ 成立 |
+| I5 | `find*` 的每次成功返回，路径上恰有一次 `put` | 调用点配对 | `kgsl_lifecycle.py`：21 取 / 42 放；逐函数复核无失衡（`gpumem_get_info`/`sync_cache` 的 2:1 是 id/gpuaddr 二选一后汇合） | ✅ 成立（put 计数为**下界**，内联会折叠） |
+| **I6** | **`cur_bindings>0` 时，任何释放路径都必须拒绝** | 设计意图（`sparse_phys_free` 实现之） | **只有 `kgsl_ioctl_sparse_phys_free` 检查**：全 KGSL 面扫 `entry+0x74` 仅 3 处（bind 递增 / virt_alloc 清零 / phys_free 守卫） | ❌ **被违反 → KO-1** |
+| **I7** | `mmu_map_offset` 成功 ⇒ bind_tree 必有节点，否则必须回滚 | `_sparse_bind` | @`0x87407fc` map 成功 → 插树失败 @`0x87409e8` 直接 `kfree` 返回，**无 unmap** | ❌ 违反（可达性未证）→ C-2 |
+| **I8** | `cur_bindings` 增减与实际 unmap 字节严格对应 | `sparse_unbind_range` | @`0x8740b14`–`0x8740b24` 算式为 `size - v_off - offset`（应为 `size - (v_off - offset)`） | ⚠️ 异常 → C-3 |
+| I9 | 类型专属门只在该类型的专属 ioctl 内实现 | 结构观察 | 见 KO-1 | I6/I7 的结构性根因 |
+
+> I6 的表述刻意写成"任何释放路径"：它是一条**全称**不变量，而实现只在一个入口做了偏守护——
+> 这是本轮判定"生命周期层有真实缺口"的依据，而不是"猜可能有问题"。
+
+### 61.6 KO-1：通用释放路径绕过 sparse 绑定门（**静态成立，上机未验证**）
+
+**一句话**：`KGSL_SPARSE_PHYS_ALLOC` 出来的物理块一旦被 `KGSL_SPARSE_BIND` 绑进虚拟块，
+就可以用 `KGSL_GPUMEM_FREE_ID`（或 `KGSL_GPUOBJ_FREE`）**按 id 直接释放**，
+绕过 `KGSL_SPARSE_PHYS_FREE` 里唯一的 `cur_bindings != 0` 门。
+
+**证据链（五步，全部落到指令）**
+
+| # | 事实 | 证据 |
+|---|---|---|
+| 1 | `sparse_phys_free` 的守卫读 `entry+0x74`，非 0 则 `unset_pend` 并拒绝 | @`0x873fdfc` `ldr w8,[x19,#0x74]` → @`0x873fe14` `str wzr,[x19,#0xb0]` |
+| 2 | 该守卫**全 KGSL 唯一**；三条通用释放路径均不读 `0x74` | `gpumem_free_entry`/`gpumem_free_id`/`gpuobj_free`/`mem_entry_destroy`/`detach_process` 全函数扫描无命中 |
+| 3 | `GPUMEM_FREE_ID` 以 **flags=0** 查 id ⇒ 匹配任意类型（含 `SPARSE_PHYS`） | @`0x873d564` `mov x2,xzr`（第 3 参数） |
+| 4 | `GPUOBJ_FREE` 同构：`find_id(private,id)` ⇒ flags=0 | @`0x873d5ec` `mov x2,xzr` |
+| 5 | 命中后：`gpumem_free_entry` → `put` → `destroy` → `detach`（`gpuaddr==0` ⇒ `put_gpuaddr` 早退）→ `sharedmem_free`（`ops->free` 回收页 + `sg_free_table`） | @`0x873d608` `bl gpumem_free_entry`；`kgsl_mem_entry_destroy` @`0x873acc8`/`0x873ad0c`；`kgsl_sharedmem_free` @`0x874e36c` `blr x8` |
+
+**后果（静态推断，两级）**
+
+1. **悬空 IOMMU 映射**：phys 的物理页经 `mmu_map_offset` 已写进 virt 块的 PTE；
+   phys 被销毁后页回到 buddy，PTE 仍指向这些物理页 ⇒ GPU 侧仍可读写已释放页。
+   这正是 CVE-2023-33107 利用链中"dangling PTE"那一环，但**不需要整数溢出、不需要竞态**。
+2. **悬空指针**：virt 的 bind 节点里 `p_memdesc` 指向被 `kfree` 的 mem_entry；
+   之后对该区间 bind/unbind 会在 @`0x8740b58`（读 `cur_bindings`）、@`0x8740b6c`（读 `pagetable`）
+   解引用已释放内存。二级后果比一级更"可打"：目标是内核堆对象，而非仅 IOMMU 表项。
+
+**为什么以前没被发现**：项目此前的 KGSL 工作集中在 ① 长度维度（§57/§58）与
+② CVE-2023-33107 的 `set_svm_region` 整数溢出（命中即 `BUG()`）。
+KO-1 既不在长度维度、也不在 33107 的代码路径上——它是**类型门错位**，
+只有在"按 id 释放"与"按类型释放"两条路径并置时才显形。
+
+**推翻条件（先说清怎么打死它）**
+
+1. 若 `sparse_phys_alloc` 在本机不可用（KL/OEM 配置不支持稀疏），KO-1 降级为"不可达的静态缺陷"——
+   需上机 1 次 `SPARSE_PHYS_ALLOC` + `SPARSE_VIRT_ALLOC` 返回 0 才能定论；
+2. 若 `kgsl_sharedmem_free` 对 `SPARSE_PHYS` 的 memdesc 早退（不回收页），一级后果不成立——
+   本轮已排除：@`0x874e348` 的 `size==0` 早退对 sparse 不成立；@`0x874e36c` 的 `blr` 走 `ops->free`；
+3. 若 bind 时把 phys 转成"引用计数保护"，二级后果不成立——本轮反证是
+   `sparse_bind_range` 全程只 `get` 了 **virt** 条目（@`0x8740698` 一次 `find_id_flags`，
+   在 @`0x8740708`/@`0x8740a18` 两处 put 同一指针 `x19`），**phys 从未被引用计数保护**。
+
+**当前定级**：**KO-1 = 生命周期层候选，未上机验证**。不上机不得称"漏洞已确认"，也不得称"可利用"；
+按 §60.6 的纪律，动态验证需单独授权（会产生设备状态，且 bind 会让页进入 GPU 可见状态）。
+
+> **⚠️ §62 已上机判定：KO-1 关闭。** 本机 `device->flags & BIT(1)`（即 `KGSL_FLAG_SPARSE`）未置位，
+> 六个 sparse 入口全部返回 `ENOTSUPP(524)`，`SPARSE_PHYS` 对象无法创建 ⇒ 命中的是本节推翻条件 #1。
+> 本节内容保留为**静态分析记录**与"若将来遇到启用 sparse 的构建"的参考，不再作为本机研究优先级。
+
+### 61.7 两个次级候选（K2 待办，不进本轮判定）
+
+**C-2 孤儿映射（违反 I7）**：`sparse_bind_range` 的顺序是 `unmap → map → 插树`，
+插树失败（`-EADDRINUSE`，@`0x87409e8` `kfree` → @`0x87409f0` 解锁返回）时**不回滚已建立的映射**。
+后果与 KO-1 一级相同（映射在、记账无），但触发需要"unbind 之后仍有重叠节点"，
+即依赖 C-3 的算式异常或并发（K3）。**可达性未证，故不与 KO-1 同级。**
+
+**C-3 unbind 算式异常（违反 I8）**：`tmp_size = size - v_off - offset`
+（@`0x8740b14` `sub x10,x28,x8`；@`0x8740b18` `sub x10,x10,x22`；@`0x8740b24` `csel x24,x9,x10,hi`）。
+正确写法应为 `size - (v_off - offset)`。现写法在 `v_off + offset > size` 时无符号回绕成巨值，
+被 `min` 钳到 `node->size` ⇒ **整节点超范围解绑**；在 `v_off + offset < size` 时则**少解绑**。
+两个方向都让 bind 树记账与 MMU 实际状态错位，也是 C-2"制造重叠残留"的现实来源，
+因此两者应作为一组一起做 K2。
+
+### 61.8 对 K1 停止条件的回答（审核里程碑）
+
+审核给 K1 的停止条件是"所有对象销毁路径均有明确所有权"。本轮的回答要分两半：
+
+| 问题 | 回答 |
+|---|---|
+| 所有权（谁持有引用、谁负责 put）是否明确？ | **是**。I1–I5 在二进制上全部成立；21 个取引用点与 42 个释放点逐函数对齐，无"取了不还"的路径。**这一半可以关闭。** |
+| 销毁的**前提条件**是否完整？ | **否**。I6/I7/I8 三条新增不变量全部与实现不符，其中 I6 是**全称不变量被单点实现**，直接给出 KO-1。**这一半不能关闭，应作为 K2 第一项。** |
+
+⇒ 建议把 K1 的交付口径修正为"**所有权图 + 状态前提表**"两件：所有权图已交（61.4/61.5），
+状态前提表的第一行（bound ⇒ 不可销毁）已被证伪。这比"先做完整静态状态机、再谈动态验证"更省时间，且不需动设备。
+
+### 61.9 判定影响与下一步
+
+| 项 | 变化 |
+|---|---|
+| 四层 ROOT 判定 | **不变：NO-GO**（KO-1 未上机；即便成立，也只是内核原语的**前置**，不是提权终点） |
+| 研究主线 | 正式转为 KGSL 生命周期；GhostLock 冻结（接受 v012 建议） |
+| 新工具 | `tools/kgsl_lifecycle.py`（取/放普查、`pending_free` 访问点、idr 归属） |
+| 下一步（K2） | ① KO-1 上机最小验证（需授权：alloc phys/virt + bind + free-by-id，观察 panic 与 dmesg IOMMU fault）；② C-2/C-3 可达几何穷举（纯离线）；③ `sparse_phys_alloc` 的 `err_remove_idr` 路径（唯一未复核的 id 生命周期分支） |
+
+> **v12.1 更新**：① 已执行，结果是 **KO-1 关闭**（sparse 面整支 `ENOTSUPP`，见 §62）；② 随之作废（C-2/C-3 同属该子树）；
+> ③ 亦作废（`sparse_phys_alloc` 不可达）。K2 的可动面收窄为**非 sparse 对象**（§62.7）。
+
+### 61.10 设备终态
+
+本轮**零上机**：仅读取本机已有的 `vmlinux.elf`；未 `adb`、未写 `/data/local/tmp`、未改配置。
+设备 `uptime` 与 §60 连续（未重启），① 类地址与示踪数据仍有效。
+
+---
+
+## §62 v12-K2：KO-1 上机判定 —— **本机 sparse 面整体不可达（ENOTSUPP）**，KO-1 关闭（2026-11-20，只读 + 最小探针）
+
+> 用户授权上机，硬约束是**不得重启设备**。本轮因此只做"能判定而不触发"的实验，
+> 全程没有提交 GPU 命令、没有 mmap、没有构造悬空映射。
+> **结论：KO-1 在本机不可达——不是被门挡在某个分支，而是 `SPARSE_PHYS` 对象根本无法创建。**
+> 这命中的正是 §61.6 列出的**推翻条件 #1**。C-2 / C-3 同属 sparse 子树，一并不适用。
+
+### 62.1 安全边界（先定，后做）
+
+| # | 边界 | 理由 |
+|---|---|---|
+| 1 | 不提交 GPU 命令、不 mmap、不执行 IB | 悬空 PTE 只有被 GPU 实际访问才会出问题；不访问即不触发 |
+| 2 | 不构造非法用户指针做 EFAULT 型探测之外的写操作 | 复用 §59.3 已验证过的零副作用手法 |
+| 3 | 几何固定 1 页、offset=0 | 刻意避开 C-3 的算式异常区间 |
+| 4 | 每阶段独立进程 + 前后校验 `boot_id` 与 `uptime` | 任一阶段异常可定位，且能立刻确认"有没有重启" |
+
+### 62.2 探针
+
+`live_probe/kgsl_sparse_probe.c`（static aarch64 / musl，zig 0.17.1 交叉编译），五个阶段：
+
+| stage | 内容 | 副作用 |
+|---|---|---|
+| `prop` | 复刻 §59.3 的 `getproperty` EFAULT 判据 | 零 |
+| `matrix` | 命令字矩阵：已注册/未注册 × 不同 size | 零（仅一次 `syncsource_create`，随 fd 关闭回收） |
+| `sparse` | 六个 sparse 入口逐个最小调用 | 零（全部在分配前返回） |
+| `alloc` | sparse phys + virt 分配并正常释放 | 有（若门不存在） |
+| `guard` / `ko1` | 绑定后分别走专用门与通用门 | 有（**未执行**，见 62.4） |
+
+命令字取自 §61.3 的分派表解析结果，不依赖目标 libc 的 `_IOWR` 展开。
+
+### 62.3 一次必须记录的自我更正：errno 读错导致"假发现"
+
+第一版探针的 `show()` 写成 `strerror((int)-ret)`。`ioctl()` 失败时返回 **-1 并把错误码放进 `errno`**，
+所以 `-ret` 恒为 1，**所有失败都被打印成 `EPERM（Operation not permitted）`**。
+据此我一度判断"存在一个分派前的权限门"——**这是错的**。
+改成在 `show()` 内直接读 `errno` 后，真值立刻不同（`EINVAL` / `ENOTTY` / `ENOTSUPP`）。
+
+> 记这一条的理由：本轮唯一一次"看起来像新发现"的信号是工具 bug，不是目标行为。
+> 与 §5.2 的统计量错误、§47 的窗口错位同类——**先怀疑工具**。
+
+### 62.4 判定矩阵（真值表，可复算）
+
+设备：`PCGM00_11_F.16`，`boot_id=27520eec…`，`Seccomp: 0`，进程为 `uid=2000(shell)` / `u:r:shell:s0`。
+
+| 命令字 | 含义 | 实测 | 判读 |
+|---|---|---|---|
+| `0xc0180902`（type=8、非法指针） | `DEVICE_GETPROPERTY` | **EFAULT(14)** | 处理器**被到达**（与 §59.3 完全一致） |
+| `0xc0180902`（type=0） | 同上，走 default | **EINVAL(22)** | 与源码 `default:` 分支一致 |
+| `0xc0180940` / `0xc0200940` | `SYNCSOURCE_CREATE` | **0** | 分派与调用链正常 |
+| `0xc0180956` / `0x40180956` | **未注册** nr=0x56 | **ENOTTY(25)** | 分派层正常，不存在"未知命令一律拒绝" |
+| `0xc0200950` | `SPARSE_PHYS_ALLOC` | **ENOTSUPP(524)** | ← 关键 |
+| `0x40040951` | `SPARSE_PHYS_FREE` | **ENOTSUPP(524)** | |
+| `0xc0280952` | `SPARSE_VIRT_ALLOC` | **ENOTSUPP(524)** | |
+| `0x40040953` | `SPARSE_VIRT_FREE` | **ENOTSUPP(524)** | |
+| `0x40180954` | `SPARSE_BIND` | **ENOTSUPP(524)** | |
+| `0xc0380955` | `GPU_SPARSE_COMMAND` | **ENOTSUPP(524)** | |
+
+⇒ **六个 sparse 入口在同一处被同一门挡掉**，且都发生在任何分配/状态变更之前。
+
+### 62.5 门的定位：`device->flags` 的 BIT(1)
+
+六个 handler 的**首三条指令完全相同**（以 `sparse_phys_alloc` 为例）：
+
+```
+0xffffff800873f984  ldr   x8, [x0]        ; dev_priv->device
+0xffffff800873f988  ldrb  w8, [x8, #0x18] ; device->flags 的最低字节
+0xffffff800873f98c  tbnz  w8, #1, ...     ; BIT(1) 置位则继续
+0xffffff800873f990  mov   x0, #-0x20c     ; 否则 -ENOTSUPP(524)
+```
+
+`struct kgsl_device` 的前四个字段是 `dev/name/ver_major/ver_minor`，`flags` 正好落在 **0x18**，
+所以这是 `device->flags & BIT(1)`。本仓库的 4.9 源码副本只定义了
+`KGSL_FLAG_WAKE_ON_TOUCH = BIT(0)`（早于该门），而上游 msm-4.9 在 BIT(1) 上定义的就是 **`KGSL_FLAG_SPARSE`**。
+⇒ **本机没有启用 sparse 能力位**，六个入口自然全部返回 `ENOTSUPP`。
+
+同一门在全 KGSL 面的分布（扫 `mov #-0x20c`）：六个 sparse 入口各 1 处，
+外加 `kgsl_ioctl_gpuobj_import` 2 处（另一含义，非本轮范围）。
+
+### 62.6 对 KO-1 的结论
+
+| 项 | 判定 |
+|---|---|
+| KO-1（通用释放路径绕过 sparse 绑定门） | **不可达 → 关闭**。`SPARSE_PHYS` 对象在本机无法创建，谈不上"被绑定"，也谈不上"被释放" |
+| C-2（孤儿映射）/ C-3（unbind 算式） | 同属 sparse 子树，**一并不适用**，从 K2 待办中移除 |
+| 代码层缺陷 | 保留为**潜在缺陷（latent）**：在启用 sparse 的构建/设备上依然成立，但不构成本机研究优先级 |
+| 四层 ROOT 判定 | **不变：NO-GO** |
+
+> 这与本项目一贯的口径一致：**"静态成立的缺陷"不等于"可利用的漏洞"**。
+> §61.6 事先写下的推翻条件 #1 就是"本机不支持稀疏 ⇒ 降级为不可达的静态缺陷"，本轮命中的正是它。
+
+### 62.7 可达面重排（下一步真正能做的）
+
+sparse 子树整支关闭后，KGSL 在本机**仍可直达**的是非 sparse 面（§62.4 已实测分派正常）：
+
+| 面 | 命令字 | 状态 |
+|---|---|---|
+| `GPUOBJ_ALLOC` / `GPUOBJ_FREE` / `GPUOBJ_INFO` / `SET_INFO` | `0xc0300945` / `0x40200946` / `0xc0300947` / `0x4020094c` | 可调用（§61.5 所有权图已覆盖） |
+| `GPUMEM_ALLOC_ID` / `GPUMEM_FREE_ID` / `GET_INFO` | `0xc0300934` / `0xc0080935` / `0xc0480936` | 同上 |
+| `GPU_COMMAND` / `DRAWCTXT_CREATE` | `0xc040094a` / `0xc0080913` | 已实测可达（§58.4、§59.4） |
+| `MAP_USER_MEM` / `GPUOBJ_IMPORT` | `0xc0300915` / `0xc0200948` | 可达，但涉及 SVM 区间（33107 所在路径） |
+
+⇒ K2 的下一步应聚焦**非 sparse 对象的"释放前提"**：即"对象仍被 pagetable/context 引用时能否被释放"，
+用与 KO-1 相同的判据形式（全称不变量 vs 单点实现）去筛，而不是继续挖 sparse。
+
+### 62.8 设备终态
+
+| 项 | 值 |
+|---|---|
+| `boot_id` | `27520eec-0945-44db-930d-0c0fd61c1eeb`（**与开局一致，未重启**） |
+| `uptime` | 247305 s → 247557 s（+252 s，与墙钟一致，全程连续） |
+| `/data/local/tmp` | 探针已删，条目数 **0** |
+| 内核对象 | 全部 sparse 调用在分配前返回；`syncsource_create` 建立的对象随 fd 关闭回收 |
+| 写入 | 仅 `/data/local/tmp` 临时探针（已删）；未触 `persist`、未改配置、未重启 |
+
+---
+
+## §63 v12.2：非 sparse 释放前提 —— I4 上机证实 + 释放链自洽（2026-11-20，离线审计 + 判定型上机，`boot_id` 不变）
+
+> 承接 §62.7 的可达面重排。用户授权上机，硬约束仍为**不得重启**；本轮只做"能判定而不触发悬空映射"的实验。
+> **结论：非 sparse 对象的所有权图与释放链在本机自洽——I4（id 撤销）上机证实，未发现 KO-1 式单点缺门。**
+> 至此 §61.8 的"销毁前提"一半，在非 sparse 面上由"未审"推进到"已审且成立（在本机可达面内）"。
+
+### 63.1 安全边界（继承 §62.1，逐条遵守）
+
+| # | 边界 | 本轮落实 |
+|---|---|---|
+| 1 | 不提交 GPU 命令、不 mmap、不执行 IB | `life` 阶段只做 `GPUOBJ_ALLOC`(4096 B, flags=0) + `FREE`，全程无 mmap、无 cmdstream |
+| 2 | 不构造非法用户指针做 EFAULT 型写 | `param` 阶段的 `priv` 指针均指向合法栈对象，仅 id/type/fd 取非法值 |
+| 3 | 几何最小 | alloc 固定 1 页 (4096)，无 offset/bind 几何 |
+| 4 | 每阶段独立进程 + 前后校验 `boot_id`/`uptime` | `param`/`life` 分两次执行，每次前后读数，全程连续 |
+
+### 63.2 离线审计：释放链自洽性（本机 `vmlinux.elf`，零上机）
+
+把 §61.5 的 I1–I5 沿用到非 sparse 面，新增三条针对性检查，**全部成立**：
+
+| # | 全称不变量 | 本机二进制核对 | 判定 |
+|---|---|---|---|
+| I10 | 立即释放（`gpumem_free_entry`）以 `set_pend`(0xb0) 为唯一赢家门 | `0x873d310` 读/`0x873d344` 写 1，失败 `-EBUSY`(`0x873d324`)；`gpuobj_free` 立即分支 `0x873d608` 汇入同一函数 | ✅ |
+| I11 | 释放必先撤销 id + unmap gpuaddr，且 unmap 幂等 | `detach_process` @`0x873ae4c` `idr_remove`、`0x873ae5c` `id=0`、`0x873ae88` put_gpuaddr；`kgsl_mmu_put_gpuaddr` @`0x8756d84` `str xzr,[x19]` 清零 gpuaddr，二次调用 @`0x8756d24` 早退 | ✅ |
+| I12 | 延迟释放（timestamp/fence）与立即释放共享同一 `pending_free`，引用配对 | `gpumem_free_entry_on_timestamp` @`0x873dbe4` set/`0x873dce8` unset；`gpuobj_free` fence 分支 @`0x873d718` set、失败 @`0x873d914`/`0x873d934` unset；回调 `_deferred_put` @`0x8741ce0` 经 `container_of`(work@0xf8) 做 `kref_dec` | ✅ |
+
+**三条关键排除（避免把正常设计误判为缺陷）**：
+
+1. **`destroy` 里 `put_gpuaddr` 被调用两次不是 double-free**：`destroy`→`detach_process`(@`0x873ae88`) 与 `sharedmem_free`(@`0x874e358`) 各一次，但 `kgsl_mmu_put_gpuaddr` 首次即清零 `memdesc.gpuaddr`(`0x8756d84`)，第二次因 `gpuaddr==0` 早退——**幂等**。
+2. **命令提交路径不 get entry 引用不是缺陷**：`kgsl_drawobj_cmd_add_memlist`/`add_ibdesc` 只 `copy_from_user`+`kmem_cache_alloc`，命令用 gpuaddr 走 pagetable；安全性由"释放时 unmap gpuaddr"(I11) 保证，而非 kref——与设计一致。
+3. **`gpuobj_free` 四分支（立即/timestamp/fence/context）不是"单点门错位"**：KO-1 的根因是"类型专属门只在专属入口实现"，而这里四条分支汇聚到同一个 `set_pend`+`destroy` 链，无绕过。
+
+### 63.3 上机判定：参数门 + I4 实证
+
+探针 `live_probe/kgsl_life_probe.c`（static aarch64/musl，仓库内 zig 0.13.0 交叉编译），两阶段：
+
+**stage=param（零副作用，验证分支解析）** —— 对不存在 id (`0xdeadbeef`) 跑四条分支：
+
+| 调用 | 实测 | 判读 |
+|---|---|---|
+| `GPUOBJ_FREE` flags=0 | **EINVAL(22)** | 立即分支 → `find_id_flags` 失败，无异常 deref |
+| `GPUOBJ_FREE` on_timestamp(type=1) | **EINVAL(22)** | copy event → context 查失败 |
+| `GPUOBJ_FREE` on_fence(type=2, fd=-1) | **EINVAL(22)** | set_pend 后 fd<0 → unset 并返回 |
+| `GPUOBJ_FREE` type=3（非法） | **EINVAL(22)** | `default:` 分支 |
+| `GPUMEM_FREE_ID` bad_id | **EINVAL(22)** | 同上 |
+
+5/5 符合预期 ⇒ 63.2 的分支解读正确，"全 EINVAL"不是"打不进去"（对照 §62.4 的判据形式）。
+
+**stage=life（判定型核心，直接证伪 I4）**：
+
+| 调用 | 实测 | 判读 |
+|---|---|---|
+| `GPUOBJ_ALLOC`(4096, flags=0) | `0`，`id=1`，`mmapsize=4096` | 对象真实创建 |
+| `GPUOBJ_FREE`(flags=0) #1 | `0` | 正常释放 |
+| `GPUOBJ_FREE` 同 id #2 | **EINVAL(22)** | **I4 成立**：id 已撤销，无 double-free |
+| `GPUMEM_FREE_ID` 同 id | **EINVAL(22)** | 两条通用路径共享 idr，交叉验证一致 |
+
+> 若第二次 FREE 返回 0，则 I4 被推翻（id 未撤销 ⇒ double-free 候选）。实测 EINVAL，命题未被证伪。
+
+### 63.4 结论与判定影响
+
+| 项 | 判定 |
+|---|---|
+| K2「索引与生命周期」里程碑 | 在本机非 sparse 可达面内**达成**：I4 上机证实，I10–I12 静态成立，无可达的过期引用/错误状态转换（审核 v012 停止条件） |
+| K3「并发一致性」 | **仍未做动态测试**；63.2 的 set_pend 原子性只做静态确认，并发竞态（如 fence signal 与 free 竞态）未测，且测并发需制造悬空窗口 → 超出"不重启"边界，**登记不作** |
+| 代码层 latent 缺陷 | KO-1（sparse）仍为 latent（§62）；非 sparse 面本轮未发现新候选 |
+| 四层 ROOT 判定 | **不变：NO-GO**。KGSL 生命周期自洽不等于提权原语；无 UAF/过期引用可用 |
+| 主线后续 | 非 sparse 释放前提已收口，KGSL 生命周期主线**阶段性关闭**；除非出现新可达面（如启用 sparse 的同 SPL 机型、K3 并发新证据），不再投入 |
+
+### 63.5 设备终态
+
+| 项 | 值 |
+|---|---|
+| `boot_id` | `27520eec-0945-44db-930d-0c0fd61c1eeb`（**全程一致，未重启**） |
+| `uptime` | 248129 s → 248153 s（+24 s，与墙钟一致，连续） |
+| `/data/local/tmp` | `kgsl_life_probe` 已删，条目数 **0** |
+| 内核日志 | `dmesg` 无 KGSL/gpu fault/panic/BUG/Call trace |
+| 内核对象 | `life` 阶段对象已正常 free（id 撤销、gpuaddr unmap）；无残留 |
+| 写入 | 仅 `/data/local/tmp` 临时探针（已删）；未触 `persist`、未改配置、未提交 GPU 命令、未 mmap、未重启 |

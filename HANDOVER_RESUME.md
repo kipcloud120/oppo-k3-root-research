@@ -1,54 +1,56 @@
-# 接手摘要（v11.6：**推断已实测 + 基线/能力集逐项复核**，2026-11-20）
+# 接手摘要（v12.2：**非 sparse 释放链自洽，I4（id 撤销）上机证实；K2 里程碑在本机可达面内达成，KGSL 生命周期主线阶段性关闭**，2026-11-20）
 
-> 一页式入口。完整证据：`HANDOVER.md` §58（C2 长度维度闭合）+ §57（C2 首轮）+ §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
-> §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
+> 一页式入口。完整证据：`HANDOVER.md` §63（非 sparse 释放前提 + I4 上机，最新）+ §62（sparse 关判定）+ §61（v12-K1 生命周期）+ §60 + §58 + §57 + §56 + §55 + §53。
+> 分层判定 `CLOSURE.md`；审阅入口 `README.md`。
 >
-> **v11.1 三句话**：
-> ① **③ 从"缺 oracle 未知"变成"已实测否证"**：逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、
->   perf、BPF、tracefs、debugfs、`/sys/module/*/sections`、hung_task），**唯一含 sp 的输出是 oops 寄存器
->   dump，而 `panic_on_oops` 推断为 1（未实测）** ⇒ 触发即重启，不构成 oracle。按审核 v011 的停止标准，③ 子方向关闭。
-> ② **Track C 的物料墙已拆**：解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 不在内核镜像内
->   （`hdd_*`/`qdf_*` 符号 0 个；`cfg80211` 907 个在镜像内属上游）。已用 `adb exec-out` 流式取回
->   `qca_cld3_wlan.ko`（`adb pull` 被 sync 服务的 SELinux 拒）：14,601,726 B、`vermagic=4.9.227-perf+`、
->   **符号表未剥离**，落在 `vendor_ko/`（已 gitignore）。调用链已钉到 `request_firmware`。
-> ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已实测否证）。
+> **v12.2 三句话**：
+> ① **非 sparse 释放链自洽**：新增 I10–I12 三条全称不变量在本机 `vmlinux.elf` 全部成立——
+>   `set_pend` 唯一赢家门、释放必 `idr_remove`+幂等 unmap gpuaddr、四释放分支共享 `pending_free` 且引用配对。
+>   排除了三处"看似缺陷"：`put_gpuaddr` 双调用是幂等、命令不 get entry 引用是设计、四分支不是单点门错位（§63.2）。
+> ② **I4 上机证实（判定型）**：`GPUOBJ_ALLOC`(4096)→FREE→再 FREE 同 id，第二次返回 `EINVAL(22)` ⇒
+>   id 已撤销、无 double-free；`GPUMEM_FREE_ID` 交叉验证一致。`param` 阶段五分支全 EINVAL，证明分支解析正确。
+>   全程未提交 GPU 命令、未 mmap、未构造悬空映射；`boot_id` 不变、`uptime` 连续 +24 s（§63.3/§63.5）。
+> ③ **K2 达成、主线阶段性关闭**：K2「索引与生命周期」停止条件（无可达过期引用/错误状态转换）在本机非 sparse 面满足；
+>   K3 并发动态测试因须制造悬空窗口、超出"不重启"边界而**登记不作**。四层判定不变：NO-GO。
+>   除非出现新可达面（启用 sparse 的同 SPL 机型 / K3 并发新证据），不再投入 KGSL 生命周期。
 
-## 0. 本轮送审要点（v11.1–v11.6，对应 `HANDOVER.md` §55–§60）
+## 0. 本轮送审要点（v12.2，对应 `HANDOVER.md` §63）
 
-**三个负结果**
+**一个正面结果（K2 达成）+ 三处"看似缺陷"排除**
 
 | # | 结论 | 证据等级 |
 |---|---|---|
-| 1 | ③ 类（W 线程栈基址）**无可达 oracle** | 16 接口逐项枚举（§53）+ 本机实测（§55.1：`kstkesp/kstkeip=0`、`/proc/self/stack` 被 SELinux 拒） |
-| 2 | Track C1（WLAN 配置解析）**无可达输入** | `/vendor` dm-verity `ro` + 驱动 `fwpath` 为空（§56.1，只读实测） |
-| 3 | Track C2（KGSL）**长度维度 14/14 有界** | 逐点反汇编 + 分派表静态解析（§57/§58） |
+| 1 | **I4（id 撤销）上机证实**：alloc→FREE→再 FREE 同 id，第二次 `EINVAL(22)`；`GPUMEM_FREE_ID` 交叉验证一致 ⇒ 无 double-free | 真机实测（`boot_id` 不变） |
+| 2 | **非 sparse 释放链自洽**：I10（set_pend 唯一赢家）/ I11（id 撤销 + 幂等 unmap gpuaddr）/ I12（四分支共享 pending_free、引用配对）静态全成立 | 本机 `vmlinux.elf` 逐指令 |
+| 3 | **三处排除**：`put_gpuaddr` 双调用幂等、命令不 get entry 引用是设计、四释放分支非单点门错位 | 反汇编（§63.2） |
 
-**三处推断的上机实测结论（v11.5，见 `HANDOVER.md` §59）**
+**判定矩阵（可复算，§63.3）**
 
-| 推断 | 实测结果 | 处置 |
+| 命令 | 实测 | 作用 |
 |---|---|---|
-| `panic_on_oops` 推断为 1 | shell 与 `oplus_wifi_service`（uid 0）**均被 SELinux 拒**（`proc_panic` 标签，AVC 原文见 §59.1） | 改写为"**本机不可观测**"，结论不再依赖该值 |
-| `request_firmware` 回落 `/vendor/firmware` | 四条独立证据：`fwpath` 读成功且为空；模块含 `wlan/qca_cld` 字面；文件只存在于 `/vendor/firmware/wlan/qca_cld/`；`/system/etc/firmware` 无同名项 | **证实**（仍未直接观测 syscall 入参） |
-| KGSL `size` 字段语义 | 差分测试：cmd size 取 0x17/0x19/0x20（表项 0x18）**均进入 handler**（`EFAULT`），nr 不存在才 `ENOTTY` | **推翻我方判读**：实为 `min(entry,cmd)`，非"严格相等"；§58.1 已加更正块 |
+| `GPUOBJ_FREE` flags=0 / on_timestamp / on_fence / bad_type（bad id） | 全 `EINVAL(22)` | 四分支解析正确、无异常 deref |
+| `GPUOBJ_ALLOC`(4096) | `0`, id=1 | 对象真实创建 |
+| `GPUOBJ_FREE` #1 / #2 同 id | `0` / **`EINVAL(22)`** | **I4 成立，无 double-free** |
+| `GPUMEM_FREE_ID` 同 id | `EINVAL(22)` | 两条通用路径共享 idr |
 
-**v11.6 补测（见 §60）**：基线未变（内核 4.9.227 / SPL 2022-04 / verity enforcing / 未重启）；
-`CapEff=CapBnd=0x13000` 实测（`/proc/self/status` 中五处同值）⇒ **无 CAP_SYS_ADMIN/SYSLOG**；
-Track A 逐项复核：`kallsyms` SELinux 拒、`/proc/self/stack` 在 uid-0 **域可读但为空**（shell 域拒）、
-`vmallocinfo`/`timer_list`/`sections` 无输出且无 AVC（EPERM/清零，原因未细分）；
-C1 补充：vendor ini **12,592 B** vs persist ini **21,663 B**，**两者不是同一文件**，
-进一步确认"可写副本不进解析器"。
+**明确未覆盖（不要外推）**
 
-**明确未覆盖（不要外推为"已否证"）**
+- **K3 并发动态测试未做**：set_pend 原子性只静态确认；测竞态须制造悬空窗口 → 超出"不重启"边界，登记不作。
+- KO-1（sparse）代码层缺陷仍为 latent（本机不可达，§62）；非 sparse 面本轮未发现新候选。
+- 其余 vendor `.ko`（41 个模块只取回 `qca_cld3_wlan.ko`）。
 
-- KGSL 结构层面：`gpuobj` id→对象生命周期、`sparse_bind` 索引区间、refcount/UAF、并发竞争。
-- `sscanf`/item-handler 层（C1）：因无输入路径，未审。
-- 其余 vendor `.ko`（41 个模块中只取回了 `qca_cld3_wlan.ko`）。
+**v12.1 送审要点（历史，§62）**
 
-**建议审核回答的三个问题**
+| # | 结论 | 证据等级 |
+|---|---|---|
+| 1 | KO-1 不可达 → 关闭：六个 sparse 入口同一门 `ENOTSUPP(524)` | 真机实测 |
+| 2 | 门定位：`kgsl_device::flags` BIT(1) = `KGSL_FLAG_SPARSE` 未置位 | 六 handler 首三条指令一致 |
+| 3 | 工具更正：`strerror(-ret)` 把失败全打成 `EPERM` | §62.3 |
 
-1. ③ 是否还存在"非 oops、非 perf、非 futex"的栈地址来源（尤其 vendor 驱动 debugfs 类接口）？
-2. C1 的"无可达输入"是否成立？若认为不成立，请指出可写副本进入 `request_firmware` 的具体机制。
-3. C2 的结构层面是否值得投入？若值得，建议先切哪个子目标（我方倾向 `gpuobj_free` 的 id 复用窗口）。
+**建议审核回答的问题（更新）**
+
+1. 本轮已回答 v12.1 的第 2 问：非 sparse 面**不存在**对称的"释放前提缺失"（I10–I12 成立 + I4 上机证实）。
+2. 仍未回答：K3 并发一致性（fence signal 与 free 竞态）——但受"不重启"硬约束，本环境无法安全测试，须另择条件。
 
 ---
 
@@ -59,60 +61,54 @@ C1 补充：vendor ini **12,592 B** vs persist ini **21,663 B**，**两者不是
 | Wi-Fi 域内 Root UID 命令执行 | **已达成**（2026-11-18，§23） |
 | 可用 root（脱离 SELinux 域） | **未达成**（§24 / §32） |
 | 持久 ROOT | **未达成**，按约定不做持久化写入 |
-| **GhostLock 地址缺口** | ① **闭合**（本次开机，§48/§49）；② **未闭合**（§50 时间流否证）；③ **已枚举否证**（§53，16 接口全查） |
+| GhostLock 地址缺口 | ① **闭合**（本次开机）；② **未闭合**（§50 时间流否证）；③ **已审接口范围内无可用 oracle**（§53/§60）。**v12 起冻结** |
+| KGSL 生命周期（主线） | 所有权 **成立**（I1–I5，§61.5）；**KO-1 本机不可达已关闭（§62）**；**非 sparse 释放链自洽（I10–I12）、I4 上机证实（§63）** ⇒ K2 里程碑在本机可达面内达成，主线阶段性关闭；K3 并发登记不作 |
 
-## 2. v11 本轮做了什么（2026-11-19，**纯离线，零上机**）
+## 2. v12 三轮做了什么
 
-| 节 | 内容 | 结果 |
-|---|---|---|
-| §53.3 | 16 个接口逐项判定：吐出什么 / 是否含栈地址 / 门 / 证据等级 | 无非 oops 的 sp 来源 |
-| §53.4 | 两项 5 秒只读复核（`/proc/self/stat` 字段 28–30；`/proc/self/stack`） | **待授权** |
-| §54.1 | WLAN 主机驱动是否在镜像内 | **不在**（0 个 `hdd_*`/`qdf_*`）⇒ 需 `.ko` 物料 |
-| §54.2–54.3 | 镜像内可达厂商面 + Track C 排序（C1 WLAN .ko / C2 KGSL ioctl / C3 其余 .ko） | C2 可立即离线开工 |
-| §51.4 R2 | DCI 非 apps 入口 | remote 侧门已确认（`len<0x2202`、`len+5 ≤ 剩余`）；transaction 侧为驱动自建帧 |
-| §55 | **上机只读取证**（设备在环，零写入） | `kstkesp/kstkeip=0`、`/proc/self/stack` 被 SELinux 拒 ⇒ ③ 实测否证 |
-| §55 | **`qca_cld3_wlan.ko` 已取回**（14.6 MB，未剥离符号） | `hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request_firmware` |
-| §56.1 | **C1 可达性判定**（只读实测） | `/vendor` 为 dm-verity **ro**、`fwpath` 为空 ⇒ 驱动只读 vendor 副本，**可写 persist 副本不进入解析器** |
-| §56.3 | `cfg_parse` 形态核对 | 27 处拷贝全为 `strlcpy`（dst = 结构体固定偏移）；模块**未导入**无界 `strcpy` |
-| §56.4 | **C2 KGSL 首扫**（新工具 `tools/kgsl_ioctl_scan.py`） | 54 入口 / 14 拷贝点（CONST 3 / REG 11） |
-| §57 | **C2 首轮判读** | 6/8 REG 由「min 钳位」或「同尺寸分配」闭合；11/13 点带 `__check_object_size` |
-| §58 | **C2 长度维度闭合** | 14/14 有界：`copy_in/out` = `min(_IOC_SIZE(cmd), 表项 size)`，adreno 表最大 0x20；`gpuobj_import` 第 2 点夹到 4 |
+| 轮 | 日期 | 性质 | 结果 |
+|---|---|---|---|
+| §61（v12-K1） | 2026-11-20 上午 | 纯离线 | 六态状态机 + 不变量 I1–I9；I1–I5 成立、I6 被违反（KO-1）；legacy 分派表全解（86 槽/37 入口） |
+| §62（v12-K2） | 2026-11-20 上午 | 上机（判定型） | KO-1 **关闭**：六个 sparse 入口 `ENOTSUPP`；`boot_id` 不变、`uptime` 连续；探针已删 |
+| §63（v12.2） | 2026-11-20 上午 | 离线 + 上机（判定型） | 非 sparse 释放链自洽（I10–I12），I4 上机证实（再 FREE = EINVAL，无 double-free）；K2 达成、主线阶段性关闭；`boot_id` 不变、探针已删 |
 
-## 3. 下一步（C1 已降级，C2 为主）
+## 3. 下一步（v12.2 收口）
 
-1. **[纯离线 · 主线]** C2 结构层面：`gpuobj` 的 id→对象查找与生命周期、`sparse_bind` 的索引区间校验、
-   refcount/UAF。KGSL 历史缺陷集中于此；长度维度已闭合（§58），不再重复。
-   可达性已实测：shell（uid 2000）可 open `/dev/kgsl-3d0` 且 `DRAWCTXT_CREATE` 成功。
-2. **[纯离线 · 低优先]** C1 的 `sscanf %s` 面：仅在有"可达输入路径"新证据后才值得做
-   （当前 `/vendor` 只读、`fwpath` 空 ⇒ 无可达输入）。
-3. **[登记不作]** 重载 `wlan` 模块并覆盖 `fwpath` —— 会拆掉 Wi-Fi（唯一 root 通道），且重启作废 ① 类地址。
-4. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**。
+1. **[主线阶段性关闭]** KGSL 生命周期在本机非 sparse 可达面已收口（K2 达成）；仅在出现新可达面时重开：启用 sparse 的同 SPL 机型、或 K3 并发新证据。
+2. **[登记不作]** K3 并发动态测试（须制造悬空窗口，超"不重启"边界）；sparse 子树（KO-1/C-2/C-3，本机不可达）；GhostLock ②/③；C1 的 `sscanf` 面；重载 `wlan`。
+3. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**；建议关闭 OTA（SPL/内核变化会使全部偏移与判据作废）。
 
 ## 4. 工具与物料入口
 
 ```bash
-# —— Track A：接口语义核对（纯离线）——
-python tools/kfn.py --list "stack"            # 栈相关符号
-python tools/kfn.py proc_pid_stack            # 输出格式（[<%pK>] %pB）
-python tools/kfn.py proc_pid_wchan            # %s（lookup_symbol_name）
-python -c "d=open('firmware_F16/kernel.decompressed','rb').read(); print(d.count(b'[<%pK>] %pB'))"
+# —— KGSL 生命周期（纯离线）——
+python tools/kgsl_lifecycle.py                # 取/放点普查 + 机械可疑项
+python tools/kgsl_lifecycle.py --pending      # pending_free(entry+0xb0) 访问点
+python tools/kgsl_lifecycle.py --fn sparse_bind_range
 
-# —— Track C：厂商面 ——
-grep -cE "hdd_|qdf_" firmware_F16/kallsyms_out.txt      # 0 ⇒ qcacld 不在镜像
-grep -c "cfg80211" firmware_F16/kallsyms_out.txt        # 907 ⇒ 上游无线栈在镜像内
+# —— 上机探针（判定型）——
+zig cc -target aarch64-linux-musl -O2 -static -o live_probe/kgsl_sparse_probe live_probe/kgsl_sparse_probe.c
+adb push live_probe/kgsl_sparse_probe /data/local/tmp/
+adb shell '/data/local/tmp/kgsl_sparse_probe matrix'   # 分派层真值表
+adb shell '/data/local/tmp/kgsl_sparse_probe sparse'   # 六个 sparse 入口（本机应全 524）
 
-# —— 唯一性审计（v10.1，纯离线）——
-python tools/m2_tracer_analysis.py --prefix ks_tracer_run1_ \
-    --meta live_probe/ks_tracer_meta_run1.txt \
-    --out live_probe/ks_m2_tracer_summary_run1_v101.txt --jobs 16
-python tools/m2_unique_globals.py --auto
+# —— 非 sparse 释放前提（§63，判定型）——
+# 注意 Git Bash 下需 export MSYS_NO_PATHCONV=1，否则 /data/local/tmp 被改成 Windows 路径
+ZIG=".build/zig-windows-x86_64-0.13.0/zig.exe"
+"$ZIG" cc -target aarch64-linux-musl -O2 -static -o live_probe/kgsl_life_probe live_probe/kgsl_life_probe.c
+adb push live_probe/kgsl_life_probe /data/local/tmp/
+adb shell /data/local/tmp/kgsl_life_probe param   # 四分支参数门（应全 EINVAL，零副作用）
+adb shell /data/local/tmp/kgsl_life_probe life    # alloc→FREE→再 FREE（第二次应 EINVAL = I4 成立）
+
+# —— C2 长度维度 / Track A ——
+python tools/kgsl_ioctl_scan.py --detail
+python tools/kfn.py proc_pid_stack
 ```
 
 ## 5. 运营约定
 
-- 设备 `PCGM00_11_F.16`（SDM710，6 GB，DRAM phys 从 2 GB 起，possible 0-7 ⇒ futex_hashsize=2048），
-  未刷写/解锁/改分区。**mm 地址随开机变化**：重启后 ① 类需重扫、示踪数据作废。
-- 本轮 v11 **零上机**；`/data/local/tmp` 已清空。
-- 只读拉取 `.ko` 不写设备，但仍属设备操作，须先获授权；`persist/wlan` 写入永久禁止（跨重启持久化）。
+- 设备 `PCGM00_11_F.16`（SDM710，6 GB，futex_hashsize=2048），未刷写/解锁/改分区；**mm 地址随开机变化**。
+- 上机授权已获得（2026-11-20），但**硬约束：不得重启**。任何可能 panic 的动作（GPU 命令提交、悬空映射访问）都不在授权含义内。
+- 只读拉取 `.ko` 属设备操作；`persist/wlan` 写入永久禁止。
 - 建议关闭 OTA：SPL/内核变化会使全部偏移与判据作废。
-- 新对话从本文件开始 → `HANDOVER.md` §53 → §54 → §52 → §51 → §50 → §49 → §48。
+- 新对话从本文件开始 → `HANDOVER.md` §62 → §61 → §60 → §58 → §53。

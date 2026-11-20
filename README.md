@@ -16,7 +16,13 @@
 >
 > **v10.1 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §51/§52，纯离线、零上机）**：响应外部审核 v010。① **唯一性升级为脚本断言**——9/9 个示踪的满命中候选数 `n_full`=1、**次高分恒为 3**（噪声地板），最优/次优相差 ≥10 个约束；两个原在 1 GB 邻域出解者已补扫 16 GB 复核，同为全局唯一（`tools/m2_unique_globals.py`）。② **`/dev/diag` DCI 解析子树静态否证**——三条回传路径均有"声明长度⇄实收长度"门 + 缓冲容量二次校验，子树内无 `copy_to_user`；余量 R1–R3。③ 探针补记 dummy 实际成功数/errno 与 `posttracer` slabinfo（待上机验证）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
 >
-> **v11 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §53/§54，纯离线、零上机）**：响应审核 v011。① **③ 类从"缺 oracle"变为"已枚举否证"**——逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、perf、BPF、tracefs、debugfs、`/sys/module/*/sections`、hung_task），唯一含 sp 的输出是 oops 寄存器 dump，而 `panic_on_oops` 按 Android 默认推断为 1（本机不可读）⇒ 不构成 oracle。② **Track C 撞到物料墙**——解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 不在镜像内（`hdd_*`/`qdf_*` 符号 0 个），需先只读拉取 `qca_cld3_wlan.ko`。③ 待授权两项 5 秒只读复核（`/proc/self/stat` 28–30 字段、`/proc/self/stack`）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
+> **v11 增补（2026-11-19，见 [`HANDOVER.md`](HANDOVER.md) §53/§54，纯离线、零上机）**：响应审核 v011。① **③ 类改为"已审接口范围内无可用 oracle"**——逐项审完 16 条可达接口（`/proc/*`、`dmesg`、`sysrq`、perf、BPF、tracefs、debugfs、`/sys/module/*/sections`、hung_task），唯一含 sp 的输出是 oops 寄存器 dump，而 `panic_on_oops` **本机不可观测**（两个可用域均被 SELinux 拒，§59.1）⇒ 不构成 oracle；范围限制见 §60.3。② **Track C 撞到物料墙**——解析 `WCNSS_qcom_cfg.ini` 的 qcacld-3.0 不在镜像内（`hdd_*`/`qdf_*` 符号 0 个），需先只读拉取 `qca_cld3_wlan.ko`（已于 §55 取回，14.6 MB 未剥离）。**四层判定不变：可用 root / 持久 ROOT 仍 NO-GO。**
+>
+> **v12 增补（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §61，纯离线、零上机）**：响应审核 v012。① **研究主线正式从 GhostLock 转向 KGSL 内存对象生命周期**，GhostLock ②/③ 冻结。② **K1「所有权」一半关闭**：不变量 I1–I5 在本机二进制上全部成立（取引用需持锁且拒绝 `pending_free`、释放有唯一赢家、id 只在 detach 撤销、取/放配对 21:42 逐函数对齐）。③ **K1「销毁前提」一半被证伪——KO-1**：`SPARSE_PHYS` 的"有绑定则不可释放"门**只实现在 `SPARSE_PHYS_FREE` 一个入口**，而 `GPUMEM_FREE_ID`（`0x873d564`）与 `GPUOBJ_FREE`（`0x873d5ec`）都以 `flags=0` 查 id ⇒ 可释放仍被绑定的物理块，留下**悬空 IOMMU 映射**与**悬空 `p_memdesc`**。**静态成立。**（→ **§62 上机判定：本机 sparse 面整支 `ENOTSUPP`，KO-1 已关闭**）④ 附：legacy 分派表全解（86 槽 / 37 入口 / 命令字 + handler），解除 §58.2 的"表项指针恒为 0"限制。**四层判定不变：NO-GO。**
+
+> **v12.1 上机判定（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §62，只读 + 最小探针）**：**KO-1 关闭**。本机 `kgsl_device::flags` 的 BIT(1)（上游即 `KGSL_FLAG_SPARSE`）未置位，六个 sparse 入口（phys/virt alloc/free、bind、gpu_sparse_command）**全部返回 `ENOTSUPP(524)`**，且都发生在任何分配之前 ⇒ `SPARSE_PHYS` 对象无法创建，KO-1 与 C-2/C-3 一并不适用，仅保留为潜在缺陷（latent）。控制项齐备：`getproperty`(type=8/非法指针)=`EFAULT`、`(type=0)`=`EINVAL`、`syncsource_create`=0、未注册 nr=`ENOTTY`，证明分派层与处理器到达性正常，负结果不是"打不进去"造成的。同轮更正一次工具层误判（`strerror(-ret)` 把所有失败打成 `EPERM`，§62.3）。**`boot_id` 全程不变、`uptime` 连续、探针已删；四层判定不变：NO-GO。**
+
+> **v12.2 非 sparse 释放前提（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §63，离线 + 判定型上机）**：承接 §62.7 的可达面重排。**非 sparse 释放链自洽**：新增 I10–I12 三条全称不变量在本机二进制全部成立（`set_pend` 唯一赢家、释放必 `idr_remove`+幂等 unmap gpuaddr、四释放分支共享 `pending_free` 且引用配对），并排除三处"看似缺陷"（`put_gpuaddr` 双调用因清零而幂等、命令用 gpuaddr 走 pagetable 故不需 get entry、四分支汇聚同一 destroy 链而非单点门错位）。**I4 上机证实**：`GPUOBJ_ALLOC`(4096)→FREE→再 FREE 同 id 返回 `EINVAL(22)`、`GPUMEM_FREE_ID` 交叉验证一致 ⇒ 无 double-free；`param` 阶段五分支全 EINVAL 证明解析正确。**K2「索引与生命周期」里程碑在本机可达面内达成，KGSL 生命周期主线阶段性关闭**；K3 并发动态测试因须制造悬空窗口、超"不重启"边界而**登记不作**。`boot_id` 全程不变、`uptime` 连续 +24 s、探针已删、内核日志无异常。**四层判定不变：NO-GO。**
 
 | | |
 |---|---|
@@ -24,16 +30,17 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测复核一致，无 OTA） |
 | 可用入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** GhostLock 路径（v10）：**① 类已闭合**——G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；盲扫成本 8.59 G 候选 @64 B ≈ 38 min/20 进程；**② 可控 rt_mutex 堆地址未闭合，且 v10 新增"时间流/固定 delta 页级邻接"否证**；**③ 内核栈基址仍缺** |
+| **总体判定** | **受限 root 已达成，可用 root / 持久 ROOT 仍为 NO-GO。** 主线 **KGSL 对象生命周期**已阶段性收口：所有权（I1–I5）成立、KO-1 本机不可达已关闭（§62）、**非 sparse 释放链自洽（I10–I12）+ I4 上机证实（§63）** ⇒ K2 达成；K3 并发登记不作。GhostLock 已冻结：① 类闭合（G1 18/19 + G2 唯一解）；② 未闭合（v10 时间流否证）；③ **已审接口范围内无可用 oracle** |
 | 设备终态 | 未刷写、未解锁、未改分区、未装持久化文件；`/data/local/tmp` 已清空；累计 5 次内核重启（均前期实验，v3 实测零重启） |
 
 ---
 
-## 当前状态一览（v10）
+## 当前状态一览（v12）
 
-| 面 | 机制 | 卡点 / v10 状态 |
+| 面 | 机制 | 卡点 / v12 状态 |
 |---|---|---|
-| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **v10.1**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪，9/9 示踪 `n_full`=1 由脚本断言）/ ③ W 线程栈基址** |
+| **KGSL 对象生命周期**（v12 主线，已阶段性收口） | shell 可 open `/dev/kgsl-3d0` 且 `DRAWCTXT_CREATE` 成功（实测） | 长度维度 **14/14 有界**（§58）；所有权 **I1–I5 成立**；KO-1 已关闭（sparse 面 `ENOTSUPP`，§62）；**非 sparse 释放链自洽（I10–I12）+ I4 上机证实（无 double-free，§63）** ⇒ **K2 达成、主线阶段性关闭**；K3 并发登记不作 |
+| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **冻结（v12）**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪）/ ③ 栈地址（已审接口范围内无可用 oracle，§53/§60）** |
 | KGSL `CVE-2023-33107` | 成立（源码 pre-fix） | 命中缺陷即 `BUG()` panic，无中间态 |
 | binder `CVE-2023-20938` | 不成立（未引入） | — |
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
@@ -42,7 +49,7 @@
 | **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限）；缺口 = 域逃逸（§24 判无路径） |
 | 私有 Binder / `system_server` / Wi-Fi 消费者 | 方法级否证 | 7/7 闭合、`system_server` 取句柄处断开、消费者三道门全封（§33–§37） |
 
-**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v10.1 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §52 → §51 → §50 → §49 → §48。
+**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v12 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §61 → §60 → §58 → §53 → §52。
 
 ---
 
@@ -108,6 +115,8 @@ tools/
 ├── cil_policy.py / cil_selftest.py         # CIL 求值引擎（28 用例）
 ├── ksnitch_local_check.py / .md            # 方向A：KernelSnitch 本机闭环验证
 ├── gl_frame_calc.py / gl_carrier_rescan.py / gl_nul_analysis.py   # GhostLock 几何/NUL
+├── kgsl_ioctl_scan.py                      # v11：KGSL ioctl 拷贝点与长度来源
+├── kgsl_lifecycle.py                       # v12：KGSL 取/放点普查 + pending_free 访问点
 └── ...                                      # 其余分析器与探针
 artifacts_adb/
 ├── binder_audit/           # AUDIT_REPORT / GHOSTLOCK_NUL_ANALYSIS / WAITER_ADDRESS_ANALYSIS 等
@@ -139,6 +148,9 @@ python tools/gl_carrier_rescan.py --mode context --copy-extra strncpy_from_user 
 python tools/gl_nul_analysis.py                         # NUL 语义 / 72B 字节映射
 python tools/cil_selftest.py                            # CIL 28 用例
 python tools/kfn.py --list 'futex|ashmem|configfs|nfulnl'  # 符号查询
+python tools/kgsl_lifecycle.py                      # v12：KGSL 取/放点普查 + 机械可疑项
+python tools/kgsl_lifecycle.py --pending            # v12：pending_free(entry+0xb0) 访问点
+python tools/kgsl_ioctl_scan.py --detail            # v11：54 入口 / 14 拷贝点（长度维度）
 ```
 
 真机只读探针（**纯用户态 futex 计时，不会 panic**；GhostLock 端到端 PoC 不提供）：
@@ -150,6 +162,17 @@ zig cc -target aarch64-linux-musl -O2 -static -pthread -o purity_probe live_prob
 export MSYS_NO_PATHCONV=1                 # Git Bash 必须关闭路径转换
 adb push live_probe/collision_probe /data/local/tmp/
 adb shell '/data/local/tmp/collision_probe'
+```
+
+KGSL 判定型探针（v12.1，**不提交 GPU 命令、不 mmap**，分阶段独立进程；每阶段前后校验 `boot_id`/`uptime`）：
+
+```bash
+zig cc -target aarch64-linux-musl -O2 -static -o live_probe/kgsl_sparse_probe live_probe/kgsl_sparse_probe.c
+adb push live_probe/kgsl_sparse_probe /data/local/tmp/ && adb shell 'chmod 755 /data/local/tmp/kgsl_sparse_probe'
+adb shell '/data/local/tmp/kgsl_sparse_probe prop'     # 处理器到达性（EFAULT / EINVAL）
+adb shell '/data/local/tmp/kgsl_sparse_probe matrix'   # 分派层真值表（ENOTTY / ENOTSUPP）
+adb shell '/data/local/tmp/kgsl_sparse_probe sparse'   # 六个 sparse 入口（本机：全 524）
+adb shell 'rm -f /data/local/tmp/kgsl_sparse_probe'
 ```
 
 ---
@@ -178,9 +201,9 @@ adb shell '/data/local/tmp/collision_probe'
 
 ---
 
-## 审阅须知（v3）
+## 审阅须知（v12）
 
-外部复核者请按以下靶面攻击，**只接受可复算的反例**：
+外部复核者请按以下靶面攻击，**只接受可复算的反例**。1–6 为 GhostLock（已冻结，仅保留靶面），7–9 为当前主线：
 
 1. **② 堆路径**：是否存在 K3 上"把可控数据写到已知内核地址"的原语？这是把 slide 兑现为受控 rt_mutex 的前提（参考项目靠 AF_UNIX skb 喷射，K3 无）。
 2. **③ 栈路径**：4.9 / `!VMAP_STACK` 下是否存在针对 order-2 连续页栈地址的泄露面？futex 哈希侧信道已证不行，USENIX'25 TLB 侧信道依赖 VMAP_STACK（本机关闭）。
@@ -188,6 +211,9 @@ adb shell '/data/local/tmp/collision_probe'
 4. **侧信道实测能否放大**：本机 110× 信号是否足以支撑"在真实噪声下稳定找到碰撞"？探针用 256 线程，参考项目用 4096。
 5. **地址三档的完备性**：是否存在第 ④ 类可用地址（既非栈、非 pi_state 堆、非仅 slide）？
 6. **三类地址是否独立（v008）**：见 `FEASIBILITY_v008.md` §1 的反汇编证据；要构成推翻，须给出 `mm_va → kimage_voffset` 的可复算数学关系，而非再证一次侧信道可用。
+7. **~~KO-1 的可达性~~（已关闭，v12.1）**：实测六个 sparse 入口同一门 `ENOTSUPP(524)`，`device->flags` BIT(1)（`KGSL_FLAG_SPARSE`）未置位 ⇒ 对象无法创建。若你认为该位可在本机构造，请给出可复算路径。
+8. **KO-1 的泛化（当前可动方向）**：非 sparse 面（`GPUOBJ_*` / `GPUMEM_*` / `MAP_USER_MEM`）是否存在对称缺陷——对象仍被 pagetable/drawctxt/in-flight 命令引用时可被释放？请按 §61.5 的 I1–I9 形式指出违反了哪一条，并给出指令地址。
+9. **C-3 的已知性（降级）**：`tmp_size = size - v_off - offset`（§61.7）是否为该分支已知实现？因 sparse 整支不可达，此条仅作潜在缺陷记录。
 
 | 不构成推翻 | 构成推翻 |
 |---|---|
@@ -195,17 +221,19 @@ adb shell '/data/local/tmp/collision_probe'
 | "GhostLock 历史上有漏洞" | 指明本机某字段越界点，给出可复算反汇编地址 |
 | "可能还有别的面" | 指名该面并给出策略/rc/二进制中的存在证据 |
 | 用其它 SPL/内核外推 | 指明本机 SPL `2022-04-05` / 内核 `4.9.227-perf+` 下同一路径的差异 |
+| "KGSL 历史 CVE 很多，应该有问题" | 给出本机某 ioctl 的**释放门缺失**或**序号/索引未校验**的具体指令地址（对照 §61.5 的 I1–I9 指出违反了哪一条） |
 
 ---
 
 ## 何时应重开 / 已重开
 
-1. **【v3 已重开】GhostLock**：理由不是"任一地址泄露"，而是**侧信道真机可用**（① 类地址可得）。下一步闭合 ② 或 ③（见审阅须知 1–2）。**注意：路径重开 ≠ 已 root。**
-2. binder 线：出现面向 4.9 / ticket spinlock 的 UAF 原语研究 → 靶点、pre-fix 证据、堆条件已备。
-3. SPL / 内核构建变化 → 全部偏移/形态/策略作废，须整体重跑（故建议关闭 OTA）。
-4. 取得 pstore / dmesg / last_kmsg 任一 → 可定位 panic 精确点。
-5. Wi-Fi 面：**已打通**（受限 root）；主缺口 = SELinux 域逃逸，§24 判无路径。
-6. 其余各面的重开条件见 `HANDOVER.md` §7 与 `CLOSURE.md`。
+1. **【v3 已重开 · v12 冻结】GhostLock**：重开理由是侧信道真机可用（① 类地址可得），而非"任一地址泄露"。**v12 起冻结**：②/③ 在已审接口范围内均无路径，重开条件收紧为"出现新的、可独立验证的内核对象地址来源"。**注意：路径重开 ≠ 已 root。**
+2. **【v12 新主线】KGSL 生命周期**：KO-1（§61.6）已由 §62 上机关闭（sparse 面 `ENOTSUPP`）；重开条件为"该能力位在本机可置位"或"找到非 sparse 面的对称缺陷"。
+3. binder 线：出现面向 4.9 / ticket spinlock 的 UAF 原语研究 → 靶点、pre-fix 证据、堆条件已备。
+4. SPL / 内核构建变化 → 全部偏移/形态/策略作废，须整体重跑（故建议关闭 OTA）。
+5. 取得 pstore / dmesg / last_kmsg 任一 → 可定位 panic 精确点。
+6. Wi-Fi 面：**已打通**（受限 root）；主缺口 = SELinux 域逃逸，§24 判无路径。
+7. 其余各面的重开条件见 `HANDOVER.md` §7 与 `CLOSURE.md`。
 
 ---
 
@@ -223,7 +251,9 @@ adb shell '/data/local/tmp/collision_probe'
 
 **v008 caliber correction (2026-11-19)**: the earlier claim of "end-to-end KASLR slide" is withdrawn. Three address relations are independent: (R1) KernelSnitch yields only the mm_struct's position in the direct physical mapping; (R2) conversion to a physical address uses compile-time constants and leaks no secret; (R3) the `.text` KASLR slide is carried by a separately boot-computed `kimage_voffset` and **cannot** be derived from R1/R2 on this arm64 kernel (binary evidence in `FEASIBILITY_v008.md` §1). The 110× signal proves the timing oracle exists, but is a separate gate from the N=4 uniqueness problem.
 
-The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and deliberately **25+ previously "certain" conclusions later falsified** by this project's own experiments or external review. Start with [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md), then [`HANDOVER.md`](HANDOVER.md) §38–§42.
+**v12.1 (2026-11-20)**: KO-1 went to the device and came back **closed**. The hypothesis was sound in the code — the "a bound physical block must not be freed" guard exists in exactly one ioctl — but this device does not implement the feature at all: `kgsl_device::flags` BIT(1) (`KGSL_FLAG_SPARSE` upstream) is clear, so all six sparse entry points return `ENOTSUPP(524)` before touching any state. Control probes rule out the alternative explanation that the ioctls never reached the driver: `getproperty` with a bad pointer still yields `EFAULT`, an unregistered command yields `ENOTTY`, and `syncsource_create` returns 0. KO-1, C-2 and C-3 are therefore **latent code defects on an unreachable path**, and the reachable audit surface narrows to the non-sparse objects. One methodological correction is recorded in §62.3: the first probe reported every failure as `EPERM` because it computed `strerror(-ret)` instead of reading `errno` — the only "new finding" of that hour was a bug in my own tooling.
+
+The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and deliberately **25+ previously "certain" conclusions later falsified** by this project's own experiments or external review. Start with [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md), then [`HANDOVER.md`](HANDOVER.md) §62 → §61 → §60 → §53.
 
 ---
 
