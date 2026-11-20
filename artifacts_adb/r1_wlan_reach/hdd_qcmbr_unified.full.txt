@@ -1,0 +1,71 @@
+0x02b730  stp      x29, x30, [sp, #-0x20]!
+0x02b734  stp      x20, x19, [sp, #0x10]
+0x02b738  mov      x29, sp
+0x02b73c  ldr      x19, [x0, #0x18]
+0x02b740  mov      x20, x1
+0x02b744  mov      x1, #0
+0x02b748  movk     x1, #0, lsl #16
+0x02b74c  movk     x1, #0, lsl #32
+0x02b750  movk     x1, #0, lsl #48
+0x02b754  mov      x0, x19
+0x02b758  bl       #0x2b758        ; -> __wlan_hdd_validate_context
+0x02b75c  cbnz     w0, #0x2b840
+0x02b760  ldr      x11, [x20, #0x10]
+0x02b764  mrs      x9, sp_el0
+0x02b768  ldr      x8, [x9, #0x40]
+0x02b76c  mov      x10, x11
+0x02b770  adds     x10, x10, #4
+0x02b774  csel     x8, xzr, x8, hi
+0x02b778  csinv    x10, x10, xzr, lo
+0x02b77c  sbcs     xzr, x10, x8
+0x02b780  cset     x10, ls
+0x02b784  cbz      x10, #0x2b820
+0x02b788  mov      x8, #0
+0x02b78c  ldr      x12, [x9, #0x40]
+0x02b790  movk     x8, #0, lsl #16
+0x02b794  bics     xzr, x11, x12
+0x02b798  csel     x10, x11, xzr, eq
+0x02b79c  movk     x8, #0, lsl #32
+0x02b7a0  csdb     
+0x02b7a4  movk     x8, #0, lsl #48
+0x02b7a8  ldr      x11, [x8]
+0x02b7ac  tbnz     w11, #4, #0x2b7e0
+0x02b7b0  mrs      x11, daif
+0x02b7b4  msr      daifset, #2
+0x02b7b8  ldr      x9, [x9, #0x48]
+0x02b7bc  mrs      x12, ttbr1_el1
+0x02b7c0  mov      x13, x9
+0x02b7c4  bfxil    x13, x12, #0, #0x30
+0x02b7c8  msr      ttbr1_el1, x13
+0x02b7cc  isb      
+0x02b7d0  msr      ttbr0_el1, x9
+0x02b7d4  isb      
+0x02b7d8  msr      daif, x11
+0x02b7dc  b        #0x2b7e4
+0x02b7e0  nop      
+0x02b7e4  mov      w9, wzr
+0x02b7e8  ldr      w1, [x10]
+0x02b7ec  ldr      x8, [x8]
+0x02b7f0  tbnz     w8, #4, #0x2b828
+0x02b7f4  mrs      x8, daif
+0x02b7f8  msr      daifset, #2
+0x02b7fc  mrs      x10, ttbr1_el1
+0x02b800  and      x10, x10, #0xffffffffffff
+0x02b804  add      x11, x10, #2, lsl #12
+0x02b808  msr      ttbr0_el1, x11
+0x02b80c  isb      
+0x02b810  msr      ttbr1_el1, x10
+0x02b814  isb      
+0x02b818  msr      daif, x8
+0x02b81c  cbz      w9, #0x2b830
+0x02b820  mov      w0, #0x10
+0x02b824  b        #0x2b840
+0x02b828  nop      
+0x02b82c  cbnz     w9, #0x2b820
+0x02b830  ldr      x8, [x20, #0x10]
+0x02b834  ldr      x0, [x19, #8]
+0x02b838  add      x2, x8, #4
+0x02b83c  bl       #0x2b83c        ; -> wlan_ioctl_ftm_testmode_cmd
+0x02b840  ldp      x20, x19, [sp, #0x10]
+0x02b844  ldp      x29, x30, [sp], #0x20
+0x02b848  ret      

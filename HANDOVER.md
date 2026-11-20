@@ -1,6 +1,9 @@
 # OPPO K3「临时 ROOT」项目 · 交接文档
 
-> **⚠️ v3.0（2026-11-19）：GhostLock 研究路径重开；v008 口径收紧。** 本文件前 §1–§37 是 v2.24+（2026-11-18）的历史证据链，**其中关于 GhostLock "无内核地址泄露"的收口结论已被 v3 部分推翻**。**接手请先读文末 §38–§43（v3 章节 + v008 响应）与 `HANDOVER_RESUME.md`**，再按需回溯历史章节。**v008 更正：撤回 v3"端到端可得 KASLR slide"的夸大，`mm_struct 线性地址 / 物理换算 / 镜像 slide` 三者独立，权威论证见 `FEASIBILITY_v008.md`。** 历史全文已归档到 `docs_archive/HANDOVER_v2.24_2026-11-18_full.md`。
+> **⚠️ v13.2（2026-11-20）当前口径：主线 = WLAN 调用链审计 + 项目收口；GhostLock 冻结、B3 已审计否决。**
+> **先读**：一页入口 [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md)（v13.2）→ 最终判定 [`CLOSURE.md`](CLOSURE.md)（五层验收）→ 外部审阅 [`README.md`](README.md)（v13.2 审阅须知）。**本文件是完整历史技术证据**：§1–§37 = v2.x、§38–§43 = v3、§44–§54 = v4–v11、§55–§60 = v11.x、§61–§65 = v12.x、§66–§71 = v13.x、**§72 = v13.2（最新）**。
+> **v13.2 主结论（不改变四层判定）**：① `0x89f1 → hdd_driver_command` 的真实用户态调用方是 **wpa_supplicant** 的 `DRIVER` 通道（Android `android_priv_cmd`，4 处 ioctl）；`/odm/bin/iwpriv` 只发 **WEXT 私有**（`0x8BE0..0x8BFF`），**不经 `hdd_driver_command`** ⇒ 审核 v0132 的候选 A 需按"WEXT 私有面"重定向（[`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md)）。② 98 项 `hdd_drv_cmds` handler 审计见 [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md)；代理可达的 WEXT handler 审计见 [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md)。③ FTM `0x89fd` 只在 `con_mode==5` 受理，正常运行不可达（[`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md)）。④ 其余 vendor 模块分诊见 [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)。⑤ 可用 ROOT / 持久 ROOT 仍 **NO-GO**。
+> **【历史 v3.0 说明，保留】** 本文件前 §1–§37 是 v2.24+（2026-11-18）的历史证据链，**其中关于 GhostLock "无内核地址泄露"的收口结论已被 v3 部分推翻**（v13 已实证取得当前 boot 的 `.text` slide，见 `KASLR_EVIDENCE.md`）。**接手请先读 §72（v13.2）与 `HANDOVER_RESUME.md`**，再按需回溯历史章节。**v008 更正：撤回 v3"端到端可得 KASLR slide"的夸大，`mm_struct 线性地址 / 物理换算 / 镜像 slide` 三者独立，权威论证见 `FEASIBILITY_v008.md`。** 历史全文已归档到 `docs_archive/HANDOVER_v2.24_2026-11-18_full.md`。
 
 | 项                 | 值                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -4993,3 +4996,62 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 - **GhostLock ②/③ 维持冻结**；B3 从"静态层已证实候选集（待审计）"改为"**静态层已证实、可用性已否证**"。
 - **阶段 3（G0–G4）全部完成**；阶段 4（WLAN `hdd_driver_command` 调用链）与阶段 5（总验收）**待用户通知**。
 - 边界：纯离线、零上机、未申请设备授权、未构造任何 PoC；`panic_on_oops` 运行时真值、`/proc/uid*` 的 SELinux 可达性**未证**（G4 §8）。
+
+---
+
+## §72 v13.2：WLAN 调用链审计完成 —— **候选 A 重定向到 WEXT 私有面**；98/WEXT handler、FTM、vendor 分诊落档；项目五层验收（2026-11-20，纯离线、零上机，不改变四层判定）
+
+> 承接 §71；响应审核意见 v0132（`docs_archive/审核意见CHATGPT-v0132.txt`）§二–§七。交付：`WLAN_IOCTL_CHAIN_AUDIT.md`（P1-A/C/D）、`WLAN_HANDLER_AUDIT.md`（98 项）、`WLAN_WEXT_HANDLER_AUDIT.md`（代理可达的 32 handler）、`WLAN_FTM_AUDIT.md`（P2）、`VENDOR_SURFACE_MATRIX.md`（P3）、`CLOSURE.md` 五层验收（P5）。**未连接设备、未做任何动态 WLAN 输入。**
+
+### 72.1 一句话结论
+
+**审核 v0132 的 P1「先证明调用链，再审漏洞」以"证否 + 重定向"完成。** `0x89f1 → hdd_driver_command` 的连接**存在**，但用户态主语是 **`wpa_supplicant` 的 `DRIVER` 通道**；`/odm/bin/iwpriv` **只发 WEXT 私有 ioctl**（`0x8BE0..0x8BFF`），**不发 `0x89f1/0x89fd`** ⇒ OPPO HAL `executeDriverCommand` 的真实内核端点是 **WEXT 私有面**（32 handler / 223 参数），不是 98 项 `hdd_driver_command`。**未发现新的提权原语；可用 ROOT / 持久 ROOT 仍 NO-GO。**
+
+### 72.2 P1-A：用户态 → 系统调用 → 驱动分派（指令级）
+
+| 环节 | 证据 |
+|---|---|
+| 用户态（真实消费者） | `wpa_supplicant` 4 处 `mov w1,#0x89f1` + `ioctl`（`0x2a22f4`/`0x2ac688`/`0x2c2a14`/`0x2c2edc`），`android_priv_cmd{buf@0,len@8,total_len@0xc}`；控制链 `"DRIVER "`（`0x213bdc`）→ `0x226748` → `wpa_drv_driver_cmd`（`0x212924`）→ `ops+0x308`（`0x314510`）→ `0x2c2174` → 通用透传 `0x2c2a14` |
+| 其他出货调用方 | `hostapd` 4 处（同源四角色）、`sigma_dut` 1 处、`lowi-server` 1 处（`ioctl_const_inventory.md`） |
+| 系统调用 | `net/socket.c:953` `SIOCDEVPRIVATE..+15 → dev_ioctl`；`net/core/dev_ioctl.c:549-561` 该分支**无 `CAP_NET_ADMIN` 检查**；`:319-344` → `ndo_do_ioctl` |
+| 驱动分派 | `hdd_ioctl@0x38050`：`0x38210 cmp w21,#0x89f1` → `0x38254 __arch_copy_from_user(16 B)` → `0x382d0 bl hdd_driver_command@0x38320` |
+| 入口约束 | `0x383f4 ldrsw x5,[x22,#0xc]`；`0x383fc cmp w8,#2,lsl#12`（`1..0x2000`）；`0x384ec strb wzr`（NUL）；`0x38510 strchrnul(' ')`；`0x38544 cmp x27,#0x62`（98 项）；`0x38574 strncasecmp`；未匹配 `-0x20c`（ENOTSUPP）；`0x38648 __qdf_mem_free` |
+
+**负结果（关键）**：`/odm/bin/iwpriv` 的全部 ioctl 常量 = `{0x8912, 0x8B01, 0x8B0B, 0x8B0D, 0x8927, 0x8915, 0x8954}` + 表项 `cmd`（父项 `0x8BE0..0x8BFF`）；`0x89f1/0x89fd` 全文 0 命中；唯一私有 ioctl 点 `0x2a24` 用 `ldr w1,[x22]`（驱动返回的表项）。⇒ **`executeDriverCommand → iwpriv → hdd_driver_command` 不成立。**
+
+### 72.3 P1-B：98 项与 WEXT 32 handler
+
+- 98 项：`hdd_drv_cmds`（`.rodata+0x2bb8`，98×0x18）已全解（`tools/wlan_cmd_table.py`，0 未解析）；handler 解析事实与判定见 `WLAN_HANDLER_AUDIT.md` + `handler_audit.csv`（98 行）。入口长度上界 `0x2000` + NUL + 白名单 ⇒ 朴素长度越界不成立；具体反例/未决以报告为准。
+- WEXT 32 handler（**代理可达面**）：`we_handler_def`（`.rodata+0x6258`）→ `we_private`（`0x4c70`，32 指针）→ `we_private_args`（`0x4d70`，223×0x18，23 父项 + 200 子命令）。核心 `net/wireless/wext-priv.c:137-161`：`iwp->length > (set_args & 0x7FF)` → `-E2BIG`；`kzalloc(extra_size)` + `copy_from_user(extra_size)` ⇒ **长度被核心归一化**，"用户长度 < 结构体 ⇒ 堆越界读"不成立；handler 侧需按字段/索引校验重审（报告见 `WLAN_WEXT_HANDLER_AUDIT.md`）。
+
+### 72.4 P1-D：两个主体的可达性（不得用"域满足"代替"调用闭合"）
+
+| 主体 | 事实 | 判定 |
+|---|---|---|
+| 受限 UID 0 代理（`oplus_wifi_service`） | `(allow oplus_wifi_service wcnss_service_exec (file (... execute_no_trans)))`；`(allow ... self (capability (... net_admin ...)))` | 可执行 `/odm/bin/iwpriv`、持 `net_admin` ⇒ **WEXT SET 面域满足** |
+| 同上 → wpa 通道 | **无** `wifi_vendor_wpa_socket` / `wpa_socket` / `hal_wifi_supplicant` 的任何 allow；`/data/vendor/wifi/sockets` 标签为 `wifi_vendor_wpa_socket` | **`wpa_cli`/supplicant 通道关闭** |
+| shell | 无 `wcnss_service_exec` 执行权（CIL 全集 grep）；`CapEff=0x13000` 无 NET_ADMIN | 不能跑 `iwpriv`；WEXT SET 不可达 |
+| shell → `0x89f1` 直连 | 内核 `dev_ioctl` 无 CAP 门；策略有 `neverallowx shell domain (ioctl udp_socket (… 0x89e0 0x89ff))`；本机内核树只有 `file_ioctl` 钩子、无 `socket_ioctl` 钩子 | **未决**（不动态验证） |
+
+### 72.5 P2 FTM / P3 vendor / P5 验收（摘要）
+
+- **FTM**：`0x89fd` 双门 `0x38138 cmp w21,#0x89fd` + `0x38144 cmp w0,#5`；正常启动 `init.wlan.target.rc:119 insmod` 不带 con_mode（默认 0）；`con_mode_handler@0x616a0 → hdd_driver_mode_change@0x60fb8` ⇒ 运行期改 con_mode = 整驱动模式重启；`ftmdaemon`/`myftm`/`ftmtest` **无 0x89fd 常量**，全固件 `0x89fd` 命中全在 RMNET（`netmgrd`×6 / `qti`×3 / `adpl`×1）⇒ **条件性关闭**。
+- **vendor**：37 `.ko` / 32 实际加载；非 WLAN 模块"两主体可达"合格者 **0**；源码树 ≠ 出厂 `.ko`（`tfa98xx` 用例）是后续审计必须注意的陷阱。
+- **验收**：`CLOSURE.md` §1 五层（已达成 3 / 已否证 5 / 阶段性关闭 3 / 已完成审计 4 / 条件性关闭 1 / 分诊 1 / 未解决 2）；四层判定不变。
+
+### 72.6 对 R1 / 审核 v0132 的口径更正
+
+| 旧口径 | 更正 |
+|---|---|
+| "`/odm/bin/iwpriv` 是 `0x89f1` 的候选调用方"（R1 §5/§6.3） | **否**：iwpriv 只发 WEXT 私有（`0x8BE0..0x8BFF`），不发 `0x89f1` |
+| "shell 无 wlan0/CAP_NET_ADMIN ⇒ 候选 A 不可达"（R1 §2 行 A） | 对 **WEXT SET** 成立；对 **`0x89f1`** 内核层不需要 CAP_NET_ADMIN |
+| "候选 A = `0x89f1 → hdd_driver_command`"（R1 §6） | 候选 A 的**代理可达部分**是 **WEXT 私有面**；`0x89f1` 属 wpa_supplicant 通道，代理不可达 |
+| "连接点未证，需补 iwpriv ↔ `0x89f1` 绑定"（R1 §5） | **绑定不存在**（负结果）；需补的是"代理能否驱动 WEXT 私有面"的只读动态确认 |
+
+### 72.7 边界与未决（不得外推）
+
+1. 纯离线、零上机；未申请设备授权；未做任何动态 WLAN 输入（审核 v0132 §三 P1-C 明文）。
+2. 未决：`iwpriv` 在代理域内是否真能完成 `SIOCGIWPRIV` + 私有 ioctl（只读枚举需新授权）；shell 的 `neverallowx` 与内核 xperm 生效性；WEXT 剩余 ~12 handler 的逐条判定。
+3. 结论范围限定 `qca_cld3_wlan.ko` SHA `f45c1c1c…d00` + F.16 固件（2025-03-26 构建）；换构建即作废。
+4. **工作区并发写入事件**：v13.2 会话期间另一写入方创建 `GHOSTLOCK_HEAP_RECLAIM_FEASIBILITY.md`（"G5"）并 push `e370348` 到 `origin/main`；主代理已本地回退并把两份文件归档 `docs_archive/out_of_scope_v13.2/`（未纳入判定、未复核）。**本 §72 与 `CLOSURE.md` 不含 G5 结论。**
+

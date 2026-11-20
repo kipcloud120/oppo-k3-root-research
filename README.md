@@ -26,6 +26,8 @@
 
 > **v13 证据收口（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §66 与权威台账 [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)；文档/离线收口 + 一次用户明确授权的重启）**：**当前 boot 的 `.text` KASLR slide 已实证取得**——dumpstate 第三主体路径（shell → init → dumpstate → bugreport，内核日志含未哈希的原始 pc/lr）+ 一次授权重启：当前 boot（`b9f9f06a-…`）slide = **`0x1953600000`**、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机、再重启即失效**；全部物料 SHA-256、地址归属区分（当前 boot / 重启前 boot / 10 份历史 last_kmsg）与 dumpstate 日志保留边界、成功/失败条件已在 `KASLR_EVIDENCE.md` 固化（审核 v013 P0.1–P0.4）。**判定语义不变：slide ≠ 可用 root**——GhostLock ②（可控 rt_mutex 堆地址）/ ③（W 线程栈基址）缺口不变，dumpstate 附带的 `sp` 属 init/swapper 栈、不满足 ③ 判据；v008 口径在"已审接口范围"内仍成立。**v13 主线从"找 slide"转为"地址发现 → 利用条件闭合"：阶段 1 证据收口、阶段 2 WARNING 观察面审计 + 候选裁决（厂商内核源码 `oppo-source/android_kernel_oppo_sdm710` 落地并双锚点校准；futex PI 路径 68 个 WARN 候选点全部排除——唯一用户路径候选 `futex.c:1302` 被 4 处 `-EINVAL` 前置检查拦截，③ 的 WARN-oracle 假设被否决，见 `WARN_ADDRESS_SURFACE_AUDIT.md` §8 + `HANDOVER.md` §68/§69）与阶段 3 GhostLock ②/③ 复评（缺口收敛为单一 N1，维持冻结，见 `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档与 §67）已完成；**厂商源码补做（§69.4/§70）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（地址可由 slide 复算，G2 §2.3 / G3 §6），waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证，`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）；阶段 3 收尾（v13.1，§71 + [`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)（G4），纯离线）：B3 并发语义静态审计完成、结论为否——链走查 `:702` 无条件读 `lock->waiters_leftmost`（空树 ⇒ `NULL+0x38` fault；非空树 ⇒ 必有地址不可知的真实 waiter），`:705` `rb_erase(fake)` 只能产生孤儿/幽灵 waiter 或不可控写 ⇒ B3 不满足 N1 的"可控"，由"待审计候选"改为"已审计否决"（复算 `python tools/b3_audit.py`），GhostLock ②/③ 维持冻结**；阶段 4 WLAN 调用链审计与阶段 5 总验收待启动，改代码与调试待用户通知。四层判定不变：NO-GO。**
 
+> **v13.2 WLAN 调用链与项目收口（2026-11-20，见 [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) / [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) / [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) / [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) / [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)；纯离线、零上机，不改变四层判定）**：① **候选 A 重定向**——`0x89f1 → hdd_driver_command` 的真实用户态调用方是 **`wpa_supplicant` 的 `DRIVER` 通道**（Android `android_priv_cmd`，4 处 ioctl；控制接口 `"DRIVER "` → `wpa_drv_driver_cmd`），而 `/odm/bin/iwpriv`（含 `iwpriv_vendor`）**只发 WEXT 私有**（`0x8BE0..0x8BFF`，32 handler / 223 参数）与 7 个固定常量，**不发 `0x89f1/0x89fd`**；因此 OPPO HAL `executeDriverCommand` 的真实内核端点是 **WEXT 私有面**，不是 `hdd_driver_command`。② **可达性（P1-D）**——受限 UID 0 代理（`oplus_wifi_service`）可执行 `iwpriv` 且持 `net_admin` ⇒ WEXT SET 面**域满足**；但它对 `wifi_vendor_wpa_socket` **无任何 SELinux allow** ⇒ wpa_cli/supplicant 通道对代理**关闭**；shell 无 `wcnss_service_exec` 执行权 ⇒ 不能跑 `iwpriv`；`0x89f1` 在内核层**无 `CAP_NET_ADMIN` 门**（`dev_ioctl` 源码），但 shell 的 `neverallowx` 与内核 xperm 生效性**未决**。③ **handler 审计**——98 项 `hdd_drv_cmds` 与 WEXT 32 handler 分别见两份报告；4.9 wext 核心以 `kzalloc(extra_size)+copy_from_user(extra_size)` 归一化长度，"用户长度 < 结构体 ⇒ 堆越界读"不成立。④ **FTM `0x89fd` 条件性关闭**——仅 `conparam==5` 受理；正常启动 `insmod` 无 con_mode 参数（默认 0），运行期改 con_mode 触发整驱动模式重启；随固件出货的用户态程序无 `0x89fd` 调用方。⑤ **vendor 分诊**——37 个 `.ko` / 32 个实际加载，非 WLAN 模块中"真实加载 + 用户态接口 + 两主体可达"合格者 **0**。⑥ **结论不变：受限 UID 0 命令执行已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
+
 | | |
 |---|---|
 | 目标设备 | OPPO K3 `PCGM00`（`OP4679`，`sdm710`），Android 11，内核 `4.9.227-perf+`（clang 10.0.7，2025-03 构建） |
@@ -203,30 +205,32 @@ adb shell 'rm -f /data/local/tmp/kgsl_sparse_probe'
 
 ---
 
-## 审阅须知（v12）
+## 审阅须知（v13.2）
 
-外部复核者请按以下靶面攻击，**只接受可复算的反例**。1–6 为 GhostLock（已冻结，仅保留靶面），7–9 为当前主线：
+外部复核者请按以下靶面攻击，**只接受可复算的反例**。1–7 为已冻结/已否证面，8–12 为 v13.2 当前面：
 
-1. **② 堆路径**：是否存在 K3 上"把可控数据写到已知内核地址"的原语？这是把 slide 兑现为受控 rt_mutex 的前提（参考项目靠 AF_UNIX skb 喷射，K3 无）。
-2. **③ 栈路径**：4.9 / `!VMAP_STACK` 下是否存在针对 order-2 连续页栈地址的泄露面？futex 哈希侧信道已证不行，USENIX'25 TLB 侧信道依赖 VMAP_STACK（本机关闭）。
-3. **方向 A 的唯一性**：`N=4` 误报期望 ~0.65 属边缘，建议复核 `tools/ksnitch_local_check.py` 的误报模型与 hsz=1024 单档判定。**注意（v008）：这与 110× oracle 是两道独立的门——oracle 证明"能采到真碰撞"，唯一性决定"这些碰撞够不够唯一"，互不蕴含。**
-4. **侧信道实测能否放大**：本机 110× 信号是否足以支撑"在真实噪声下稳定找到碰撞"？探针用 256 线程，参考项目用 4096。
+1. **② 堆路径（冻结）**：是否存在 K3 上"把可控数据写到已知内核地址"的原语？这是把 slide 兑现为受控 rt_mutex 的前提（参考项目靠 AF_UNIX skb 喷射，K3 的固定 delta 已被 v10 否证）。
+2. **③ 栈路径（冻结）**：4.9 / `!VMAP_STACK` 下是否存在针对 order-2 连续页栈地址的泄露面？futex 哈希侧信道已证不行，USENIX'25 TLB 侧信道依赖 VMAP_STACK（本机关闭）。
+3. **方向 A 的唯一性**：`N=4` 误报期望 ~0.65 属边缘；**注意（v008）** oracle 与唯一性是两道独立的门。
+4. **侧信道实测能否放大**：本机 110× 信号是否足以支撑真实噪声下的稳定碰撞（探针 256 线程 vs 参考 4096）。
 5. **地址三档的完备性**：是否存在第 ④ 类可用地址（既非栈、非 pi_state 堆、非仅 slide）？
-6. **三类地址是否独立（v008）**：见 `FEASIBILITY_v008.md` §1 的反汇编证据；要构成推翻，须给出 `mm_va → kimage_voffset` 的可复算数学关系，而非再证一次侧信道可用。
-7. **~~KO-1 的可达性~~（已关闭，v12.1）**：实测六个 sparse 入口同一门 `ENOTSUPP(524)`，`device->flags` BIT(1)（`KGSL_FLAG_SPARSE`）未置位 ⇒ 对象无法创建。若你认为该位可在本机构造，请给出可复算路径。
-8. **~~KO-1 的泛化~~（已阶段性关闭，v12.2 / §63）**：非 sparse 面的释放链已由 I10–I12 三条全称不变量覆盖，且 I4 上机证实无 double-free（K2 达成）；不再列为当前可动方向。**仅接受**违反 I10–I12 的新指令级反例，或新的可达面对象/路径；重复提交已审入口不构成推翻。向外评述请沿用 §63 的限定：K2 在「非 sparse、已审静态路径 + 立即释放判定」范围内达成，延迟释放动态行为与 K3 不在实证范围内。
-9. **C-3 的已知性（降级）**：`tmp_size = size - v_off - offset`（§61.7）是否为该分支已知实现？因 sparse 整支不可达，此条仅作潜在缺陷记录。
+6. **三类地址是否独立（v008）**：要构成推翻，须给出 `mm_va → kimage_voffset` 的可复算数学关系。
+7. **B3 的否证（v13.1）**：`uid_lock` / `msm_bus_adhoc_lock` / `msm_bus_dbg_cllist_lock` / `proc_uid_lock` 四实例的并发语义审计（G4）判否。要推翻，须给出"空树不 fault / 非空树 waiter 可控"的指令级反例，或证明存在第五种状态；重复"地址可得"不构成推翻。
+8. **WLAN 调用链（v13.2）**：`0x89f1` 的用户态调用方已定位为 `wpa_supplicant`（`android_priv_cmd`，4 处 ioctl）与 `hostapd`/`lowi-server`/`sigma_dut`。要推翻，须给出**另一个随固件出货的二进制**发 `0x89f1` 的指令地址（仅字符串/符号不算）。
+9. **iwpriv 负结果（v13.2）**：`/odm/bin/iwpriv` 只发 WEXT 私有（`0x8BE0..0x8BFF`）与 7 个固定常量，**不发 `0x89f1/0x89fd`**。要推翻，给出 iwpriv 中 `ioctl` 第 2 参数为 `0x89f1` 的指令地址。
+10. **代理可达性（v13.2）**：`oplus_wifi_service` 可执行 `iwpriv` 且持 `net_admin`，但对 `wifi_vendor_wpa_socket` 无 SELinux allow。要推翻"wpa 通道对代理关闭"，给出 `(allow oplus_wifi_service wifi_vendor_wpa_socket ...)` 的实际策略行。
+11. **handler 审计（v13.2）**：`WLAN_HANDLER_AUDIT.md`（98 项）与 `WLAN_WEXT_HANDLER_AUDIT.md`（32 项）中的"有界/无缺陷"判定，是否有一条可复算的指令级反例（给 handler 名 + 指令地址 + 违反的不变量）。
+12. **FTM（v13.2）**：`0x89fd` 是否能在 `con_mode != 5` 下被受理？要推翻条件性关闭，给出 `hdd_ioctl` 中绕过 `0x38144 cmp w0,#5` 的指令级路径。
 
 | 不构成推翻 | 构成推翻 |
 |---|---|
 | "侧信道能拿地址了，所以能 root 了" | 给出 ② 或 ③ 类地址的可复算获取路径，并说明如何填进 fake waiter 的 lock/rb |
-| "GhostLock 历史上有漏洞" | 指明本机某字段越界点，给出可复算反汇编地址 |
+| "GhostLock 历史上有漏洞" | 指明本机某字段的越界点，给出可复算的反汇编地址 |
 | "可能还有别的面" | 指名该面并给出策略/rc/二进制中的存在证据 |
 | 用其它 SPL/内核外推 | 指明本机 SPL `2022-04-05` / 内核 `4.9.227-perf+` 下同一路径的差异 |
-| "KGSL 历史 CVE 很多，应该有问题" | 给出本机某 ioctl 的**释放门缺失**或**序号/索引未校验**的具体指令地址（对照 §61.5 的 I1–I9 指出违反了哪一条） |
-| "某 CVE 进了 CISA KEV / 有公开 PoC / 在野利用" | 给出该 CVE 在本机 `4.9.227-perf+` 上的**引入形态 + 域可达性 + 安全边界**证据。外部 PoC/KEV 不构成本机适用性证据；「pre-fix 形态 ≠ 可利用」「EOL ≠ 已修复」——判据是 commit 演变 + 本机反汇编，不是 SPL 或公告日期（v14 §0/§7） |
-
----
+| "iwpriv 是 `hdd_driver_command` 的调用方" | 给出 `/odm/bin/iwpriv` 中 `ioctl` 第 2 参数为 `0x89f1` 的指令地址（v13.2 已复算为否） |
+| "B3 地址能算出来所以可用" | 给出空树 `:702` 不 fault 或非空树 waiter 可控的指令级反例（v13.1/G4 已否证） |
+| "某 CVE 进了 CISA KEV / 有公开 PoC / 在野利用" | 给出该 CVE 在本机 `4.9.227-perf+` 上的**引入形态 + 域可达性 + 安全边界**证据；判据是 commit 演变 + 本机反汇编，不是 SPL 或公告日期（v14 §0/§7） |
 
 ## 何时应重开 / 已重开
 

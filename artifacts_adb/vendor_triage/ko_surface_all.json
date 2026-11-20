@@ -1,0 +1,406 @@
+{
+ "audio_adsp_loader.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "sysfs": [
+    "sysfs_create_group"
+   ]
+  }
+ },
+ "audio_ak4376.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_analog_cdc.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_apr.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_file"
+   ]
+  }
+ },
+ "audio_cpe_lsm.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_digital_cdc.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_dspg_dbmdx.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "alloc_chrdev_region",
+    "cdev_add",
+    "cdev_init",
+    "misc_register"
+   ],
+   "devnode": [
+    "device_create"
+   ],
+   "sysfs": [
+    "sysfs_create_group"
+   ],
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_hdmi.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_machine_sdm710.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_mbhc.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_msm_sdw.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_native.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "misc_register"
+   ],
+   "debugfs": [
+    "debugfs_create_file"
+   ]
+  }
+ },
+ "audio_pinctrl_lpi.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_pinctrl_wcd.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_platform.ko": {
+  "init_fns": [
+   "init_module"
+  ],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_component"
+   ]
+  }
+ },
+ "audio_q6.ko": {
+  "init_fns": [
+   "init_module"
+  ],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "alloc_chrdev_region",
+    "cdev_add",
+    "cdev_init",
+    "misc_register"
+   ],
+   "devnode": [
+    "device_create"
+   ],
+   "debugfs": [
+    "debugfs_create_file"
+   ]
+  }
+ },
+ "audio_q6_notifier.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_q6_pdr.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_stub.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_swr.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "audio_swr_ctrl.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file"
+   ]
+  }
+ },
+ "audio_tfa98xx-v6.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "sysfs": [
+    "device_create_bin_file"
+   ],
+   "procfs": [
+    "proc_create_data",
+    "proc_mkdir"
+   ],
+   "input": [
+    "input_register_device"
+   ],
+   "alsa": [
+    "snd_soc_register_component"
+   ]
+  }
+ },
+ "audio_tfa98xx.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "sysfs": [
+    "device_create_bin_file"
+   ],
+   "procfs": [
+    "proc_create_data",
+    "proc_mkdir"
+   ],
+   "input": [
+    "input_register_device"
+   ],
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_usf.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "misc_register"
+   ],
+   "input": [
+    "input_register_device"
+   ]
+  }
+ },
+ "audio_wcd9335.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_wcd934x.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "misc_register"
+   ],
+   "debugfs": [
+    "debugfs_create_bool",
+    "debugfs_create_dir",
+    "debugfs_create_u32"
+   ],
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "audio_wcd9xxx.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_bool",
+    "debugfs_create_dir"
+   ]
+  }
+ },
+ "audio_wcd_core.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file"
+   ]
+  }
+ },
+ "audio_wcd_cpe.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file",
+    "debugfs_create_u32"
+   ]
+  }
+ },
+ "audio_wcd_spi.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file",
+    "debugfs_create_u32"
+   ]
+  }
+ },
+ "audio_wglink.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "alloc_chrdev_region",
+    "cdev_add",
+    "cdev_init"
+   ],
+   "devnode": [
+    "device_create"
+   ]
+  }
+ },
+ "audio_wsa881x.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file"
+   ],
+   "alsa": [
+    "snd_soc_register_codec"
+   ]
+  }
+ },
+ "llcc_perfmon.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "sysfs": [
+    "sysfs_create_group"
+   ]
+  }
+ },
+ "mpq-adapter.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {}
+ },
+ "mpq-dmx-hw-plugin.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file",
+    "debugfs_create_u32"
+   ]
+  }
+ },
+ "qca_cld3_wlan.ko": {
+  "init_fns": [
+   "init_module"
+  ],
+  "init_calls_interest": [
+   "alloc_chrdev_region",
+   "cdev_add",
+   "cdev_init",
+   "device_create"
+  ],
+  "categories": {
+   "chrdev": [
+    "alloc_chrdev_region",
+    "cdev_add",
+    "cdev_init"
+   ],
+   "devnode": [
+    "device_create"
+   ],
+   "debugfs": [
+    "debugfs_create_dir",
+    "debugfs_create_file",
+    "debugfs_create_u32",
+    "debugfs_create_u8"
+   ],
+   "sysfs": [
+    "device_create_file"
+   ],
+   "procfs": [
+    "proc_create_data",
+    "proc_mkdir"
+   ]
+  }
+ },
+ "rdbg.ko": {
+  "init_fns": [],
+  "init_calls_interest": [],
+  "categories": {
+   "chrdev": [
+    "alloc_chrdev_region",
+    "cdev_add",
+    "cdev_init"
+   ],
+   "devnode": [
+    "device_create"
+   ]
+  }
+ }
+}

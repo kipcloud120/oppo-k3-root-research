@@ -1,4 +1,4 @@
-# 判定：PCGM00 F.16 —— 可用 ROOT 为 NO-GO；GhostLock 冻结；KGSL sparse 面不可达 + 非 sparse 释放链自洽；**v13：`.text` KASLR slide 已实证取得（当前 boot），证据固化完成**（2026-11-20）
+# 判定：PCGM00 F.16 —— 可用 ROOT 为 NO-GO；GhostLock 冻结（B3 已否证）；KGSL 非 sparse 生命周期阶段性关闭；**v13.2：WLAN 调用链审计完成（候选 A 重定向到 WEXT 私有面）、FTM 条件性关闭、项目五层验收**（2026-11-20）
 
 | | |
 |---|---|
@@ -7,8 +7,16 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测基线复核一致，无 OTA） |
 | 唯一入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| 判定版本 | `HANDOVER.md` v3.0 + v008 + v6（§46）+ v7（§47）+ v8（§48）+ v9（§49）+ v10（§50）+ v10.1（§51/§52）+ v11（§53/§54）+ v11.1（§55）+ v11.2（§56）+ v11.5（§57–§59）+ v11.6（§60）+ v12（§61）+ v12.1（§62，sparse 上机判定）+ v12.2（§63，非 sparse 释放前提 + I4 上机）+ v12.3（§64，分诊收口）+ v12.3.1（§65，R1 更正）+ **v13（§66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，dumpstate slide 证据固化）** + **v13.1（§71 + [`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)，B3 审计收尾）** |
+| 判定版本 | `HANDOVER.md` v3.0 + v008 + v6（§46）+ v7（§47）+ v8（§48）+ v9（§49）+ v10（§50）+ v10.1（§51/§52）+ v11（§53/§54）+ v11.1（§55）+ v11.2（§56）+ v11.5（§57–§59）+ v11.6（§60）+ v12（§61）+ v12.1（§62，sparse 上机判定）+ v12.2（§63，非 sparse 释放前提 + I4 上机）+ v12.3（§64，分诊收口）+ v12.3.1（§65，R1 更正）+ **v13（§66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，dumpstate slide 证据固化）** + **v13.1（§71 + [`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)，B3 审计收尾）** + **v13.2（§72 + [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) / [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) / [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) / [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) / [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)，WLAN 调用链 + 分诊 + 五层验收）** |
 | 判定范围 | **本机、本固件、不解 BL**。不是"任何条件下不可能"，也不是"任何设备不可能" |
+
+> **v13.2 WLAN 调用链 + 五层验收（2026-11-20，响应审核 v0132；纯离线、零上机，不改变可用 ROOT 判定）**：
+> ① **候选 A 重定向**：`0x89f1 → hdd_driver_command` 的真实用户态调用方是 **`wpa_supplicant` 的 `DRIVER` 通道**（Android `android_priv_cmd`，4 处 ioctl；控制接口 `"DRIVER "` → `wpa_drv_driver_cmd` → `ops+0x308`），`/odm/bin/iwpriv` 只发 **WEXT 私有**（`0x8BE0..0x8BFF`，32 handler / 223 参数）——**不经 `hdd_driver_command`**。审核 v0132 要求的"用户态→内核"连接在 `0x89f1` 上成立，但主语是 `wpa_supplicant`；`executeDriverCommand` 的真实端点是 **WEXT 私有面**（[`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md)）。
+> ② **可达性（P1-D）**：受限 UID 0 代理可执行 `/odm/bin/iwpriv` 且持 `net_admin` ⇒ WEXT SET 面**域满足**；但它对 `wifi_vendor_wpa_socket` **无任何 SELinux allow** ⇒ wpa_cli/supplicant 通道对代理**关闭**；shell 无 `wcnss_service_exec` 执行权 ⇒ 不能跑 iwpriv。`0x89f1` 在内核层**无 `CAP_NET_ADMIN` 门**（`dev_ioctl` 源码），shell 的 `neverallowx` 与内核 xperm 生效性**未决**（不做动态验证）。
+> ③ **handler 审计**：98 项 `hdd_drv_cmds` 见 [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md)；代理可达的 WEXT 32 handler 见 [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md)（4.9 wext 核心以 `kzalloc(extra_size)+copy_from_user(extra_size)` 归一化长度，"用户长度 < 结构体 ⇒ 堆越界读"不成立，handler 侧需按字段/索引校验重审）。
+> ④ **FTM 条件性关闭**：`0x89fd` 仅在 `conparam==5` 受理；正常启动链 `init.wlan.target.rc` 的 `insmod` 无 con_mode 参数（默认 0），运行期改 con_mode 会触发整驱动模式重启；随固件出货的用户态程序无 `0x89fd` 调用方（[`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md)）。
+> ⑤ **vendor 分诊**：37 个 `.ko` / **32 个实际加载**；非 WLAN 模块中"真实加载 + 用户态接口 + shell/代理两主体可达"合格者 **0**（[`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)）。
+> ⑥ **五层验收见 §1**；四层判定不变：Wi-Fi 域内受限 UID 0 命令执行已达成；**可用 ROOT / 持久 ROOT 仍 NO-GO**。
 
 > **v13 证据收口（2026-11-20，`HANDOVER.md` §66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，纯文档/离线 + 一次**已授权**重启，不改变四层判定）**：
 > ① **`.text` KASLR slide（①-s 类）已实证取得**：dumpstate 第三主体路径 + 用户明确授权的一次重启。当前 boot（`b9f9f06a-…`）slide = `0x1953600000`、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机，再重启即失效，须重走流程**。
@@ -137,7 +145,32 @@ GhostLock 那面"无地址泄露"的墙，从 v3 起就被报告"有一道缝"�
 
 ---
 
-## 1. 四层判定
+## 1. 五层验收（v13.2，唯一最终判定口径）
+
+> 审核 v0132 §七要求：最终验收不应只写一句 NO-GO，而应把已取得的成果、已否证的方向、已阶段性关闭的面、待审计项与未解决项分开。以下五层，每层给证据等级与停止条件/边界。
+
+| 层 | 条目 | 状态 | 证据等级 | 交付 / 停止条件 |
+|---|---|---|---|---|
+| **已达成** | Wi-Fi 受限 UID 0 命令执行 | **达成**（2026-11-18，两次回显 `uid=0(root)`） | 真机实测 | §23；域 `oplus_wifi_service`，**非**可用 root |
+| **已达成** | dumpstate 取得当前 boot `.text` KASLR slide | **达成**（`0x1953600000`，当前 boot `b9f9f06a-…`） | 真机实测 + 静态符号 | [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)；每 boot 随机 |
+| **已达成** | KernelSnitch Direct Map（`mm_struct`）地址观测方法 | **达成**（G1 18/19 genuine + G2 唯一解） | 真机实测 + 可复算 | §48/§49；仅本次开机 |
+| **已完成否证** | GhostLock A（W 线程栈基址） | **否证**：已审接口范围内无可用 oracle | 已审接口穷尽 + 实测 | §53 / §60 |
+| **已完成否证** | GhostLock B1（`pi_state` 堆地址） | **否证**：无独立地址锚点 | 静态 + 实测 | §67 / G0–G3 |
+| **已完成否证** | GhostLock B2（skb 喷页） | **否证**：M2 固定 delta / 时间邻接不成立 | 真机示踪 | §50 |
+| **已完成否证** | GhostLock B3（4 个全局静态 `rt_mutex`） | **否证**：地址可得、对象不可用（空树必 fault / 非空树不可控） | 指令级 + 厂商源码 | G4 / §71 |
+| **已完成否证** | futex PI 路径 68 个 WARN 候选 | **全部排除**（唯一用户路径被 4 处 `-EINVAL` 拦截） | 厂商源码 + 反汇编 | `WARN_ADDRESS_SURFACE_AUDIT.md` §8 |
+| **已阶段性关闭** | KGSL 非 sparse 生命周期 | **K2 达成**（I1–I5、I10–I12、I4 上机证实） | 静态 + 判定型上机 | §63；K3 并发登记不作 |
+| **已阶段性关闭** | KGSL sparse（KO-1） | **本机不可达**（六入口 `ENOTSUPP`） | 上机判定 | §62 |
+| **已阶段性关闭** | WLAN 配置解析链 C1 | **无可达输入路径** | 只读实测 | §56 |
+| **已完成审计** | WLAN `0x89f1 → hdd_driver_command` 调用链 | **连接成立，主语 = `wpa_supplicant`**；`iwpriv` 负结果（只发 WEXT 私有） | 指令级 + 内核源码 + CIL | [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) |
+| **已完成审计** | 98 项 `hdd_drv_cmds` handler | **0 个内存安全反例**（无无界 `%s`、无输入长度入拷贝、无栈槽重叠）；1 个逻辑不变量违反 H1（`SETMCRATE` 未检解析返回值，**非内存安全**）；4 项未决（格式串未解析/值域门待确认） | 指令级（本机 `.ko`） | [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) |
+| **已完成审计** | WEXT 32 私有 handler（代理可达面） | **8/32 逐指令核完：0 个可确认越界反例**；`iw_setchar_getnone`（0x8BE3）为唯一残留"经典形态"嫌疑（未核）；15 个父项未决；核心长度归一化 + 多数父项走 16 B union 免拷贝 | 指令级 + WEXT 源码 | [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) |
+| **条件性关闭** | FTM testmode `0x89fd` | **需 `con_mode==5` + 驱动模式重启**；正常启动不可达 | 指令级 + 固件脚本 + CIL | [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) |
+| **已完成分诊** | 其余 vendor 模块 | **两主体可达的合格者 0** | 取证 + 源码 + CIL | [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md) |
+| **未解决** | 可用 ROOT（脱离 SELinux 域的系统管理能力） | **NO-GO** | 域逃逸静态无路径 | §24 / §32 |
+| **未解决** | 持久 ROOT | **NO-GO** | 且全程未做持久化写入 | 项目约定 |
+
+### 1.1 四层判定（历史口径，保留）
 
 | 层次 | 结果 |
 |---|---|

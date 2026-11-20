@@ -1,0 +1,251 @@
+== iw_set_keepalive_params @0x8cd70 size=0x3e8 ==
+0x08cd70  sub      sp, sp, #0x70
+0x08cd74  stp      x29, x30, [sp, #0x20]
+0x08cd78  add      x29, sp, #0x20
+0x08cd7c  stp      x26, x25, [sp, #0x30]
+0x08cd80  stp      x24, x23, [sp, #0x40]
+0x08cd84  stp      x22, x21, [sp, #0x50]
+0x08cd88  stp      x20, x19, [sp, #0x60]
+0x08cd8c  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08cd90  mov      x19, #0        ; = .rodata.str1.1+0x2b650   ; "iw_set_keepalive_params"
+0x08cd94  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08cd98  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x2b650   ; "iw_set_keepalive_params"
+0x08cd9c  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08cda0  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x2b650   ; "iw_set_keepalive_params"
+0x08cda4  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08cda8  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x2b650   ; "iw_set_keepalive_params"
+0x08cdac  mov      x25, x2
+0x08cdb0  mov      x24, x1
+0x08cdb4  add      x1, sp, #0x10
+0x08cdb8  mov      x2, x19
+0x08cdbc  ldr      x8, [x8]
+0x08cdc0  mov      x21, x3
+0x08cdc4  mov      x22, x0
+0x08cdc8  stur     x8, [x29, #-8]
+0x08cdcc  bl       #0x8cdcc        ; -> __osif_vdev_sync_op_start
+0x08cdd0  mov      w26, w0
+0x08cdd4  cbnz     w0, #0x8ce34
+0x08cdd8  mov      x20, #0        ; = .rodata.str1.1+0x2b668   ; "__iw_set_keepalive_params"
+0x08cddc  mov      x2, #0        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08cde0  movk     x20, #0, lsl #16        ; = .rodata.str1.1+0x2b668   ; "__iw_set_keepalive_params"
+0x08cde4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08cde8  movk     x20, #0, lsl #32        ; = .rodata.str1.1+0x2b668   ; "__iw_set_keepalive_params"
+0x08cdec  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08cdf0  movk     x20, #0, lsl #48        ; = .rodata.str1.1+0x2b668   ; "__iw_set_keepalive_params"
+0x08cdf4  mov      w0, #0x33
+0x08cdf8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08cdfc  mov      w4, #0x2260
+0x08ce00  mov      w1, #8
+0x08ce04  mov      x3, x20
+0x08ce08  mov      x5, x22
+0x08ce0c  bl       #0x8ce0c        ; -> qdf_trace_msg
+0x08ce10  ldr      x23, [x22, #0x918]
+0x08ce14  mov      x1, x20
+0x08ce18  mov      x0, x23
+0x08ce1c  bl       #0x8ce1c        ; -> __wlan_hdd_validate_context
+0x08ce20  mov      w26, w0
+0x08ce24  cbz      w0, #0x8ce74
+0x08ce28  ldr      x0, [sp, #0x10]
+0x08ce2c  mov      x1, x19
+0x08ce30  bl       #0x8ce30        ; -> __osif_vdev_sync_op_stop
+0x08ce34  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x08ce38  ldur     x8, [x29, #-8]
+0x08ce3c  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ce40  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08ce44  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08ce48  ldr      x9, [x9]
+0x08ce4c  cmp      x9, x8
+0x08ce50  b.ne     #0x8d154
+0x08ce54  mov      w0, w26
+0x08ce58  ldp      x20, x19, [sp, #0x60]
+0x08ce5c  ldp      x22, x21, [sp, #0x50]
+0x08ce60  ldp      x24, x23, [sp, #0x40]
+0x08ce64  ldp      x26, x25, [sp, #0x30]
+0x08ce68  ldp      x29, x30, [sp, #0x20]
+0x08ce6c  add      sp, sp, #0x70
+0x08ce70  ret      
+0x08ce74  ldr      x8, [x23, #0xc0]
+0x08ce78  ldr      w8, [x8, #0x20f0]
+0x08ce7c  cmp      w8, #1
+0x08ce80  b.eq     #0x8cec8
+0x08ce84  cmp      w8, #2
+0x08ce88  b.eq     #0x8cee8
+0x08ce8c  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08ce90  mov      x20, #0        ; = .bss+0xfc8
+0x08ce94  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ce98  movk     x20, #0, lsl #16        ; = .bss+0xfc8
+0x08ce9c  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08cea0  movk     x20, #0, lsl #32        ; = .bss+0xfc8
+0x08cea4  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08cea8  movk     x20, #0, lsl #48        ; = .bss+0xfc8
+0x08ceac  ldr      x21, [x8]
+0x08ceb0  ldr      x8, [x20]
+0x08ceb4  sub      x8, x8, x21
+0x08ceb8  cmn      x8, #0x32
+0x08cebc  b.mi     #0x8cfc0
+0x08cec0  mov      w26, #-0x20c
+0x08cec4  b        #0x8ce28
+0x08cec8  mov      x2, #0        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cecc  ldrh     w3, [x24]
+0x08ced0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08ced4  mov      w0, #0x33
+0x08ced8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cedc  mov      w1, #8
+0x08cee0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cee4  bl       #0x8cee4        ; -> qdf_trace_msg
+0x08cee8  ldrh     w5, [x25, #8]
+0x08ceec  cmp      w5, #0x20
+0x08cef0  b.ne     #0x8cf30
+0x08cef4  ldr      w5, [x21, #4]
+0x08cef8  cmp      w5, #0x3e9
+0x08cefc  b.lo     #0x8cf5c
+0x08cf00  mov      x2, #0        ; = .rodata.str1.1+0x2b69c   ; "%s: %d: Value of timePeriod %d exceed Max limit %d"
+0x08cf04  mov      w0, #0x33
+0x08cf08  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b69c   ; "%s: %d: Value of timePeriod %d exceed Max limit %d"
+0x08cf0c  mov      w4, #0x2273
+0x08cf10  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b69c   ; "%s: %d: Value of timePeriod %d exceed Max limit %d"
+0x08cf14  mov      w6, #0x3e8
+0x08cf18  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b69c   ; "%s: %d: Value of timePeriod %d exceed Max limit %d"
+0x08cf1c  mov      w1, #2
+0x08cf20  mov      x3, x20
+0x08cf24  bl       #0x8cf24        ; -> qdf_trace_msg
+0x08cf28  mov      w26, #-0x16
+0x08cf2c  b        #0x8ce28
+0x08cf30  mov      x2, #0        ; = .rodata.str1.1+0x2b682   ; "%s: %d: Invalid length %d"
+0x08cf34  mov      w0, #0x33
+0x08cf38  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b682   ; "%s: %d: Invalid length %d"
+0x08cf3c  mov      w4, #0x226c
+0x08cf40  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b682   ; "%s: %d: Invalid length %d"
+0x08cf44  mov      w1, #2
+0x08cf48  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b682   ; "%s: %d: Invalid length %d"
+0x08cf4c  mov      x3, x20
+0x08cf50  bl       #0x8cf50        ; -> qdf_trace_msg
+0x08cf54  mov      w26, #-0x16
+0x08cf58  b        #0x8ce28
+0x08cf5c  mov      x2, #0        ; = .rodata.str1.1+0x2b6cf   ; "%s: %d: Set Keep Alive Request : TimePeriod %d size %zu"
+0x08cf60  mov      w0, #0x33
+0x08cf64  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b6cf   ; "%s: %d: Set Keep Alive Request : TimePeriod %d size %zu"
+0x08cf68  mov      w4, #0x2279
+0x08cf6c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b6cf   ; "%s: %d: Set Keep Alive Request : TimePeriod %d size %zu"
+0x08cf70  mov      w1, #8
+0x08cf74  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b6cf   ; "%s: %d: Set Keep Alive Request : TimePeriod %d size %zu"
+0x08cf78  mov      x3, x20
+0x08cf7c  mov      w6, #0x20
+0x08cf80  bl       #0x8cf80        ; -> qdf_trace_msg
+0x08cf84  ldrb     w8, [x21]
+0x08cf88  cmp      w8, #2
+0x08cf8c  b.eq     #0x8d000
+0x08cf90  cmp      w8, #1
+0x08cf94  b.ne     #0x8d0c0
+0x08cf98  mov      x2, #0        ; = .rodata.str1.1+0x2b707   ; "%s: %d: Keep Alive Request: Tx NULL"
+0x08cf9c  mov      w0, #0x33
+0x08cfa0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b707   ; "%s: %d: Keep Alive Request: Tx NULL"
+0x08cfa4  mov      w4, #0x227d
+0x08cfa8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b707   ; "%s: %d: Keep Alive Request: Tx NULL"
+0x08cfac  mov      w1, #8
+0x08cfb0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b707   ; "%s: %d: Keep Alive Request: Tx NULL"
+0x08cfb4  mov      x3, x20
+0x08cfb8  bl       #0x8cfb8        ; -> qdf_trace_msg
+0x08cfbc  b        #0x8d0c0
+0x08cfc0  mov      x2, #0        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cfc4  mov      x3, #0        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cfc8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cfcc  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cfd0  ldrh     w5, [x24]
+0x08cfd4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cfd8  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cfdc  mov      w0, #0x33
+0x08cfe0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cfe4  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cfe8  mov      w4, #0xbe6
+0x08cfec  mov      w1, #2
+0x08cff0  bl       #0x8cff0        ; -> qdf_trace_msg
+0x08cff4  mov      w26, #-0x20c
+0x08cff8  str      x21, [x20]
+0x08cffc  b        #0x8ce28
+0x08d000  mov      x2, #0        ; = .rodata.str1.1+0x2b72b   ; "%s: %d: Keep Alive Request: Tx UnSolicited ARP RSP"
+0x08d004  mov      w24, #0x33
+0x08d008  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b72b   ; "%s: %d: Keep Alive Request: Tx UnSolicited ARP RSP"
+0x08d00c  mov      w4, #0x2281
+0x08d010  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b72b   ; "%s: %d: Keep Alive Request: Tx UnSolicited ARP RSP"
+0x08d014  mov      w1, #8
+0x08d018  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b72b   ; "%s: %d: Keep Alive Request: Tx UnSolicited ARP RSP"
+0x08d01c  mov      w0, w24
+0x08d020  mov      x3, x20
+0x08d024  bl       #0x8d024        ; -> qdf_trace_msg
+0x08d028  mov      x2, #0        ; = .rodata.str1.1+0x2b75e   ; "%s: %d: Host IP address: %d.%d.%d.%d"
+0x08d02c  ldrb     w5, [x21, #8]
+0x08d030  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b75e   ; "%s: %d: Host IP address: %d.%d.%d.%d"
+0x08d034  ldrb     w6, [x21, #9]
+0x08d038  ldrb     w7, [x21, #0xa]
+0x08d03c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b75e   ; "%s: %d: Host IP address: %d.%d.%d.%d"
+0x08d040  ldrb     w8, [x21, #0xb]
+0x08d044  mov      w4, #0x2285
+0x08d048  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b75e   ; "%s: %d: Host IP address: %d.%d.%d.%d"
+0x08d04c  mov      w0, w24
+0x08d050  mov      w1, #8
+0x08d054  mov      x3, x20
+0x08d058  str      w8, [sp]
+0x08d05c  bl       #0x8d05c        ; -> qdf_trace_msg
+0x08d060  mov      x2, #0        ; = .rodata.str1.1+0x2b783   ; "%s: %d: Dest IP address: %d.%d.%d.%d"
+0x08d064  ldrb     w5, [x21, #0xc]
+0x08d068  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b783   ; "%s: %d: Dest IP address: %d.%d.%d.%d"
+0x08d06c  ldrb     w6, [x21, #0xd]
+0x08d070  ldrb     w7, [x21, #0xe]
+0x08d074  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b783   ; "%s: %d: Dest IP address: %d.%d.%d.%d"
+0x08d078  ldrb     w8, [x21, #0xf]
+0x08d07c  mov      w4, #0x2289
+0x08d080  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b783   ; "%s: %d: Dest IP address: %d.%d.%d.%d"
+0x08d084  mov      w0, w24
+0x08d088  mov      w1, #8
+0x08d08c  mov      x3, x20
+0x08d090  str      w8, [sp]
+0x08d094  bl       #0x8d094        ; -> qdf_trace_msg
+0x08d098  mov      x2, #0        ; = .rodata.str1.1+0x2b7a8   ; "%s: %d: Dest MAC address: %pM"
+0x08d09c  add      x5, x21, #0x10
+0x08d0a0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b7a8   ; "%s: %d: Dest MAC address: %pM"
+0x08d0a4  mov      w4, #0x228c
+0x08d0a8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b7a8   ; "%s: %d: Dest MAC address: %pM"
+0x08d0ac  mov      w0, w24
+0x08d0b0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b7a8   ; "%s: %d: Dest MAC address: %pM"
+0x08d0b4  mov      w1, #8
+0x08d0b8  mov      x3, x20
+0x08d0bc  bl       #0x8d0bc        ; -> qdf_trace_msg
+0x08d0c0  mov      x2, #0        ; = .rodata.str1.1+0x2b7c6   ; "%s: %d: Keep alive period  %d"
+0x08d0c4  ldr      w5, [x21, #4]
+0x08d0c8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b7c6   ; "%s: %d: Keep alive period  %d"
+0x08d0cc  mov      w0, #0x33
+0x08d0d0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b7c6   ; "%s: %d: Keep alive period  %d"
+0x08d0d4  mov      w4, #0x2290
+0x08d0d8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b7c6   ; "%s: %d: Keep alive period  %d"
+0x08d0dc  mov      w1, #8
+0x08d0e0  mov      x3, x20
+0x08d0e4  bl       #0x8d0e4        ; -> qdf_trace_msg
+0x08d0e8  ldr      x0, [x23, #0x10]
+0x08d0ec  mov      x2, x21
+0x08d0f0  ldrb     w1, [x22, #0x998]
+0x08d0f4  bl       #0x8d0f4        ; -> sme_set_keep_alive
+0x08d0f8  cbz      w0, #0x8d128
+0x08d0fc  mov      x2, #0        ; = .rodata.str1.1+0x2b7e4   ; "%s: %d: Failure to execute Keep Alive"
+0x08d100  mov      w0, #0x33
+0x08d104  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b7e4   ; "%s: %d: Failure to execute Keep Alive"
+0x08d108  mov      w4, #0x2295
+0x08d10c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b7e4   ; "%s: %d: Failure to execute Keep Alive"
+0x08d110  mov      w1, #2
+0x08d114  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b7e4   ; "%s: %d: Failure to execute Keep Alive"
+0x08d118  mov      x3, x20
+0x08d11c  bl       #0x8d11c        ; -> qdf_trace_msg
+0x08d120  mov      w26, #-0x16
+0x08d124  b        #0x8ce28
+0x08d128  mov      x2, #0        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08d12c  mov      w0, #0x33
+0x08d130  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08d134  mov      w4, #0x2298
+0x08d138  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08d13c  mov      w1, #8
+0x08d140  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08d144  mov      x3, x20
+0x08d148  bl       #0x8d148        ; -> qdf_trace_msg
+0x08d14c  mov      w26, wzr
+0x08d150  b        #0x8ce28
+0x08d154  bl       #0x8d154        ; -> __stack_chk_fail
