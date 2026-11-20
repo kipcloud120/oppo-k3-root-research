@@ -1,0 +1,400 @@
+0x05dd68  sub      sp, sp, #0x70
+0x05dd6c  stp      x29, x30, [sp, #0x10]
+0x05dd70  add      x29, sp, #0x10
+0x05dd74  stp      x28, x27, [sp, #0x20]
+0x05dd78  stp      x26, x25, [sp, #0x30]
+0x05dd7c  stp      x24, x23, [sp, #0x40]
+0x05dd80  stp      x22, x21, [sp, #0x50]
+0x05dd84  stp      x20, x19, [sp, #0x60]
+0x05dd88  mov      x8, #0
+0x05dd8c  mov      x20, #0
+0x05dd90  movk     x8, #0, lsl #16
+0x05dd94  mov      x0, #0
+0x05dd98  movk     x8, #0, lsl #32
+0x05dd9c  mov      x2, #0
+0x05dda0  movk     x8, #0, lsl #48
+0x05dda4  movk     x20, #0, lsl #16
+0x05dda8  movk     x0, #0, lsl #16
+0x05ddac  movk     x2, #0, lsl #16
+0x05ddb0  movk     x20, #0, lsl #32
+0x05ddb4  movk     x0, #0, lsl #32
+0x05ddb8  ldr      x8, [x8]
+0x05ddbc  movk     x2, #0, lsl #32
+0x05ddc0  movk     x20, #0, lsl #48
+0x05ddc4  movk     x0, #0, lsl #48
+0x05ddc8  movk     x2, #0, lsl #48
+0x05ddcc  add      x1, x20, #0x18
+0x05ddd0  str      x8, [sp, #8]
+0x05ddd4  bl       #0x5ddd4        ; -> printk
+0x05ddd8  bl       #0x5ddd8        ; -> qdf_print_setup
+0x05dddc  cbz      w0, #0x5de00
+0x05dde0  mov      w19, w0
+0x05dde4  mov      x0, #0
+0x05dde8  movk     x0, #0, lsl #16
+0x05ddec  mov      w1, w19
+0x05ddf0  movk     x0, #0, lsl #32
+0x05ddf4  movk     x0, #0, lsl #48
+0x05ddf8  bl       #0x5ddf8        ; -> printk
+0x05ddfc  b        #0x5df50
+0x05de00  mov      x0, #0
+0x05de04  mov      x3, #0
+0x05de08  movk     x0, #0, lsl #16
+0x05de0c  movk     x3, #0, lsl #16
+0x05de10  movk     x0, #0, lsl #32
+0x05de14  movk     x3, #0, lsl #32
+0x05de18  movk     x0, #0, lsl #48
+0x05de1c  movk     x3, #0, lsl #48
+0x05de20  mov      x1, xzr
+0x05de24  mov      x2, xzr
+0x05de28  bl       #0x5de28        ; -> qdf_print_ctrl_register
+0x05de2c  tbnz     w0, #0x1f, #0x5de78
+0x05de30  bl       #0x5de30        ; -> qdf_set_pidx
+0x05de34  bl       #0x5de34        ; -> qdf_debugfs_init
+0x05de38  cbz      w0, #0x5de94
+0x05de3c  mov      x2, #0
+0x05de40  mov      x3, #0
+0x05de44  movk     x2, #0, lsl #16
+0x05de48  movk     x3, #0, lsl #16
+0x05de4c  mov      w19, w0
+0x05de50  movk     x2, #0, lsl #32
+0x05de54  movk     x3, #0, lsl #32
+0x05de58  mov      w0, #0x33
+0x05de5c  movk     x2, #0, lsl #48
+0x05de60  movk     x3, #0, lsl #48
+0x05de64  mov      w4, #0x3c4e
+0x05de68  mov      w1, #2
+0x05de6c  mov      w5, w19
+0x05de70  bl       #0x5de70        ; -> qdf_trace_msg
+0x05de74  b        #0x5df38
+0x05de78  mov      x0, #0
+0x05de7c  movk     x0, #0, lsl #16
+0x05de80  movk     x0, #0, lsl #32
+0x05de84  movk     x0, #0, lsl #48
+0x05de88  bl       #0x5de88        ; -> printk
+0x05de8c  mov      w19, #0x10
+0x05de90  b        #0x5df50
+0x05de94  bl       #0x5de94        ; -> qdf_lock_stats_init
+0x05de98  bl       #0x5de98        ; -> qdf_mem_init
+0x05de9c  bl       #0x5de9c        ; -> qdf_event_list_init
+0x05dea0  bl       #0x5dea0        ; -> qdf_cpuhp_init
+0x05dea4  cbz      w0, #0x5dee4
+0x05dea8  mov      x2, #0
+0x05deac  mov      x3, #0
+0x05deb0  movk     x2, #0, lsl #16
+0x05deb4  movk     x3, #0, lsl #16
+0x05deb8  mov      w19, w0
+0x05debc  movk     x2, #0, lsl #32
+0x05dec0  movk     x3, #0, lsl #32
+0x05dec4  mov      w0, #0x33
+0x05dec8  movk     x2, #0, lsl #48
+0x05decc  movk     x3, #0, lsl #48
+0x05ded0  mov      w4, #0x3c61
+0x05ded4  mov      w1, #2
+0x05ded8  mov      w5, w19
+0x05dedc  bl       #0x5dedc        ; -> qdf_trace_msg
+0x05dee0  b        #0x5df28
+0x05dee4  bl       #0x5dee4        ; -> qdf_trace_spin_lock_init
+0x05dee8  cbz      w0, #0x5df68
+0x05deec  mov      x2, #0
+0x05def0  mov      x3, #0
+0x05def4  movk     x2, #0, lsl #16
+0x05def8  movk     x3, #0, lsl #16
+0x05defc  mov      w19, w0
+0x05df00  movk     x2, #0, lsl #32
+0x05df04  movk     x3, #0, lsl #32
+0x05df08  mov      w0, #0x33
+0x05df0c  movk     x2, #0, lsl #48
+0x05df10  movk     x3, #0, lsl #48
+0x05df14  mov      w4, #0x3c67
+0x05df18  mov      w1, #2
+0x05df1c  mov      w5, w19
+0x05df20  bl       #0x5df20        ; -> qdf_trace_msg
+0x05df24  bl       #0x5df24        ; -> qdf_cpuhp_deinit
+0x05df28  bl       #0x5df28        ; -> qdf_event_list_destroy
+0x05df2c  bl       #0x5df2c        ; -> qdf_mem_exit
+0x05df30  bl       #0x5df30        ; -> qdf_lock_stats_deinit
+0x05df34  bl       #0x5df34        ; -> qdf_debugfs_exit
+0x05df38  bl       #0x5df38        ; -> qdf_get_pidx
+0x05df3c  mov      w20, w0
+0x05df40  mov      w0, #-1
+0x05df44  bl       #0x5df44        ; -> qdf_set_pidx
+0x05df48  mov      w0, w20
+0x05df4c  bl       #0x5df4c        ; -> qdf_print_ctrl_cleanup
+0x05df50  mov      w0, w19
+0x05df54  bl       #0x5df54        ; -> qdf_status_to_os_return
+0x05df58  mov      w24, w0
+0x05df5c  cbz      w24, #0x5e1d8
+0x05df60  mov      w0, #-0x16
+0x05df64  b        #0x5e1dc
+0x05df68  bl       #0x5df68        ; -> qdf_trace_init
+0x05df6c  bl       #0x5df6c        ; -> qdf_register_debugcb_init
+0x05df70  bl       #0x5df70        ; -> osif_sync_init
+0x05df74  mov      x19, #0
+0x05df78  mov      x0, sp
+0x05df7c  movk     x19, #0, lsl #16
+0x05df80  movk     x19, #0, lsl #32
+0x05df84  movk     x19, #0, lsl #48
+0x05df88  mov      x1, x19
+0x05df8c  bl       #0x5df8c        ; -> __osif_driver_sync_create_and_trans
+0x05df90  cbz      w0, #0x5dfd0
+0x05df94  mov      x2, #0
+0x05df98  mov      w21, w0
+0x05df9c  movk     x2, #0, lsl #16
+0x05dfa0  mov      w0, #0x33
+0x05dfa4  movk     x2, #0, lsl #32
+0x05dfa8  mov      w4, #0x3df4
+0x05dfac  movk     x2, #0, lsl #48
+0x05dfb0  mov      w1, #2
+0x05dfb4  mov      x3, x19
+0x05dfb8  mov      w5, w21
+0x05dfbc  bl       #0x5dfbc        ; -> qdf_trace_msg
+0x05dfc0  mov      w0, w21
+0x05dfc4  bl       #0x5dfc4        ; -> qdf_status_to_os_return
+0x05dfc8  mov      w24, w0
+0x05dfcc  b        #0x5e1a0
+0x05dfd0  bl       #0x5dfd0        ; -> hdd_init
+0x05dfd4  cbz      w0, #0x5e008
+0x05dfd8  mov      x2, #0
+0x05dfdc  mov      w24, w0
+0x05dfe0  movk     x2, #0, lsl #16
+0x05dfe4  mov      w0, #0x33
+0x05dfe8  movk     x2, #0, lsl #32
+0x05dfec  mov      w4, #0x3dfb
+0x05dff0  movk     x2, #0, lsl #48
+0x05dff4  mov      w1, #2
+0x05dff8  mov      x3, x19
+0x05dffc  mov      w5, w24
+0x05e000  bl       #0x5e000        ; -> qdf_trace_msg
+0x05e004  b        #0x5e190
+0x05e008  bl       #0x5e008        ; -> ucfg_mlme_global_init
+0x05e00c  mov      w21, w0
+0x05e010  cbnz     w0, #0x5e104
+0x05e014  bl       #0x5e014        ; -> dispatcher_init
+0x05e018  mov      w21, w0
+0x05e01c  cbnz     w0, #0x5e100
+0x05e020  mov      x0, #0
+0x05e024  movk     x0, #0, lsl #16
+0x05e028  movk     x0, #0, lsl #32
+0x05e02c  movk     x0, #0, lsl #48
+0x05e030  bl       #0x5e030        ; -> target_if_init
+0x05e034  mov      w21, w0
+0x05e038  cbnz     w0, #0x5e0fc
+0x05e03c  bl       #0x5e03c        ; -> ucfg_mlme_init
+0x05e040  mov      w21, w0
+0x05e044  cbnz     w0, #0x5e0f8
+0x05e048  bl       #0x5e048        ; -> ucfg_fwol_init
+0x05e04c  mov      w21, w0
+0x05e050  cbnz     w0, #0x5e0f4
+0x05e054  bl       #0x5e054        ; -> disa_init
+0x05e058  mov      w21, w0
+0x05e05c  cbnz     w0, #0x5e0f0
+0x05e060  bl       #0x5e060        ; -> pmo_init
+0x05e064  mov      w21, w0
+0x05e068  cbnz     w0, #0x5e0ec
+0x05e06c  bl       #0x5e06c        ; -> ipa_init
+0x05e070  mov      w21, w0
+0x05e074  cbnz     w0, #0x5e0e8
+0x05e078  bl       #0x5e078        ; -> ucfg_action_oui_init
+0x05e07c  mov      w21, w0
+0x05e080  cbnz     w0, #0x5e0e4
+0x05e084  bl       #0x5e084        ; -> nan_init
+0x05e088  mov      w21, w0
+0x05e08c  cbnz     w0, #0x5e0e0
+0x05e090  bl       #0x5e090        ; -> ucfg_p2p_init
+0x05e094  mov      w21, w0
+0x05e098  cbnz     w0, #0x5e0dc
+0x05e09c  bl       #0x5e09c        ; -> ucfg_interop_issues_ap_init
+0x05e0a0  mov      w21, w0
+0x05e0a4  cbnz     w0, #0x5e0d8
+0x05e0a8  bl       #0x5e0a8        ; -> policy_mgr_init
+0x05e0ac  mov      w21, w0
+0x05e0b0  cbnz     w0, #0x5e0d4
+0x05e0b4  bl       #0x5e0b4        ; -> ucfg_tdls_init
+0x05e0b8  mov      w21, w0
+0x05e0bc  cbnz     w0, #0x5e0d0
+0x05e0c0  bl       #0x5e0c0        ; -> ucfg_blm_init
+0x05e0c4  cbz      w0, #0x5e220
+0x05e0c8  mov      w21, w0
+0x05e0cc  bl       #0x5e0cc        ; -> ucfg_tdls_deinit
+0x05e0d0  bl       #0x5e0d0        ; -> policy_mgr_deinit
+0x05e0d4  bl       #0x5e0d4        ; -> ucfg_interop_issues_ap_deinit
+0x05e0d8  bl       #0x5e0d8        ; -> ucfg_p2p_deinit
+0x05e0dc  bl       #0x5e0dc        ; -> nan_deinit
+0x05e0e0  bl       #0x5e0e0        ; -> ucfg_action_oui_deinit
+0x05e0e4  bl       #0x5e0e4        ; -> ipa_deinit
+0x05e0e8  bl       #0x5e0e8        ; -> pmo_deinit
+0x05e0ec  bl       #0x5e0ec        ; -> disa_deinit
+0x05e0f0  bl       #0x5e0f0        ; -> ucfg_fwol_deinit
+0x05e0f4  bl       #0x5e0f4        ; -> ucfg_mlme_deinit
+0x05e0f8  bl       #0x5e0f8        ; -> target_if_deinit
+0x05e0fc  bl       #0x5e0fc        ; -> dispatcher_deinit
+0x05e100  bl       #0x5e100        ; -> ucfg_mlme_global_deinit
+0x05e104  mov      x2, #0
+0x05e108  mov      w0, #0x33
+0x05e10c  movk     x2, #0, lsl #16
+0x05e110  mov      w4, #0x3e01
+0x05e114  movk     x2, #0, lsl #32
+0x05e118  mov      w1, #2
+0x05e11c  movk     x2, #0, lsl #48
+0x05e120  mov      x3, x19
+0x05e124  mov      w5, w21
+0x05e128  bl       #0x5e128        ; -> qdf_trace_msg
+0x05e12c  mov      w0, w21
+0x05e130  bl       #0x5e130        ; -> qdf_status_to_os_return
+0x05e134  mov      w24, w0
+0x05e138  bl       #0x5e138        ; -> wlan_logging_sock_deinit_svc
+0x05e13c  bl       #0x5e13c        ; -> cds_get_global_context
+0x05e140  cbz      x0, #0x5e150
+0x05e144  add      x0, x0, #0x1e0
+0x05e148  bl       #0x5e148        ; -> qdf_lock_stats_cookie_destroy
+0x05e14c  b        #0x5e180
+0x05e150  mov      x2, #0
+0x05e154  mov      x3, #0
+0x05e158  movk     x2, #0, lsl #16
+0x05e15c  movk     x3, #0, lsl #16
+0x05e160  movk     x2, #0, lsl #32
+0x05e164  movk     x3, #0, lsl #32
+0x05e168  mov      w0, #0x33
+0x05e16c  movk     x2, #0, lsl #48
+0x05e170  mov      w4, #0x2134
+0x05e174  movk     x3, #0, lsl #48
+0x05e178  mov      w1, #2
+0x05e17c  bl       #0x5e17c        ; -> qdf_trace_msg
+0x05e180  mov      x0, xzr
+0x05e184  mov      x1, xzr
+0x05e188  bl       #0x5e188        ; -> qdf_op_callbacks_register
+0x05e18c  bl       #0x5e18c        ; -> cds_deinit
+0x05e190  ldr      x0, [sp]
+0x05e194  bl       #0x5e194        ; -> osif_driver_sync_trans_stop
+0x05e198  ldr      x0, [sp]
+0x05e19c  bl       #0x5e19c        ; -> osif_driver_sync_destroy
+0x05e1a0  bl       #0x5e1a0        ; -> osif_sync_deinit
+0x05e1a4  bl       #0x5e1a4        ; -> qdf_trace_deinit
+0x05e1a8  bl       #0x5e1a8        ; -> qdf_cpuhp_deinit
+0x05e1ac  bl       #0x5e1ac        ; -> qdf_event_list_destroy
+0x05e1b0  bl       #0x5e1b0        ; -> qdf_mem_exit
+0x05e1b4  bl       #0x5e1b4        ; -> qdf_lock_stats_deinit
+0x05e1b8  bl       #0x5e1b8        ; -> qdf_debugfs_exit
+0x05e1bc  bl       #0x5e1bc        ; -> qdf_get_pidx
+0x05e1c0  mov      w19, w0
+0x05e1c4  mov      w0, #-1
+0x05e1c8  bl       #0x5e1c8        ; -> qdf_set_pidx
+0x05e1cc  mov      w0, w19
+0x05e1d0  bl       #0x5e1d0        ; -> qdf_print_ctrl_cleanup
+0x05e1d4  cbnz     w24, #0x5df60
+0x05e1d8  mov      w0, wzr
+0x05e1dc  mov      x9, #0
+0x05e1e0  ldr      x8, [sp, #8]
+0x05e1e4  movk     x9, #0, lsl #16
+0x05e1e8  movk     x9, #0, lsl #32
+0x05e1ec  movk     x9, #0, lsl #48
+0x05e1f0  ldr      x9, [x9]
+0x05e1f4  cmp      x9, x8
+0x05e1f8  b.ne     #0x5e21c
+0x05e1fc  ldp      x20, x19, [sp, #0x60]
+0x05e200  ldp      x22, x21, [sp, #0x50]
+0x05e204  ldp      x24, x23, [sp, #0x40]
+0x05e208  ldp      x26, x25, [sp, #0x30]
+0x05e20c  ldp      x28, x27, [sp, #0x20]
+0x05e210  ldp      x29, x30, [sp, #0x10]
+0x05e214  add      sp, sp, #0x70
+0x05e218  ret      
+0x05e21c  bl       #0x5e21c        ; -> __stack_chk_fail
+0x05e220  mov      x21, #0
+0x05e224  mov      x1, #0
+0x05e228  movk     x21, #0, lsl #16
+0x05e22c  movk     x1, #0, lsl #16
+0x05e230  movk     x21, #0, lsl #32
+0x05e234  movk     x1, #0, lsl #32
+0x05e238  movk     x21, #0, lsl #48
+0x05e23c  movk     x1, #0, lsl #48
+0x05e240  mov      x0, x21
+0x05e244  bl       #0x5e244        ; -> qdf_wake_lock_create
+0x05e248  cbz      w0, #0x5e288
+0x05e24c  mov      x2, #0
+0x05e250  mov      w22, w0
+0x05e254  movk     x2, #0, lsl #16
+0x05e258  mov      w0, #0x33
+0x05e25c  movk     x2, #0, lsl #32
+0x05e260  mov      w4, #0x3e08
+0x05e264  movk     x2, #0, lsl #48
+0x05e268  mov      w1, #2
+0x05e26c  mov      x3, x19
+0x05e270  mov      w5, w22
+0x05e274  bl       #0x5e274        ; -> qdf_trace_msg
+0x05e278  mov      w0, w22
+0x05e27c  bl       #0x5e27c        ; -> qdf_status_to_os_return
+0x05e280  mov      w24, w0
+0x05e284  b        #0x5e484
+0x05e288  mov      x8, #0
+0x05e28c  mov      x23, #0
+0x05e290  movk     x8, #0, lsl #16
+0x05e294  movk     x23, #0, lsl #16
+0x05e298  movk     x8, #0, lsl #32
+0x05e29c  mov      x9, #0
+0x05e2a0  movk     x8, #0, lsl #48
+0x05e2a4  mov      x1, #0
+0x05e2a8  mov      x2, #0
+0x05e2ac  movk     x23, #0, lsl #32
+0x05e2b0  movk     x9, #0, lsl #16
+0x05e2b4  movk     x1, #0, lsl #16
+0x05e2b8  movk     x2, #0, lsl #16
+0x05e2bc  movk     x23, #0, lsl #48
+0x05e2c0  movk     x9, #0, lsl #32
+0x05e2c4  ldr      w8, [x8]
+0x05e2c8  movk     x1, #0, lsl #32
+0x05e2cc  movk     x2, #0, lsl #32
+0x05e2d0  mov      x0, x23
+0x05e2d4  movk     x9, #0, lsl #48
+0x05e2d8  movk     x1, #0, lsl #48
+0x05e2dc  movk     x2, #0, lsl #48
+0x05e2e0  str      wzr, [x0], #8
+0x05e2e4  str      w8, [x9]
+0x05e2e8  bl       #0x5e2e8        ; -> __init_waitqueue_head
+0x05e2ec  mov      x22, #0
+0x05e2f0  mov      x27, #0
+0x05e2f4  movk     x22, #0, lsl #16
+0x05e2f8  mov      x3, #0
+0x05e2fc  movk     x27, #0, lsl #16
+0x05e300  movk     x22, #0, lsl #32
+0x05e304  movk     x3, #0, lsl #16
+0x05e308  movk     x27, #0, lsl #32
+0x05e30c  movk     x22, #0, lsl #48
+0x05e310  movk     x3, #0, lsl #32
+0x05e314  movk     x27, #0, lsl #48
+0x05e318  movk     x3, #0, lsl #48
+0x05e31c  mov      x0, x22
+0x05e320  mov      w1, wzr
+0x05e324  mov      w2, #1
+0x05e328  str      wzr, [x27]
+0x05e32c  str      wzr, [x22]
+0x05e330  bl       #0x5e330        ; -> alloc_chrdev_region
+0x05e334  cbz      w0, #0x5e350
+0x05e338  mov      x0, #0
+0x05e33c  movk     x0, #0, lsl #16
+0x05e340  movk     x0, #0, lsl #32
+0x05e344  movk     x0, #0, lsl #48
+0x05e348  bl       #0x5e348        ; -> printk
+0x05e34c  b        #0x5e450
+0x05e350  mov      x2, #0
+0x05e354  add      x24, x20, #0x18
+0x05e358  movk     x2, #0, lsl #16
+0x05e35c  ldr      w28, [x22]
+0x05e360  movk     x2, #0, lsl #32
+0x05e364  mov      x0, x20
+0x05e368  movk     x2, #0, lsl #48
+0x05e36c  mov      x1, x24
+0x05e370  bl       #0x5e370        ; -> __class_create
+0x05e374  mov      x26, #0
+0x05e378  cmn      x0, #0xfff
+0x05e37c  movk     x26, #0, lsl #16
+0x05e380  movk     x26, #0, lsl #32
+0x05e384  movk     x26, #0, lsl #48
+0x05e388  str      x0, [x26]
+0x05e38c  b.lo     #0x5e3a8
+0x05e390  mov      x0, #0
+0x05e394  movk     x0, #0, lsl #16
+0x05e398  movk     x0, #0, lsl #32
+0x05e39c  movk     x0, #0, lsl #48
+0x05e3a0  bl       #0x5e3a0        ; -> printk
+0x05e3a4  b        #0x5e444

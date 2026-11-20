@@ -1,0 +1,8 @@
+0xffffff800815119c  bl     -> 0xffffff80080bfdf8  __lock_task_sighand
+0xffffff80081511b8  bl     -> 0xffffff80091257f0  _raw_spin_unlock_irqrestore
+0xffffff80081511c0  b      -> 0xffffff800815121c  posix_cpu_timer_del+0xbc
+0xffffff80081511ec  bl     -> 0xffffff80091257f0  _raw_spin_unlock_irqrestore
+0xffffff8008151214  bl     -> 0xffffff80080ab0c8  __put_task_struct
+0xffffff800815124c  b      -> 0xffffff8008151194  posix_cpu_timer_del+0x34
+0xffffff8008151278  b      -> 0xffffff80081511f0  posix_cpu_timer_del+0x90
+0xffffff800815127c  bl     -> 0xffffff80080aefc0  __stack_chk_fail

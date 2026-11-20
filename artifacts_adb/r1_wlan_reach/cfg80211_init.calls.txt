@@ -1,0 +1,15 @@
+0x01a5a4  bl       #0x1a5a4        ; -> qdf_trace_msg
+0x01a638  bl       #0x1a638        ; -> wlan_scan_cfg80211_add_connected_pno_support
+0x01a664  bl       #0x1a664        ; -> __qdf_mem_malloc
+0x01a67c  bl       #0x1a67c        ; -> __qdf_mem_malloc
+0x01a68c  bl       #0x1a68c        ; -> ucfg_fwol_get_gcmp_enable
+0x01a6a0  bl       #0x1a6a0        ; -> __qdf_mem_malloc
+0x01a6c8  bl       #0x1a6c8        ; -> qdf_mem_copy
+0x01a708  bl       #0x1a708        ; -> qdf_trace_msg
+0x01a720  bl       #0x1a720        ; -> __qdf_mem_malloc
+0x01a748  bl       #0x1a748        ; -> qdf_mem_copy
+0x01a760  bl       #0x1a760        ; -> cds_get_conparam
+0x01a804  bl       #0x1a804        ; -> qdf_trace_msg
+0x01a814  bl       #0x1a814        ; -> __qdf_mem_free
+0x01a83c  bl       #0x1a83c        ; -> qdf_trace_msg
+0x01a844  bl       #0x1a844        ; -> __qdf_mem_free

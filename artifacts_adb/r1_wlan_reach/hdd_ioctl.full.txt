@@ -1,0 +1,179 @@
+0x038050  sub      sp, sp, #0x80
+0x038054  stp      x29, x30, [sp, #0x30]
+0x038058  add      x29, sp, #0x30
+0x03805c  str      x25, [sp, #0x40]
+0x038060  stp      x24, x23, [sp, #0x50]
+0x038064  stp      x22, x21, [sp, #0x60]
+0x038068  stp      x20, x19, [sp, #0x70]
+0x03806c  mov      x8, #0
+0x038070  mov      x19, #0
+0x038074  movk     x8, #0, lsl #16
+0x038078  movk     x19, #0, lsl #16
+0x03807c  movk     x8, #0, lsl #32
+0x038080  movk     x19, #0, lsl #32
+0x038084  movk     x8, #0, lsl #48
+0x038088  movk     x19, #0, lsl #48
+0x03808c  mov      w21, w2
+0x038090  mov      x22, x1
+0x038094  mov      x1, sp
+0x038098  mov      x2, x19
+0x03809c  ldr      x8, [x8]
+0x0380a0  mov      x25, x0
+0x0380a4  stur     x8, [x29, #-8]
+0x0380a8  bl       #0x380a8        ; -> __osif_vdev_sync_op_start
+0x0380ac  mov      w24, w0
+0x0380b0  cbnz     w0, #0x381bc
+0x0380b4  mov      x20, #0
+0x0380b8  mov      x2, #0
+0x0380bc  movk     x20, #0, lsl #16
+0x0380c0  movk     x2, #0, lsl #16
+0x0380c4  movk     x20, #0, lsl #32
+0x0380c8  movk     x2, #0, lsl #32
+0x0380cc  movk     x20, #0, lsl #48
+0x0380d0  mov      w0, #0x33
+0x0380d4  movk     x2, #0, lsl #48
+0x0380d8  mov      w4, #0x2058
+0x0380dc  mov      w1, #8
+0x0380e0  mov      x3, x20
+0x0380e4  mov      x5, x25
+0x0380e8  bl       #0x380e8        ; -> qdf_trace_msg
+0x0380ec  ldr      x8, [x25, #0x9a0]
+0x0380f0  cmp      x8, x25
+0x0380f4  b.eq     #0x38124
+0x0380f8  mov      x2, #0
+0x0380fc  mov      w0, #0x33
+0x038100  movk     x2, #0, lsl #16
+0x038104  mov      w4, #0x205b
+0x038108  movk     x2, #0, lsl #32
+0x03810c  mov      w1, #2
+0x038110  movk     x2, #0, lsl #48
+0x038114  mov      x3, x20
+0x038118  bl       #0x38118        ; -> qdf_trace_msg
+0x03811c  mov      w24, #-0x13
+0x038120  b        #0x3818c
+0x038124  cbz      x22, #0x38160
+0x038128  ldr      x8, [x22, #0x10]
+0x03812c  cbz      x8, #0x38160
+0x038130  add      x23, x25, #0x900
+0x038134  bl       #0x38134        ; -> hdd_get_conparam
+0x038138  mov      w8, #0x89fd
+0x03813c  cmp      w21, w8
+0x038140  b.ne     #0x381fc
+0x038144  cmp      w0, #5
+0x038148  b.ne     #0x381fc
+0x03814c  mov      x0, x23
+0x038150  mov      x1, x22
+0x038154  bl       #0x38154        ; -> wlan_hdd_qcmbr_unified_ioctl
+0x038158  mov      w24, w0
+0x03815c  b        #0x3818c
+0x038160  mov      x2, #0
+0x038164  mov      w0, #0x33
+0x038168  movk     x2, #0, lsl #16
+0x03816c  mov      w4, #0x2061
+0x038170  movk     x2, #0, lsl #32
+0x038174  mov      w1, #2
+0x038178  movk     x2, #0, lsl #48
+0x03817c  mov      x3, x20
+0x038180  mov      w5, w21
+0x038184  bl       #0x38184        ; -> qdf_trace_msg
+0x038188  mov      w24, #-0x16
+0x03818c  mov      x2, #0
+0x038190  mov      w0, #0x33
+0x038194  movk     x2, #0, lsl #16
+0x038198  mov      w4, #0x2080
+0x03819c  movk     x2, #0, lsl #32
+0x0381a0  mov      w1, #8
+0x0381a4  movk     x2, #0, lsl #48
+0x0381a8  mov      x3, x20
+0x0381ac  bl       #0x381ac        ; -> qdf_trace_msg
+0x0381b0  ldr      x0, [sp]
+0x0381b4  mov      x1, x19
+0x0381b8  bl       #0x381b8        ; -> __osif_vdev_sync_op_stop
+0x0381bc  mov      x9, #0
+0x0381c0  ldur     x8, [x29, #-8]
+0x0381c4  movk     x9, #0, lsl #16
+0x0381c8  movk     x9, #0, lsl #32
+0x0381cc  movk     x9, #0, lsl #48
+0x0381d0  ldr      x9, [x9]
+0x0381d4  cmp      x9, x8
+0x0381d8  b.ne     #0x38310
+0x0381dc  mov      w0, w24
+0x0381e0  ldr      x25, [sp, #0x40]
+0x0381e4  ldp      x20, x19, [sp, #0x70]
+0x0381e8  ldp      x22, x21, [sp, #0x60]
+0x0381ec  ldp      x24, x23, [sp, #0x50]
+0x0381f0  ldp      x29, x30, [sp, #0x30]
+0x0381f4  add      sp, sp, #0x80
+0x0381f8  ret      
+0x0381fc  ldr      x0, [x25, #0x918]
+0x038200  mov      x1, x20
+0x038204  bl       #0x38204        ; -> __wlan_hdd_validate_context
+0x038208  mov      w24, w0
+0x03820c  cbnz     w0, #0x3818c
+0x038210  mov      w8, #0x89f1
+0x038214  cmp      w21, w8
+0x038218  b.ne     #0x38264
+0x03821c  mrs      x8, sp_el0
+0x038220  ldr      x9, [x8]
+0x038224  tbnz     w9, #0x16, #0x38284
+0x038228  ldr      x1, [x22, #0x10]
+0x03822c  ldr      x8, [x8, #0x40]
+0x038230  mov      x9, x1
+0x038234  adds     x9, x9, #0x10
+0x038238  csel     x8, xzr, x8, hi
+0x03823c  csinv    x9, x9, xzr, lo
+0x038240  sbcs     xzr, x9, x8
+0x038244  cset     x9, ls
+0x038248  cbz      x9, #0x382dc
+0x03824c  add      x0, sp, #8
+0x038250  mov      w2, #0x10
+0x038254  bl       #0x38254        ; -> __arch_copy_from_user
+0x038258  cbz      x0, #0x382c8
+0x03825c  mov      x2, x0
+0x038260  b        #0x382e0
+0x038264  mov      x2, #0
+0x038268  mov      w0, #0x33
+0x03826c  movk     x2, #0, lsl #16
+0x038270  mov      w4, #0x207b
+0x038274  movk     x2, #0, lsl #32
+0x038278  mov      w1, #3
+0x03827c  movk     x2, #0, lsl #48
+0x038280  b        #0x3817c
+0x038284  ldr      x1, [x22, #0x10]
+0x038288  ldr      x8, [x8, #0x40]
+0x03828c  mov      x9, x1
+0x038290  adds     x9, x9, #0xc
+0x038294  csel     x8, xzr, x8, hi
+0x038298  csinv    x9, x9, xzr, lo
+0x03829c  sbcs     xzr, x9, x8
+0x0382a0  cset     x9, ls
+0x0382a4  cbz      x9, #0x382f0
+0x0382a8  add      x0, sp, #0x18
+0x0382ac  mov      w2, #0xc
+0x0382b0  bl       #0x382b0        ; -> __arch_copy_from_user
+0x0382b4  cbnz     x0, #0x38314
+0x0382b8  ldp      w8, w9, [sp, #0x18]
+0x0382bc  ldr      w10, [sp, #0x20]
+0x0382c0  str      x8, [sp, #8]
+0x0382c4  stp      w9, w10, [sp, #0x10]
+0x0382c8  add      x1, sp, #8
+0x0382cc  mov      x0, x23
+0x0382d0  bl       #0x38320
+0x0382d4  mov      w24, w0
+0x0382d8  b        #0x3818c
+0x0382dc  mov      w2, #0x10
+0x0382e0  add      x8, sp, #8
+0x0382e4  sub      x8, x8, x2
+0x0382e8  add      x0, x8, #0x10
+0x0382ec  b        #0x38300
+0x0382f0  mov      w2, #0xc
+0x0382f4  add      x8, sp, #0x18
+0x0382f8  sub      x8, x8, x2
+0x0382fc  add      x0, x8, #0xc
+0x038300  mov      w1, wzr
+0x038304  bl       #0x38304        ; -> memset
+0x038308  mov      w24, #-0xe
+0x03830c  b        #0x3818c
+0x038310  bl       #0x38310        ; -> __stack_chk_fail
+0x038314  mov      x2, x0
+0x038318  b        #0x382f4

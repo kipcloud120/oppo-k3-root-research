@@ -1,0 +1,6 @@
+0xffffff80080aafa0 arch_release_task_struct
+0xffffff80080e8ea8 do_task_dead
+0xffffff80080c26b0 exit_signals
+0xffffff80080b2c38 release_task
+0xffffff800814a1f8 run_local_timers
+0xffffff800814a160 update_process_times

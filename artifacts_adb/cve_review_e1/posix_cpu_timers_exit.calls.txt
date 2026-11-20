@@ -1,0 +1,1 @@
+0xffffff800814fb48  bl     -> 0xffffff80085f5ac8  add_device_randomness

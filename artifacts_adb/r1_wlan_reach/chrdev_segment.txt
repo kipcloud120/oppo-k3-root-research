@@ -1,0 +1,48 @@
+0x05e2e8  bl       #0x5e2e8        ; -> __init_waitqueue_head
+0x05e2ec  mov      x22, #0
+0x05e2f0  mov      x27, #0
+0x05e2f4  movk     x22, #0, lsl #16
+0x05e2f8  mov      x3, #0
+0x05e2fc  movk     x27, #0, lsl #16
+0x05e300  movk     x22, #0, lsl #32
+0x05e304  movk     x3, #0, lsl #16
+0x05e308  movk     x27, #0, lsl #32
+0x05e30c  movk     x22, #0, lsl #48
+0x05e310  movk     x3, #0, lsl #32
+0x05e314  movk     x27, #0, lsl #48
+0x05e318  movk     x3, #0, lsl #48
+0x05e31c  mov      x0, x22
+0x05e320  mov      w1, wzr
+0x05e324  mov      w2, #1
+0x05e328  str      wzr, [x27]
+0x05e32c  str      wzr, [x22]
+0x05e330  bl       #0x5e330        ; -> alloc_chrdev_region
+0x05e334  cbz      w0, #0x5e350
+0x05e338  mov      x0, #0
+0x05e33c  movk     x0, #0, lsl #16
+0x05e340  movk     x0, #0, lsl #32
+0x05e344  movk     x0, #0, lsl #48
+0x05e348  bl       #0x5e348        ; -> printk
+0x05e34c  b        #0x5e450
+0x05e350  mov      x2, #0
+0x05e354  add      x24, x20, #0x18
+0x05e358  movk     x2, #0, lsl #16
+0x05e35c  ldr      w28, [x22]
+0x05e360  movk     x2, #0, lsl #32
+0x05e364  mov      x0, x20
+0x05e368  movk     x2, #0, lsl #48
+0x05e36c  mov      x1, x24
+0x05e370  bl       #0x5e370        ; -> __class_create
+0x05e374  mov      x26, #0
+0x05e378  cmn      x0, #0xfff
+0x05e37c  movk     x26, #0, lsl #16
+0x05e380  movk     x26, #0, lsl #32
+0x05e384  movk     x26, #0, lsl #48
+0x05e388  str      x0, [x26]
+0x05e38c  b.lo     #0x5e3a8
+0x05e390  mov      x0, #0
+0x05e394  movk     x0, #0, lsl #16
+0x05e398  movk     x0, #0, lsl #32
+0x05e39c  movk     x0, #0, lsl #48
+0x05e3a0  bl       #0x5e3a0        ; -> printk
+0x05e3a4  b        #0x5e444

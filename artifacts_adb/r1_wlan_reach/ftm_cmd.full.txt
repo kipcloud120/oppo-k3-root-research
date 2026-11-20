@@ -1,0 +1,161 @@
+0x1e60c0  stp      x29, x30, [sp, #-0x40]!
+0x1e60c4  stp      x24, x23, [sp, #0x10]
+0x1e60c8  mov      x29, sp
+0x1e60cc  stp      x22, x21, [sp, #0x20]
+0x1e60d0  stp      x20, x19, [sp, #0x30]
+0x1e60d4  mov      w21, w1
+0x1e60d8  mov      w1, #0x17
+0x1e60dc  mov      x20, x2
+0x1e60e0  mov      x19, x0
+0x1e60e4  bl       #0x1e60e4        ; -> wlan_objmgr_pdev_get_comp_private_obj
+0x1e60e8  cbz      x0, #0x1e6184
+0x1e60ec  mov      w8, #1
+0x1e60f0  mov      w9, #0x1001
+0x1e60f4  cmp      w21, w9
+0x1e60f8  str      w8, [x0, #0x28]
+0x1e60fc  b.eq     #0x1e618c
+0x1e6100  cmp      w21, #1, lsl #12
+0x1e6104  b.ne     #0x1e61c8
+0x1e6108  mrs      x24, sp_el0
+0x1e610c  ldr      x8, [x24, #0x40]
+0x1e6110  mov      x9, x20
+0x1e6114  adds     x9, x9, #4
+0x1e6118  csel     x8, xzr, x8, hi
+0x1e611c  csinv    x9, x9, xzr, lo
+0x1e6120  sbcs     xzr, x9, x8
+0x1e6124  cset     x9, ls
+0x1e6128  cbz      x9, #0x1e61d0
+0x1e612c  mov      x8, #0
+0x1e6130  ldr      x10, [x24, #0x40]
+0x1e6134  movk     x8, #0, lsl #16
+0x1e6138  bics     xzr, x20, x10
+0x1e613c  csel     x9, x20, xzr, eq
+0x1e6140  movk     x8, #0, lsl #32
+0x1e6144  csdb     
+0x1e6148  movk     x8, #0, lsl #48
+0x1e614c  ldr      x10, [x8]
+0x1e6150  tbnz     w10, #4, #0x1e61d8
+0x1e6154  mrs      x10, daif
+0x1e6158  msr      daifset, #2
+0x1e615c  ldr      x11, [x24, #0x48]
+0x1e6160  mrs      x12, ttbr1_el1
+0x1e6164  mov      x13, x11
+0x1e6168  bfxil    x13, x12, #0, #0x30
+0x1e616c  msr      ttbr1_el1, x13
+0x1e6170  isb      
+0x1e6174  msr      ttbr0_el1, x11
+0x1e6178  isb      
+0x1e617c  msr      daif, x10
+0x1e6180  b        #0x1e61dc
+0x1e6184  mov      w0, #0x10
+0x1e6188  b        #0x1e6318
+0x1e618c  mov      x1, #0
+0x1e6190  mov      w0, #0x804
+0x1e6194  movk     x1, #0, lsl #16
+0x1e6198  mov      w2, #0x43
+0x1e619c  movk     x1, #0, lsl #32
+0x1e61a0  movk     x1, #0, lsl #48
+0x1e61a4  bl       #0x1e61a4        ; -> __qdf_mem_malloc
+0x1e61a8  cbz      x0, #0x1e629c
+0x1e61ac  mov      x21, x0
+0x1e61b0  mov      x0, x19
+0x1e61b4  mov      x1, x21
+0x1e61b8  bl       #0x1e61b8        ; -> ucfg_wlan_ftm_testmode_rsp
+0x1e61bc  cbz      w0, #0x1e62a4
+0x1e61c0  mov      w23, #3
+0x1e61c4  b        #0x1e62e4
+0x1e61c8  mov      w23, #0xb
+0x1e61cc  b        #0x1e6310
+0x1e61d0  mov      w23, #0x10
+0x1e61d4  b        #0x1e6310
+0x1e61d8  nop      
+0x1e61dc  mov      w10, wzr
+0x1e61e0  ldr      w21, [x9]
+0x1e61e4  ldr      x8, [x8]
+0x1e61e8  tbnz     w8, #4, #0x1e6218
+0x1e61ec  mrs      x8, daif
+0x1e61f0  msr      daifset, #2
+0x1e61f4  mrs      x9, ttbr1_el1
+0x1e61f8  and      x9, x9, #0xffffffffffff
+0x1e61fc  add      x11, x9, #2, lsl #12
+0x1e6200  msr      ttbr0_el1, x11
+0x1e6204  isb      
+0x1e6208  msr      ttbr1_el1, x9
+0x1e620c  isb      
+0x1e6210  msr      daif, x8
+0x1e6214  b        #0x1e621c
+0x1e6218  nop      
+0x1e621c  mov      w23, #0x10
+0x1e6220  cbnz     w10, #0x1e6310
+0x1e6224  cmp      w21, #0x800
+0x1e6228  b.gt     #0x1e6310
+0x1e622c  mov      x1, #0
+0x1e6230  sxtw     x23, w21
+0x1e6234  movk     x1, #0, lsl #16
+0x1e6238  mov      w2, #0x2c
+0x1e623c  movk     x1, #0, lsl #32
+0x1e6240  mov      x0, x23
+0x1e6244  movk     x1, #0, lsl #48
+0x1e6248  bl       #0x1e6248        ; -> __qdf_mem_malloc
+0x1e624c  cbz      x0, #0x1e629c
+0x1e6250  mov      x1, x23
+0x1e6254  mov      w2, wzr
+0x1e6258  mov      x22, x0
+0x1e625c  add      x20, x20, #4
+0x1e6260  bl       #0x1e6260        ; -> __check_object_size
+0x1e6264  ldr      x8, [x24, #0x40]
+0x1e6268  mov      x9, x20
+0x1e626c  adds     x9, x9, x23
+0x1e6270  csel     x8, xzr, x8, hi
+0x1e6274  csinv    x9, x9, xzr, lo
+0x1e6278  sbcs     xzr, x9, x8
+0x1e627c  cset     x9, ls
+0x1e6280  cbz      x9, #0x1e62ec
+0x1e6284  mov      x0, x22
+0x1e6288  mov      x1, x20
+0x1e628c  mov      x2, x23
+0x1e6290  bl       #0x1e6290        ; -> __arch_copy_from_user
+0x1e6294  mov      x2, x0
+0x1e6298  b        #0x1e62f0
+0x1e629c  mov      w23, #2
+0x1e62a0  b        #0x1e6310
+0x1e62a4  sub      x0, x20, #4
+0x1e62a8  mrs      x8, sp_el0
+0x1e62ac  ldr      x8, [x8, #0x40]
+0x1e62b0  mov      x9, x0
+0x1e62b4  adds     x9, x9, #0x804
+0x1e62b8  csel     x8, xzr, x8, hi
+0x1e62bc  csinv    x9, x9, xzr, lo
+0x1e62c0  sbcs     xzr, x9, x8
+0x1e62c4  cset     x9, ls
+0x1e62c8  cbz      x9, #0x1e62e0
+0x1e62cc  mov      w2, #0x804
+0x1e62d0  mov      x1, x21
+0x1e62d4  bl       #0x1e62d4        ; -> __arch_copy_to_user
+0x1e62d8  mov      x23, x0
+0x1e62dc  b        #0x1e62e4
+0x1e62e0  mov      w23, #0x804
+0x1e62e4  mov      x0, x21
+0x1e62e8  b        #0x1e630c
+0x1e62ec  mov      x2, x23
+0x1e62f0  cbnz     x2, #0x1e632c
+0x1e62f4  mov      x0, x19
+0x1e62f8  mov      x1, x22
+0x1e62fc  mov      w2, w21
+0x1e6300  bl       #0x1e6300        ; -> ucfg_wlan_ftm_testmode_cmd
+0x1e6304  mov      w23, w0
+0x1e6308  mov      x0, x22
+0x1e630c  bl       #0x1e630c        ; -> __qdf_mem_free
+0x1e6310  mov      w0, w23
+0x1e6314  bl       #0x1e6314        ; -> qdf_status_to_os_return
+0x1e6318  ldp      x20, x19, [sp, #0x30]
+0x1e631c  ldp      x22, x21, [sp, #0x20]
+0x1e6320  ldp      x24, x23, [sp, #0x10]
+0x1e6324  ldp      x29, x30, [sp], #0x40
+0x1e6328  ret      
+0x1e632c  sub      x8, x23, x2
+0x1e6330  mov      w1, wzr
+0x1e6334  add      x0, x22, x8
+0x1e6338  bl       #0x1e6338        ; -> memset
+0x1e633c  mov      w23, #0x10
+0x1e6340  b        #0x1e6308
