@@ -7,14 +7,14 @@
 | 安全补丁 | `2022-04-05` |
 | 启动状态 | BL 锁定、AVB `green`、dm-verity `enforcing`、A-only（v3 实测基线复核一致，无 OTA） |
 | 唯一入口 | `uid=2000(shell)` + `u:r:shell:s0`，SELinux Enforcing，`Seccomp: 0` |
-| 判定版本 | `HANDOVER.md` v3.0 + v008 + v6（§46）+ v7（§47）+ v8（§48）+ v9（§49）+ v10（§50）+ v10.1（§51/§52）+ v11（§53/§54）+ v11.1（§55）+ v11.2（§56）+ v11.5（§57–§59）+ v11.6（§60）+ v12（§61）+ v12.1（§62，sparse 上机判定）+ v12.2（§63，非 sparse 释放前提 + I4 上机）+ v12.3（§64，分诊收口）+ v12.3.1（§65，R1 更正）+ **v13（§66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，dumpstate slide 证据固化）** |
+| 判定版本 | `HANDOVER.md` v3.0 + v008 + v6（§46）+ v7（§47）+ v8（§48）+ v9（§49）+ v10（§50）+ v10.1（§51/§52）+ v11（§53/§54）+ v11.1（§55）+ v11.2（§56）+ v11.5（§57–§59）+ v11.6（§60）+ v12（§61）+ v12.1（§62，sparse 上机判定）+ v12.2（§63，非 sparse 释放前提 + I4 上机）+ v12.3（§64，分诊收口）+ v12.3.1（§65，R1 更正）+ **v13（§66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，dumpstate slide 证据固化）** + **v13.1（§71 + [`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)，B3 审计收尾）** |
 | 判定范围 | **本机、本固件、不解 BL**。不是"任何条件下不可能"，也不是"任何设备不可能" |
 
 > **v13 证据收口（2026-11-20，`HANDOVER.md` §66 + [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，纯文档/离线 + 一次**已授权**重启，不改变四层判定）**：
 > ① **`.text` KASLR slide（①-s 类）已实证取得**：dumpstate 第三主体路径 + 用户明确授权的一次重启。当前 boot（`b9f9f06a-…`）slide = `0x1953600000`、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机，再重启即失效，须重走流程**。
 > ② **本文此前"`.text` slide 拿不到（v008）"的表述自本轮起仅在"已审接口范围 + 未授权重启"这一限定下成立**——v008 口径在其原范围内不被推翻，但事实状态已由 dumpstate 路径（该范围外第三主体）补齐。证据、哈希与归属台账见 `KASLR_EVIDENCE.md`。
 > ③ **判定语义不变**：slide ≠ 可用 root。GhostLock **②（可控 rt_mutex 堆地址）与 ③（W 线程栈基址）仍未闭合**；dumpstate 附带的 `sp` 属 init/swapper 栈，不满足 ③ 判据；M2 固定 delta 维持关闭。
-> ④ **v13 阶段进度**：阶段 1（证据收口）、阶段 2（WARNING 观察面审计 + 候选裁决，`WARN_ADDRESS_SURFACE_AUDIT.md` §1–§9 + §68/§69/§70：WARN dump 通道实证但 futex 68 点候选集经厂商源码裁决**全部排除**，③ 的 WARN-oracle 假设被否决，③ 回到"无可用 oracle"）与阶段 3（GhostLock ②/③ 复评，§67 + `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档：**缺口收敛为单一 N1，GhostLock 维持冻结**）已完成；**厂商源码补做（§69.4/§70，2026-11-20）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（`uid_lock`/`msm_bus_adhoc_lock`/`msm_bus_dbg_cllist_lock`/`proc_uid_lock`，地址可由 slide 复算，G2 §2.3 / G3 §6）；waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证；`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）——B3 升级为"静态层已证实候选集"但 GhostLock ②/③ 维持冻结（并发语义审计未做、panic 风险未评估）**；阶段 4（WLAN 调用链）与阶段 5（总验收）待用户通知。
+> ④ **v13 阶段进度**：阶段 1（证据收口）、阶段 2（WARNING 观察面审计 + 候选裁决，`WARN_ADDRESS_SURFACE_AUDIT.md` §1–§9 + §68/§69/§70：WARN dump 通道实证但 futex 68 点候选集经厂商源码裁决**全部排除**，③ 的 WARN-oracle 假设被否决，③ 回到"无可用 oracle"）与阶段 3（GhostLock ②/③ 复评，§67 + `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档：**缺口收敛为单一 N1，GhostLock 维持冻结**）已完成；**厂商源码补做（§69.4/§70，2026-11-20）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（`uid_lock`/`msm_bus_adhoc_lock`/`msm_bus_dbg_cllist_lock`/`proc_uid_lock`，地址可由 slide 复算，G2 §2.3 / G3 §6）；waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证；`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）**；**阶段 3 收尾（v13.1，§71 + `GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`（G4），纯离线）：B3 并发语义静态审计完成、结论为否——链走查 `:702` 无条件读 `lock->waiters_leftmost`（空树 ⇒ `NULL+0x38` fault；非空树 ⇒ 必有地址不可知的真实 waiter），`:705` `rb_erase(fake)` 只能产生孤儿/幽灵 waiter 或不可控写 ⇒ B3 不满足 N1 的"可控"，由"待审计候选"改为"已审计否决"（复算 `python tools/b3_audit.py`）**；阶段 4（WLAN 调用链）与阶段 5（总验收）待用户通知。
 > ⑤ **四层判定不变：Wi-Fi 域内受限 UID 0 命令执行已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
 
 > **v12.3.1 分诊摘要（2026-11-20，`HANDOVER.md` §64/§65，纯离线、零上机，不改变四层判定）**：
@@ -144,7 +144,7 @@ GhostLock 那面"无地址泄露"的墙，从 v3 起就被报告"有一道缝"�
 | Root UID 命令执行 | **达成**（2026-11-18，两次独立载荷复现，§23） |
 | 可用 root（脱离域限制的系统管理能力） | **NO-GO**（域逃逸静态无路径 §24；FastRPC 在 uid 0 域下更封闭 §32） |
 | 持久 ROOT | **NO-GO**（且全程未做任何持久化写入） |
-| GhostLock 内核地址泄露 | **① 已闭合（v8，本次开机）**：G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；② 可控 rt_mutex 堆地址（**v10：时间流锚定证伪**）/ ③ 内核栈基址**已审接口范围内无可用 oracle**（§53 + §60）；`.text` slide：**v13 已实证取得（当前 boot `b9f9f06a-…`，`0x1953600000`，见 `KASLR_EVIDENCE.md`）——每 boot 随机，不改变 ②/③ 未闭合状态**。**v12 起冻结。** |
+| GhostLock 内核地址泄露 | **① 已闭合（v8，本次开机）**：G1 成立（18/19 genuine、3.68× 规模缩放）+ G2 成立（两套数据唯一解、全量 100% 同桶）；② 可控 rt_mutex 堆地址（**v10：时间流锚定证伪**）/ ③ 内核栈基址**已审接口范围内无可用 oracle**（§53 + §60）；`.text` slide：**v13 已实证取得（当前 boot `b9f9f06a-…`，`0x1953600000`，见 `KASLR_EVIDENCE.md`）——每 boot 随机，不改变 ②/③ 未闭合状态**。**v13.1：B3 全局静态 rt_mutex 的 4 实例已枚举并完成并发语义审计（G4）——地址可得但不可用（空树 `:702` 必 fault；非空树必有不可控真实 waiter），不构成 ② 的替代，已审计否决。v12 起冻结。** |
 | KGSL 对象生命周期（v12 主线） | 所有权 **成立**（I1–I5，§61.5）；KO-1 **本机不可达已关闭**（sparse 面 `ENOTSUPP`，§62）；**非 sparse 释放链自洽**（I10–I12 静态 + I4 上机证实，§63）⇒ **K2 达成、主线阶段性关闭**；K3 并发登记不作 |
 
 ---

@@ -4946,3 +4946,50 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 
 - 纯离线/静态工作，零上机，未申请任何设备授权；代码修改与调试仍等用户通知。
 - 阶段进度：阶段 1–3 ✅（含本次补做）；阶段 4（WLAN 调用链审计）与阶段 5（总验收）**待用户通知**。
+
+---
+
+## §71 v13.1：阶段 3 收尾 —— B3 并发语义静态审计完成，**B3 可用性被否证**，GhostLock 维持冻结（2026-11-20，纯离线，零上机，不改变四层判定）
+
+> 承接 §70。G3 §1 把 B3 的重开条件定为"枚举完成 + 并发语义静态审计通过 + 用户明确授权"；§70 已完成枚举，**本次补做审计**（此前登记为"尚未执行"的唯一剩余项）。交付物：`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`（G4）；复算工具：`tools/b3_audit.py`。
+
+### 71.1 审计结论（一句话）
+
+**B3 的"地址可得"成立，但"对象可用"不成立**：四个静态实例都是共享的真实内核锁，GhostLock 链走查在 `:702` 无条件内联 `rt_mutex_top_waiter()`（读 `lock->waiters_leftmost` 再读 `w->lock@0x38`）——空树时必然对 `NULL+0x38` 数据异常；非空树时（首次使用）必然包含至少一个真实、地址不可知的 waiter（fake 首次入树在 `:726`，晚于 `:702`），`:705` 的 `rb_erase(fake)` 只能产生"拔根 + 孤儿 + 永久幽灵 waiter"或"不可控任意写 + 树损坏"。**B3 不满足 N1 的"可控"，且唯一出写路径必然越过"不制造新内核竞态/不强制异常"的边界。G3 重开条件②执行完毕，结论为否；B3 维持冻结。**
+
+### 71.2 关键证据（源码 + 本机二进制双证；静态 VA）
+
+| 环节 | 证据 |
+|---|---|
+| 触发入口 | `sched_setscheduler` → `kernel/sched/core.c:4609-4610` → `rt_mutex_adjust_pi()`（`rtmutex.c:1157-1179`）；二进制 `0x81255b8`，`0x8125610-0x8125624` 置 `x0=task, w1=0(MIN_CHAINWALK), x2=0(orig_lock), x3=next_lock, x4=0(orig_waiter), x5=task(top_task)` |
+| requeue 恒真 | `orig_waiter=NULL` ⇒ `:586-601` 跳过；prio 相等的提前出口（`adjust_pi :1166` / 链内 `:610`）同时消灭写；二进制 `0x8125718-0x8125734` |
+| `:702` 致命解引用 | `rtmutex_common.h:47-57`；二进制 `0x812585c tbnz w28` → `0x81258d8 ldr x27,[x24,#0x10]` → `0x81258dc ldr x8,[x27,#0x38]` → `0x81258e4 b.ne` → `0x8125e7c brk #0x800` |
+| 非空树必有真实 waiter | `rtmutex.c:1005`（`task_blocks_on_rt_mutex` 入树）与 `:726`（fake 首次入树）的先后关系 |
+| `:705` rb_erase | `rtmutex.c:270-281`（`RB_EMPTY_NODE` 早退 / `rb_erase`）；`lib/rbtree.c:424-430`（rebalance 才进 `__rb_erase_color`） |
+| 四实例零初值 | `tools/b3_audit.py`：4 个 0x20 字节对象（`uid_lock` .kernel2 / 三个 .bss）全零 ⇒ 稳态空树 |
+
+### 71.3 分支完备性（为什么没有"安全且能出写"的第五种状态）
+
+| 状态 | 结果 |
+|---|---|
+| E1 空树（四实例稳态） | `:702` fault（致命；故障点持有 `W->pi_lock` 与 `lock->wait_lock`，`panic_on_oops=0` 也不可恢复该锁） |
+| E2 非空 + fake 全零链接 | 无任意写；真实 waiter 孤儿 + 幽灵顶层 waiter 永久驻留；`:723` 把 fake->prio 重写为 W 的 prio（普通任务 120）后，目标锁对 `prio≥120`（普通 nice≥0）的后继申请者永久不可用（无 owner 可解锁；需 fake->task 为有效 task_struct，仅 `init_task` 静态可算） |
+| E3 非空 + fake 非零链接 | 任意写与真实锁树/选定 parent 的 rb 树损坏不可分离（不可控、可 panic） |
+| E4 prio 相等 | `rt_mutex_adjust_pi :1166` 提前返回（链内 `:610` 同判）—— 无写 |
+| E5 W 自己持有目标锁 | `:641` `-EDEADLK` —— 无写 |
+| E6 树中只剩上次入树的 fake | 非首次路径；链接已被 `RB_CLEAR_NODE`/`rb_link_node` 重写，需新的栈重写原语（UAF 型，禁止） |
+
+### 71.4 四个实例的可达性（摘要，详见 G4 §6）
+
+- `uid_lock`：`/proc/uid_cputime/show_uid_stat`（0444）、`/proc/uid_io/stats`（0444）等；临界区长（遍历全线程 + `seq_printf`）⇒ **VFS 层可自造"持锁 + 阻塞"**；SELinux 域门未证。
+- `proc_uid_lock`：`/proc/uid/` readdir（0555），锁内 `proc_fill_cache`（GFP_KERNEL）⇒ 窗口更大；SELinux 域门未证。
+- `msm_bus_dbg_cllist_lock`：debugfs（`S_IRUGO`/`S_IWUSR`，root 属主）**+** `msm_bus_dbg_client_data()`（`EXPORT_SYMBOL`，客户端注册/注销时由内核驱动调用）⇒ shell 无直接入口，时序不可控。
+- `msm_bus_adhoc_lock`：msm_bus 投票内核路径，真实并发不可控。
+- **没有任何一个是"专供攻击者"的锁**——这是 B3 不可用的根因，也是 G4 §9 R-i 的来源。
+
+### 71.5 判定与状态
+
+- **四层判定不变**：Wi-Fi 域内受限 UID 0 命令执行已达成；**可用 ROOT / 持久 ROOT 仍 NO-GO**。
+- **GhostLock ②/③ 维持冻结**；B3 从"静态层已证实候选集（待审计）"改为"**静态层已证实、可用性已否证**"。
+- **阶段 3（G0–G4）全部完成**；阶段 4（WLAN `hdd_driver_command` 调用链）与阶段 5（总验收）**待用户通知**。
+- 边界：纯离线、零上机、未申请设备授权、未构造任何 PoC；`panic_on_oops` 运行时真值、`/proc/uid*` 的 SELinux 可达性**未证**（G4 §8）。
