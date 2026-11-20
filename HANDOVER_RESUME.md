@@ -13,6 +13,39 @@
 >   **符号表未剥离**，落在 `vendor_ko/`（已 gitignore）。调用链已钉到 `request_firmware`。
 > ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已实测否证）。
 
+## 0. 本轮送审要点（v11.1–v11.4，对应 `HANDOVER.md` §55–§58）
+
+**三个负结果**
+
+| # | 结论 | 证据等级 |
+|---|---|---|
+| 1 | ③ 类（W 线程栈基址）**无可达 oracle** | 16 接口逐项枚举（§53）+ 本机实测（§55.1：`kstkesp/kstkeip=0`、`/proc/self/stack` 被 SELinux 拒） |
+| 2 | Track C1（WLAN 配置解析）**无可达输入** | `/vendor` dm-verity `ro` + 驱动 `fwpath` 为空（§56.1，只读实测） |
+| 3 | Track C2（KGSL）**长度维度 14/14 有界** | 逐点反汇编 + 分派表静态解析（§57/§58） |
+
+**请重点质疑的三处推断**（我方标为"未实测/推断"，若成立需撤回）
+
+1. `panic_on_oops` 推断为 1（§53.3/§55）：本机 `/proc/sys/kernel/panic_on_oops` 被 SELinux 拒读。
+   若该值实为 0，oops 路径仍需"可从低权限触发的 oops"才成立——本机无已知。
+2. `request_firmware` 的实际搜索路径：由 `fwpath` 为空**推得**回落到 `/vendor/firmware`，
+   未在运行时抓取 `request_firmware` 的入参（无 ftrace 权限）。
+3. KGSL 分派表 `size` 字段的位置（`(w0>>16)&0x3fff`）：由反汇编语义推定，
+   与实际结构体声明的一致性未用源码核对（厂商未提供源码）。
+
+**明确未覆盖（不要外推为"已否证"）**
+
+- KGSL 结构层面：`gpuobj` id→对象生命周期、`sparse_bind` 索引区间、refcount/UAF、并发竞争。
+- `sscanf`/item-handler 层（C1）：因无输入路径，未审。
+- 其余 vendor `.ko`（41 个模块中只取回了 `qca_cld3_wlan.ko`）。
+
+**建议审核回答的三个问题**
+
+1. ③ 是否还存在"非 oops、非 perf、非 futex"的栈地址来源（尤其 vendor 驱动 debugfs 类接口）？
+2. C1 的"无可达输入"是否成立？若认为不成立，请指出可写副本进入 `request_firmware` 的具体机制。
+3. C2 的结构层面是否值得投入？若值得，建议先切哪个子目标（我方倾向 `gpuobj_free` 的 id 复用窗口）。
+
+---
+
 ## 1. 当前结论（四层，不可混用）
 
 | 层次 | 状态 |
