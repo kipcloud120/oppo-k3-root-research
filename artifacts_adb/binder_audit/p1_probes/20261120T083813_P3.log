@@ -1,0 +1,30 @@
+--------- beginning of main
+11-20 08:38:13.179 21709 21709 D OplusUtils: OplusUtils [83]: 
+11-20 08:38:13.182 21709 21709 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:38:13.173 21709 21709 W app_process: type=1400 audit(0.0:33520): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:38:13.191 21709 21709 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:38:13.195 21709 21709 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:38:13.195 21709 21709 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:38:13.195 21709 21709 I AndroidRuntime: Using default boot image
+11-20 08:38:13.195 21709 21709 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:38:13.195 21709 21709 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:38:13.195 21709 21709 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:38:13.193 21709 21709 W app_process: type=1400 audit(0.0:33521): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:38:13.193 21709 21709 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 08:38:13.193 21709 21709 W app_process: type=1400 audit(0.0:33524): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:38:13.316 21709 21709 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:38:13.316 21709 21709 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:38:13.358 21709 21709 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:38:13.369 21709 21709 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:38:13.399  1755  4354 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:38:13.399  1755  4354 D OplusWifiHalService: log -t P3 `wc -c < /mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini`)
+11-20 08:38:13.403  1755  4354 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:38:13.403  1755  4354 D OplusWifiHalService: log -t P3 `wc -c < /mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini`) completed successfully.
+11-20 08:38:13.403  1755  4354 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:38:13.403  1755  4354 D OplusWifiHalService: log -t P3 `wc -c < /mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini`) with result =  
+11-20 08:38:13.406 21709 21709 D AndroidRuntime: Shutting down VM
+11-20 08:38:13.490 21726 21726 I P3      : 21663
+--------- beginning of system
+11-20 08:38:14.029  1755  2429 D AlarmManager: NumDelayedAlarms:2596   NextNonWakeupDeliveryTime:247401293/246125320
+11-20 08:38:14.033  1755  3228 W OplusLocationManagerService: NavigateMode doesn't match LocationMode
+11-20 08:38:14.492 12036 12203 D HoraeHelper: getAllShellTemps tSize : 4

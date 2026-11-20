@@ -1,0 +1,35 @@
+--------- beginning of main
+11-20 08:37:47.025 21588 21588 D OplusUtils: OplusUtils [83]: 
+11-20 08:37:47.023 21588 21588 W app_process: type=1400 audit(0.0:33493): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:37:47.027 21588 21588 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:37:47.038 21588 21588 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:37:47.041 21588 21588 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:37:47.041 21588 21588 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:37:47.041 21588 21588 I AndroidRuntime: Using default boot image
+11-20 08:37:47.041 21588 21588 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:37:47.041 21588 21588 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:37:47.041 21588 21588 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:37:47.033 21588 21588 W app_process: type=1400 audit(0.0:33494): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:37:47.033 21588 21588 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 08:37:47.033 21588 21588 W app_process: type=1400 audit(0.0:33497): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:37:47.161 21588 21588 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:37:47.161 21588 21588 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:37:47.213 21588 21588 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:37:47.227 21588 21588 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:37:47.254  1755  4354 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:37:47.254  1755  4354 D OplusWifiHalService: log -t K4 `grep -c . /proc/self/stack`)
+11-20 08:37:47.258  1755  4354 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:37:47.258  1755  4354 D OplusWifiHalService: log -t K4 `grep -c . /proc/self/stack`) completed successfully.
+11-20 08:37:47.259  1755  4354 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:37:47.259  1755  4354 D OplusWifiHalService: log -t K4 `grep -c . /proc/self/stack`) with result =  
+11-20 08:37:47.261 21588 21588 D AndroidRuntime: Shutting down VM
+11-20 08:37:47.371 21605 21605 I K4      : 0
+--------- beginning of system
+11-20 08:37:47.468  1755  2234 D BatteryLed: getLightInColorState, oppoLightMgr empty!
+11-20 08:37:47.469  1755  1755 D OppoBaseBatteryService: send broadcast : oppo.intent.action.BATTERY_DATA_UPDATE
+11-20 08:37:47.469  1755  1755 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcast:1174 com.android.server.OppoBaseBatteryService$2.run:280 android.os.Handler.handleCallback:938 android.os.Handler.dispatchMessage:99 android.os.Looper.loop:263 
+11-20 08:37:47.487 22356 22356 I MainLooperBlockDetector: com.bytedance.q.q.to.q.ml$q.onReceive
+11-20 08:37:47.487 22356 22356 I MainLooperBlockDetector: checkMainLooperBlocked: message not updated
+11-20 08:37:47.492   687   687 I android.system.suspend@1.0-service: mSuspendCounter=1 first holding wakelock name=PowerManagerService.WakeLocks: Success
+11-20 08:37:47.495 11152 15083 E FileStrategy: java.io.IOException: Read-only file system
+11-20 08:37:47.499   687   687 I android.system.suspend@1.0-service: mSuspendCounter=0 last release wakelock name=PowerManagerService.WakeLocks: Success

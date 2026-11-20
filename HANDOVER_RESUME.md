@@ -1,4 +1,4 @@
-# 接手摘要（v11.5：**三项推断已上机实测；C2 机制判读已更正**，2026-11-20）
+# 接手摘要（v11.6：**推断已实测 + 基线/能力集逐项复核**，2026-11-20）
 
 > 一页式入口。完整证据：`HANDOVER.md` §58（C2 长度维度闭合）+ §57（C2 首轮）+ §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
 > §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
@@ -13,7 +13,7 @@
 >   **符号表未剥离**，落在 `vendor_ko/`（已 gitignore）。调用链已钉到 `request_firmware`。
 > ③ 四层 ROOT 判定不变：**NO-GO**（① 闭合；② 未闭合；③ 已实测否证）。
 
-## 0. 本轮送审要点（v11.1–v11.5，对应 `HANDOVER.md` §55–§59）
+## 0. 本轮送审要点（v11.1–v11.6，对应 `HANDOVER.md` §55–§60）
 
 **三个负结果**
 
@@ -30,6 +30,13 @@
 | `panic_on_oops` 推断为 1 | shell 与 `oplus_wifi_service`（uid 0）**均被 SELinux 拒**（`proc_panic` 标签，AVC 原文见 §59.1） | 改写为"**本机不可观测**"，结论不再依赖该值 |
 | `request_firmware` 回落 `/vendor/firmware` | 四条独立证据：`fwpath` 读成功且为空；模块含 `wlan/qca_cld` 字面；文件只存在于 `/vendor/firmware/wlan/qca_cld/`；`/system/etc/firmware` 无同名项 | **证实**（仍未直接观测 syscall 入参） |
 | KGSL `size` 字段语义 | 差分测试：cmd size 取 0x17/0x19/0x20（表项 0x18）**均进入 handler**（`EFAULT`），nr 不存在才 `ENOTTY` | **推翻我方判读**：实为 `min(entry,cmd)`，非"严格相等"；§58.1 已加更正块 |
+
+**v11.6 补测（见 §60）**：基线未变（内核 4.9.227 / SPL 2022-04 / verity enforcing / 未重启）；
+`CapEff=CapBnd=0x13000` 实测（`/proc/self/status` 中五处同值）⇒ **无 CAP_SYS_ADMIN/SYSLOG**；
+Track A 逐项复核：`kallsyms` SELinux 拒、`/proc/self/stack` 在 uid-0 **域可读但为空**（shell 域拒）、
+`vmallocinfo`/`timer_list`/`sections` 无输出且无 AVC（EPERM/清零，原因未细分）；
+C1 补充：vendor ini **12,592 B** vs persist ini **21,663 B**，**两者不是同一文件**，
+进一步确认"可写副本不进解析器"。
 
 **明确未覆盖（不要外推为"已否证"）**
 

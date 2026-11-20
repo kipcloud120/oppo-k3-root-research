@@ -1,0 +1,34 @@
+--------- beginning of main
+11-20 08:37:39.690 21504 21504 D OplusUtils: OplusUtils [83]: 
+11-20 08:37:39.692 21504 21504 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:37:39.683 21504 21504 W app_process: type=1400 audit(0.0:33474): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:37:39.702 21504 21504 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:37:39.706 21504 21504 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:37:39.706 21504 21504 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:37:39.706 21504 21504 I AndroidRuntime: Using default boot image
+11-20 08:37:39.706 21504 21504 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:37:39.706 21504 21504 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:37:39.703 21504 21504 W app_process: type=1400 audit(0.0:33475): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:37:39.707 21504 21504 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:37:39.703 21504 21504 W app_process: type=1400 audit(0.0:33476): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:37:39.703 21504 21504 I chatty  : uid=2000(shell) app_process identical 1 line
+11-20 08:37:39.703 21504 21504 W app_process: type=1400 audit(0.0:33478): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:37:39.827 21504 21504 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:37:39.827 21504 21504 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+--------- beginning of system
+11-20 08:37:39.834  1755  2532 D JobScheduler.Temperature: get temperature=25.137
+11-20 08:37:39.866 21504 21504 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:37:39.877 21504 21504 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:37:39.903  1755  4866 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:37:39.903  1755  4866 D OplusWifiHalService: log -t K1 `grep -c . /proc/kallsyms`)
+11-20 08:37:39.907  1755  4866 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:37:39.907  1755  4866 D OplusWifiHalService: log -t K1 `grep -c . /proc/kallsyms`) completed successfully.
+11-20 08:37:39.907  1755  4866 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:37:39.907  1755  4866 D OplusWifiHalService: log -t K1 `grep -c . /proc/kallsyms`) with result =  
+11-20 08:37:39.910 21504 21504 D AndroidRuntime: Shutting down VM
+11-20 08:37:39.963 21520 21520 W grep    : type=1400 audit(0.0:33479): avc: denied { read } for name="kallsyms" dev="proc" ino=4026532143 scontext=u:r:oplus_wifi_service:s0 tcontext=u:object_r:proc:s0 tclass=file permissive=0
+11-20 08:37:41.232  1331  1361 D bspCriticalLog: power_monitor cpu-0-0-usr: open fail -1
+11-20 08:37:41.232  1331  1361 D bspCriticalLog: power_monitor cpu-1-0-usr: open fail -1
+11-20 08:37:41.233  1331  1359 D bspCriticalLog: thermal_monitor gpuss-0-usr: open fail -1
+11-20 08:37:41.233  1331  1359 D bspCriticalLog: thermal_monitor cpu-0-0-usr: open fail -1
+11-20 08:37:41.233  1331  1359 D bspCriticalLog: thermal_monitor cpu-1-0-usr: open fail -1

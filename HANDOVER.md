@@ -3856,7 +3856,7 @@ diagchar_write → diag_user_process_dci_apps_data → diag_process_apps_dci_rea
 
 | # | 接口 | 吐出的内容 | 含栈地址? | 门 | 证据等级 |
 |---|---|---|---|---|---|
-| 1 | `/proc/<pid>/stack` | `[<%pK>] %pB` —— **返回地址（文本）** | ❌ 文本地址，且 %pK 门控 | `ptrace_may_access`；`kptr_restrict` | 镜像内该格式串**唯一存在**；`proc_pid_stack` 符号存在 |
+| 1 | `/proc/<pid>/stack` | `[<%pK>] %pB` —— **返回地址（文本）** | ❌ 文本地址，且 %pK 门控 | `ptrace_may_access`；`kptr_restrict` | 镜像内该格式串**唯一存在**；`proc_pid_stack` 符号存在；shell 拒 / uid-0 可读但空（§55.1、§60.4） |
 | 2 | `/proc/<pid>/wchan` | `%s`（符号名）或 `"0"` | ❌ 纯符号名 | 同上 + `lookup_symbol_name` | 反汇编见 `%s` 字面（`0xffffff80082c80c0`） |
 | 3 | `/proc/<pid>/syscall` | 用户态 sp/pc + 8 参数 | ❌ 用户态寄存器 | `ptrace` | 格式串 `%ld 0x%lx …` 实测 |
 | 4 | `/proc/<pid>/stat` 字段 28–30 | startstack / kstkesp / kstkeip | ⚠️ 待测（arm64 通常 0） | 世界可读 | **待 5 秒只读实测**（53.4-a） |
@@ -3951,7 +3951,7 @@ Track C **未开展实证审计**，仅完成"物料与可达性边界"判定。
 | 探针 | 结果 | 判读 |
 |---|---|---|
 | `/proc/self/stat` 字段 28–30（shell 域） | `startstack=549171887936`（≈`0x7ff…`，**用户态栈 VA**）、`kstkesp=0`、`kstkeip=0` | arm64 两个内核寄存器字段**恒 0** ⇒ 无 sp 泄露；与 §53 推断一致 |
-| `/proc/self/stack`（shell 域） | **Permission denied** | SELinux 直接拒，与 `kptr_restrict` 无关 ⇒ 该通道彻底关闭 |
+| `/proc/self/stack`（shell 域） | **Permission denied** | shell 域被 SELinux 拒。**注意**：uid-0 域**可读**（§60.4）——但只吐返回地址、对运行态任务为空 |
 | `/proc/1/stack`（跨进程对照） | Permission denied | 同上 |
 | `/proc/self/wchan` | `"0"` | 与 §53 的 `lookup_symbol_name` 路径一致（无地址） |
 
@@ -4249,3 +4249,76 @@ C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据�
 - 探针与临时 jar 均已删除，`/data/local/tmp` 为空；
 - `uptime` 连续（较昨日 +13.6 h，与墙钟一致）⇒ **未重启**，① 类地址与示踪数据仍有效；
 - 唯一写入是 `/data/local/tmp` 的临时探针（已删），未触 `persist`、未改配置。
+
+---
+
+## §60 v11.6：送审前的补充实测（基线 / 能力集 / Track A 逐项 / C1 双文件）（2026-11-20，只读）
+
+> 目的：把 §53 表格里"引用旧档案"的条目升级为**本轮实测**，并补齐 §55.1 的遗留项。
+> 全部经 `tools/wifi_exec.py` 在 `u:r:oplus_wifi_service:s0`（uid 0）域执行；
+> 输出以 `grep -c`（单 token）取回，规避注入链对多 token 输出的截断。
+
+### 60.1 基线（判据仍适用的前提）
+
+| 项 | 值 |
+|---|---|
+| 内核 | `4.9.227-perf+ #1 SMP PREEMPT Wed Mar 26 16:32:43 CST 2025 aarch64` |
+| SPL | `2022-04-05` |
+| 指纹 | `OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys` |
+| verity / vbmeta | `enforcing` / `locked` |
+| uptime | 246 085 s（≈68.4 h，与墙钟连续）⇒ **未重启**，① 类地址与示踪数据仍有效 |
+
+### 60.2 能力集（实测，非引用）
+
+`grep -c 0000000000013000 /proc/self/status` → **5**
+（CapInh/CapPrm/CapEff/CapBnd/CapAmb 五行同值）
+⇒ 该域 `CapEff=CapBnd=0x13000` = `NET_BIND_SERVICE(10)|NET_ADMIN(12)|NET_RAW(13)|SYS_MODULE(16)`，
+**无 `CAP_SYS_ADMIN(21)`、无 `CAP_SYSLOG(34)`**。这直接支撑 §53 中"sysrq/perf/BPF 不可用"的判读链。
+
+### 60.3 Track A 逐项复核（uid-0 域，本轮）
+
+| # | 目标 | 结果 | 判读 |
+|---|---|---|---|
+| K1 | `/proc/kallsyms` | **SELinux 拒**（AVC：`name="kallsyms"`、`scontext=u:r:oplus_wifi_service:s0`） | 维持"拒" |
+| K2 | `/proc/vmallocinfo` | 无输出、**无 AVC** | 与"缺 `CAP_SYS_ADMIN`（EPERM）/ 或内容为空"一致；**原因未细分** |
+| K3 | `/proc/timer_list` | 无输出、无 AVC | 同上 |
+| K5 | `/sys/module/wlan/sections/.text` | 无输出、无 AVC | 同上（`kptr_restrict` 清零或权限门） |
+| K4 | `/proc/self/stack` | **返回 0 行**（文件可读） | ⚠️ 见 60.4 |
+| Q1 | `/proc/1/stack` | 无输出、无 AVC | 跨进程 `ptrace_may_access` 拒（EPERM） |
+| Q2 | `/proc/self/wchan` | 1 行 | 可读（内容为符号名/"0"） |
+
+### 60.4 一个需要精确化的差异：`/proc/self/stack` 在 root 域**可读**
+
+§55.1 记录的是 **shell 域** `Permission denied`；本轮在 `oplus_wifi_service`（uid 0）域中该文件**可以打开**，
+返回 0 行（`cat` 自身处于运行态，内核栈回溯为空是预期行为）。
+
+**这不改变 ③ 的判定**，理由有三：
+1. 该文件的输出是 `[<%pK>] %pB` —— **返回地址（文本）**，不是 sp、也不指向栈页；
+2. 运行中的任务返回空；要拿到内容需读**睡眠中**线程的栈，而拿到的是它的返回地址；
+3. 即使取到，`%pK` 仍受 `kptr_restrict` 门控（K5 的表现说明该门是关的）。
+
+⇒ 结论修订为："**shell 域不可读；uid-0 域可读，但只吐文本地址、且对运行态任务为空**——
+仍然不构成 ③ 所需的栈地址 oracle。"
+
+### 60.5 C1 的补充证据：两份 ini 不是同一文件
+
+| 文件 | 大小 |
+|---|---|
+| `/vendor/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini` | **12,592 B** |
+| `/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini` | **21,663 B** |
+
+⇒ 大小相差 9 KB，**persist 那份不是 vendor 副本的同内容拷贝**（更可能是 OPPO 侧自用/备份）。
+结合 §59.2（`fwpath` 空 ⇒ 读 `/vendor/firmware`）⇒ **可写副本与解析器之间确实无消费关系**，
+§56 的"无可达输入"结论更硬。
+
+### 60.6 本轮明确未做（留给审核定优先级）
+
+| 项 | 为什么未做 |
+|---|---|
+| adreno 分派表的运行时验证（perfcounter 系列） | 需真实调用 perfcounter 处理器，有 GPU 状态副作用；legacy 路径已被 `kgsl_cmdprobe` 实测覆盖，adreno 路径仅有静态判读 |
+| KGSL 结构层面（id 生命周期/索引/refcount/UAF） | 工作量数倍于长度维度，需先定子目标 |
+| DCI 的 R1（ctrl 包控制语义） | 数据面无拷贝，逻辑面价值低 |
+
+### 60.7 设备终态
+
+临时 jar 已删（`/data/local/tmp` 为空）；未重启；未写 `persist`；未改配置。
