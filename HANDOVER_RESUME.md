@@ -1,7 +1,13 @@
-# 接手摘要（v12.2：**非 sparse 释放链自洽，I4（id 撤销）上机证实；K2 里程碑在本机可达面内达成，KGSL 生命周期主线阶段性关闭**，2026-11-20）
+# 接手摘要（v12.2 + v13/v14 分诊收口：**非 sparse 释放链自洽、I4 上机证实、K2 达成；KGSL 主线阶段性关闭；外部 CVE 与 WLAN 输入面分诊完成，四层判定仍 NO-GO**，2026-11-20）
 
-> 一页式入口。完整证据：`HANDOVER.md` §63（非 sparse 释放前提 + I4 上机，最新）+ §62（sparse 关判定）+ §61（v12-K1 生命周期）+ §60 + §58 + §57 + §56 + §55 + §53。
+> 一页式入口。完整证据：`HANDOVER.md` §63（非 sparse 释放前提 + I4 上机，最新）+ §62（sparse 关判定）+ §61（v12-K1 生命周期）+ §60 + §58 + §57 + §56 + §55 + §53；**本轮三份分诊报告见 `docs_archive/` 的 `项目评审与下一步规划_v13`、`联网调研_高优先级突破方向_v14`、`CVE-2025-38352_E1形态复核`、`R0_覆盖台账`、`R1_WLAN非配置输入可达性矩阵`（均 2026-11-20）**。
 > 分层判定 `CLOSURE.md`；审阅入口 `README.md`。
+
+> **v13/v14 分诊收口（2026-11-20 下午，**纯离线、零上机，不改变四层判定**）**：
+> ① **v13 评审**：维持 NO-GO；KGSL/GhostLock 冻结；下一轮主线从"继续找漏洞"改为"文档同步 + 可达性优先"，即 R0（交接口径）+ R1（WLAN 非配置输入可达性矩阵）。
+> ② **v14 联网调研**：四个 CVE 候选中仅 `CVE-2025-38352`（POSIX CPU timers TOCTOU）值得登记；其余排除/降级。**任务 E1 已完成**：本机 `run_posix_cpu_timers` 无 `exit_state` 门、`posix_cpu_timer_del` lock-fail 不读 `firing`、无 task_work 缓解 ⇒ pre-fix 结构同构证实，但动态可达性未证、高 panic + 缺 `.text` slide ⇒ **不升级授权、动态默认禁止**。
+> ③ **R0 覆盖台账 + 交接口径修正已完成**（`docs_archive/R0_覆盖台账`）；**R1 WLAN 非配置输入可达性矩阵已完成**（`docs_archive/R1_WLAN非配置输入可达性矩阵`）：ioctl/FTM/cfg80211/日志/debugfs 五类面，仅 wifi uid0 域可达、shell 域仅经已终局的 Binder 私有事务，**无合格 R3 候选**。
+> ④ 三份权威文档（`HANDOVER.md`/`HANDOVER_RESUME.md`/`CLOSURE.md`）**未改写历史正文**，仅增补本节与 §64 摘要；四层判定不变：**可用 root / 持久 ROOT 仍 NO-GO**。
 >
 > **v12.2 三句话**：
 > ① **非 sparse 释放链自洽**：新增 I10–I12 三条全称不变量在本机 `vmlinux.elf` 全部成立——
