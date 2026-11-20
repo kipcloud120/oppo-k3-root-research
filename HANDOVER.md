@@ -3994,3 +3994,68 @@ hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request
 `CALL26/JUMP26` 解析调用目标，支持 `--list / --callers / --copy-sites / --grep`。
 （内核镜像用 `tools/kfn.py`，模块用本工具；两者不可混用：模块所有数据引用走 `MOVW_UABS_G*` 重定位，
 不是 `adrp+add`，因此字符串引用暂未解析——明日若要读格式串需补 MOVW 支持。）
+
+---
+
+## §56 v11.2：Track C1 可达性判定 —— **可写副本不进入解析器**（2026-11-20 上午，只读）
+
+> 承接 §55.3 的前置问题："`persist/wlan/*.ini` 的可写副本能否进入 qcacld 解析器？"
+> **结论：不能（本机当前配置）**——驱动读的是 verity 只读的 vendor 副本。
+> 全程只读：`ls` / `cat` / `getprop` / `mount`；仅经 root 域读了几条路径，**未写设备任何文件**
+> （`/data/local/tmp` 收尾为空）。
+
+### 56.1 三处路径的实测
+
+| 路径 | 是否可写（本域） | 实测 |
+|---|---|---|
+| `/vendor/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini` | **否** | `mount` 显示 `/dev/block/dm-1 on /vendor ext4 (ro)`；`getprop ro.boot.veritymode=enforcing`、`vbmeta.device_state=locked` |
+| `/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini` | 是（0666 / `mnt_vendor_file`，§R1） | root 域 `ls` 确认存在；本域可写但**项目禁止写**（跨重启持久化） |
+| `/data/vendor/wifi/` | 未知（shell 拒） | 未列入驱动搜索路径 |
+
+**驱动的搜索路径**：`/sys/module/wlan/parameters/fwpath` **为空串**（root 域 `cat` 无输出）
+⇒ 回落到 `request_firmware` 默认路径 `/vendor/firmware`，即**只读分区**。
+
+⇒ 可写副本与解析器之间**没有消费关系**：改 `persist` 的 ini 不会改变驱动读到的内容。
+
+### 56.2 这对 C1 意味着什么
+
+审核 v011 建议的"WLAN 配置解析器审计"，在**当前加载方式**下**没有可达的输入路径**：
+
+- 要投喂攻击者内容，必须改动 `/vendor/firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini` ⇒ 需 remount `/vendor`
+  ⇒ dm-verity enforcing + 无 `CAP_SYS_ADMIN`，**不可行**；
+- 唯一剩余的设想是"重载模块并覆盖 `fwpath` 指向可写目录"。技术上具备部分前提
+  （`CapEff=0x13000` **含 `CAP_SYS_MODULE`**；厂商签名模块本身可加载），但：
+  1. 需 SELinux 放行本域的 `kernel` 模块操作（未核）；
+  2. `rmmod wlan` 会**拆掉 Wi-Fi**，即**自断唯一 root 通道**，且恢复需重启 ⇒ **重启作废 ① 类地址与全部示踪数据**；
+  3. 即使成功，仍需一个真实解析缺陷才谈得上收益。
+  ⇒ **登记为"高风险假设"，不做**。除非出现"模块重载不影响 root 通道"的新证据。
+
+### 56.3 cfg_parse 的形态结论（静态）
+
+| 项 | 结果 |
+|---|---|
+| 无界拷贝 | 模块**未导入** `strcpy`；`cfg_parse` 内 27 处拷贝**全部为 `strlcpy`** |
+| 目标 | 全部 `x23 + 固定偏移`（`cfg` 结构体字段），长度为字段尺寸常量或该结构体段的同一常量 |
+| 结论 | 形态上**有界**；`strlcpy` 保证 NUL 终止与截断，不构成溢出面 |
+
+> 未做：27 处 dst 尺寸与字段声明尺寸的逐处比对（缺源码）；`sscanf`（已导入）在各 item handler 中的
+> `%s` 用法**未审**——但按 56.2，这些都没有可达输入，优先级降到最低。
+
+### 56.4 C2（KGSL）首扫：已建面
+
+`tools/kgsl_ioctl_scan.py`（新）：对 54 个 `kgsl_ioctl_*` 入口逐个找 `copy_from_user/copy_to_user`，
+回溯长度来源（`CONST` / `REG`）。
+
+| 指标 | 值 |
+|---|---|
+| 扫描入口 | 54（`kgsl_ioctl*` 符号 57 个，3 个非 ioctl 入口） |
+| 拷贝点 | **14**（CONST 3 / REG 11） |
+| REG 需复盘 | `kgsl_ioctl_copy_in`、`kgsl_ioctl_copy_out`、`gpumem_sync_cache_bulk`、`gpuobj_free`、`gpuobj_import`、`gpuobj_sync`、`kgsl_ioctl_helper`、`sparse_bind` |
+
+> 注意：KGSL 多数 ioctl 经 `kgsl_ioctl_helper` 走**描述符表**（长度来自 `sizeof(struct)` 常量），
+> 因此 REG 结果多为"长度由上层算好再传入"，**不等于缺陷**。下一步是把 8 个 REG 入口逐个回溯到
+> 描述符表项，确认长度是否恒等于结构体尺寸。
+
+### 56.5 设备终态
+
+`/data/local/tmp` 为空（临时 jar 已删）；未重启（uptime 连续）；未写 `persist`；未改任何配置。

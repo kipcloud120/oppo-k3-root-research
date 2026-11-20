@@ -1,0 +1,28 @@
+--------- beginning of main
+11-20 08:23:15.579 20176 20176 D OplusUtils: OplusUtils [83]: 
+11-20 08:23:15.581 20176 20176 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:23:15.573 20176 20176 W app_process: type=1400 audit(0.0:33086): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:23:15.592 20176 20176 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:23:15.596 20176 20176 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:23:15.596 20176 20176 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:23:15.596 20176 20176 I AndroidRuntime: Using default boot image
+11-20 08:23:15.596 20176 20176 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:23:15.596 20176 20176 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:23:15.593 20176 20176 W app_process: type=1400 audit(0.0:33087): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:23:15.596 20176 20176 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:23:15.593 20176 20176 W app_process: type=1400 audit(0.0:33088): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:23:15.593 20176 20176 I chatty  : uid=2000(shell) app_process identical 1 line
+11-20 08:23:15.593 20176 20176 W app_process: type=1400 audit(0.0:33090): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:23:15.639  1755  2474 D OppoWifiClientModeImpl: Adjust rssi from -20 to -23
+11-20 08:23:15.717 20176 20176 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:23:15.718 20176 20176 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:23:15.759 20176 20176 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:23:15.770 20176 20176 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:23:15.797  1755  3711 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:23:15.797  1755  3711 D OplusWifiHalService: log -t WP2 `ls /mnt/vendor/persist/wlan`)
+11-20 08:23:15.801  1755  3711 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:23:15.801  1755  3711 D OplusWifiHalService: log -t WP2 `ls /mnt/vendor/persist/wlan`) completed successfully.
+11-20 08:23:15.801  1755  3711 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:23:15.801  1755  3711 D OplusWifiHalService: log -t WP2 `ls /mnt/vendor/persist/wlan`) with result =  
+11-20 08:23:15.803 20176 20176 D AndroidRuntime: Shutting down VM
+11-20 08:23:15.912 20193 20193 I WP2     : WCNSS_qcom_cfg.ini

@@ -1,0 +1,35 @@
+--------- beginning of main
+11-20 08:23:47.317 20527 20527 D OplusUtils: OplusUtils [83]: 
+11-20 08:23:47.313 20527 20527 W app_process: type=1400 audit(0.0:33125): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:23:47.319 20527 20527 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:23:47.329 20527 20527 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:23:47.333 20527 20527 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:23:47.333 20527 20527 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:23:47.333 20527 20527 I AndroidRuntime: Using default boot image
+11-20 08:23:47.333 20527 20527 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:23:47.333 20527 20527 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:23:47.333 20527 20527 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:23:47.323 20527 20527 W app_process: type=1400 audit(0.0:33126): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:23:47.323 20527 20527 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 08:23:47.323 20527 20527 W app_process: type=1400 audit(0.0:33129): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:23:47.431 22356 22356 I MainLooperBlockDetector: com.bytedance.q.q.to.q.ml$q.onReceive
+11-20 08:23:47.431 22356 22356 I MainLooperBlockDetector: checkMainLooperBlocked: message not updated
+11-20 08:23:47.433 13407 13407 W kworker/0:1: type=1400 audit(0.0:33130): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0
+11-20 08:23:47.438 20234 20274 W mk_broadcast: onReceive:android.intent.action.BATTERY_CHANGED,2
+11-20 08:23:47.442   687   687 I android.system.suspend@1.0-service: mSuspendCounter=1 first holding wakelock name=PowerManagerService.WakeLocks: Success
+11-20 08:23:47.451   687   687 I android.system.suspend@1.0-service: mSuspendCounter=0 last release wakelock name=PowerManagerService.WakeLocks: Success
+11-20 08:23:47.455 20527 20527 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:23:47.455 20527 20527 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:23:47.492 20527 20527 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:23:47.503 20527 20527 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:23:47.530  1755  2562 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:23:47.530  1755  2562 D OplusWifiHalService: log -t G4 `grep -n persist /odm/bin/init.oppo.wifi.sh`)
+11-20 08:23:47.534  1755  2562 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:23:47.534  1755  2562 D OplusWifiHalService: log -t G4 `grep -n persist /odm/bin/init.oppo.wifi.sh`) completed successfully.
+11-20 08:23:47.534  1755  2562 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:23:47.534  1755  2562 D OplusWifiHalService: log -t G4 `grep -n persist /odm/bin/init.oppo.wifi.sh`) with result =  
+11-20 08:23:47.538 20527 20527 D AndroidRuntime: Shutting down VM
+11-20 08:23:47.603 20542 20542 W sh      : type=1400 audit(0.0:33131): avc: denied { read } for name="/" dev="dm-0" ino=2 scontext=u:r:oplus_wifi_service:s0 tcontext=u:object_r:rootfs:s0 tclass=dir permissive=0
+--------- beginning of system
+11-20 08:23:47.421  1755  2234 D BatteryLed: getLightInColorState, oppoLightMgr empty!
+11-20 08:23:48.602  1755  2532 D JobScheduler.Temperature: get temperature=25.275

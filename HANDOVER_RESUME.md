@@ -1,6 +1,6 @@
-# 接手摘要（v11.1：**③ 实测否证 + WLAN 模块已取回**，2026-11-19）
+# 接手摘要（v11.2：**③ 实测否证；C1 无输入路径；C2 已建面**，2026-11-20）
 
-> 一页式入口。完整证据：`HANDOVER.md` §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
+> 一页式入口。完整证据：`HANDOVER.md` §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
 > §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
 >
 > **v11.1 三句话**：
@@ -33,19 +33,18 @@
 | §51.4 R2 | DCI 非 apps 入口 | remote 侧门已确认（`len<0x2202`、`len+5 ≤ 剩余`）；transaction 侧为驱动自建帧 |
 | §55 | **上机只读取证**（设备在环，零写入） | `kstkesp/kstkeip=0`、`/proc/self/stack` 被 SELinux 拒 ⇒ ③ 实测否证 |
 | §55 | **`qca_cld3_wlan.ko` 已取回**（14.6 MB，未剥离符号） | `hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request_firmware` |
+| §56.1 | **C1 可达性判定**（只读实测） | `/vendor` 为 dm-verity **ro**、`fwpath` 为空 ⇒ 驱动只读 vendor 副本，**可写 persist 副本不进入解析器** |
+| §56.3 | `cfg_parse` 形态核对 | 27 处拷贝全为 `strlcpy`（dst = 结构体固定偏移）；模块**未导入**无界 `strcpy` |
+| §56.4 | **C2 KGSL 首扫**（新工具 `tools/kgsl_ioctl_scan.py`） | 54 入口 / 14 拷贝点（CONST 3 / REG 11），8 个 REG 待回溯描述符表 |
 
-## 3. 下一步（明日起点）
+## 3. 下一步（C1 已降级，C2 为主）
 
-1. **[纯离线 · 已完成一半]** Track C1 首轮 triage（§55.3）：`cfg_parse` 是唯一必查点——
-   27 处 `strlcpy` 的 **dst 尺寸逐处核对**（工具 `tools/ko_fn.py SYM --copy-sites`）。
-2. **[纯离线 · 前置问题，先答再谈漏洞]** `persist/wlan/*.ini` 与 `/vendor/firmware/wlan/*.ini`
-   的关系：驱动只走 `request_firmware`，可写副本必须经 root 脚本复制才能进解析器；
-   若该复制存在且可被本域触发，才存在"可写 → 解析"链路（但写 persist 属跨重启持久化，**本项目禁止**）。
-3. **[纯离线 · 可立即做]** KGSL ioctl 面系统枚举（C2）：`/dev/kgsl-3d0` 0666；判据 =
-   任一 ioctl 的 `copy_from_user` 长度未与对象尺寸绑定。
-4. **[可选上机 · 只读]** 用 `tools/wifi_exec.py` 在 `oplus_wifi_service` 域复核 `/proc/self/stack`
-   （shell 域已拒；该域无 `CAP_SYSLOG`，预期仍拒）。
-5. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**（重启作废 ① 类地址与示踪数据）。
+1. **[纯离线 · 主线]** C2：把 8 个 REG 拷贝入口回溯到 KGSL 描述符表，确认长度恒等于
+   `sizeof(struct)`；若发现"用户给长度、对象按固定尺寸"的错配，才是候选缺陷。
+2. **[纯离线 · 低优先]** C1 的 `sscanf %s` 面：仅在有"可达输入路径"新证据后才值得做
+   （当前 `/vendor` 只读、`fwpath` 空 ⇒ 无可达输入）。
+3. **[登记不作]** 重载 `wlan` 模块并覆盖 `fwpath` —— 会拆掉 Wi-Fi（唯一 root 通道），且重启作废 ① 类地址。
+4. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**。
 
 ## 4. 工具与物料入口
 

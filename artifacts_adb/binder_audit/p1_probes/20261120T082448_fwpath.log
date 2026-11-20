@@ -1,0 +1,44 @@
+--------- beginning of main
+11-20 08:24:48.010 24370 24585 I DRS_LOG_ChinaTimeWindowPolicy[DRS-Scheduler-1]: [DEFAULT] time=08:24, window=BASELINE, base=15m, scale=1.00, result=15m
+11-20 08:24:48.010 24370 24585 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: NON_REALTIME triggered, next=15m, base=15m, config:15min(OBUS), policy=ChinaTimeWindow(baseline 1.0x)
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: triggerNr() called, channelMode=STANDALONE, gate=UploadGateFacade{
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   BusinessRuleGate{mode=STANDALONE, enableNetRequest=false}
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   NetworkGate{networkReady=true, isWifi=true}
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   PerformanceGate{skipped(STANDALONE)}
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   EnvRecoveryDetector: EnvRecoveryDetector{standalone=true, state=IDLE, snapshot=EnvSnapshot{net=true, normalOk=true, rtOk=true}, lastNormalOk=true, lastRtOk=true}
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   envRecoveryListeners: 2
+11-20 08:24:48.010 24370 24585 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: }
+11-20 08:24:48.011 24370 24585 I DRS_LOG_GateStateManager[DRS-Scheduler-1]: resetCompensationBudget[NonRealtime]: budget=2
+11-20 08:24:48.011 24370 24585 I DRS_LOG_ChannelTaskRunner[DRS-Scheduler-1]: [NR] upload_trigger request=ChannelTaskRequest{channelType=NonRealtime, triggerReason=NR_PERIODIC, requestTimeMs=1795134288011, skipGateCheck=false, scheduledRun=false}
+11-20 08:24:48.011 24370 24585 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: NON_REALTIME thread scheduled, reason=loop, delay=15m
+11-20 08:24:48.012 24370 25132 I DRS_LOG_UploadGateFacade[DRS-Upload-Nr-1]: allowUpload[NonRealtime]: GateResult{BLOCKED by BusinessRule: enableNetRequest=false}
+11-20 08:24:48.012 24370 25132 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [NR] gate_blocked reason=enableNetRequest=false request=ChannelTaskRequest{channelType=NonRealtime, triggerReason=NR_PERIODIC, requestTimeMs=1795134288011, skipGateCheck=false, scheduledRun=false}
+11-20 08:24:48.124 20844 20844 D OplusUtils: OplusUtils [83]: 
+11-20 08:24:48.126 20844 20844 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 08:24:48.123 20844 20844 W app_process: type=1400 audit(0.0:33207): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 08:24:48.136 20844 20844 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 08:24:48.133 20844 20844 W app_process: type=1400 audit(0.0:33208): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:24:48.133 20844 20844 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 08:24:48.133 20844 20844 W app_process: type=1400 audit(0.0:33211): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 08:24:48.141 20844 20844 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 08:24:48.141 20844 20844 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 08:24:48.141 20844 20844 I AndroidRuntime: Using default boot image
+11-20 08:24:48.141 20844 20844 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 08:24:48.141 20844 20844 I AndroidRuntime: Leaving lock profiling enabled
+11-20 08:24:48.141 20844 20844 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 08:24:48.261 20844 20844 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 08:24:48.261 20844 20844 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 08:24:48.302 20844 20844 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 08:24:48.313 20844 20844 D AndroidRuntime: Calling main entry FtmProbe
+11-20 08:24:48.339  1755  2562 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 08:24:48.339  1755  2562 D OplusWifiHalService: log -t fwpath `grep -ic "fwpath" /odm/bin/init.oppo.wifi.sh`)
+11-20 08:24:48.343  1755  2562 D OplusWifiHalService: executeDriverCommand(x
+11-20 08:24:48.343  1755  2562 D OplusWifiHalService: log -t fwpath `grep -ic "fwpath" /odm/bin/init.oppo.wifi.sh`) completed successfully.
+11-20 08:24:48.343  1755  2562 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 08:24:48.343  1755  2562 D OplusWifiHalService: log -t fwpath `grep -ic "fwpath" /odm/bin/init.oppo.wifi.sh`) with result =  
+11-20 08:24:48.346 20844 20844 D AndroidRuntime: Shutting down VM
+11-20 08:24:48.441 20862 20862 I fwpath  : 0
+--------- beginning of system
+11-20 08:24:48.696  1755  2532 D JobScheduler.Temperature: get temperature=25.229
+11-20 08:24:49.342 12036 12209 D HoraeHelper: getAllShellTemps tSize : 4
+11-20 08:24:49.343 12036 12209 D HoraeHelper: Thermal length:1
