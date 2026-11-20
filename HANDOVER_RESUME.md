@@ -1,6 +1,6 @@
-# 接手摘要（v11.2：**③ 实测否证；C1 无输入路径；C2 已建面**，2026-11-20）
+# 接手摘要（v11.3：**③ 实测否证；C1 无输入路径；C2 首轮无长度错配**，2026-11-20）
 
-> 一页式入口。完整证据：`HANDOVER.md` §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
+> 一页式入口。完整证据：`HANDOVER.md` §57（C2 首轮判读）+ §56（C1 可达性/C2 首扫）+ §55（上机只读取证/物料）+ §53（Track A 枚举）+ §54（Track C 边界）+
 > §52（唯一性断言/复算）+ §51（DCI 否证）+ §50（M2 证伪）。分层判定 `CLOSURE.md`；审阅入口 `README.md`。
 >
 > **v11.1 三句话**：
@@ -35,12 +35,14 @@
 | §55 | **`qca_cld3_wlan.ko` 已取回**（14.6 MB，未剥离符号） | `hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request_firmware` |
 | §56.1 | **C1 可达性判定**（只读实测） | `/vendor` 为 dm-verity **ro**、`fwpath` 为空 ⇒ 驱动只读 vendor 副本，**可写 persist 副本不进入解析器** |
 | §56.3 | `cfg_parse` 形态核对 | 27 处拷贝全为 `strlcpy`（dst = 结构体固定偏移）；模块**未导入**无界 `strcpy` |
-| §56.4 | **C2 KGSL 首扫**（新工具 `tools/kgsl_ioctl_scan.py`） | 54 入口 / 14 拷贝点（CONST 3 / REG 11），8 个 REG 待回溯描述符表 |
+| §56.4 | **C2 KGSL 首扫**（新工具 `tools/kgsl_ioctl_scan.py`） | 54 入口 / 14 拷贝点（CONST 3 / REG 11） |
+| §57 | **C2 首轮判读** | 6/8 REG 由「min 钳位」或「同尺寸分配」闭合；11/13 点带 `__check_object_size`；剩 2 处待追溯 |
 
 ## 3. 下一步（C1 已降级，C2 为主）
 
-1. **[纯离线 · 主线]** C2：把 8 个 REG 拷贝入口回溯到 KGSL 描述符表，确认长度恒等于
-   `sizeof(struct)`；若发现"用户给长度、对象按固定尺寸"的错配，才是候选缺陷。
+1. **[纯离线 · 主线]** C2 第二轮：补齐 §57.3 的两处——`gpuobj_import` 第 2 点的 `x24` 数据流、
+   `kgsl_ioctl_helper` 的动态钳位（`cmp w10, w9`，需读分派表 size 来源）；
+   之后转**结构层面**（索引校验 / refcount / UAF），那才是 KGSL 历史缺陷的集中区。
 2. **[纯离线 · 低优先]** C1 的 `sscanf %s` 面：仅在有"可达输入路径"新证据后才值得做
    （当前 `/vendor` 只读、`fwpath` 空 ⇒ 无可达输入）。
 3. **[登记不作]** 重载 `wlan` 模块并覆盖 `fwpath` —— 会拆掉 Wi-Fi（唯一 root 通道），且重启作废 ① 类地址。

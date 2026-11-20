@@ -4059,3 +4059,51 @@ hdd_context_create → cfg_parse → qdf_ini_parse → qdf_file_read → request
 ### 56.5 设备终态
 
 `/data/local/tmp` 为空（临时 jar 已删）；未重启（uptime 连续）；未写 `persist`；未改任何配置。
+
+---
+
+## §57 v11.3：C2 首轮 —— KGSL ioctl 拷贝长度判读（2026-11-20，纯离线）
+
+> 承接 §56.4。目标：把 8 个 REG 长度的拷贝点判定为"有界/需深挖"，而不是停留在"REG 未知"。
+
+### 57.1 判据（三条，缺一不可）
+
+| 判据 | 含义 | 判为安全的理由 |
+|---|---|---|
+| A. `min` 钳位 | 拷贝前有 `cmp wX,#imm; csel wX, wX, wN, lo`，`imm` = 目标缓冲尺寸 | 长度被夹到目标对象内 |
+| B. 同尺寸分配 | 先 `kmalloc(len)` 再 `copy_from_user(ptr, user, len)` | 源长 = 目标容量 |
+| C. `__check_object_size` | 每个拷贝点前都有该调用（`CONFIG_HARDENED_USERCOPY=y`） | 运行期越界会被拒（非仅静态） |
+
+### 57.2 结果（14 个拷贝点）
+
+| 入口 | 点 | 判据 | 结论 |
+|---|---|---|---|
+| `kgsl_ioctl_device_getproperty` | 3 | CONST len=4 | ✅ 定长 |
+| `kgsl_ioctl_gpuobj_free` | 2 | **A**（`cmp w8,#8` + `csel`，dst = 8 字节栈槽） | ✅ 夹到 8 |
+| `kgsl_ioctl_sparse_bind` | 1 | **A**（`cmp w8,#0x28`，`memset(sp,0,0x28)`，dst = sp） | ✅ 夹到 40 |
+| `kgsl_ioctl_gpuobj_sync` | 1 | **A**（`cmp w8,#0x18`） | ✅ 夹到 24 |
+| `kgsl_ioctl_gpuobj_import` | 2 | 其一 `cmp w8,#4`；其二**未定位钳位** | ⚠️ 见 57.3 |
+| `kgsl_ioctl_gpumem_sync_cache_bulk` | 1 | **B**（`lsl x23, x8, #2` → `kmalloc` 同长） | ✅ 同尺寸分配 |
+| `kgsl_ioctl_copy_in/copy_out/helper` | 4 | 动态钳位（`cmp w10, w9/w11`） | ⚠️ 见 57.3 |
+
+**逐点核实（13 个取样点）**：11 个拷贝点前存在 `bl __check_object_size`（`CONFIG_HARDENED_USERCOPY=y`）；
+两个 `device_getproperty` 的 4 字节定长点只有 `access_ok`（地址上界检查），无该调用——但它们本身是定长，
+不依赖长度判据。全部 13 点均有 `access_ok`。
+
+### 57.3 未完成项（明日起点，按性价比）
+
+| # | 项 | 说明 |
+|---|---|---|
+| 1 | `kgsl_ioctl_gpuobj_import` 第 2 个拷贝点（`0x873df6c`） | 窗口内未见 `cmp` 立即数钳位，需向前追溯 `x24` 的完整数据流（可能是 `min(num, sizeof(array))/elem_size` 的变形） |
+| 2 | `kgsl_ioctl_helper` / `copy_in` / `copy_out` 的动态钳位（`cmp w10, w9`） | `w9` 来自调用方传入的 size 与剩余长度，需读 `kgsl_ioctl` 分派处的 size 来源（描述符表项） |
+| 3 | **结构层面**（索引/refcount/UAF） | 本轮只判"长度错配"，未审"索引是否校验""对象是否持有引用"——KGSL 历史缺陷多在后一类 |
+
+### 57.4 判定影响
+
+C2 **首轮未见"长度错配"候选**：8 个 REG 中 6 个已由 A/B 判据闭合，2 个待追溯。
+这**不是**"KGSL 无缺陷"的结论——本轮只覆盖 14 个拷贝点的长度维度。
+四层判定不变（NO-GO）。
+
+### 57.5 设备终态
+
+本轮纯离线，未上机；设备保持 `uptime` 连续、`/data/local/tmp` 空。
