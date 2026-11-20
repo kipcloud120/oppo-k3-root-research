@@ -1,0 +1,47 @@
+--------- beginning of main
+11-20 16:03:38.604  1755  2474 D OppoWifiClientModeImpl: Adjust rssi from -26 to -34
+11-20 16:03:38.674   687   687 I android.system.suspend@1.0-service: mSuspendCounter=1 first holding wakelock name=PowerManagerService.WakeLocks: Success
+11-20 16:03:38.676  3942  3942 I WeatherS_WeatherServiceVersionUtils: serviceVersionCode16024000
+11-20 16:03:38.676  3942  3942 I chatty  : uid=10076(com.coloros.alarmclock) identical 1 line
+11-20 16:03:38.676  3942  3942 I WeatherS_WeatherServiceVersionUtils: serviceVersionCode16024000
+11-20 16:03:38.691 13061 13061 D SingleClockView: updateTime,  24hfmt=true, h=16, m=03
+11-20 16:03:38.697   687   687 I android.system.suspend@1.0-service: mSuspendCounter=0 last release wakelock name=PowerManagerService.WakeLocks: Success
+11-20 16:03:38.699 24646  5066 E ONEPUSH:WakeLockUtil: acquireWakeLock
+11-20 16:03:38.702   687   687 I android.system.suspend@1.0-service: mSuspendCounter=1 first holding wakelock name=PowerManagerService.WakeLocks: Success
+11-20 16:03:38.706 24646  5066 E ONEPUSH:WakeLockUtil: releaseWakeLock
+11-20 16:03:38.708   687   687 I android.system.suspend@1.0-service: mSuspendCounter=0 last release wakelock name=PowerManagerService.WakeLocks: Success
+--------- beginning of system
+11-20 16:03:38.709  1755  2949 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+11-20 16:03:38.710  1755  2941 E OplusCustomizeRestrictionManagerService: isBiometricDisabled start
+11-20 16:03:38.740  5065  5065 D OplusUtils: OplusUtils [83]: 
+11-20 16:03:38.742  5065  5065 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 16:03:38.731  5065  5065 W app_process: type=1400 audit(0.0:36795): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 16:03:38.751  5065  5065 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 16:03:38.754  5065  5065 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 16:03:38.754  5065  5065 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 16:03:38.754  5065  5065 I AndroidRuntime: Using default boot image
+11-20 16:03:38.754  5065  5065 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 16:03:38.754  5065  5065 I AndroidRuntime: Leaving lock profiling enabled
+11-20 16:03:38.755  5065  5065 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 16:03:38.741  5065  5065 W app_process: type=1400 audit(0.0:36796): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:03:38.741  5065  5065 I chatty  : uid=2000(shell) app_process identical 2 lines
+11-20 16:03:38.741  5065  5065 W app_process: type=1400 audit(0.0:36799): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:03:38.871  5065  5065 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 16:03:38.871  5065  5065 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 16:03:38.931  5065  5065 W app_process: JNI RegisterNativeMethods: attempt to register 0 native methods for android.media.AudioAttributes
+11-20 16:03:38.944  5065  5065 D AndroidRuntime: Calling main entry FtmProbe
+11-20 16:03:38.969  1755  5021 D OplusWifiHalService: entering executeDriverCommand(x
+11-20 16:03:38.969  1755  5021 D OplusWifiHalService: log -t KALS `head -2 /proc/kallsyms`)
+11-20 16:03:38.973  1755  5021 D OplusWifiHalService: executeDriverCommand(x
+11-20 16:03:38.973  1755  5021 D OplusWifiHalService: log -t KALS `head -2 /proc/kallsyms`) completed successfully.
+11-20 16:03:38.973  1755  5021 D OplusWifiHalService: leaving executeDriverCommand(x
+11-20 16:03:38.973  1755  5021 D OplusWifiHalService: log -t KALS `head -2 /proc/kallsyms`) with result =  
+11-20 16:03:38.976  5065  5065 D AndroidRuntime: Shutting down VM
+11-20 16:03:39.021  5084  5084 W head    : type=1400 audit(0.0:36800): avc: denied { read } for name="kallsyms" dev="proc" ino=4026532143 scontext=u:r:oplus_wifi_service:s0 tcontext=u:object_r:proc:s0 tclass=file permissive=0
+11-20 16:03:39.709  1331  1361 D bspCriticalLog: power_monitor cpu-0-0-usr: open fail -1
+11-20 16:03:39.710  1331  1361 D bspCriticalLog: power_monitor cpu-1-0-usr: open fail -1
+11-20 16:03:39.710  1331  1359 D bspCriticalLog: thermal_monitor gpuss-0-usr: open fail -1
+11-20 16:03:39.710  1331  1359 D bspCriticalLog: thermal_monitor cpu-0-0-usr: open fail -1
+11-20 16:03:39.710  1331  1359 D bspCriticalLog: thermal_monitor cpu-1-0-usr: open fail -1
+11-20 16:03:39.921  1867  1867 W kworker/0:5: type=1400 audit(0.0:36801): avc: denied { write } for name="oplus_charge" dev="sda13" ino=1310808 scontext=u:r:kernel:s0 tcontext=u:object_r:system_data_file:s0 tclass=dir permissive=0
+11-20 16:03:40.000 12036 12203 D HoraeHelper: getAllShellTemps tSize : 4

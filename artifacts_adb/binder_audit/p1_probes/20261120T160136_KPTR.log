@@ -1,0 +1,353 @@
+--------- beginning of main
+11-20 16:01:36.241  4570  4570 W app_process: type=1400 audit(0.0:36754): avc: denied { read } for name="u:object_r:vendor_mm_video_prop:s0" dev="tmpfs" ino=23621 scontext=u:r:shell:s0 tcontext=u:object_r:vendor_mm_video_prop:s0 tclass=file permissive=0
+11-20 16:01:36.251  4570  4570 D OplusUtils: OplusUtils [83]: 
+11-20 16:01:36.258  4570  4570 E libc    : Access denied finding property "persist.vendor.debug.en.drpcrpt"
+11-20 16:01:36.282  4570  4570 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-20 16:01:36.296  4570  4570 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.profilebootclasspath"
+11-20 16:01:36.281  4570  4570 W app_process: type=1400 audit(0.0:36755): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:01:36.296  4570  4570 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_apex_image"
+11-20 16:01:36.296  4570  4570 I AndroidRuntime: Using default boot image
+11-20 16:01:36.281  4570  4570 W app_process: type=1400 audit(0.0:36756): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:01:36.296  4570  4570 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.disable_lock_profiling"
+11-20 16:01:36.296  4570  4570 I AndroidRuntime: Leaving lock profiling enabled
+11-20 16:01:36.281  4570  4570 W app_process: type=1400 audit(0.0:36757): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:01:36.281  4570  4570 W app_process: type=1400 audit(0.0:36758): avc: denied { read } for name="u:object_r:device_config_runtime_native_boot_prop:s0" dev="tmpfs" ino=23457 scontext=u:r:shell:s0 tcontext=u:object_r:device_config_runtime_native_boot_prop:s0 tclass=file permissive=0
+11-20 16:01:36.297  4570  4570 E libc    : Access denied finding property "persist.device_config.runtime_native_boot.enable_generational_cc"
+11-20 16:01:36.319  1755  2061 D HoraeHelper: skinThermal:26.33
+11-20 16:01:36.489  4570  4570 D app_process: Time zone APEX ICU file found: /apex/com.android.tzdata/etc/icu/icu_tzdata.dat
+11-20 16:01:36.489  4570  4570 D app_process: I18n APEX ICU file found: /apex/com.android.i18n/etc/icu/icudt66l.dat
+11-20 16:01:36.516  4570  4570 W System  : ClassLoader referenced unknown path: /data/local/tmp/ftmprobe.jar
+11-20 16:01:36.533  4570  4570 E appproc : ERROR: could not find class 'FtmProbe'
+11-20 16:01:36.533  4570  4570 F app_process: thread.cc:2381] No pending exception expected: java.lang.ClassNotFoundException: FtmProbe
+11-20 16:01:36.533  4570  4570 F app_process: thread.cc:2381] (Throwable with empty stack trace)
+11-20 16:01:36.533  4570  4570 F app_process: thread.cc:2381] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] Runtime aborting...
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] All threads:
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] DALVIK THREADS (12):
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "main" prio=5 tid=1 Runnable
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=0 dsCount=0 flags=0 obj=0x12c02c10 self=0x797b410800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4570 nice=0 cgrp=default sched=0/0 handle=0x7a02d2e500
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=R schedstat=( 626474786 11787132 173 ) utm=36 stm=26 core=6 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x7fd80a5000-0x7fd80a7000 stackSize=8192KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes= "abort lock" "mutator lock"(shared held)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000049f310  /apex/com.android.art/lib64/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, int, BacktraceMap*, char const*, art::ArtMethod*, void*, bool)+140)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000005abf58  /apex/com.android.art/lib64/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, bool, BacktraceMap*, bool) const+376)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005c956c  /apex/com.android.art/lib64/libart.so (art::DumpCheckpoint::Run(art::Thread*)+924)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005c3420  /apex/com.android.art/lib64/libart.so (art::ThreadList::RunCheckpoint(art::Closure*, art::Closure*)+528)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005c23e0  /apex/com.android.art/lib64/libart.so (art::ThreadList::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, bool)+1396)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 000000000055da38  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+1864)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 0000000000013988  /system/lib64/libbase.so (android::base::SetAborter(std::__1::function<void (char const*)>&&)::$_3::__invoke(char const*)+76)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #07 pc 0000000000012fb4  /system/lib64/libbase.so (android::base::LogMessage::~LogMessage()+320)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #08 pc 00000000005b1ae4  /apex/com.android.art/lib64/libart.so (art::Thread::AssertNoPendingException() const+1808)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #09 pc 00000000001d1828  /apex/com.android.art/lib64/libart.so (art::ClassLinker::FindClass(art::Thread*, char const*, art::Handle<art::mirror::ClassLoader>)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #10 pc 0000000000393554  /apex/com.android.art/lib64/libart.so (art::JNI<false>::FindClass(_JNIEnv*, char const*)+1048)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #11 pc 000000000009ec28  /system/lib64/libandroid_runtime.so (android::register_android_util_SeempLog(_JNIEnv*)+32)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #12 pc 00000000000a430c  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::startReg(_JNIEnv*)+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #13 pc 00000000000a4004  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+508)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #14 pc 0000000000003674  /system/bin/app_process64 (main+1580)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #15 pc 0000000000073a5c  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+108)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Jit thread pool worker thread 0" prio=5 tid=2 Native
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c40030 self=0x796960d000
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4577 nice=9 cgrp=default sched=0/0 handle=0x796aa5ad00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 999221 0 4 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x796a95c000-0x796a95e000 stackSize=1023KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005cb294  /apex/com.android.art/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*)+120)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005ca4f8  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Run()+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005ca008  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+192)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Runtime worker thread 0" prio=5 tid=3 Native (still starting up)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x0 self=0x797b5f1800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4578 nice=0 cgrp=default sched=0/0 handle=0x79ff88bd00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 544584 213698 3 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x79ff87d000-0x79ff87f000 stackSize=63KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005cb294  /apex/com.android.art/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*)+120)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005ca4f8  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Run()+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005ca008  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+192)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Runtime worker thread 2" prio=5 tid=4 Native (still starting up)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x0 self=0x796961e800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4580 nice=0 cgrp=default sched=0/0 handle=0x79ff7d3d00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 644323 1303230 3 ) utm=0 stm=0 core=1 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x79ff7c5000-0x79ff7c7000 stackSize=63KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005cb294  /apex/com.android.art/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*)+120)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005ca4f8  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Run()+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005ca008  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+192)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Runtime worker thread 1" prio=5 tid=5 Native (still starting up)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x0 self=0x7971017800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4579 nice=0 cgrp=default sched=0/0 handle=0x79ff838d00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 722813 0 8 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x79ff82a000-0x79ff82c000 stackSize=63KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005cb294  /apex/com.android.art/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*)+120)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005ca4f8  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Run()+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005ca008  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+192)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Runtime worker thread 3" prio=5 tid=6 Native (still starting up)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x0 self=0x796963b000
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4581 nice=0 cgrp=default sched=0/0 handle=0x79ff75bd00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 460468 0 3 ) utm=0 stm=0 core=3 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x79ff74d000-0x79ff74f000 stackSize=63KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000005cb294  /apex/com.android.art/lib64/libart.so (art::ThreadPool::GetTask(art::Thread*)+120)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000005ca4f8  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Run()+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000005ca008  /apex/com.android.art/lib64/libart.so (art::ThreadPoolWorker::Callback(void*)+192)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "Signal Catcher" prio=5 tid=7 WaitingInMainSignalCatcherLoop
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c80020 self=0x797102c800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4582 nice=0 cgrp=default sched=0/0 handle=0x7969955cc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 720989 0 2 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x796985e000-0x7969860000 stackSize=995KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 00000000000c5ea8  /apex/com.android.runtime/lib64/bionic/libc.so (__rt_sigtimedwait+8)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 0000000000086dd0  /apex/com.android.runtime/lib64/bionic/libc.so (sigwait+68)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 0000000000583b08  /apex/com.android.art/lib64/libart.so (art::SignalCatcher::WaitForSignal(art::Thread*, art::SignalSet&)+428)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 0000000000582700  /apex/com.android.art/lib64/libart.so (art::SignalCatcher::Run(void*)+272)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "perfetto_hprof_listener" prio=5 tid=8 Native (still starting up)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x0 self=0x796964c800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4583 nice=0 cgrp=default sched=0/0 handle=0x7964591cc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 677917 0 1 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x796449a000-0x796449c000 stackSize=995KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 00000000000c5224  /apex/com.android.runtime/lib64/bionic/libc.so (read+4)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000000180bc  /apex/com.android.art/lib64/libperfetto_hprof.so (void* std::__1::__thread_proxy<std::__1::tuple<std::__1::unique_ptr<std::__1::__thread_struct, std::__1::default_delete<std::__1::__thread_struct> >, ArtPlugin_Initialize::$_29> >(void*)+280)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000000da278  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 000000000007a448  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "HeapTaskDaemon" prio=5 tid=9 WaitingForTaskProcessor
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c03ce8 self=0x797b412400
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4584 nice=0 cgrp=default sched=0/0 handle=0x7963493cc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 563071 0 4 ) utm=0 stm=0 core=1 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x7963390000-0x7963392000 stackSize=1043KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 00000000002e5260  /apex/com.android.art/lib64/libart.so (art::gc::TaskProcessor::GetTask(art::Thread*)+536)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 00000000002e5b90  /apex/com.android.art/lib64/libart.so (art::gc::TaskProcessor::RunAllTasks(art::Thread*)+92)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at dalvik.system.VMRuntime.runHeapTasks(Native method)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$HeapTaskDaemon.runInternal(Daemons.java:542)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$Daemon.run(Daemons.java:144)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Thread.run(Thread.java:923)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "ReferenceQueueDaemon" prio=5 tid=10 Waiting
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c03d78 self=0x7971040c00
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4585 nice=0 cgrp=default sched=0/0 handle=0x7962389cc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 500261 0 5 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x7962286000-0x7962288000 stackSize=1043KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 000000000049a50c  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, long, int, bool, art::ThreadState)+544)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 000000000049bd60  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, art::ObjPtr<art::mirror::Object>, long, int, bool, art::ThreadState)+280)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Native method)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - waiting on <0x05de6711> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Object.java:442)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Object.java:568)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$ReferenceQueueDaemon.runInternal(Daemons.java:222)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - locked <0x05de6711> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$Daemon.run(Daemons.java:144)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Thread.run(Thread.java:923)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "FinalizerDaemon" prio=5 tid=11 Waiting
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c03e08 self=0x7971042800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4586 nice=0 cgrp=default sched=0/0 handle=0x796127fcc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 545470 0 5 ) utm=0 stm=0 core=1 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x796117c000-0x796117e000 stackSize=1043KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 000000000049a50c  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, long, int, bool, art::ThreadState)+544)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 000000000049bd60  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, art::ObjPtr<art::mirror::Object>, long, int, bool, art::ThreadState)+280)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Native method)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - waiting on <0x0b3f4076> (a java.lang.Object)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Object.java:442)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:190)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - locked <0x0b3f4076> (a java.lang.Object)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:211)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$FinalizerDaemon.runInternal(Daemons.java:278)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$Daemon.run(Daemons.java:144)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Thread.run(Thread.java:923)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "FinalizerWatchdogDaemon" prio=5 tid=12 Waiting
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12c03ec8 self=0x7971044400
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4587 nice=0 cgrp=default sched=0/0 handle=0x7961175cc0
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=S schedstat=( 508592 0 6 ) utm=0 stm=0 core=0 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x7961072000-0x7961074000 stackSize=1043KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes=
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000007550c  /apex/com.android.runtime/lib64/bionic/libc.so (syscall+28)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000001af800  /apex/com.android.art/lib64/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+148)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 000000000049a50c  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, long, int, bool, art::ThreadState)+544)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 000000000049bd60  /apex/com.android.art/lib64/libart.so (art::Monitor::Wait(art::Thread*, art::ObjPtr<art::mirror::Object>, long, int, bool, art::ThreadState)+280)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Native method)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - waiting on <0x00d69677> (a java.lang.Daemons$FinalizerWatchdogDaemon)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Object.java:442)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Object.wait(Object.java:568)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$FinalizerWatchdogDaemon.sleepUntilNeeded(Daemons.java:346)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   - locked <0x00d69677> (a java.lang.Daemons$FinalizerWatchdogDaemon)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$FinalizerWatchdogDaemon.runInternal(Daemons.java:326)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Daemons$Daemon.run(Daemons.java:144)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   at java.lang.Thread.run(Thread.java:923)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] Aborting thread:
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] "main" prio=5 tid=1 Runnable
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | group="" sCount=0 dsCount=0 flags=0 obj=0x12c02c10 self=0x797b410800
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | sysTid=4570 nice=0 cgrp=default sched=0/0 handle=0x7a02d2e500
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | state=R schedstat=( 704594572 14457707 219 ) utm=44 stm=26 core=1 HZ=100
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | stack=0x7fd80a5000-0x7fd80a7000 stackSize=8192KB
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   | held mutexes= "abort lock" "mutator lock"(shared held)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #00 pc 000000000049f310  /apex/com.android.art/lib64/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, int, BacktraceMap*, char const*, art::ArtMethod*, void*, bool)+140)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #01 pc 00000000005abf58  /apex/com.android.art/lib64/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, bool, BacktraceMap*, bool) const+376)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #02 pc 0000000000572278  /apex/com.android.art/lib64/libart.so (art::AbortState::DumpThread(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, art::Thread*) const+60)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #03 pc 000000000055dc58  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+2408)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #04 pc 0000000000013988  /system/lib64/libbase.so (android::base::SetAborter(std::__1::function<void (char const*)>&&)::$_3::__invoke(char const*)+76)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #05 pc 0000000000012fb4  /system/lib64/libbase.so (android::base::LogMessage::~LogMessage()+320)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #06 pc 00000000005b1ae4  /apex/com.android.art/lib64/libart.so (art::Thread::AssertNoPendingException() const+1808)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #07 pc 00000000001d1828  /apex/com.android.art/lib64/libart.so (art::ClassLinker::FindClass(art::Thread*, char const*, art::Handle<art::mirror::ClassLoader>)+64)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #08 pc 0000000000393554  /apex/com.android.art/lib64/libart.so (art::JNI<false>::FindClass(_JNIEnv*, char const*)+1048)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #09 pc 000000000009ec28  /system/lib64/libandroid_runtime.so (android::register_android_util_SeempLog(_JNIEnv*)+32)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #10 pc 00000000000a430c  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::startReg(_JNIEnv*)+80)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #11 pc 00000000000a4004  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+508)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #12 pc 0000000000003674  /system/bin/app_process64 (main+1580)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   native: #13 pc 0000000000073a5c  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+108)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655]   (no managed stack frames)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] Pending exception java.lang.ClassNotFoundException: FtmProbe
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] (Throwable with empty stack trace)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:655] 
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:663] No pending exception expected: java.lang.ClassNotFoundException: FtmProbe
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:663] (Throwable with empty stack trace)
+11-20 16:01:36.732  4570  4570 F app_process: runtime.cc:663] 
+--------- beginning of crash
+11-20 16:01:36.736  4570  4570 F libc    : Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 4570 (main), pid 4570 (main)
+11-20 16:01:36.768 22356 22740 I DRS_LOG_ChinaTimeWindowPolicy[DRS-Scheduler-1]: [DEFAULT] time=16:01, window=BASELINE, base=5m, scale=1.00, result=5m
+11-20 16:01:36.768 22356 22740 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO triggered, next=5m, base=5m, config:5min,effective=5m,screen=ON, policy=ChinaTimeWindow(baseline 1.0x)
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: triggerPseudo() called, gate=UploadGateFacade{
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   BusinessRuleGate{mode=STANDALONE, enableNetRequest=true}
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   NetworkGate{networkReady=true, isWifi=true}
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   PerformanceGate{skipped(STANDALONE)}
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   EnvRecoveryDetector: EnvRecoveryDetector{standalone=true, state=IDLE, snapshot=EnvSnapshot{net=false, normalOk=true, rtOk=true}, lastNormalOk=false, lastRtOk=false}
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   envRecoveryListeners: 1
+11-20 16:01:36.768 22356 22740 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: }
+11-20 16:01:36.769 22356 22740 I DRS_LOG_GateStateManager[DRS-Scheduler-1]: resetCompensationBudget[Pseudo]: budget=2
+11-20 16:01:36.769 22356 22740 I DRS_LOG_ChannelTaskRunner[DRS-Scheduler-1]: [PSEUDO] upload_trigger request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795161696769, skipGateCheck=false, scheduledRun=false}
+11-20 16:01:36.769 22356 22740 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO thread scheduled, reason=loop, delay=5m
+11-20 16:01:36.769 22356 25434 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] task_start submitMode=NEW_TASK request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795161696769, skipGateCheck=false, scheduledRun=false}
+11-20 16:01:36.775 22356 25434 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1]: [PSEUDO] initial_snapshot round=1 appIdCount=0 appIds=[] wifi=true allowDcs=false cacheGen=30
+11-20 16:01:36.775 22356 25434 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-1]: [PSEUDO] final_supplement previousRound=1 knownAppIds=0 supplementedAppIds=[]
+11-20 16:01:36.776 22356 25434 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] prepare_empty hadSuccess=false claimMissStop=false allUploaded=false loop=1
+11-20 16:01:36.776 22356 25434 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-1]: [PSEUDO] task_finish completed=true stopReason=TASK_COMPLETED successApps=0 skippedBatches=0 appErrors=0 envScenario=null allUploaded=false newDataDuringTask=false
+11-20 16:01:36.824  4592  4592 I crash_dump64: obtaining output fd from tombstoned, type: kDebuggerdTombstone
+11-20 16:01:36.829   792   792 I tombstoned: received crash request for pid 4570
+11-20 16:01:36.839  4592  4592 I crash_dump64: performing dump of process 4570 (target tid = 4570)
+11-20 16:01:36.855  4592  4592 F DEBUG   : Process name is app_process, not key_process
+11-20 16:01:36.855  4592  4592 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+11-20 16:01:36.855  4592  4592 F DEBUG   : Build fingerprint: 'OPPO/PCGM00/OP4679:11/RKQ1.201217.002/1704167642389:user/release-keys'
+11-20 16:01:36.855  4592  4592 F DEBUG   : Revision: '0'
+11-20 16:01:36.855  4592  4592 F DEBUG   : ABI: 'arm64'
+11-20 16:01:36.856  4592  4592 F DEBUG   : Timestamp: 2026-11-20 16:01:36+0800
+11-20 16:01:36.856  4592  4592 F DEBUG   : pid: 4570, tid: 4570, name: main  >>> app_process <<<
+11-20 16:01:36.856  4592  4592 F DEBUG   : uid: 2000
+11-20 16:01:36.856  4592  4592 F DEBUG   : signal 6 (SIGABRT), code -1 (SI_QUEUE), fault addr --------
+11-20 16:01:36.856  4592  4592 F DEBUG   : Abort message: 'No pending exception expected: java.lang.ClassNotFoundException: FtmProbe
+11-20 16:01:36.856  4592  4592 F DEBUG   : (Throwable with empty stack trace)
+11-20 16:01:36.856  4592  4592 F DEBUG   : '
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x0  0000000000000000  x1  00000000000011da  x2  0000000000000006  x3  0000007fd88a1430
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x4  0000007a02c38000  x5  0000007a02c38000  x6  0000007a02c38000  x7  00000000009dbd2a
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x8  00000000000000f0  x9  b1ea9b9099a389f3  x10 0000000000000000  x11 ffffffc0fffffbdf
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x12 0000000000000001  x13 000000000000009e  x14 002afa33f4e97734  x15 0000b54e9769819d
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x16 00000079fbb707e0  x17 00000079fbb4fda0  x18 0000007a01fb8000  x19 00000000000011da
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x20 00000000000011da  x21 00000000ffffffff  x22 0000000000000002  x23 0000000000000002
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x24 00000079797b2000  x25 0000000000000043  x26 000000797983786c  x27 00000079797b4000
+11-20 16:01:36.856  4592  4592 F DEBUG   :     x28 00000079797b5000  x29 0000007fd88a14b0
+11-20 16:01:36.856  4592  4592 F DEBUG   :     lr  00000079fbb03460  sp  0000007fd88a1410  pc  00000079fbb0348c  pst 0000000000000000
+11-20 16:01:36.873  4592  4592 F DEBUG   : backtrace:
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #00 pc 000000000007848c  /apex/com.android.runtime/lib64/bionic/libc.so (abort+164) (BuildId: e81bf516b888e895d4e757da439c8117)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #01 pc 000000000055dbf4  /apex/com.android.art/lib64/libart.so (art::Runtime::Abort(char const*)+2308) (BuildId: f1efa0d147bf4ca93b0a9f02fa6b1dde)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #02 pc 0000000000013988  /system/lib64/libbase.so (android::base::SetAborter(std::__1::function<void (char const*)>&&)::$_3::__invoke(char const*)+76) (BuildId: a09a41f1c2370328c811e735cdaa2860)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #03 pc 0000000000012fb4  /system/lib64/libbase.so (android::base::LogMessage::~LogMessage()+320) (BuildId: a09a41f1c2370328c811e735cdaa2860)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #04 pc 00000000005b1ae4  /apex/com.android.art/lib64/libart.so (art::Thread::AssertNoPendingException() const+1808) (BuildId: f1efa0d147bf4ca93b0a9f02fa6b1dde)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #05 pc 00000000001d1828  /apex/com.android.art/lib64/libart.so (art::ClassLinker::FindClass(art::Thread*, char const*, art::Handle<art::mirror::ClassLoader>)+64) (BuildId: f1efa0d147bf4ca93b0a9f02fa6b1dde)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #06 pc 0000000000393554  /apex/com.android.art/lib64/libart.so (art::JNI<false>::FindClass(_JNIEnv*, char const*)+1048) (BuildId: f1efa0d147bf4ca93b0a9f02fa6b1dde)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #07 pc 000000000009ec28  /system/lib64/libandroid_runtime.so (android::register_android_util_SeempLog(_JNIEnv*)+32) (BuildId: dfae6300deeefca6120c60477a9aa605)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #08 pc 00000000000a430c  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::startReg(_JNIEnv*)+80) (BuildId: dfae6300deeefca6120c60477a9aa605)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #09 pc 00000000000a4004  /system/lib64/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector<android::String8> const&, bool)+508) (BuildId: dfae6300deeefca6120c60477a9aa605)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #10 pc 0000000000003674  /system/bin/app_process64 (main+1580) (BuildId: 9349370b830e2b77b835dee3aff71480)
+11-20 16:01:36.874  4592  4592 F DEBUG   :       #11 pc 0000000000073a5c  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+108) (BuildId: e81bf516b888e895d4e757da439c8117)
+--------- beginning of system
+11-20 16:01:37.230  1755  2960 W NativeCrashListener: Couldn't find ProcessRecord for pid 4570
+11-20 16:01:37.231  4592  4592 E crash_dump64: AM data write failed: Broken pipe
+11-20 16:01:37.236   792   792 E tombstoned: Tombstone written to: /data/tombstones/tombstone_25
+11-20 16:01:37.264  1755  2153 I BootReceiver: Copying /data/tombstones/tombstone_25 to DropBox (SYSTEM_TOMBSTONE)
+11-20 16:01:37.286  1755  2153 I DropBoxManagerService: add tag=SYSTEM_TOMBSTONE isTagEnabled=true flags=0x2
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: failed to get version code, 
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: android.content.pm.PackageManager$NameNotFoundException: app_process
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at android.app.ApplicationPackageManager.getPackageInfoAsUser(ApplicationPackageManager.java:237)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.f.g.a(SourceFile:95)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.collector.a.c.b(SourceFile:76)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.collector.a.d.c(SourceFile:79)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.collector.collectors.d.c(SourceFile:128)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.collector.collectors.d.a(SourceFile:100)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at com.oplus.crashbox.collector.collectors.d.call(SourceFile:44)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-20 16:01:37.317 11271  4596 E CrashBox_PackageUtils: 	at java.lang.Thread.run(Thread.java:923)
+11-20 16:01:37.320  1755  2153 D DropBoxManagerService: file :: /data/system/dropbox/SYSTEM_TOMBSTONE@1795161697317.txt.gz
+11-20 16:01:37.320  1755  2153 V java.lang.ASSERT: in copyTombstone
+11-20 16:01:37.321  1755  2154 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+11-20 16:01:37.321  1755  2154 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.chimera.GmsIntentOperationService$PersistentTrustedReceiver
+11-20 16:01:37.353   687   687 I android.system.suspend@1.0-service: mSuspendCounter=1 first holding wakelock name=PowerManagerService.WakeLocks: Success
+11-20 16:01:37.383   687   687 I android.system.suspend@1.0-service: mSuspendCounter=0 last release wakelock name=PowerManagerService.WakeLocks: Success
+11-20 16:01:38.135 13776 13891 I DRS_LOG_ChinaTimeWindowPolicy[DRS-Scheduler-1]: [DEFAULT] time=16:01, window=BASELINE, base=5m, scale=1.00, result=5m
+11-20 16:01:38.137 13776 13891 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO triggered, next=5m, base=5m, config:5min,effective=5m,screen=ON, policy=ChinaTimeWindow(baseline 1.0x)
+11-20 16:01:38.138 13776 13891 E MSP-LOG-APP-DRS-DrsSdkCore: isEnableNetRequest() returning true
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: triggerPseudo() called, gate=UploadGateFacade{
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   BusinessRuleGate{mode=STANDALONE, enableNetRequest=true}
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   NetworkGate{networkReady=true, isWifi=true}
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   PerformanceGate{skipped(STANDALONE)}
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   EnvRecoveryDetector: EnvRecoveryDetector{standalone=true, state=IDLE, snapshot=EnvSnapshot{net=true, normalOk=true, rtOk=true}, lastNormalOk=true, lastRtOk=true}
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]:   envRecoveryListeners: 1
+11-20 16:01:38.139 13776 13891 I DRS_LOG_UploadPipelineV2[DRS-Scheduler-1]: }
+11-20 16:01:38.140 13776 13891 I DRS_LOG_GateStateManager[DRS-Scheduler-1]: resetCompensationBudget[Pseudo]: budget=2
+11-20 16:01:38.140 13776 13891 I DRS_LOG_ChannelTaskRunner[DRS-Scheduler-1]: [PSEUDO] upload_trigger request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795161698140, skipGateCheck=false, scheduledRun=false}
+11-20 16:01:38.143 13776 13891 I DRS_LOG_ThreadTimer[DRS-Scheduler-1]: PSEUDO thread scheduled, reason=loop, delay=5m
+11-20 16:01:38.145 13776  4630 E MSP-LOG-APP-DRS-DrsSdkCore: isEnableNetRequest() returning true
+11-20 16:01:38.145 13776  4630 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-63]: [PSEUDO] task_start submitMode=NEW_TASK request=ChannelTaskRequest{channelType=Pseudo, triggerReason=PSEUDO_PERIODIC, requestTimeMs=1795161698140, skipGateCheck=false, scheduledRun=false}
+11-20 16:01:38.160 13776  4630 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-63]: [PSEUDO] initial_snapshot round=1 appIdCount=0 appIds=[] wifi=true allowDcs=false cacheGen=0
+11-20 16:01:38.164 13776  4630 I DRS_LOG_UploadBatchAssembler[DRS-Upload-Nr-63]: [PSEUDO] final_supplement previousRound=1 knownAppIds=0 supplementedAppIds=[]
+11-20 16:01:38.165 13776  4630 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-63]: [PSEUDO] prepare_empty hadSuccess=false claimMissStop=false allUploaded=false loop=1
+11-20 16:01:38.165 13776  4630 I DRS_LOG_ChannelTaskRunner[DRS-Upload-Nr-63]: [PSEUDO] task_finish completed=true stopReason=TASK_COMPLETED successApps=0 skippedBatches=0 appErrors=0 envScenario=null allUploaded=false newDataDuringTask=false
