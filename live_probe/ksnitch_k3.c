@@ -12,7 +12,7 @@
 #define _GNU_SOURCE
 #define __ARM 1
 #define KERNELSNITCH_IDENTITY_START 0xffffffc000000000ULL
-#define KERNELSNITCH_IDENTITY_END   (KERNELSNITCH_IDENTITY_START + (128ULL << 30))
+#define KERNELSNITCH_IDENTITY_END   (KERNELSNITCH_IDENTITY_START + (256ULL << 30))
 #include "kernelsnitch.h"
 
 int main(int argc, char **argv) {
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
     size_t collisions = argc > argi ? strtoul(argv[argi], 0, 0) : 10;
     size_t threads = argc > argi+1 ? strtoul(argv[argi+1], 0, 0) : 16;
     if (threads < 2) threads = 2;
-    printf("ksnitch_k3: mm_sz=896 order=2 window=[%016llx,+128GB] collisions=%zu threads=%zu\n",
+    printf("ksnitch_k3: mm_sz=896 order=2 window=[%016llx,+256GB] collisions=%zu threads=%zu\n",
            (unsigned long long)KERNELSNITCH_IDENTITY_START, collisions, threads);
     fflush(stdout);
     size_t t0 = gettime_ns();
