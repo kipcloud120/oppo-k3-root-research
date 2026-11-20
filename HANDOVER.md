@@ -525,6 +525,7 @@ ENOTTY（未实现）3833
 | `hrtimer_sleeper` | **72** (0x48)  | `timer=0x00`、`task=0x40`                                                                                                |
 
 > 链走查真正读取的三个字段 `task`/`lock`/`prio` 在 72 B 与 80 B 两种 waiter 形态下偏移**完全相同**（`deadline` 只能追加在 `prio` 之后）⇒ 该不确定性不影响任何可操作结论。
+> **【v13-补做修正（2026-11-20，权威结论见 §70）】：上表 72 B（0x48）/「无 deadline」记录**错误**。厂商源码（android-4.9-q 血统）+ 二进制反汇编双证：`rt_mutex_waiter` **0x50 字节**，含内嵌 `deadline@0x48`；但 `MAX_DL_PRIO=0` ⇒ 对合法用户 prio 该字段**永不被解引用**，`task/lock/prio` 偏移不变，本表其余行不受影响。**
 
 ### 8.2 `task_struct` 偏移（mainline-4.9 + 本机 config 推导，**须运行时锚定**）
 
@@ -4777,3 +4778,171 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 - **四层判定不变**：Wi-Fi 域内受限 UID 0 命令执行已达成；**可用 ROOT / 持久 ROOT 仍 NO-GO**。
 - 本次更正属**离线证据复核**，未上机、未改变设备状态；§62/§63 的 `boot_id` 与探针清理记录仍是最后一次设备操作。
 - 完整更正见 `docs_archive/R1_WLAN非配置输入可达性矩阵_2026-11-20.md`（§2.1/§3/§5/§6）；三份权威入口（`HANDOVER_RESUME.md`/`CLOSURE.md`/`README.md`）已同步至 v12.3.1 口径。
+
+---
+
+## §66 v13：dumpstate KASLR 证据固化 —— 阶段 1 证据收口完成（2026-11-20，响应审核 v013；纯文档/离线，零新增设备操作）
+
+> 承接 §65。审核 v013 指出：当前 boot 的 `.text` slide 已取得，研究重心应从"寻找 slide"转向"地址发现 → 利用条件闭合"，且三个权威入口仍停留在 v12.3.1 的旧结论。本节为 **Paper work（阶段 1）的收口条目**：不改写 §1–§63 历史证据；**权威证据台账独立成文：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)**（方法原始记录 `live_probe/DUMPSTATE_KASLR_PATH.md` §8）。
+
+### 66.1 本节登记的事实（全部数值已在台账中独立复算）
+
+| 项 | 值 |
+|---|---|
+| 当前 boot（`b9f9f06a-2f2c-470f-8887-c9bb004bdaa2`）`.text` slide | **`0x1953600000`**；运行时 `_text = 0xffffff995b680000`；2 MB 对齐 ✓ |
+| 推导 | `sysfs_create_dir_ns`（静态 `0xffffff80082dcab0`）+0xb8/+0xb4 的原始 pc/lr（`0xffffff995b8dcb68/64`）两路独立推出同值；寄存器族（x28/x27/x15/x7 静态对应 `0xffffff8009a84e50`/`0xffffff800a022000`/`0xffffff80084898b8`/`0xffffff8009e6af38`）一致 ✓ |
+| 重启前 boot（`27520eec-…`）slide | `0x16a000000`：last_kmsg 的 sysfs/proc_register 双 WARN 四路一致；重启后采集副本与重启前拉取副本 SHA-256 逐字节一致（`262b2631…`）⇒ §8.3 跨 boot 预测复现 |
+| SHA-256 台账 | vmlinux.elf `6588c871…6e36189a`、kernel.decompressed `95a70412…5613baebc`、boot.img `22fc0926…db00a36c3f`、newboot.zip `754925b4…f2a0b8379b`、final.zip `c9c81091…7ef4d4664` 等（完整表见 `KASLR_EVIDENCE.md` §3） |
+| 地址归属（P0.3） | 当前 boot（唯一有效）/ 重启前 boot（复现用）/ 历史 last_kmsg ×10（pc 各异；**.5–.10 的 WARN 形态为 0xa0/0xd4，与当前内核的 0xb8/0xf8 对不同 ⇒ 旧内核构建，不可用当前符号表推导**——新登记的边界事实） |
+| 日志保留边界（P0.4） | 新 boot KERNEL LOG 段覆盖 t=0→0.371 s（396 行）；76 h 老 boot 段仅最近 ~26 分钟（早期 WARN 已逐出）；`logcat -b kernel` 与 pstore 均不可替代；成功条件 = 重启后尽早（≤数分钟）经 `ctl.start dumpstate` 采集。**停止标准：该 boot 结果冻结，不为重复证明而重启** |
+
+### 66.2 证据完整性异常（如实登记）
+
+1. `klog_newboot.txt` 为 0 字节（§8.5 曾列为留存物）——无损，主报告完整留存于 `newboot.zip`，KERNEL LOG 段已重新解包核对；
+2. `last_kmsg_postreboot.txt` 单文件缺失——无损，其本体即 `newboot.zip` 内 `FS/cache/recovery/last_kmsg`；
+3. adb 拉取文件名末字符截断（`.tx`/`.zi` 两例）——§6 已登记的教训再现。
+
+### 66.3 判定语义（v013 纪律）
+
+- **①-s 类（`.text` slide）获取原语在本机成立**，但 `FEASIBILITY_v008.md` 的"已审接口内无原语"表述在其原范围内仍成立（本路径为范围外第三主体 + 一次**单独授权**的重启）。
+- **slide ≠ 堆地址 ≠ 栈地址**：GhostLock **②/③ 缺口不变**；附带 `sp` 属 init/swapper，不满足 ③ 判据；M2 固定 delta 维持关闭。
+- **四层判定不变：Wi-Fi 域内受限 UID 0 已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
+
+### 66.4 v13 后续阶段（均未启动，属分析类工作）
+
+| 阶段 | 交付物 | 状态 |
+|---|---|---|
+| 1 证据收口（本节 + 台账） | `KASLR_EVIDENCE.md` + 三入口 v13 同步 | **已完成** |
+| 2 运行期 WARNING 观察面（只读静态审计，不制造内核异常） | `WARN_ADDRESS_SURFACE_AUDIT.md` | 待启动 |
+| 3 GhostLock ②/③ 分别复评（不恢复 M2） | `GHOSTLOCK_ADDRESS_REASSESSMENT.md` | 待启动 |
+| 4 WLAN `hdd_driver_command` 调用链静态审计 | `WLAN_IOCTL_CHAIN_AUDIT.md` | 待启动 |
+| 5 总体验收 | 新版 `CLOSURE.md`（已证明/未证明/不可达/冻结逐条） | 待启动 |
+
+**改代码与调试类工作待用户通知后再开始。**
+
+---
+
+## §67 v13 阶段 3：GhostLock 地址条件复评完成 —— 缺口收敛为单一 N1，维持冻结（2026-11-20，响应审核 v013-step3；纯离线，零上机，不改变四层判定）
+
+> 承接 §66。用户指示**跳过阶段 2（登记为暂缓、非关闭），先执行阶段 3**。依据 `docs_archive/审核意见CHATGPT-v013-step3.txt` 的 G0–G3 任务表完成四份交付物（均在本仓库根目录）：
+
+| 交付物 | 核心结论 |
+|---|---|
+| `GHOSTLOCK_ADDRESS_BASELINE.md`（G0） | 四类地址基线：①A slide 已取得（绑定 boot `b9f9f06a-…`）、①B mm 已验证但属**上一台次开机**（与 ①A 不同 boot，不可混用）、②/③ 未解决；建立强制审计规则 R1–R6（类型/时间/对象身份/线程归属/生命周期/证据等级） |
+| `GHOSTLOCK_ADDRESS_REQUIREMENTS.md`（G1） | **需求三层分解**：机制必要条件只有 N1（`waiter->lock` 须指向内核可写、结构合法 rt_mutex）；"③W 线程栈"是 K3 xattr 载体条件 C1 + N3(i) 构造的复合产物，**不是机制必要条件**；v13 slide 满足的是 N3(ii)（已知镜像地址可计算），不满足 N1 |
+| `GHOSTLOCK_ADDRESS_SOURCE_MATRIX.md`（G2） | 方向 A（W 线程栈）候选 A1–A5 全部无 oracle 维持冻结；方向 B（合法锁对象）：B1 pi_state / B2 skb 喷页维持"缺地址锚点"；**新登记 B3（全局静态 rt_mutex，地址=静态 VA+slide 可计算）——两轮离线枚举未判定**：`src_ref` 源码树 `DEFINE_RT_MUTEX` 全局实例 0 处、`vmlinux.elf` 符号 st_size 全为 0（无法按 0x20 尺寸过滤）、config 确认 `CONFIG_DEBUG_RT_MUTEXES` 未启用（尺寸基准 0x20 成立） |
+| `GHOSTLOCK_PHASE3_DECISION.md`（G3） | **GhostLock 维持冻结**；B3 登记为条件线索（前置：完整源码/带尺寸符号表完成枚举 + 纯静态安全审计 + 用户授权）；阶段 3 成功标准 = 找到有独立证据支持的地址来源解决 N1，而非获得新地址 |
+
+### 67.1 本节必须被后续 AI 记住的三条语义
+
+1. **缺口已收敛**：GhostLock 的地址问题从"地址全缺"收敛为**单一缺口 N1（② 或 ③ 二选一）**；slide 只补 N3(ii)，不再把"找 slide"当瓶颈，也不把 slide 当作 ②/③ 的替代品。
+2. **B3 是唯一由 slide 直接受益的候选**，但其前提（全局 rt_mutex 实例存在性）**未证实且当前物料不可判定**——正确状态是"未证实候选 + 枚举前置条件缺失"，不得写成"不存在"（枚举不完备）也不得写成"存在可用对象"（无对象身份证据）。
+3. **KernelSnitch 定位变更**：保留为独立的 Direct Map 观测工具；不再扩展为栈地址定位工具（futex key 不含栈地址，源码层确认）；M2 维持关闭。
+
+### 67.2 判定影响
+
+- **四层判定不变**：Wi-Fi 域内受限 UID 0 命令执行已达成；**可用 ROOT / 持久 ROOT 仍 NO-GO**；GhostLock 维持冻结（重开条件收紧为 G3 §1 的 B3 两前置或 A/B1/B2 的对应 oracle）。
+- 本轮全部为离线分析/文档工作，未连接设备；§62/§63/§8 的设备终态记录仍为最后一次设备操作。
+- **阶段 2（运行期 WARNING 观察面）按用户指示暂缓**；阶段 4（WLAN `hdd_driver_command` 调用链审计）保持并行优先，**待用户通知后启动**。
+
+---
+
+## §68 v13 阶段 2：运行期 WARNING 观察面静态审计完成 —— WARN dump 登记为 ③ 唯一潜在 oracle 形态，无安全候选（2026-11-20，响应审核 v013 §四.2 / P1.1–P1.5；纯离线，零上机，不改变四层判定）
+
+> 承接 §67。交付物：`WARN_ADDRESS_SURFACE_AUDIT.md`；目录工件 `.build/bugreport_20261120/{vmlinux,wlan}_bug_catalog.json`（不入库）；工具 `tools/bugtable_scan.py`（可离线复跑）。
+
+### 68.1 目录总量（P1.1，可复算）
+
+| 物料 | 条目 | WARN | BUG |
+|---|---|---|---|
+| `vmlinux.elf` | 11,283 | 6,846 | 4,437 |
+| `qca_cld3_wlan.ko` | 612 | 497 | 115 |
+
+方法：`CONFIG_DEBUG_BUGVERBOSE=y` ⇒ 12 字节 bug 条目；arm64 `brk #0x800`（`0xD4210000`）逐条校验；flags 语义实测校准（bit0=WARN、高 8 位=taint，`0x901`=WARN+TAINT_WARN 与真机 `Tainted: G W` 一致）。ko 侧 612/612 全部通过校验。
+
+### 68.2 三项核心结论
+
+1. **WARN dump = 非致命、上下文本地的 sp 观测通道**（真机双 boot 实证：WARN 后系统继续运行）——对 §53/§60"唯一含 sp 的是 oops（触发即重启）"的**范围外修订**。它是 ③ 迄今唯一的潜在 oracle 形态：若 W 线程能经合法参数在 stale 窗口内触发某 WARN，其 dump 的 sp 即给出 W 栈基址。
+2. **自然发生率不足**（P1.4，经验）：稳态 26 分钟窗口内核 WARN = **0**；全程 boot console 仅 3 次早期事件，上下文全部为内核线程（swapper/0、kworker/u16:1），从未出现用户态 comm ⇒ 自然发生不提供 ③。
+3. **无安全、明确的候选**（P1.2/P1.3/P1.5）：`hdd_driver_command` 与 KGSL 非 sparse ioctl 已审函数内 **0 个 WARN/BUG 点**；KGSL 994 个 WARN 集中于 `a5xx_start` 等初始化路径，不可合法按需触发；futex PI 路径 **68 个 WARN 点**（`futex_lock_pi`/`attach_to_pi_owner`/`fixup_pi_state_owner` 等）是唯一与 W 上下文相关的候选集，但**逐点"合法可触发+无 BUG 升级+无状态破坏"裁决未完成**——物料缺口：厂商构建 futex.c 行号与本地 mainline 副本漂移。全部 BUG 点（4,437+115）已排除。
+
+### 68.3 判定影响
+
+- **③ 判定精确化（非解除）**："无可用 oracle"维持，oracle 可能形态从"无"更新为"WARN 上下文 dump（futex 68 点候选集待裁决）"。按 R6 规则为"未证实候选"，不得写成"已解决"。
+- **①A 判定不变**：dumpstate 路径已实证；自然发生面仅提供 boot 早期窗口。
+- **不申请任何额外授权、不做动态触发**（P1.5）；四层判定不变：**可用 root / 持久 ROOT 仍 NO-GO**。
+- v13 阶段进度：阶段 1 ✅、阶段 2 ✅（本节）、阶段 3 ✅（§67）；阶段 4（WLAN 调用链）与阶段 5（总验收）待用户通知。
+
+---
+
+## §69 阶段 2 续：厂商源码到手，futex 68 点候选集裁决完成 —— 全部排除，③ 的 WARN-oracle 假设被否决（2026-11-20，纯离线，零上机，不改变四层判定）
+
+> 承接 §68 的"裁决未完成"物料缺口。**用户指示联网获取厂商匹配内核源码**，已完成获取、校准与逐点裁决。交付物：`WARN_ADDRESS_SURFACE_AUDIT.md` §8（完整裁决记录）。
+
+### 69.1 新物料
+
+- **来源**：`github.com/oppo-source/android_kernel_oppo_sdm710`（OPPO 官方 GPL 组织），分支 `oppo/sdm710_r_11.0_reno`（SDM710 / Android 11，PCAM00_11_F.56）。
+- **入库**：`src_ref/vendor_sdm710_r11/{kernel/futex.c, fs/sysfs/dir.c, fs/proc/generic.c}`（GPLv2 原许可；futex.c 3,487 行，SHA-256 `2b3c2678…d29952f6`）。
+- **设备差异边界**：树为 Reno F.56，本机 K3 F.16——同 SoC 同分支非同机型。
+- **行号校准通过**：两个真机锚点逐字命中（`sysfs/dir.c:31` 与 `generic.c:345` 的 WARN 语句与本机 dmesg 逐字一致）+ futex 20 个去重行号全部落在 WARN/BUG 语句上（20/20）。可信等级：高度可信（非绝对，残余风险已登记）。
+
+### 69.2 裁决结果（核心）
+
+| 项 | 结果 |
+|---|---|
+| 唯一用户路径候选 `futex.c:1302`（`WARN(q->pi_state \|\| q->rt_waiter, "refusing to wake PI futex")`，mark_wake_futex 内联 4 处） | **被否决**：4 个调用点之前全部有 `-EINVAL` 前置检查（`futex_wake@1463-1466`、`futex_wake_op@1601/1615`、`futex_requeue@1962-1965`），PI waiter 到不了该 WARN；二进制侧交叉印证（站点 @`0xffffff800815e038` 前为 rodata 字符串 `0xffffff800962460d` + printk + brk，随后 `mov w21,#-0x16` = -EINVAL 出口）。**死防御代码，用户态不可达** |
+| 其余 19 行（61 点） | 全部为内部不变量（pi_state 链表/持锁/refcount 断言），仅内核 bug 态可达，排除 |
+| 3 个 BUG 点（`2178/2198` 等） | 排除（BUG/panic 面） |
+
+**⇒ 68 点全部排除。③ 的 WARN-oracle 假设在源码层被否决（证据等级：厂商源码 + 双锚点 + 反汇编交叉印证）。③ 回到"无可用 oracle"，且从 §68 的"待裁决"升级为"已完整裁决为否"。** WARN dump 通道机制仍为已实证，但本内核 futex 路径无可达触发点。
+
+### 69.3 判定影响
+
+- **四层判定不变**：可用 root / 持久 ROOT 仍 NO-GO；GhostLock ②/③ 维持冻结（G3 重开条件不变——本裁决是条件的一次实证关闭而非重开）。
+- **不需要任何上机动作、不申请任何授权**。
+- 新物料使后续"逐行核对厂商内核"类审计（阶段 4 WLAN 审计的内核侧对照等）具备厂商源码条件；`techpack/`、`drivers/` 等目录可按需增补拉取。
+
+### 69.4 后续指令与补做范围（2026-11-20，用户指示）
+
+- **用户指令 1**："我们已经拿到厂商源码，那些之前因为没有源码做不到的工作先不做。"（当时正欲启动全树克隆，已中止写入）
+- **用户指令 2（覆盖指令 1）**："我们已经拿到厂商源码，那些之前因为没有源码做不到的工作**先补做**。"——即把 G2 §2.2 B3 中标注"当前物料不可验证"的**全局 rt_mutex 实例静态枚举**，以及厂商 rtmutex 机制核对中因缺源码搁置的项，现在补做。
+- **补做清单**：
+  1. 全树克隆 `oppo/sdm710_r_11.0_reno`（本地代理 127.0.0.1:7890 已启用）→ B3 全局静态 `struct rt_mutex` 实例枚举 → 符号名 ↔ vmlinux 符号表静态 VA ↔ 运行时 VA（+slide `0x1953600000`）→ 候选裁决（G2/G3 回填）。
+  2. 厂商 rtmutex 机制核对收尾：`rt_mutex_waiter` 布局修正（waiter 0x50、内嵌 `deadline` @0x48，二进制已证）+ `dl_prio`/`MAX_DL_PRIO=0` 验证（厂商 `include/linux/sched/deadline.h:10`，SHA-256 `bde95a62…05cde8`，与本地副本一致）→ 相关文档（G2/G3、WARN 审计、HANDOVER §70）回填。
+- 边界不变：纯离线/静态工作，零上机，不申请任何设备授权；代码修改与调试仍等用户通知。
+
+---
+
+## §70 阶段 2 续：补做完成 —— B3 全局 rt_mutex 静态枚举 + 厂商 rtmutex 机制核验 + waiter 布局修正（2026-11-20，纯离线，零上机）
+
+> 承接 §69.4 的补做清单。**用户覆盖性指令**："那些之前因为没有源码做不到的工作**先补做**"。前置物料：全树 `oppo-source/android_kernel_oppo_sdm710` @ `oppo/sdm710_r_11.0_reno`（提交 `bf9316a9`，PCAM00_11_F.56，QCOM TAG LA.UM.9.8.R1.11.00.00.673.034_r2.1.1）经本地代理（127.0.0.1:7890）克隆入库 `.build/vendor_kernel_full/`（约 177 MB，深度 1；仅 nouveau `aux.{c,h}` 2 个文件因 Windows 保留名未检出，与审计无关）。
+
+### 70.1 B3：全局 rt_mutex 实例静态枚举（完成，G2 §2.3 / G3 §6）
+
+- **源码枚举**：全树 `DEFINE_RT_MUTEX` 9 处，文件作用域裸 `struct rt_mutex` 0 处，tester 不存在；嵌套成员（i2c_adapter.bus_lock/mux_lock、em28xx.i2c_bus_lock）为动态分配，rcu `boost_mtx` 因 `CONFIG_RCU_BOOST` 未开启为死成员。
+- **符号表裁决**（vmlinux.elf）：**4 个实例编入内核**——
+
+| 符号 | 源文件 | 静态 VA | 运行时 VA（+slide `0x1953600000`） | 节 |
+|---|---|---|---|---|
+| `uid_lock` | drivers/misc/uid_sys_stats.c:36 | `0xffffff8009e0ca80` | `0xffffff995d40ca80` | .kernel2 |
+| `msm_bus_adhoc_lock` | msm_bus_arb_adhoc.c:43 | `0xffffff800a139530` | `0xffffff995d739530` | .bss |
+| `msm_bus_dbg_cllist_lock` | msm_bus_dbg.c:41 | `0xffffff800a139590` | `0xffffff995d739590` | .bss |
+| `proc_uid_lock` | fs/proc/uid.c:26 | `0xffffff800a05b150` | `0xffffff995d65b150` | .bss |
+
+- 排除：`torture_rtmutex`/`rpm_clock_lock`/`voter_clk_lock`/`floor_vote_lock` 未编入（symtab 无符号）；`cpufreq_times.c:35` 的 `uid_lock` 是 **spinlock**（同名异型，排除）。
+- **判定影响**：B3 从"未证实候选"升级为**"静态层已证实候选集（4 实例）"**——对象身份（R2/R3）、生命周期（R5 静态永活）、地址可得性（R4，slide 复算）三项在静态层全部满足。**但 GhostLock ②/③ 维持冻结**：这 4 个是真实在用内核锁，操作其 waiter 树 = 操作真实内核对象并触发对真实 owner 的链式优先级传播；step3 §六要求的并发语义静态审计未执行，panic 风险未评估；重开条件（并发审计通过 + 用户明确授权）不变。
+
+### 70.2 厂商 rtmutex 机制核验（完成）
+
+- 解引用链全部核验通过（厂商 rtmutex.c）：`:273` RB_EMPTY_NODE 提前返回、`:626` raw_spin_trylock、`:641/665/671` owner 解引用、`:745` 附近 top_waiter `BUG_ON(w->lock != lock)`；`futex_pi_state` 内嵌 `pi_mutex` 确认；`struct rt_mutex` 非 debug 尺寸 0x20 确认。厂商 rtmutex.c 与主线 4.9 差异 99 行（deadline 内嵌字段比较 + `waiter->deadline` 写入 + lockdep 断言）。
+
+### 70.3 修正：`rt_mutex_waiter` 布局（推翻 §8.1 旧记录）
+
+- 厂商 `rtmutex_common.h` + 二进制双证（`rt_mutex_adjust_prio_chain` 内 `ldr xN, [waiter, #0x48]`）：waiter **0x50 字节**，布局 `tree_entry@0x00 / pi_tree_entry@0x18 / task@0x30 / lock@0x38 / prio@0x40 / deadline@0x48`。§8.1 的"72 B / 无 deadline"记录**错误**（已在 §8.1 原位打更正标记）。
+- **无害性**：厂商 `deadline.h:10` `MAX_DL_PRIO=0` ⇒ `dl_prio(prio)` 对一切合法用户 prio 恒假，`deadline` **永不被解引用**（sha256 `bde95a62…05cde8`）。伪造 waiter 携带任意 prio ≥ 0 不触达 deadline 路径；`task/lock/prio` 三个链走查字段偏移不变。
+- §8 的 68 点排除结论不受影响（基于 WARN 可达性，与 waiter 尺寸无关）。
+
+### 70.4 边界与状态
+
+- 纯离线/静态工作，零上机，未申请任何设备授权；代码修改与调试仍等用户通知。
+- 阶段进度：阶段 1–3 ✅（含本次补做）；阶段 4（WLAN 调用链审计）与阶段 5（总验收）**待用户通知**。

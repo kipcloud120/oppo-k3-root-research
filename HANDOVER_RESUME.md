@@ -1,7 +1,16 @@
-# 接手摘要（v12.3.1：**非 sparse 释放链自洽、I4 上机证实、K2 达成；KGSL 主线阶段性关闭；外部 CVE 与 WLAN 输入面分诊完成；R1 已按原始证据更正 Binder 10070 口径并将 hdd_driver_command 列为首选离线候选**，四层判定仍 NO-GO，2026-11-20）
+# 接手摘要（**v13：dumpstate 路径实证取得当前 boot 的 `.text` KASLR slide（`0x1953600000`）；证据已固化为 `KASLR_EVIDENCE.md`；研究重心从"找 slide"转向"地址发现 → 利用条件闭合"；四层判定仍 NO-GO**，2026-11-20）
 
-> 一页式入口。完整证据：`HANDOVER.md` §63（非 sparse 释放前提 + I4 上机，最新）+ §62（sparse 关判定）+ §61（v12-K1 生命周期）+ §60 + §58 + §57 + §56 + §55 + §53；**本轮三份分诊报告见 `docs_archive/` 的 `项目评审与下一步规划_v13`、`联网调研_高优先级突破方向_v14`、`CVE-2025-38352_E1形态复核`、`R0_覆盖台账`、`R1_WLAN非配置输入可达性矩阵`（均 2026-11-20）**。
+> 一页式入口。完整证据：`HANDOVER.md` §66（v13 证据收口，最新）+ §63 + §62 + §61 + §60 + §58 + §57 + §56 + §55 + §53；**dumpstate KASLR 路径权威证据台账：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)，方法原始记录：`live_probe/DUMPSTATE_KASLR_PATH.md`**。
 > 分层判定 `CLOSURE.md`；审阅入口 `README.md`。
+
+> **v13 证据收口（2026-11-20 下午，响应审核 v013；纯文档/离线，零上机，不改变四层判定）**：
+> ① **当前 boot 的 `.text` KASLR slide 已实证取得**：dumpstate 第三主体路径（`ctl.start dumpstate → bugreport → 内核日志原始 pc/lr → vmlinux.elf 静态符号`）+ **一次用户明确授权的重启**。当前 boot（`boot_id=b9f9f06a-…`）slide = **`0x1953600000`**，运行时 `_text = 0xffffff995b680000`，2 MB 对齐，pc/lr 两路独立 + 寄存器族一致；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 复现命中。**slide 每 boot 随机，再重启即失效**。
+> ② **证据固化（P0.1–P0.4 全部落档 [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)）**：原始 pc/lr/寄存器族整理、全部物料 SHA-256 台账（vmlinux.elf `6588c871…`、boot.img `22fc0926…`、newboot.zip `754925b4…` 等）、当前/重启前/历史 last_kmsg 的地址归属区分（.5–.10 早期副本 WARN 形态不同 ⇒ 旧内核构建不可用当前符号表推导）、dumpstate 日志保留边界与成功/失败条件清单。
+> ③ **判定语义（v013 纪律，不得混用）**：①-s 类 slide 获取原语成立 ≠ 可用 root——GhostLock **②（可控 rt_mutex 堆地址）/③（W 线程栈基址）缺口不变**；dumpstate 附带的 `sp` 属 init/swapper 栈，不满足 ③ 判据；v008"已审接口内无 slide 原语"表述在其范围内仍成立。
+> ④ **v13 主线定义**：不再重复寻找已得到的 slide；第一主线 = dumpstate 证据固化（**阶段 1 已完成**）+ 运行期 WARNING 观察面静态审计（P1）；第二主线 = GhostLock ②/③ 地址条件分别复评（P2，**阶段 3 已完成**）；并行 = WLAN `hdd_driver_command` 调用链静态审计（P3，待启动）。**阶段 2（WARNING 观察面）按用户指示暂缓（非关闭）；改代码与调试类工作待用户通知。**
+> ⑥ **阶段 3 复评结论（详见 `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 四份文档，`HANDOVER.md` §67）**：地址缺口收敛为**单一 N1**（有效、可控、结构合法 rt_mutex 对象地址 = ②或③）；slide 只补 N3(ii)（已知镜像地址可计算），不满足 N1；方向 A（W 线程栈）与 B1/B2（pi_state/skb 喷页）均无 oracle 维持冻结；新登记 **B3（全局静态 rt_mutex）**为唯一由 slide 直接受益的候选——但实例存在性在现有物料上不可判定（符号表无 st_size、源码树不全），登记为**未证实候选**。**GhostLock 维持冻结；四层判定不变：NO-GO。**
+> ⑦ **阶段 2 审计 + 裁决结论（`WARN_ADDRESS_SURFACE_AUDIT.md` §1–§8，`HANDOVER.md` §68/§69）**：WARN() 寄存器 dump 是**非致命、上下文本地的 sp 观测通道**（双 boot 实证）——③ 的唯一潜在 oracle 形态；稳态自然 WARN=0、自然事件全部在内核线程上下文；`hdd_driver_command` 与 KGSL 已审 ioctl 函数内 0 个 WARN 点。**候选集裁决已完成**：厂商源码（`oppo-source/android_kernel_oppo_sdm710`，双锚点校准通过）落地后，futex PI 路径 68 点全部排除——唯一用户路径候选 `futex.c:1302` 被 4 处 `-EINVAL` 前置检查拦截（死防御代码，用户态不可达，反汇编交叉印证）。**③ 的 WARN-oracle 假设被否决，③ 回到"无可用 oracle"（已完整裁决为否）；四层判定不变：NO-GO。**
+> ⑤ 冻结/维持项（v013 §3）：KernelSnitch M1 冻结为已验证工具；M2 时间邻接固定 delta 继续关闭；KGSL 非 sparse 生命周期阶段性关闭；GhostLock 固定地址移植方案关闭；FastRPC 旧路径、WLAN persist 输入关闭；`CVE-2025-38352` 动态测试暂停。四层判定不变：**可用 root / 持久 ROOT 仍 NO-GO**。
 
 > **v13/v14 分诊收口（2026-11-20 下午，**纯离线、零上机，不改变四层判定**）**：
 > ① **v13 评审**：维持 NO-GO；KGSL/GhostLock 冻结；下一轮主线从"继续找漏洞"改为"文档同步 + 可达性优先"，即 R0（交接口径）+ R1（WLAN 非配置输入可达性矩阵）。
@@ -69,7 +78,8 @@
 | Wi-Fi 域内 Root UID 命令执行 | **已达成**（2026-11-18，§23） |
 | 可用 root（脱离 SELinux 域） | **未达成**（§24 / §32） |
 | 持久 ROOT | **未达成**，按约定不做持久化写入 |
-| GhostLock 地址缺口 | ① **闭合**（本次开机）；② **未闭合**（§50 时间流否证）；③ **已审接口范围内无可用 oracle**（§53/§60）。**v12 起冻结** |
+| GhostLock 地址缺口 | ① **闭合**（本次开机）；② **未闭合**（§50 时间流否证）；③ **已审接口范围内无可用 oracle**（§53/§60）。**v12 起冻结**；**v13：①-s（`.text` slide）已取得但 ②/③ 缺口不变** |
+| `.text` KASLR slide（①-s） | **已取得（v13，当前 boot `b9f9f06a-…`，slide=`0x1953600000`，运行时 `_text=0xffffff995b680000`）**：dumpstate 路径 + 一次授权重启；每 boot 随机、再重启即失效。台账：`KASLR_EVIDENCE.md` |
 | KGSL 生命周期（主线） | 所有权 **成立**（I1–I5，§61.5）；**KO-1 本机不可达已关闭（§62）**；**非 sparse 释放链自洽（I10–I12）、I4 上机证实（§63）** ⇒ K2 里程碑在本机可达面内达成，主线阶段性关闭；K3 并发登记不作 |
 
 ## 2. v12 三轮做了什么
@@ -80,11 +90,15 @@
 | §62（v12-K2） | 2026-11-20 上午 | 上机（判定型） | KO-1 **关闭**：六个 sparse 入口 `ENOTSUPP`；`boot_id` 不变、`uptime` 连续；探针已删 |
 | §63（v12.2） | 2026-11-20 上午 | 离线 + 上机（判定型） | 非 sparse 释放链自洽（I10–I12），I4 上机证实（再 FREE = EINVAL，无 double-free）；K2 达成、主线阶段性关闭；`boot_id` 不变、探针已删 |
 
-## 3. 下一步（v12.2 收口）
+## 3. 下一步（v13 口径，响应审核 v013 + v013-step3）
 
-1. **[主线阶段性关闭]** KGSL 生命周期在本机非 sparse 可达面已收口（K2 达成）；仅在出现新可达面时重开：启用 sparse 的同 SPL 机型、或 K3 并发新证据。
-2. **[登记不作]** K3 并发动态测试（须制造悬空窗口，超"不重启"边界）；sparse 子树（KO-1/C-2/C-3，本机不可达）；GhostLock ②/③；C1 的 `sscanf` 面；重载 `wlan`。
-3. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启设备**；建议关闭 OTA（SPL/内核变化会使全部偏移与判据作废）。
+1. **[已完成]** 阶段 1（证据收口）：`KASLR_EVIDENCE.md` + 三入口 v13 同步。
+2. **[已完成]** 阶段 2（运行期 WARNING 观察面静态审计）：`WARN_ADDRESS_SURFACE_AUDIT.md` + `HANDOVER.md` §68–§69；结论：WARN dump = 非致命上下文本地 sp 通道（③ 唯一潜在 oracle 形态）；稳态自然 WARN=0、可达入口函数 0 个 WARN 点；**futex PI 路径 68 点候选集已获厂商源码并完整裁决：全部排除（`futex.c:1302` 有 -EINVAL 前置检查，死防御代码），③ = 无可用 oracle（已完整裁决为否）**。
+3. **[已完成]** 阶段 3（GhostLock ②/③ 复评）：`GHOSTLOCK_ADDRESS_BASELINE.md` / `_REQUIREMENTS.md` / `_SOURCE_MATRIX.md` / `_PHASE3_DECISION.md`（G0–G3）+ `HANDOVER.md` §67；结论：缺口收敛为 N1，GhostLock 维持冻结。
+4. **[已完成]** 补做（厂商源码到手后，`HANDOVER.md` §69.4/§70）：B3 全局 rt_mutex 静态枚举 → **4 个已编入内核的静态实例**（`uid_lock` / `msm_bus_adhoc_lock` / `msm_bus_dbg_cllist_lock` / `proc_uid_lock`，运行时 VA = 静态 VA + slide `0x1953600000`，详见 G2 §2.3 / G3 §6）；厂商 rtmutex 机制核验通过；**waiter 布局修正：0x50 字节、内嵌 `deadline@0x48`（厂商源码 + 二进制双证，§8.1 旧记录 72 B/无 deadline 错误已标记更正）；`MAX_DL_PRIO=0` ⇒ deadline 永不被解引用**。GhostLock ②/③ 维持冻结（并发语义审计未做、panic 风险未评估）。
+5. **[待启动]** 阶段 4（WLAN 静态审计，可并行）→ `WLAN_IOCTL_CHAIN_AUDIT.md`；缺用户态↔内核连接点证据前不做动态输入。
+6. **[待启动]** 阶段 5（总体验收）→ 新版 `CLOSURE.md` 逐条列明已证明/未证明/不可达/冻结路线。
+7. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启**（重启需单独、逐次授权）；建议关闭 OTA。
 
 ## 4. 工具与物料入口
 
@@ -117,6 +131,7 @@ python tools/kfn.py proc_pid_stack
 
 - 设备 `PCGM00_11_F.16`（SDM710，6 GB，futex_hashsize=2048），未刷写/解锁/改分区；**mm 地址随开机变化**。
 - 上机授权已获得（2026-11-20），但**硬约束：不得重启**。任何可能 panic 的动作（GPU 命令提交、悬空映射访问）都不在授权含义内。
+- **重启是单独、逐次授权的操作**：2026-11-20 16:32 的一次授权重启仅覆盖当次 dumpstate 实验，不构成永久重启许可（v013 明文）。
 - 只读拉取 `.ko` 属设备操作；`persist/wlan` 写入永久禁止。
 - 建议关闭 OTA：SPL/内核变化会使全部偏移与判据作废。
-- 新对话从本文件开始 → `HANDOVER.md` §62 → §61 → §60 → §58 → §53。
+- 新对话从本文件开始 → `KASLR_EVIDENCE.md`（v13 证据台账）→ `HANDOVER.md` §66 → §63 → §62 → §61。

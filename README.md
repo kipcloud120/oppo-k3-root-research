@@ -24,6 +24,8 @@
 
 > **v12.2 非 sparse 释放前提（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §63，离线 + 判定型上机）**：承接 §62.7 的可达面重排。**非 sparse 释放链自洽**：新增 I10–I12 三条全称不变量在本机二进制全部成立（`set_pend` 唯一赢家、释放必 `idr_remove`+幂等 unmap gpuaddr、四释放分支共享 `pending_free` 且引用配对），并排除三处"看似缺陷"（`put_gpuaddr` 双调用因清零而幂等、命令用 gpuaddr 走 pagetable 故不需 get entry、四分支汇聚同一 destroy 链而非单点门错位）。**I4 上机证实**：`GPUOBJ_ALLOC`(4096)→FREE→再 FREE 同 id 返回 `EINVAL(22)`、`GPUMEM_FREE_ID` 交叉验证一致 ⇒ 无 double-free；`param` 阶段五分支全 EINVAL 证明解析正确。**K2「索引与生命周期」里程碑在本机可达面内达成，KGSL 生命周期主线阶段性关闭**；K3 并发动态测试因须制造悬空窗口、超"不重启"边界而**登记不作**。`boot_id` 全程不变、`uptime` 连续 +24 s、探针已删、内核日志无异常。**四层判定不变：NO-GO。**
 
+> **v13 证据收口（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §66 与权威台账 [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)；文档/离线收口 + 一次用户明确授权的重启）**：**当前 boot 的 `.text` KASLR slide 已实证取得**——dumpstate 第三主体路径（shell → init → dumpstate → bugreport，内核日志含未哈希的原始 pc/lr）+ 一次授权重启：当前 boot（`b9f9f06a-…`）slide = **`0x1953600000`**、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机、再重启即失效**；全部物料 SHA-256、地址归属区分（当前 boot / 重启前 boot / 10 份历史 last_kmsg）与 dumpstate 日志保留边界、成功/失败条件已在 `KASLR_EVIDENCE.md` 固化（审核 v013 P0.1–P0.4）。**判定语义不变：slide ≠ 可用 root**——GhostLock ②（可控 rt_mutex 堆地址）/ ③（W 线程栈基址）缺口不变，dumpstate 附带的 `sp` 属 init/swapper 栈、不满足 ③ 判据；v008 口径在"已审接口范围"内仍成立。**v13 主线从"找 slide"转为"地址发现 → 利用条件闭合"：阶段 1 证据收口、阶段 2 WARNING 观察面审计 + 候选裁决（厂商内核源码 `oppo-source/android_kernel_oppo_sdm710` 落地并双锚点校准；futex PI 路径 68 个 WARN 候选点全部排除——唯一用户路径候选 `futex.c:1302` 被 4 处 `-EINVAL` 前置检查拦截，③ 的 WARN-oracle 假设被否决，见 `WARN_ADDRESS_SURFACE_AUDIT.md` §8 + `HANDOVER.md` §68/§69）与阶段 3 GhostLock ②/③ 复评（缺口收敛为单一 N1，维持冻结，见 `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档与 §67）已完成；**厂商源码补做（§69.4/§70）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（地址可由 slide 复算，G2 §2.3 / G3 §6），但均为真实在用内核锁、并发语义审计未做，GhostLock ②/③ 维持冻结；waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证，`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）**；阶段 4 WLAN 调用链审计与阶段 5 总验收待启动，改代码与调试待用户通知。四层判定不变：NO-GO。**
+
 | | |
 |---|---|
 | 目标设备 | OPPO K3 `PCGM00`（`OP4679`，`sdm710`），Android 11，内核 `4.9.227-perf+`（clang 10.0.7，2025-03 构建） |
@@ -40,7 +42,7 @@
 | 面 | 机制 | 卡点 / v12 状态 |
 |---|---|---|
 | **KGSL 对象生命周期**（v12 主线，已阶段性收口） | shell 可 open `/dev/kgsl-3d0` 且 `DRAWCTXT_CREATE` 成功（实测） | 长度维度 **14/14 有界**（§58）；所有权 **I1–I5 成立**；KO-1 已关闭（sparse 面 `ENOTSUPP`，§62）；**非 sparse 释放链自洽（I10–I12）+ I4 上机证实（无 double-free，§63）** ⇒ **K2 达成、主线阶段性关闭**；K3 并发登记不作 |
-| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **冻结（v12）**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪）/ ③ 栈地址（已审接口范围内无可用 oracle，§53/§60）** |
+| **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **冻结（v12）**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪）/ ③ 栈地址（已审接口范围内无可用 oracle，§53/§60）**；**①-s `.text` slide 已于 v13 实证取得（dumpstate 路径，`0x1953600000`，当前 boot）但 ②/③ 缺口不变** |
 | KGSL `CVE-2023-33107` | 成立（源码 pre-fix） | 命中缺陷即 `BUG()` panic，无中间态 |
 | binder `CVE-2023-20938` | 不成立（未引入） | — |
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
@@ -49,7 +51,7 @@
 | **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限，两次回显 `uid=0(root)`，§23）；缺口 = 域逃逸（§24 判无路径）。**v12.3.1**：该 UID 0 子进程（域 `oplus_wifi_service`、含 NET_ADMIN/NET_RAW/SYS_MODULE）同时是 WLAN 驱动面的**间接可达主体**——`0x89f1 → hdd_driver_command` 已列为首选离线审计候选（见 `docs_archive/R1_WLAN非配置输入可达性矩阵` §6）；用户态 iwpriv ↔ 内核态 ioctl 的连接点未证，不做动态输入 |
 | 私有 Binder / `system_server` / Wi-Fi 消费者 | 方法级否证 | 7/7 闭合、`system_server` 取句柄处断开、消费者三道门全封（§33–§37） |
 
-**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v12 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §61 → §60 → §58 → §53 → §52。
+**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v13 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**；**v13 权威证据台账：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §66 → §63 → §62 → §61 → §60。
 
 ---
 
@@ -60,7 +62,7 @@
 | 档 | 类型 | 本机状态（v6） | 能否填 fake waiter 的 lock/rb |
 |---|---|---|---|
 | ① | mm_struct 线性地址（DPM 中的堆页位置） | **已闭合（本次开机）**：`0xffffffda42a97100`（19/19）与 `0xffffffda434d5500`（26/26）；盲扫 512 GB @64 B 出唯一解（§48） | ❌ 不够：解引用 + 结构校验过不了，且缺 ② 兑现 |
-| ①-s | KASLR slide（镜像 VA，v008 细分） | ❌ **拿不到**：由 `kimage_voffset` 独立承载，不能由 ① 反推（见 `FEASIBILITY_v008.md` §1） | ❌ 不够，且本机无获取原语 |
+| ①-s | KASLR slide（镜像 VA，v008 细分） | **v13：已实证取得（当前 boot，slide=`0x1953600000`）**——由 dumpstate 第三主体路径（范围外）+ 一次授权重启取得，**非**由 ① 反推（v008 的"不能反推"结论不变）；每 boot 随机，重启失效（台账：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)） | ❌ 仍不够：slide 不是堆地址，填不进 fake waiter 的 lock/rb，也不能替代 ②/③ |
 | ② | 可控 rt_mutex 的堆地址（pi_state / skb 喷射页） | ❌ 生命周期可控（3072 对象/轮、spread 0.00%），**缺地址锚点**；`SLAB_FREELIST_RANDOM=n` ⇒ slab 内布局确定；**v10：页级"时间流锚定"已证伪**（示踪 delta GB 级随机，§50） | ✅ 能——参考项目 `fake_lock = payload_base + LOCK_OFF` 的成功路径 |
 | ③ | W 线程内核栈基址（持有 stale waiter 者） | ❌ 无侧信道：futex key 不含栈地址；USENIX'25 栈侧信道依赖 VMAP_STACK，本机 `!VMAP_STACK` | ✅ 能（几何偏移已静态解决，缺的是拿栈基址的 oracle） |
 
@@ -228,7 +230,7 @@ adb shell 'rm -f /data/local/tmp/kgsl_sparse_probe'
 
 ## 何时应重开 / 已重开
 
-1. **【v3 已重开 · v12 冻结】GhostLock**：重开理由是侧信道真机可用（① 类地址可得），而非"任一地址泄露"。**v12 起冻结**：②/③ 在已审接口范围内均无路径，重开条件收紧为"出现新的、可独立验证的内核对象地址来源"。**注意：路径重开 ≠ 已 root。**
+1. **【v3 已重开 · v12 冻结 · v13 slide 已取得】GhostLock**：重开理由是侧信道真机可用（① 类地址可得），而非"任一地址泄露"。**v12 起冻结**：②/③ 在已审接口范围内均无路径，重开条件收紧为"出现新的、可独立验证的内核对象地址来源"。**v13 更新**：`.text` slide 已由 dumpstate 路径取得（`KASLR_EVIDENCE.md`），重开复评按审核 v013 P2 进行（②③ 分别评审，不以 slide 替代堆/栈地址；M2 维持关闭）。**注意：路径重开 ≠ 已 root。**
 2. **【v12 主线 · v12.2 阶段性收口】KGSL 生命周期**：KO-1（§61.6）已由 §62 上机关闭（sparse 面 `ENOTSUPP`）；非 sparse 释放链自洽（I10–I12）+ I4 上机证实 ⇒ K2 达成、主线阶段性关闭，K3 并发登记不作。重开条件收紧为：新同 SPL 的 sparse 可达面、K3 新证据（可承受重启的独立设备 + 新授权）、或违反 I10–I12 的可复算非 sparse 不变量反例。
 3. binder 线：出现面向 4.9 / ticket spinlock 的 UAF 原语研究 → 靶点、pre-fix 证据、堆条件已备。
 4. SPL / 内核构建变化 → 全部偏移/形态/策略作废，须整体重跑（故建议关闭 OTA）。
@@ -256,6 +258,10 @@ adb shell 'rm -f /data/local/tmp/kgsl_sparse_probe'
 **v12.1 (2026-11-20)**: KO-1 went to the device and came back **closed**. The hypothesis was sound in the code — the "a bound physical block must not be freed" guard exists in exactly one ioctl — but this device does not implement the feature at all: `kgsl_device::flags` BIT(1) (`KGSL_FLAG_SPARSE` upstream) is clear, so all six sparse entry points return `ENOTSUPP(524)` before touching any state. Control probes rule out the alternative explanation that the ioctls never reached the driver: `getproperty` with a bad pointer still yields `EFAULT`, an unregistered command yields `ENOTTY`, and `syncsource_create` returns 0. KO-1, C-2 and C-3 are therefore **latent code defects on an unreachable path**, and the reachable audit surface narrows to the non-sparse objects. One methodological correction is recorded in §62.3: the first probe reported every failure as `EPERM` because it computed `strerror(-ret)` instead of reading `errno` — the only "new finding" of that hour was a bug in my own tooling.
 
 The write-up keeps the full evidence chain, the quantifiable gates, the reusable tooling, and deliberately **25+ previously "certain" conclusions later falsified** by this project's own experiments or external review. Start with [`HANDOVER_RESUME.md`](HANDOVER_RESUME.md), then [`HANDOVER.md`](HANDOVER.md) §62 → §61 → §60 → §53.
+
+**v13 (2026-11-20)**: the **`.text` KASLR slide for the current boot was obtained and frozen as forensic evidence**. The dumpstate third-subject path (shell → init → dumpstate → bugreport, whose KERNEL LOG section carries un-hashed `pc`/`lr` from boot-early `WARN()` dumps), plus one explicitly user-authorized reboot, yielded slide = `0x1953600000` (runtime `_text = 0xffffff995b680000`), cross-verified by pc/lr independence, register-family consistency, 2 MB alignment, and a cross-boot prediction replay (pre-reboot boot slide `0x16a000000`, four-way consistent from `last_kmsg`). Full SHA-256 chain of custody, per-boot address attribution (including 10 historical `last_kmsg` copies with distinct slides), and the dumpstate log-retention boundary / success-failure conditions are documented in [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md). The verdict semantics are unchanged: **a slide is not a heap address** — GhostLock ② (controllable rt_mutex address) and ③ (W-thread kernel stack base) remain open, and the incidental `sp` belongs to init/swapper, not the target thread. Project focus shifts from "find the slide" to "closing exploitation prerequisites" (WARNING observation surface, GhostLock ②/③ reassessment, WLAN ioctl chain audit).
+
+**v13 backfill (2026-11-20, vendor source obtained)**: with the full vendor tree (`oppo/sdm710_r_11.0_reno`) cloned, the previously source-blocked work was completed. (1) **B3 static enumeration** — 4 global `rt_mutex` instances compiled into the kernel (`uid_lock`, `msm_bus_adhoc_lock`, `msm_bus_dbg_cllist_lock`, `proc_uid_lock`), addresses derivable as static VA + slide; all are **real, in-use kernel locks**, so concurrency-semantics audit is still required and GhostLock ②/③ **remain frozen**. (2) **waiter layout correction** — vendor source + disassembly both prove `rt_mutex_waiter` is **0x50 bytes with an embedded `deadline` at 0x48** (android-4.9-q lineage; the earlier 72-byte/no-deadline record was wrong); `MAX_DL_PRIO=0` means the deadline field is **never dereferenced** for any legal user priority, so the `task/lock/prio` offsets and all prior chain-walk conclusions stand. See `HANDOVER.md` §69–§70, `GHOSTLOCK_ADDRESS_SOURCE_MATRIX.md` §2.3, `GHOSTLOCK_PHASE3_DECISION.md` §6, `WARN_ADDRESS_SURFACE_AUDIT.md` §9.
 
 ---
 
