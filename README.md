@@ -116,7 +116,7 @@ GHOSTLOCK_B3_CONCURRENCY_AUDIT.md / GHOSTLOCK_PHASE3_DECISION.md / GHOSTLOCK_ADD
 WARN_ADDRESS_SURFACE_AUDIT.md  # 阶段 2 WARNING 观察面审计
 WLAN_IOCTL_CHAIN_AUDIT.md   # v13.2 P1-A/C/D：调用链 + 可达性 + 候选 A 重定向
 WLAN_HANDLER_AUDIT.md       # v13.2 P1-B：98 项 hdd_drv_cmds handler（+ handler_audit.csv）
-WLAN_WEXT_HANDLER_AUDIT.md  # v13.2：WEXT 32 handler（代理可达面）
+WLAN_WEXT_HANDLER_AUDIT.md  # v13.2：WEXT 23 父项 + 101 子命令（代理可达面）
 WLAN_FTM_AUDIT.md           # v13.2 P2：FTM 0x89fd 条件性关闭
 VENDOR_SURFACE_MATRIX.md    # v13.2 P3：37 .ko / 32 加载分诊
 HANDOVER_G5_T3_2026-11-20.md  # 独立 G5/T3 线（② NO-GO；不并入 v13.2 五层验收）
@@ -131,7 +131,7 @@ tools/
 ├── kgsl_ioctl_scan.py                      # v11：KGSL ioctl 拷贝点与长度来源
 ├── kgsl_lifecycle.py                       # v12：KGSL 取/放点普查 + pending_free 访问点
 ├── wlan_cmd_table.py                       # v13.2：98 项 hdd_drv_cmds 复算
-├── wlan_wext_table.py / wlan_wext_scan.py  # v13.2：WEXT 32 handler + 223 参数/扫描
+├── wlan_wext_table.py / wlan_wext_scan.py  # v13.2：WEXT 32 槽（23 父项）+ 223 参数/扫描
 ├── wlan_handler_scan.py                    # v13.2：98 handler 结构化事实（CSV）
 ├── scan_ioctl_bin.py / scan_ioctl_const.py # v13.2：固件二进制 0x89f1/0x89fd 盘点
 ├── disasm_user.py / fn_around.py           # v13.2：无符号用户态反汇编辅助

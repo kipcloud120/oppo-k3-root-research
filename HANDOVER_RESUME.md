@@ -36,7 +36,7 @@
 | **已达成** | ① Wi-Fi 受限 UID 0 命令执行（§23，两次回显）；② dumpstate 取得当前 boot `.text` slide = `0x1953600000`（`KASLR_EVIDENCE.md`）；③ KernelSnitch Direct Map `mm_struct` 地址观测（G1/G2） |
 | **已完成否证** | GhostLock A（无 oracle）、B1（无锚点）、B2（固定 delta 否证）、B3（G4 并发语义否证）、futex WARN 68 候选全排除 |
 | **已阶段性关闭** | KGSL 非 sparse 生命周期（K2）、KGSL sparse（KO-1 本机不可达）、WLAN 配置链 C1 |
-| **已完成审计** | WLAN `0x89f1` 调用链（主语 wpa_supplicant）、98 项 `hdd_drv_cmds` handler、WEXT 32 handler（代理可达面）、其余 vendor 模块分诊 |
+| **已完成审计** | WLAN `0x89f1` 调用链（主语 wpa_supplicant）、98 项 `hdd_drv_cmds` handler、WEXT 23 父项 + 101 子命令（代理可达面）、其余 vendor 模块分诊 |
 | **条件性关闭** | FTM `0x89fd`（需 `con_mode==5` + 驱动模式重启） |
 | **未解决** | **可用 ROOT（域逃逸）NO-GO**；**持久 ROOT NO-GO** |
 
