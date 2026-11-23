@@ -5067,11 +5067,13 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 | 父项总数 | **21 有界 / 2 无功能 / 0 未决**（首轮：7/1/15） | `WLAN_WEXT_HANDLER_AUDIT_2.md` §0.1 |
 | 方向误判更正 | **12 个奇数项是 GET**，core 只对偶数（SET）用 `set_args` 夹长度；首轮把它当 SET 分析（例：`0x8BE3` 的门不是 512 而是 helper 的 4096；`0x8BFF` 的 `extra` 不是 18 而是 **5**） | §0.2；`include/uapi/linux/wireless.h:353` + `wext-priv.c:93-161` |
 | `0x8BFE iw_set_dot11p_channel_sched` | **8 字节空桩**（`0x8eb40 mov w0,wzr; ret`），208 B 声明无人消费 | §0.2/§2.2 |
-| `0x8BE3 iw_setchar_getnone` | **有界**：`len>=1` + helper `len<=4096`；下游 `hdd_add_wowl_ptrn` 的 `offset<=0x92`、`plen<=0x14` 与目标字段**余量 0 字节**（回归基线） | §2.1/§3.1 |
+| `0x8BE3 iw_setchar_getnone` | **有界**：`len>=1` + helper `len<=4096`；下游 `hdd_add_wowl_ptrn` 的 `offset<=146`（目标字段恰 146 B，余量 0）、`plen<=19`（目标 20 B，余量 1），且由 `2*offset+6+2*plen\|1 == seglen` 精确等式夹住（回归基线） | §2.1/§3.1 |
 | `0x8BE8 hdd_fips_test` | **有界**：`len>=0x30` + `key_len∈{16,32}` + `data_len==len-0x30`；若缺 `len>=0x30` 会回绕（回归基线） | §2.8/§3.2 |
 | `0x8BE0` 101 个子命令 | 11 NULL / 51 标量 / 10 pps / 3 索引（均带 `b.hi` 上界）/ 26 本层标量；父项只传 `(adapter,u32)`，**子 handler 拿不到用户指针/长度** | §0.3/§2.10 |
 | 信息泄露方向 | **关闭**：GET 侧 `extra` 均 `kzalloc` 清零，回填 `iwp->length` 与 `copy_to_user` 夹取一致；回传的是统计/版本/INI 文本，不含内核指针 | §5 |
 | 仍未决（下游/配置，不在 handler 层） | ① INI `wext_control` 默认值（决定"是否可达"，不决定"是否有界"）；② `0x8BE5` 17 路输出函数内部是否真按上限截断（抽样建议）；③ `wma_cli_set_command` 等下游对 `value` 的二次解释；④ `0x8BE1` 61 路子命令语义；⑤ `hdd_add_wowl_ptrn` 全局数组元素个数（配置驱动） | §4 |
+
+> 补充：`0x8BE8 hdd_fips_test` 是唯一**不带 `wext_control` 门**的 SET handler，也是唯一自带 `copy_to_user` 的 SET handler；`len>=0x30` + `data_len==len-0x30` 两条等式是它不越界的全部依据（回归基线）。
 
 #### 72.8.2 P1 收口：98 项 handler 的 5 个残留
 

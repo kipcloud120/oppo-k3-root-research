@@ -43,7 +43,7 @@
 
 ### 0.2 三个推翻或更正 r1 的结论（本轮最重要的产出）
 
-**(1) r1 把 23 个父项的 SET/GET 方向搞错了 12 个 —— 这直接改变了"长度门在哪里"的分析。**
+**(1) r1 没有应用 ioctl 号的奇偶方向，导致 12 个父项的"core 分配尺寸 / 长度门"记错 —— 这直接改变了"长度门在哪里"的分析。**
 
 `include/uapi/linux/wireless.h:353`：`#define IW_IS_SET(cmd) (!((cmd) & 0x1))`，即**奇数是 GET、偶数是 SET**。`wext-priv.c:93 get_priv_descr_and_size()` 与 `:146/:160/:171 ioctl_private_iw_point()` 全部按 `cmd` 的奇偶分支，**与表里 `set_args`/`get_args` 的声明无关**。
 
@@ -101,13 +101,13 @@ core 的 `adjust_priv_size(0x2005, iwp) = min(iwp->length=5, max=5) × 1 = 5`，
 | 85 | `hdd_wlan_dump_stats` @0x85b88 | `sub w8,w19,#2; cmp w8,#0x17; b.hi` @0x85bdc-0x85be4 | `.rodata+0x4a30`，24×u8 | 有界 |
 | 86 | `hdd_we_clear_stats` @0x91da8 | `cmp w19,#9; b.hi` @0x91df8-0x91dfc | `.rodata+0x4c5f`，10×u8 | 有界 |
 
-**结构性负结果（比逐条"未发现"更强）**：父项只把 **adapter 指针 (`dev+0x900`) 与一个 32 位标量 (`w1`)** 传给子 handler（`0x088e8c ldr x8,[table+w22*8]; add x0,x21,#0x900; mov w1,w24; blr x8`）。**子 handler 拿不到任何用户缓冲区指针，也拿不到 length**，因此这 101 项在本层不可能出现"长度未校验的越界"。风险只可能转移到下游（`wma_cli_set_command`/`sme_*` 对 value 的取值域解释），这是 §4 的未决项，不是长度/内存问题。
+**结构性负结果（比逐条"未发现"更强）**：父项只把 **adapter 指针 (`dev+0x900`) 与一个 32 位标量 (`w1`)** 传给子 handler（`0x88e6c ldr x8,[x8,x22,lsl#3]` → `0x88e74 add x0,x21,#0x900` → `0x88e78 mov w1,w24` → `0x88e7c blr x8`）。**子 handler 拿不到任何用户缓冲区指针，也拿不到 length**，因此这 101 项在本层不可能出现"长度未校验的越界"。风险只可能转移到下游（`wma_cli_set_command`/`sme_*` 对 value 的取值域解释），这是 §4 的未决项，不是长度/内存问题。
 
 ### 0.4 与 r1 的差异一览
 
 | 项 | r1 | r2（本轮） | 依据 |
 |---|---|---|---|
-| 0x8BE1 | 未决 | 有界 | 全部访问仅 `[extra+0]` 4B（`str/ldr wX,[x22]`），`sub_cmd<=0x3c` |
+| 0x8BE1 | 未决 | 有界 | 全部访问仅 `[extra+0]` 4B（`str/ldr wX,[x22]`），`sub_cmd-1<=0x3c`（61 路） |
 | 0x8BE3 | **NOT_VERIFIED_HIGH** | 有界（但长度门=4096，非 512） | §2.1 |
 | 0x8BE4 | 未决 | 有界 | 读 `[extra+0x4/0x8/0xc]`，最大到 +0xf |
 | 0x8BE5 | 未决 | 有界 | 17 路子命令全部显式传 `0x7ff`；`length=strlen+1` |
@@ -250,18 +250,19 @@ python tools/wlan_wext_scan.py --fn mem_alloc_copy_from_user_helper
 0x84ae8  hex_to_bin(buf[0..1])  → offset
 0x84b08  hex_to_bin(buf[3..4])  → plen
 0x84b2c  cmp  w9, #0x92 ; b.hi → skip      ; offset <= 146
-0x84b34  cmp  w10, #0x14 ; b.lo → skip     ; plen  <= 20
+0x84b34  and  w10, w8, #0xff
+0x84b38  cmp  w10, #0x14 ; b.lo → 继续解析  ; plen <= 19（>=20 落进 "Invalid length"）
 0x84bbc  x11 = 2*offset + 6
 0x84bc4  cmp  w11, w25 ; b.ge → skip       ; 2*offset+6 <  seglen
 0x84bcc  ldrb w12, [buf, x11] == ':'        ; 越界前先判 x11 < seglen
 0x84bd8  w10 = 2*offset+6 + 2*plen ; orr #1
 0x84be0  cmp  w10, w25 ; b.ne → skip        ; 精确等式 2*offset+6+2*plen|1 == seglen
 0x84c20  strb → sp+0x3b .. sp+0xcc          ; offset<=146 ⇒ 最高 sp+0xcc
-0x84c70  strb → sp+0xce .. sp+0xe1          ; plen<=20   ⇒ 最高 sp+0xe1
+0x84c70  strb → sp+0xce .. sp+0xe0          ; plen<=19   ⇒ 最高 sp+0xe0
 0x84c90  malloc(seglen+1) ; 0x84cac memcpy(dst,seg,seglen) ; 0x84cb8 dst[seglen]=0
 0x84ccc  ucfg_pmo_add_wow_user_pattern(req, &stack_struct)
 ```
-栈帧 0x1d0、`x29=sp+0x170`；两处写入上界 `sp+0xe1 < sp+0x170`。**offset/plen 的上界与目标字段尺寸严格相等（146/20），零冗余但越界不了。** 所有 `ldrb` 的索引都被 `x11 < seglen` 或精确等式先夹住，`seglen <= strlen(buf) <= len`。
+栈帧 0x1d0、`x29=sp+0x170`；两处写入上界 `sp+0xe0 < sp+0x170`。**offset 的上界与目标字段尺寸严格相等（146），零冗余；plen 的上界 19 比字段 20 少 1。** 所有 `ldrb` 的索引都被 `x11 < seglen` 或精确等式先夹住，`seglen <= strlen(buf) <= len`。
 
 **（g）RRM 分支（flags=3，0x8a118…0x8a22c）——第二处 `len` 派生长度。**
 
@@ -413,7 +414,7 @@ python tools/wlan_wext_scan.py --fn mem_alloc_copy_from_user_helper
 
 **本轮把 101 项全量解开并分类（明细见 `wext_audit_2.csv` 的 101 行子命令段）：11 项 NULL（无功能）、90 个唯一目标函数（无复用）。**
 90 项里：**没有一个**调用 `memcpy/copy_from_user/strlen/strscpy/sscanf/snprintf` 这类长度或字符串解析原语（自动扫描全部 90 个目标的重定位）；**没有一个**接收用户缓冲指针或 length——签名固定 `f(adapter, u32 value)`。
-`sanity` 结论：**在这 101 × 1 个 32 位输入上，本层不存在"长度未校验 → 越界读/写"。**
+`sanity` 小结：**在这 101 × 1 个 32 位输入上，本层不存在"长度未校验 → 越界读/写"。**
 
 唯一需要单独点名的是 **三处把 `value` 当跳表索引**，全部有上界（见 §0.3 表）。抽样给出 sub 3 的完整形态：
 
@@ -439,8 +440,8 @@ hdd_we_set_power @0x8ee60
 
 下面 4 个是**"零冗余"边界**——当前指令序列成立，但只要上游常量或一条 `b.hi` 变化就会破。列出它们作为回归基线，不含利用步骤：
 
-1. **0x8BE3 → `hdd_add_wowl_ptrn` 的 offset/plen 上界与目标字段尺寸严格相等。**
-   不变量：`offset ≤ 0x92 (146)`（`0x84b2c cmp w9,#0x92 / b.hi`）且 `plen ≤ 0x14 (20)`（`0x84b34`），目标分别是 `sp+0x3b..sp+0xcc`（146B）与 `sp+0xce..sp+0xe1`（20B）。**余量 0 字节**：`offset=146` 时最后一次 `strb` 落在 `sp+0xcc`，而 `sp+0xcd` 正是紧邻的 `plen` 字段。任一上界放松 1 就会踩到相邻字段（仍是栈内，暂不跨对象，但会污染 `plen` 从而放大第二段拷贝）。
+1. **0x8BE3 → `hdd_add_wowl_ptrn` 的 offset 上界与目标字段尺寸严格相等。**
+   不变量：`offset ≤ 0x92 (146)`（`0x84b2c cmp w9,#0x92 / b.hi`），目标 `sp+0x3b..sp+0xcc`（146B）。**余量 0 字节**：`offset=146` 时最后一次 `strb` 落在 `sp+0xcc`，而 `sp+0xcd` 正是紧邻的 `plen` 字段。上界放松 1 就会踩到 `plen`（仍是同帧栈内，但会污染第二段拷贝的长度）。`plen` 侧上界 19、字段 20 字节，余量 1。
    另：`0x84bbc-0x84be4` 用 `2*offset+6+2*plen|1 == seglen` 的**精确等式**把两段十六进制解析的读取范围钉在 `seglen` 内；这条等式是"读不越界"的唯一依据。
 
 2. **0x8BE8 `hdd_fips_test`：`len >= 0x30` 只由一条 `b.hi` 保证。**
@@ -458,14 +459,14 @@ hdd_we_set_power @0x8ee60
 
 按复核价值排序：
 
-1. **`wext_control` 门（可影响"是否可达"，不影响"是否有界"）。** 除 0x8BE8 外，每个 handler 都在 `__wlan_hdd_validate_context` 之后读 `hdd_ctx->config + 0x20f0` 的一个 u32 并做 0/1/2 状态机：
+1. **`wext_control` 门（可影响"是否可达"，不影响"是否有界"）。** 除 0x8BE8（无此门）与 0x8BFE（8B 空桩，什么都不读）外，每个 handler 都在 `__wlan_hdd_validate_context` 之后读 `hdd_ctx->config + 0x20f0` 的一个 u32 并做 0/1/2 状态机：
    * `==1` → 打 `"Using deprecated ioctl %x"` 后**放行**；
    * `==2` → 直接放行；
    * `==0` → **拒绝**，返回 `-0x20c`（"Rejecting disabled ioctl %x"，并按 `last/jiffies` 做 ≤50 jiffies 的日志限流）。
    这个字段来自 INI 配置，**默认值无法离线确定**（`.ko` 里只有代码，没有配置值）。若默认为 0，则除 0x8BE8 外全部不可达——只会让结论更保守。0x8BE8 `hdd_fips_test` 体内**没有**这个门。
 2. **0x8BE5 的 17 路输出函数的内部截断。** `hdd_wlan_get_version` / `hdd_wlan_get_stats` / `hdd_cfg_get_global_config` / `iw_get_channel_list_with_cc` 都拿到了 `extra` 与显式上限（0x7ff / 0x400），但"是否真的按上限截断"未逐函数核。若某个内部用 `sprintf`/`strcat`，就会溢出 2047B 堆缓冲。**这是本面现在最值得抽样复核的点（信息泄露/堆溢出的方向）。**
 3. **下游取值域（"有界"只到本层）。** `wma_cli_set_command` / `sme_cli_set_command` / `hdd_wmm_addts` / `hdd_wmm_delts` / `hdd_wmm_checkts` / `sme_neighbor_report_request` / `sme_set_ft_ies` / `wlan_hdd_set_filter` / `sme_fips_request` 内部对 value 与长度的二次解释未展开。特别地：0x8BE0 的 101 个子命令把 `value` 直接塞进 WMI 命令参数，若某条 WMI TLV 在固件侧把它当长度，问题会出在固件而不是驱动。
-4. **0x8BE1 的 61 路（≤0x3c）子命令语义未逐个展开。** 本层已证明"只有 4B 读 + 4B 写"，但每一路指向哪个 `hdd_we_*` 函数、其 value 域是否有约束，未列表。
+4. **0x8BE1 的 61 路（`sub_cmd` 1..0x3d）子命令语义未逐个展开。** 本层已证明"只有 4B 读 + 4B 写"，但每一路指向哪个 `hdd_we_*` 函数、其 value 域是否有约束，未列表。
 5. **0x8BE3 → `hdd_add_wowl_ptrn` 的全局 pattern 数组索引。** `0x84c94 str x0,[x20, w21, sxtw #3]`，`w21` 来自"找一个空槽"的循环，上界是 `ucfg_pmo_get_num_wow_filters()` 的返回值；`x20 = .bss+0xed8` 这个全局指针数组的**实际元素个数**本轮未核（配置驱动，通常是 8）。若配置值大于数组长度，则是 8 字节指针数组越界写。
 6. **compat 路径只在 3 个 handler 里核过**（0x8BE3 / 0x8BE6 / 0x8BE9）。`compat_iw_point` 的布局是 `{u32 ptr; u16 len; u16 flags}`，与非 compat 的 `{ptr; u16 len; u16 flags}` 不同；本机 `oplus_wifi_service` 是 64 位，实际走 native，所以 compat 分支只是完备性核对。
 7. **PNO record 布局**（r1 §4 第 5 条，沿用）：`iw_set_pno` 的 stride `0x1bc` 与字段 `+0x1f4` 存在 record 间重叠，最坏写仍在 `__iw_set_pno.req`(0x1c88) 内。功能问题，非内存安全，本轮未再投入。
@@ -488,12 +489,12 @@ hdd_we_set_power @0x8ee60
 | 路径 | 内容 |
 |---|---|
 | `WLAN_WEXT_HANDLER_AUDIT_2.md` | 本文件（第二轮收口报告） |
-| `artifacts_adb/r1_wlan_reach/wext_audit_2.csv` | 124 行：23 个父项 + 101 个子命令，含方向、长度门、目标尺寸、判定、证据地址 |
+| `artifacts_adb/r1_wlan_reach/wext_audit_2.csv` | 124 条记录 + 表头：23 个父项 + 101 个子命令，含方向、长度门、目标尺寸、判定、证据地址 |
 | `artifacts_adb/r1_wlan_reach/_wext_dump_setchar.txt` | `iw_setchar_getnone` 全量带注解反汇编 |
 | `artifacts_adb/r1_wlan_reach/_wext_dump_getchar_real.txt` / `_getchar_body.txt` | `iw_get_char_setnone`（0x8a2c0 真身）与 17 路 switch 体 |
 | `artifacts_adb/r1_wlan_reach/_wext_dump_iw_*.txt` | 其余 handler 反汇编（get_linkspeed / get_statistics / set_fties / add_tspec / del_tspec / get_tspec / setnone_get_threeint / set_band_config / set_three_ints / setnone_getint / setnone_getnone / dot11p） |
 | `artifacts_adb/r1_wlan_reach/_wext_dump_hdd_fips_test.txt` / `_wowl_add.txt` / `_wowl_del.txt` / `_memalloc.txt` / `_hdd_indicate_tsf.txt` | 关键下游/helper 反汇编 |
 | `artifacts_adb/r1_wlan_reach/_wext_sub_*.txt` | 三处"value 作跳表索引"的子命令全量反汇编 |
-| `artifacts_adb/r1_wlan_reach/_wext_subcmd_8be0.txt` / `_wext_core_extra.txt` / `_p5_subval.txt` | 101 项子命令表、core extra_size 复算、value 用途摘要 |
+| `artifacts_adb/r1_wlan_reach/_wext_subcmd_8be0.txt` / `_wext_core_extra.txt` / `_wext_subval.txt` | 101 项子命令表、core extra_size 复算、`value` 用途摘要（`_wext_probe_subval.py` 生成） |
 | `tools/wlan_wext_subcmd.py` | 新增：`--args` / `--subcmd` / `--clusters` / `--at` / `--audit-csv` |
 | `tools/wlan_wext_scan.py` | 沿用（节感知全重定位扫描器） |

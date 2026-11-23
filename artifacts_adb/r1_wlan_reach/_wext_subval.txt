@@ -1,0 +1,1687 @@
+=== [  1] hdd_we_set_11d_state 0x08eda0 size=192
+    0x08edb4 cbz     x9, #0x8edcc                                
+    0x08edb8 cmp     w1, #1                                      
+    0x08edc0 cbnz    w1, #0x8edcc                                
+    0x08edc8 b       #0x8edd8                                    
+    0x08edd0 b       #0x8ee54                                    
+    0x08eddc mov     w1, w19                                     
+    0x08ede0 bl      #0x8ede0                                    
+    0x08ede8 cbz     w0, #0x8ee1c                                
+    0x08edec mov     x2, #0                                      
+    0x08edf0 mov     x3, x20                                     
+    0x08ee14 mov     w1, #2                                      
+    0x08ee18 bl      #0x8ee18                                    
+    0x08ee1c mov     x2, #0                                      
+    0x08ee40 mov     w1, #8                                      
+    0x08ee44 mov     x3, x20                                     
+    0x08ee4c bl      #0x8ee4c                                    
+=== [  3] hdd_we_set_power 0x08ee60 size=240
+    0x08ee74 cbz     x19, #0x8eefc                               
+    0x08ee78 mov     w5, w1                                      
+    0x08ee7c sub     w8, w1, #1                                  
+    0x08eea0 ldrb    w11, [x9, x8]                                  <== REG-INDEXED
+    0x08eea8 br      x10                                         
+    0x08eeb0 mov     w1, #1                                      
+    0x08eeb4 bl      #0x8eeb4                                    
+    0x08eeb8 ldrb    w1, [x20, #0x98]                            
+    0x08eec0 mov     w2, wzr                                     
+    0x08eec4 bl      #0x8eec4                                    
+    0x08eec8 b       #0x8ef40                                    
+    0x08eecc mov     x2, #0                                      
+    0x08eed0 mov     x3, #0                                      
+    0x08eef4 mov     w1, #2                                      
+    0x08eef8 bl      #0x8eef8                                    
+    0x08ef00 b       #0x8ef44                                    
+    0x08ef04 ldrb    w1, [x20, #0x98]                            
+    0x08ef0c mov     w2, #1                                      
+    0x08ef10 bl      #0x8ef10                                    
+    0x08ef18 mov     w1, wzr                                     
+    0x08ef1c bl      #0x8ef1c                                    
+    0x08ef20 b       #0x8ef40                                    
+    0x08ef24 ldrb    w1, [x20, #0x98]                            
+    0x08ef2c bl      #0x8ef2c                                    
+    0x08ef30 b       #0x8ef40                                    
+    0x08ef34 ldrb    w1, [x20, #0x98]                            
+    0x08ef3c bl      #0x8ef3c                                    
+=== [  4] hdd_we_set_max_assoc 0x08ef50 size=112
+    0x08ef60 mov     w20, w1                                     
+    0x08ef68 bl      #0x8ef68                                    
+    0x08ef70 cbz     w0, #0x8efac                                
+    0x08ef74 mov     x2, #0                                      
+    0x08ef78 mov     x3, #0                                      
+    0x08ef9c mov     w1, #2                                      
+    0x08efa8 bl      #0x8efa8                                    
+    0x08efb0 bl      #0x8efb0                                    
+=== [  5] hdd_we_set_scan_disable 0x08efc0 size=124
+    0x08efcc mov     x2, #0                                      
+    0x08efd0 mov     x3, #0                                      
+    0x08efdc mov     w19, w1                                     
+    0x08effc mov     w1, #8                                      
+    0x08f004 bl      #0x8f004                                    
+    0x08f00c cbz     x0, #0x8f020                                
+    0x08f010 mov     w1, #4                                      
+    0x08f014 cbz     w19, #0x8f028                               
+    0x08f018 bl      #0x8f018                                    
+    0x08f01c b       #0x8f02c                                    
+    0x08f024 b       #0x8f030                                    
+    0x08f028 bl      #0x8f028                                    
+=== [  6] hdd_we_set_data_inactivity_timeout 0x08f040 size=32
+    0x08f050 bl      #0x8f050                                    
+    0x08f054 bl      #0x8f054                                    
+=== [  7] hdd_we_set_max_tx_power 0x08f060 size=156
+    0x08f078 cbz     x0, #0x8f0ec                                
+    0x08f080 mov     w19, w1                                     
+    0x08f088 mov     w3, w19                                     
+    0x08f090 ldr     w1, [x8]                                    
+    0x08f094 bfi     x1, x9, #0x20, #0x10                        
+    0x08f098 mov     x2, x1                                      
+    0x08f09c bl      #0x8f09c                                    
+    0x08f0a4 cbz     w0, #0x8f0e0                                
+    0x08f0a8 mov     x2, #0                                      
+    0x08f0ac mov     x3, #0                                      
+    0x08f0d0 mov     w1, #2                                      
+    0x08f0dc bl      #0x8f0dc                                    
+    0x08f0e4 bl      #0x8f0e4                                    
+    0x08f0e8 b       #0x8f0f0                                    
+=== [  9] hdd_we_set_tm_level 0x08f100 size=184
+    0x08f118 cbz     x21, #0x8f1a4                               
+    0x08f120 mov     x2, #0                                      
+    0x08f130 mov     w19, w1                                     
+    0x08f148 mov     w1, #8                                      
+    0x08f14c mov     x3, x20                                     
+    0x08f154 bl      #0x8f154                                    
+    0x08f15c mov     w1, w19                                     
+    0x08f160 bl      #0x8f160                                    
+    0x08f168 cbz     w0, #0x8f198                                
+    0x08f16c mov     x2, #0                                      
+    0x08f180 mov     w1, #2                                      
+    0x08f188 mov     x3, x20                                     
+    0x08f194 bl      #0x8f194                                    
+    0x08f19c bl      #0x8f19c                                    
+    0x08f1a0 b       #0x8f1a8                                    
+=== [ 10] wlan_hdd_update_phymode 0x0865f0 size=1912
+    0x086630 cbz     x21, #0x866d4                               
+    0x086640 mov     w23, w1                                     
+    0x086644 bl      #0x86644                                    
+    0x086650 sub     x1, x29, #0x14                              
+    0x086658 bl      #0x86658                                    
+    0x086660 bl      #0x86660                                    
+    0x08666c sub     x1, x29, #0x14                              
+    0x086674 bl      #0x86674                                    
+    0x08667c bl      #0x8667c                                    
+    0x086688 sub     x1, x29, #0x10                              
+    0x086690 bl      #0x86690                                    
+    0x086698 cbz     w0, #0x866dc                                
+    0x08669c mov     x2, #0                                      
+    0x0866c0 mov     w1, #2                                      
+    0x0866c4 mov     x3, x19                                     
+    0x0866c8 bl      #0x866c8                                    
+    0x0866d0 b       #0x86d18                                    
+    0x0866d8 b       #0x86d18                                    
+    0x0866e4 cbz     w8, #0x866f8                                
+    0x0866f4 b       #0x866fc                                    
+    0x086700 b       #0x86710                                    
+    0x086714 sub     x1, x29, #0xc                               
+    0x086718 bl      #0x86718                                    
+    0x08671c cbz     w0, #0x86750                                
+    0x086720 mov     x2, #0                                      
+    0x086724 mov     x3, x19                                     
+    0x086748 mov     w1, #2                                      
+    0x08674c bl      #0x8674c                                    
+    0x086750 mov     x2, #0                                      
+    0x086788 mov     w1, #8                                      
+    0x08678c mov     x3, x19                                     
+    0x0867a0 bl      #0x867a0                                    
+    0x0867d0 br      x10                                         
+    0x0867d8 mov     w1, #0x100                                  
+    0x0867dc bl      #0x867dc                                    
+    0x0867ec tbnz    w28, #0, #0x86a24                           
+    0x0867fc mov     w1, wzr                                     
+    0x086800 bl      #0x86800                                    
+    0x086804 cbnz    w0, #0x86a0c                                
+    0x08680c b       #0x86a50                                    
+    0x086814 mov     w1, #0x400                                  
+    0x086818 bl      #0x86818                                    
+    0x086820 mov     w1, wzr                                     
+    0x086824 bl      #0x86824                                    
+    0x086828 cbnz    w0, #0x86a0c                                
+    0x086844 b       #0x86a98                                    
+    0x08684c mov     w1, #2                                      
+    0x086854 bl      #0x86854                                    
+    0x08685c mov     w1, #1                                      
+    0x086860 bl      #0x86860                                    
+    0x086864 cbnz    w0, #0x86a0c                                
+    0x086874 b       #0x86a98                                    
+    0x08687c mov     w1, #4                                      
+    0x086884 bl      #0x86884                                    
+    0x08688c mov     w1, #2                                      
+    0x086894 bl      #0x86894                                    
+    0x086898 cbnz    w0, #0x86a0c                                
+    0x0868a4 b       #0x86a98                                    
+    0x0868ac mov     w1, #8                                      
+    0x0868b4 bl      #0x868b4                                    
+    0x0868bc mov     w1, #2                                      
+    0x0868c0 bl      #0x868c0                                    
+    0x0868c4 cbnz    w0, #0x86a0c                                
+    0x0868d4 b       #0x86a98                                    
+    0x0868dc mov     w1, #0x10                                   
+    0x0868e4 bl      #0x868e4                                    
+    0x0868ec mov     w1, #1                                      
+    0x0868f0 bl      #0x868f0                                    
+    0x0868f4 cbnz    w0, #0x86a0c                                
+    0x0868fc b       #0x8697c                                    
+    0x086904 mov     w1, #0x10                                   
+    0x08690c bl      #0x8690c                                    
+    0x086914 mov     w1, #2                                      
+    0x086918 bl      #0x86918                                    
+    0x08691c cbnz    w0, #0x86a0c                                
+    0x08692c b       #0x86a98                                    
+    0x086934 mov     w1, #0x10                                   
+    0x08693c bl      #0x8693c                                    
+    0x086944 mov     w1, #2                                      
+    0x086948 bl      #0x86948                                    
+    0x08694c cbnz    w0, #0x86a0c                                
+    0x086954 b       #0x869ac                                    
+    0x08695c mov     w1, #0x10                                   
+    0x086964 bl      #0x86964                                    
+    0x08696c mov     w1, #1                                      
+    0x086974 bl      #0x86974                                    
+    0x086978 cbnz    w0, #0x86a0c                                
+    0x086984 b       #0x86a98                                    
+    0x08698c mov     w1, #0x400                                  
+    0x086994 bl      #0x86994                                    
+    0x08699c mov     w1, #2                                      
+    0x0869a0 bl      #0x869a0                                    
+    0x0869a4 cbnz    w0, #0x86a0c                                
+    0x0869b4 b       #0x86a98                                    
+    0x0869bc mov     w1, #0x400                                  
+    0x0869c0 bl      #0x869c0                                    
+    0x0869c8 mov     w1, #1                                      
+    0x0869cc bl      #0x869cc                                    
+    0x0869d0 cbnz    w0, #0x86a0c                                
+    0x0869e8 b       #0x86a98                                    
+    0x0869f0 mov     w1, #0x10                                   
+    0x0869f8 bl      #0x869f8                                    
+    0x086a00 mov     w1, wzr                                     
+    0x086a04 bl      #0x86a04                                    
+    0x086a08 cbz     w0, #0x86a8c                                
+    0x086a0c ldr     w1, [sp, #0x18]                             
+    0x086a14 bl      #0x86a14                                    
+    0x086a1c b       #0x86d18                                    
+    0x086a4c b       #0x86acc                                    
+    0x086a64 b       #0x86acc                                    
+    0x086a78 b       #0x86acc                                    
+    0x086a88 b       #0x86a98                                    
+    0x086a9c sub     x1, x29, #0xc                               
+    0x086aa0 bl      #0x86aa0                                    
+    0x086aa4 cbz     w0, #0x86acc                                
+    0x086aa8 mov     x2, #0                                      
+    0x086abc mov     w1, #2                                      
+    0x086ac4 mov     x3, x19                                     
+    0x086ac8 bl      #0x86ac8                                    
+    0x086ad0 mov     w2, #0xfea                                  
+    0x086ad4 mov     x1, x19                                     
+    0x086ad8 bl      #0x86ad8                                    
+    0x086adc cbz     x0, #0x86b48                                
+    0x086ae0 mov     w1, #0x568                                  
+    0x086ae4 mov     w2, wzr                                     
+    0x086aec bl      #0x86aec                                    
+    0x086af4 mov     x1, x26                                     
+    0x086af8 bl      #0x86af8                                    
+    0x086b08 cbnz    w25, #0x86b74                               
+    0x086b14 ldrb    w1, [x22, #0x98]                            
+    0x086b18 mov     w2, #1                                      
+    0x086b1c mov     w3, wzr                                     
+    0x086b20 bl      #0x86b20                                    
+    0x086b2c mov     x2, #0                                      
+    0x086b44 b       #0x86d00                                    
+    0x086b48 mov     x2, #0                                      
+    0x086b5c mov     w1, #2                                      
+    0x086b64 mov     x3, x19                                     
+    0x086b68 bl      #0x86b68                                    
+    0x086b70 b       #0x86d18                                    
+    0x086b7c cbz     w25, #0x86bc0                               
+    0x086b88 mov     w2, #1                                      
+    0x086b8c mov     w3, #1                                      
+    0x086b94 ldrb    w1, [x22, #0x98]                            
+    0x086b98 bl      #0x86b98                                    
+    0x086ba4 mov     x2, #0                                      
+    0x086bbc b       #0x86d00                                    
+    0x086bc4 mov     w1, w24                                     
+    0x086bc8 bl      #0x86bc8                                    
+    0x086bcc cbz     w0, #0x86bfc                                
+    0x086bd0 mov     x2, #0                                      
+    0x086be8 mov     w1, #2                                      
+    0x086bec mov     x3, x19                                     
+    0x086bf0 bl      #0x86bf0                                    
+    0x086bf8 b       #0x86d10                                    
+    0x086c10 mov     w1, wzr                                     
+    0x086c14 bl      #0x86c14                                    
+    0x086c18 cbz     w0, #0x86d5c                                
+    0x086c1c mov     x2, #0                                      
+    0x086c34 b       #0x86be8                                    
+    0x086c44 mov     x1, x26                                     
+    0x086c48 bl      #0x86c48                                    
+    0x086c58 ldr     w1, [x26]                                   
+    0x086c5c bl      #0x86c5c                                    
+    0x086c64 ldr     w1, [x26, #8]                               
+    0x086c68 bl      #0x86c68                                    
+    0x086c70 bl      #0x86c70                                    
+    0x086c74 tbz     w0, #0, #0x86ce8                            
+    0x086c78 cbz     w28, #0x86cac                               
+    0x086c80 sub     x1, x29, #0x14                              
+    0x086c84 bl      #0x86c84                                    
+    0x086cac mov     x2, #0                                      
+    0x086cc8 mov     w1, #8                                      
+    0x086ccc mov     x3, x19                                     
+    0x086ce0 bl      #0x86ce0                                    
+    0x086ce4 b       #0x86bf4                                    
+    0x086ce8 mov     x2, #0                                      
+    0x086d00 mov     w1, #2                                      
+    0x086d04 mov     x3, x19                                     
+    0x086d08 bl      #0x86d08                                    
+    0x086d14 bl      #0x86d14                                    
+    0x086d60 b       #0x86c40                                    
+    0x086d64 bl      #0x86d64                                    
+=== [ 11] hdd_we_set_nss 0x08f1b8 size=232
+    0x08f1cc mov     x2, #0                                      
+    0x08f1dc mov     w19, w1                                     
+    0x08f1f8 mov     w1, #8                                      
+    0x08f1fc mov     x3, x20                                     
+    0x08f204 bl      #0x8f204                                    
+    0x08f214 mov     x2, #0                                      
+    0x08f228 mov     w1, #2                                      
+    0x08f230 mov     x3, x20                                     
+    0x08f238 bl      #0x8f238                                    
+    0x08f240 b       #0x8f290                                    
+    0x08f248 mov     w1, w19                                     
+    0x08f24c mov     w2, w19                                     
+    0x08f250 bl      #0x8f250                                    
+    0x08f258 cbz     w0, #0x8f288                                
+    0x08f25c mov     x2, #0                                      
+    0x08f270 mov     w1, #2                                      
+    0x08f278 mov     x3, x20                                     
+    0x08f284 bl      #0x8f284                                    
+    0x08f28c bl      #0x8f28c                                    
+=== [ 12] hdd_set_ldpc 0x085fa0 size=472
+    0x085fc4 mov     x2, #0                                      
+    0x085fdc mov     w22, w1                                     
+    0x085ff8 mov     w1, #8                                      
+    0x085ffc mov     x3, x19                                     
+    0x086014 bl      #0x86014                                    
+    0x086018 cbz     x21, #0x86048                               
+    0x086020 mov     x1, sp                                      
+    0x086024 bl      #0x86024                                    
+    0x086028 cbz     w0, #0x86074                                
+    0x08602c mov     x2, #0                                      
+    0x086044 b       #0x860d8                                    
+    0x086048 mov     x2, #0                                      
+    0x08605c mov     w1, #2                                      
+    0x086064 mov     x3, x19                                     
+    0x086068 bl      #0x86068                                    
+    0x086070 b       #0x860e8                                    
+    0x08607c and     x1, x8, #0xfffe                             
+    0x086080 bfxil   x1, x22, #0, #1                             
+    0x086084 strh    w1, [sp]                                    
+    0x086088 bl      #0x86088                                    
+    0x08608c cbz     w0, #0x860ac                                
+    0x086090 mov     x2, #0                                      
+    0x0860a8 b       #0x860d8                                    
+    0x0860b4 cset    w1, ne                                      
+    0x0860b8 bl      #0x860b8                                    
+    0x0860bc cbz     w0, #0x86120                                
+    0x0860c0 mov     x2, #0                                      
+    0x0860d8 mov     w1, #2                                      
+    0x0860dc mov     x3, x19                                     
+    0x0860e0 bl      #0x860e0                                    
+    0x086120 ldrb    w1, [x20, #0x98]                            
+    0x086128 mov     w2, wzr                                     
+    0x08612c mov     w3, w22                                     
+    0x086130 bl      #0x86130                                    
+    0x086134 cbz     w0, #0x8615c                                
+    0x086138 mov     x2, #0                                      
+    0x08614c mov     w1, #2                                      
+    0x086154 mov     x3, x19                                     
+    0x086158 bl      #0x86158                                    
+    0x086160 ldrb    w1, [x20, #0x98]                            
+    0x086164 cset    w2, eq                                      
+    0x08616c bl      #0x8616c                                    
+    0x086170 b       #0x860e8                                    
+    0x086174 bl      #0x86174                                    
+=== [ 13] hdd_set_tx_stbc 0x086228 size=392
+    0x08624c mov     x2, #0                                      
+    0x086264 mov     w20, w1                                     
+    0x086280 mov     w1, #8                                      
+    0x086284 mov     x3, x19                                     
+    0x08629c bl      #0x8629c                                    
+    0x0862a0 cbz     x21, #0x862e4                               
+    0x0862a4 cbz     w20, #0x86334                               
+    0x0862ac mov     x1, sp                                      
+    0x0862b0 bl      #0x862b0                                    
+    0x0862b4 cbz     w0, #0x86310                                
+    0x0862b8 mov     x2, #0                                      
+    0x0862cc mov     w1, #2                                      
+    0x0862d4 mov     x3, x19                                     
+    0x0862d8 bl      #0x862d8                                    
+    0x0862e0 b       #0x86374                                    
+    0x0862e4 mov     x2, #0                                      
+    0x0862fc mov     w1, #2                                      
+    0x086300 mov     x3, x19                                     
+    0x086304 bl      #0x86304                                    
+    0x08630c b       #0x86374                                    
+    0x086314 tbnz    w8, #0x1f, #0x86334                         
+    0x086318 mov     x2, #0                                      
+    0x086330 b       #0x862fc                                    
+    0x086334 ldrb    w1, [x22, #0x98]                            
+    0x08633c mov     w2, #7                                      
+    0x086340 mov     w3, w20                                     
+    0x086344 bl      #0x86344                                    
+    0x086348 cbz     w0, #0x86374                                
+    0x08634c mov     x2, #0                                      
+    0x086360 mov     w1, #2                                      
+    0x086368 mov     x3, x19                                     
+    0x08636c bl      #0x8636c                                    
+    0x0863ac bl      #0x863ac                                    
+=== [ 14] hdd_set_rx_stbc 0x086460 size=400
+    0x086484 mov     x2, #0                                      
+    0x08649c mov     w20, w1                                     
+    0x0864b8 mov     w1, #8                                      
+    0x0864bc mov     x3, x19                                     
+    0x0864d4 bl      #0x864d4                                    
+    0x0864d8 cbz     x21, #0x8651c                               
+    0x0864dc cbz     w20, #0x86554                               
+    0x0864e4 mov     x1, sp                                      
+    0x0864e8 bl      #0x864e8                                    
+    0x0864ec cbz     w0, #0x86548                                
+    0x0864f0 mov     x2, #0                                      
+    0x086504 mov     w1, #2                                      
+    0x08650c mov     x3, x19                                     
+    0x086510 bl      #0x86510                                    
+    0x086518 b       #0x86594                                    
+    0x08651c mov     x2, #0                                      
+    0x086530 mov     w1, #2                                      
+    0x086538 mov     x3, x19                                     
+    0x08653c bl      #0x8653c                                    
+    0x086544 b       #0x86594                                    
+    0x086554 ldrb    w1, [x22, #0x98]                            
+    0x08655c mov     w2, #8                                      
+    0x086560 mov     w3, w20                                     
+    0x086564 bl      #0x86564                                    
+    0x086568 cbz     w0, #0x86594                                
+    0x08656c mov     x2, #0                                      
+    0x086580 mov     w1, #2                                      
+    0x086588 mov     x3, x19                                     
+    0x08658c bl      #0x8658c                                    
+    0x0865cc mov     x2, #0                                      
+    0x0865e0 mov     w1, #3                                      
+    0x0865e8 b       #0x86538                                    
+    0x0865ec bl      #0x865ec                                    
+=== [ 15] hdd_we_set_short_gi 0x086d68 size=256
+    0x086d80 mov     x2, #0                                      
+    0x086d90 mov     w20, w1                                     
+    0x086db0 mov     w1, #8                                      
+    0x086db4 mov     x3, x19                                     
+    0x086dbc bl      #0x86dbc                                    
+    0x086dc0 cbz     x21, #0x86de8                               
+    0x086dc4 ldrb    w1, [x22, #0x98]                            
+    0x086dc8 tbnz    w20, #3, #0x86e14                           
+    0x086dcc mov     w2, #5                                      
+    0x086dd4 mov     w3, w20                                     
+    0x086dd8 bl      #0x86dd8                                    
+    0x086de0 cbnz    w0, #0x86e28                                
+    0x086de4 b       #0x86e54                                    
+    0x086de8 mov     x2, #0                                      
+    0x086dfc mov     w1, #2                                      
+    0x086e04 mov     x3, x19                                     
+    0x086e08 bl      #0x86e08                                    
+    0x086e10 b       #0x86e54                                    
+    0x086e18 mov     w2, w20                                     
+    0x086e1c bl      #0x86e1c                                    
+    0x086e24 cbz     w0, #0x86e54                                
+    0x086e28 mov     x2, #0                                      
+    0x086e3c mov     w1, #2                                      
+    0x086e44 mov     x3, x19                                     
+    0x086e50 bl      #0x86e50                                    
+=== [ 16] hdd_we_set_rtscts 0x08f2a0 size=556
+    0x08f2c4 mov     x2, #0                                      
+    0x08f2dc mov     w20, w1                                     
+    0x08f2f8 mov     w1, #8                                      
+    0x08f2fc mov     x3, x19                                     
+    0x08f314 bl      #0x8f314                                    
+    0x08f318 cbz     x22, #0x8f358                               
+    0x08f320 add     x1, sp, #4                                  
+    0x08f324 bl      #0x8f324                                    
+    0x08f328 cbz     w0, #0x8f3bc                                
+    0x08f32c mov     x2, #0                                      
+    0x08f348 mov     w1, #2                                      
+    0x08f34c mov     x3, x19                                     
+    0x08f350 bl      #0x8f350                                    
+    0x08f354 b       #0x8f37c                                    
+    0x08f358 mov     x2, #0                                      
+    0x08f36c mov     w1, #2                                      
+    0x08f374 mov     x3, x19                                     
+    0x08f378 bl      #0x8f378                                    
+    0x08f3cc b       #0x8f448                                    
+    0x08f410 mov     x2, #0                                      
+    0x08f424 mov     w1, #2                                      
+    0x08f42c mov     x3, x19                                     
+    0x08f434 bl      #0x8f434                                    
+    0x08f440 b       #0x8f380                                    
+    0x08f44c mov     w1, #0x2c                                   
+    0x08f450 mov     w2, w20                                     
+    0x08f454 mov     w3, #1                                      
+    0x08f458 bl      #0x8f458                                    
+    0x08f45c cbz     w0, #0x8f490                                
+    0x08f460 mov     x2, #0                                      
+    0x08f47c mov     w1, #2                                      
+    0x08f480 mov     x3, x19                                     
+    0x08f488 bl      #0x8f488                                    
+    0x08f48c b       #0x8f380                                    
+    0x08f494 mov     w1, w22                                     
+    0x08f498 bl      #0x8f498                                    
+    0x08f49c cbz     w0, #0x8f4c0                                
+    0x08f4a0 mov     x2, #0                                      
+    0x08f4bc b       #0x8f348                                    
+    0x08f4c4 b       #0x8f380                                    
+    0x08f4c8 bl      #0x8f4c8                                    
+=== [ 17] hdd_we_set_ch_width 0x08f4d0 size=336
+    0x08f4ec cbz     x19, #0x8f5ac                               
+    0x08f4f4 mov     x2, #0                                      
+    0x08f504 mov     w20, w1                                     
+    0x08f520 mov     w1, #8                                      
+    0x08f524 mov     x3, x21                                     
+    0x08f52c bl      #0x8f52c                                    
+    0x08f53c mov     w2, #0x1088                                 
+    0x08f540 mov     x1, x21                                     
+    0x08f544 bl      #0x8f544                                    
+    0x08f548 cbz     x0, #0x8f5e0                                
+    0x08f554 mov     w1, #0x15                                   
+    0x08f558 mov     w2, w20                                     
+    0x08f55c mov     w3, #1                                      
+    0x08f560 bl      #0x8f560                                    
+    0x08f568 cbnz    w0, #0x8f5a0                                
+    0x08f578 mov     x1, x23                                     
+    0x08f588 bl      #0x8f588                                    
+    0x08f590 mov     x1, x23                                     
+    0x08f59c bl      #0x8f59c                                    
+    0x08f5a4 bl      #0x8f5a4                                    
+    0x08f5a8 b       #0x8f608                                    
+    0x08f5b0 b       #0x8f608                                    
+    0x08f5b4 mov     x2, #0                                      
+    0x08f5c8 mov     w1, #2                                      
+    0x08f5d0 mov     x3, x21                                     
+    0x08f5d4 bl      #0x8f5d4                                    
+    0x08f5dc b       #0x8f608                                    
+    0x08f5e0 mov     x2, #0                                      
+    0x08f5f4 mov     w1, #2                                      
+    0x08f5fc mov     x3, x21                                     
+    0x08f600 bl      #0x8f600                                    
+=== [ 18] hdd_we_set_ani_en_dis 0x08f620 size=184
+    0x08f634 mov     x2, #0                                      
+    0x08f64c mov     w20, w1                                     
+    0x08f670 mov     w1, #8                                      
+    0x08f674 mov     x3, x19                                     
+    0x08f67c bl      #0x8f67c                                    
+    0x08f684 mov     w1, #0x25                                   
+    0x08f688 mov     w2, w20                                     
+    0x08f68c mov     w3, #2                                      
+    0x08f690 bl      #0x8f690                                    
+    0x08f698 cbz     w0, #0x8f6c4                                
+    0x08f69c mov     x2, #0                                      
+    0x08f6b0 mov     w1, #2                                      
+    0x08f6b8 mov     x3, x19                                     
+    0x08f6c0 bl      #0x8f6c0                                    
+=== [ 19] hdd_we_set_ani_poll_period 0x08f6d8 size=184
+    0x08f6ec mov     x2, #0                                      
+    0x08f704 mov     w20, w1                                     
+    0x08f728 mov     w1, #8                                      
+    0x08f72c mov     x3, x19                                     
+    0x08f734 bl      #0x8f734                                    
+    0x08f73c mov     w1, #0x26                                   
+    0x08f740 mov     w2, w20                                     
+    0x08f744 mov     w3, #2                                      
+    0x08f748 bl      #0x8f748                                    
+    0x08f750 cbz     w0, #0x8f77c                                
+    0x08f754 mov     x2, #0                                      
+    0x08f768 mov     w1, #2                                      
+    0x08f770 mov     x3, x19                                     
+    0x08f778 bl      #0x8f778                                    
+=== [ 20] hdd_we_set_ani_listen_period 0x08f790 size=184
+    0x08f7a4 mov     x2, #0                                      
+    0x08f7bc mov     w20, w1                                     
+    0x08f7e0 mov     w1, #8                                      
+    0x08f7e4 mov     x3, x19                                     
+    0x08f7ec bl      #0x8f7ec                                    
+    0x08f7f4 mov     w1, #0x27                                   
+    0x08f7f8 mov     w2, w20                                     
+    0x08f7fc mov     w3, #2                                      
+    0x08f800 bl      #0x8f800                                    
+    0x08f808 cbz     w0, #0x8f834                                
+    0x08f80c mov     x2, #0                                      
+    0x08f820 mov     w1, #2                                      
+    0x08f828 mov     x3, x19                                     
+    0x08f830 bl      #0x8f830                                    
+=== [ 21] hdd_we_set_ani_ofdm_level 0x08f848 size=184
+    0x08f85c mov     x2, #0                                      
+    0x08f874 mov     w20, w1                                     
+    0x08f898 mov     w1, #8                                      
+    0x08f89c mov     x3, x19                                     
+    0x08f8a4 bl      #0x8f8a4                                    
+    0x08f8ac mov     w1, #0x28                                   
+    0x08f8b0 mov     w2, w20                                     
+    0x08f8b4 mov     w3, #2                                      
+    0x08f8b8 bl      #0x8f8b8                                    
+    0x08f8c0 cbz     w0, #0x8f8ec                                
+    0x08f8c4 mov     x2, #0                                      
+    0x08f8d8 mov     w1, #2                                      
+    0x08f8e0 mov     x3, x19                                     
+    0x08f8e8 bl      #0x8f8e8                                    
+=== [ 22] hdd_we_set_ani_cck_level 0x08f900 size=184
+    0x08f914 mov     x2, #0                                      
+    0x08f92c mov     w20, w1                                     
+    0x08f950 mov     w1, #8                                      
+    0x08f954 mov     x3, x19                                     
+    0x08f95c bl      #0x8f95c                                    
+    0x08f964 mov     w1, #0x29                                   
+    0x08f968 mov     w2, w20                                     
+    0x08f96c mov     w3, #2                                      
+    0x08f970 bl      #0x8f970                                    
+    0x08f978 cbz     w0, #0x8f9a4                                
+    0x08f97c mov     x2, #0                                      
+    0x08f990 mov     w1, #2                                      
+    0x08f998 mov     x3, x19                                     
+    0x08f9a0 bl      #0x8f9a0                                    
+=== [ 23] hdd_we_set_dynamic_bw 0x08f9b8 size=184
+    0x08f9cc mov     x2, #0                                      
+    0x08f9e4 mov     w20, w1                                     
+    0x08fa08 mov     w1, #8                                      
+    0x08fa0c mov     x3, x19                                     
+    0x08fa14 bl      #0x8fa14                                    
+    0x08fa1c mov     w1, #0xa                                    
+    0x08fa20 mov     w2, w20                                     
+    0x08fa24 mov     w3, #2                                      
+    0x08fa28 bl      #0x8fa28                                    
+    0x08fa30 cbz     w0, #0x8fa5c                                
+    0x08fa34 mov     x2, #0                                      
+    0x08fa48 mov     w1, #2                                      
+    0x08fa50 mov     x3, x19                                     
+    0x08fa58 bl      #0x8fa58                                    
+=== [ 24] hdd_we_set_tx_chainmask 0x08fa70 size=208
+    0x08fa84 mov     x2, #0                                      
+    0x08fa9c mov     w20, w1                                     
+    0x08fac0 mov     w1, #8                                      
+    0x08fac4 mov     x3, x19                                     
+    0x08facc bl      #0x8facc                                    
+    0x08fad4 mov     w1, #1                                      
+    0x08fad8 mov     w2, w20                                     
+    0x08fadc mov     w3, #2                                      
+    0x08fae0 bl      #0x8fae0                                    
+    0x08fae4 cbz     w0, #0x8fb18                                
+    0x08fae8 mov     x2, #0                                      
+    0x08fb04 mov     w1, #2                                      
+    0x08fb08 mov     x3, x19                                     
+    0x08fb10 bl      #0x8fb10                                    
+    0x08fb14 b       #0x8fb2c                                    
+    0x08fb18 ldr     x1, [x21, #0x18]                            
+    0x08fb20 mov     w2, w20                                     
+    0x08fb24 bl      #0x8fb24                                    
+=== [ 25] hdd_we_set_rx_chainmask 0x08fb40 size=208
+    0x08fb54 mov     x2, #0                                      
+    0x08fb6c mov     w20, w1                                     
+    0x08fb90 mov     w1, #8                                      
+    0x08fb94 mov     x3, x19                                     
+    0x08fb9c bl      #0x8fb9c                                    
+    0x08fba4 mov     w1, #2                                      
+    0x08fba8 mov     w2, w20                                     
+    0x08fbac mov     w3, #2                                      
+    0x08fbb0 bl      #0x8fbb0                                    
+    0x08fbb4 cbz     w0, #0x8fbe8                                
+    0x08fbb8 mov     x2, #0                                      
+    0x08fbd4 mov     w1, #2                                      
+    0x08fbd8 mov     x3, x19                                     
+    0x08fbe0 bl      #0x8fbe0                                    
+    0x08fbe4 b       #0x8fbfc                                    
+    0x08fbe8 ldr     x1, [x21, #0x18]                            
+    0x08fbf0 mov     w2, w20                                     
+    0x08fbf4 bl      #0x8fbf4                                    
+=== [ 26] hdd_we_set_11n_rate 0x08fc10 size=540
+    0x08fc34 mov     x2, #0                                      
+    0x08fc4c mov     w22, w1                                     
+    0x08fc68 mov     w1, #8                                      
+    0x08fc6c mov     x3, x19                                     
+    0x08fc80 bl      #0x8fc80                                    
+    0x08fc9c b       #0x8fd0c                                    
+    0x08fca8 tbnz    w8, #0x1f, #0x8fcf0                         
+    0x08fcb4 add     x1, x20, x8                                 
+    0x08fcb8 sub     x2, x29, #0xc                               
+    0x08fcbc bl      #0x8fcbc                                    
+    0x08fcc0 cbz     w0, #0x8fdc0                                
+    0x08fcc4 mov     x2, #0                                      
+    0x08fcd8 mov     w1, #2                                      
+    0x08fce0 mov     x3, x19                                     
+    0x08fce4 bl      #0x8fce4                                    
+    0x08fcec b       #0x8fd84                                    
+    0x08fcfc mov     w1, w22                                     
+    0x08fd00 mov     w2, w21                                     
+    0x08fd04 bl      #0x8fd04                                    
+    0x08fd0c mov     x2, #0                                      
+    0x08fd20 mov     w1, #8                                      
+    0x08fd28 mov     x3, x19                                     
+    0x08fd3c bl      #0x8fd3c                                    
+    0x08fd44 mov     w1, #0x1b                                   
+    0x08fd48 mov     w2, w24                                     
+    0x08fd4c mov     w3, #1                                      
+    0x08fd50 bl      #0x8fd50                                    
+    0x08fd58 cbz     w0, #0x8fd84                                
+    0x08fd5c mov     x2, #0                                      
+    0x08fd70 mov     w1, #2                                      
+    0x08fd78 mov     x3, x19                                     
+    0x08fd80 bl      #0x8fd80                                    
+    0x08fdd0 mov     x2, #0                                      
+    0x08fde4 mov     w1, #2                                      
+    0x08fdec mov     x3, x19                                     
+    0x08fdf4 bl      #0x8fdf4                                    
+    0x08fdfc b       #0x8fd84                                    
+    0x08fe00 tbnz    w22, #4, #0x8fe10                           
+    0x08fe0c b       #0x8fcf8                                    
+    0x08fe24 b       #0x8fcf8                                    
+    0x08fe28 bl      #0x8fe28                                    
+=== [ 27] hdd_we_set_ampdu 0x08fe30 size=104
+    0x08fe3c mov     x2, #0                                      
+    0x08fe40 mov     x3, #0                                      
+    0x08fe4c mov     w19, w1                                     
+    0x08fe6c mov     w1, #8                                      
+    0x08fe74 bl      #0x8fe74                                    
+    0x08fe7c mov     w1, #1                                      
+    0x08fe80 mov     w2, w19                                     
+    0x08fe84 mov     w3, #3                                      
+    0x08fe88 bl      #0x8fe88                                    
+=== [ 28] hdd_we_set_amsdu 0x08fe98 size=292
+    0x08feb4 mov     x2, #0                                      
+    0x08fec4 mov     w20, w1                                     
+    0x08fee4 mov     w1, #8                                      
+    0x08fee8 mov     x3, x19                                     
+    0x08fef0 bl      #0x8fef0                                    
+    0x08fef4 cbz     x22, #0x8ff24                               
+    0x08fefc mov     w1, w20                                     
+    0x08ff00 bl      #0x8ff00                                    
+    0x08ff04 cbz     w0, #0x8ff64                                
+    0x08ff08 mov     x2, #0                                      
+    0x08ff20 b       #0x8ff3c                                    
+    0x08ff24 mov     x2, #0                                      
+    0x08ff3c mov     w1, #2                                      
+    0x08ff40 mov     x3, x19                                     
+    0x08ff44 bl      #0x8ff44                                    
+    0x08ff6c cset    w1, gt                                      
+    0x08ff70 bl      #0x8ff70                                    
+    0x08ff78 mov     w1, #2                                      
+    0x08ff7c mov     w2, w20                                     
+    0x08ff80 mov     w3, #3                                      
+    0x08ff84 bl      #0x8ff84                                    
+    0x08ff8c cbz     w0, #0x8ff4c                                
+    0x08ff90 mov     x2, #0                                      
+    0x08ffa4 mov     w1, #2                                      
+    0x08ffac mov     x3, x19                                     
+    0x08ffb4 bl      #0x8ffb4                                    
+    0x08ffb8 b       #0x8ff4c                                    
+=== [ 29] hdd_we_set_txpow_2g 0x08ffc0 size=184
+    0x08ffd4 mov     x2, #0                                      
+    0x08ffec mov     w20, w1                                     
+    0x090010 mov     w1, #8                                      
+    0x090014 mov     x3, x19                                     
+    0x09001c bl      #0x9001c                                    
+    0x090024 mov     w1, #3                                      
+    0x090028 mov     w2, w20                                     
+    0x09002c mov     w3, #2                                      
+    0x090030 bl      #0x90030                                    
+    0x090038 cbz     w0, #0x90064                                
+    0x09003c mov     x2, #0                                      
+    0x090050 mov     w1, #2                                      
+    0x090058 mov     x3, x19                                     
+    0x090060 bl      #0x90060                                    
+=== [ 30] hdd_we_set_txpow_5g 0x090078 size=184
+    0x09008c mov     x2, #0                                      
+    0x0900a4 mov     w20, w1                                     
+    0x0900c8 mov     w1, #8                                      
+    0x0900cc mov     x3, x19                                     
+    0x0900d4 bl      #0x900d4                                    
+    0x0900dc mov     w1, #4                                      
+    0x0900e0 mov     w2, w20                                     
+    0x0900e4 mov     w3, #2                                      
+    0x0900e8 bl      #0x900e8                                    
+    0x0900f0 cbz     w0, #0x9011c                                
+    0x0900f4 mov     x2, #0                                      
+    0x090108 mov     w1, #2                                      
+    0x090110 mov     x3, x19                                     
+    0x090118 bl      #0x90118                                    
+=== [ 31] hdd_we_dbglog_log_level 0x090130 size=184
+    0x090144 mov     x2, #0                                      
+    0x09015c mov     w20, w1                                     
+    0x090180 mov     w1, #8                                      
+    0x090184 mov     x3, x19                                     
+    0x09018c bl      #0x9018c                                    
+    0x090194 mov     w1, #1                                      
+    0x090198 mov     w2, w20                                     
+    0x09019c mov     w3, #4                                      
+    0x0901a0 bl      #0x901a0                                    
+    0x0901a8 cbz     w0, #0x901d4                                
+    0x0901ac mov     x2, #0                                      
+    0x0901c0 mov     w1, #2                                      
+    0x0901c8 mov     x3, x19                                     
+    0x0901d0 bl      #0x901d0                                    
+=== [ 32] hdd_we_dbglog_vap_enable 0x0901e8 size=184
+    0x0901fc mov     x2, #0                                      
+    0x090214 mov     w20, w1                                     
+    0x090238 mov     w1, #8                                      
+    0x09023c mov     x3, x19                                     
+    0x090244 bl      #0x90244                                    
+    0x09024c mov     w1, #2                                      
+    0x090250 mov     w2, w20                                     
+    0x090254 mov     w3, #4                                      
+    0x090258 bl      #0x90258                                    
+    0x090260 cbz     w0, #0x9028c                                
+    0x090264 mov     x2, #0                                      
+    0x090278 mov     w1, #2                                      
+    0x090280 mov     x3, x19                                     
+    0x090288 bl      #0x90288                                    
+=== [ 33] hdd_we_dbglog_vap_disable 0x0902a0 size=184
+    0x0902b4 mov     x2, #0                                      
+    0x0902cc mov     w20, w1                                     
+    0x0902f0 mov     w1, #8                                      
+    0x0902f4 mov     x3, x19                                     
+    0x0902fc bl      #0x902fc                                    
+    0x090304 mov     w1, #3                                      
+    0x090308 mov     w2, w20                                     
+    0x09030c mov     w3, #4                                      
+    0x090310 bl      #0x90310                                    
+    0x090318 cbz     w0, #0x90344                                
+    0x09031c mov     x2, #0                                      
+    0x090330 mov     w1, #2                                      
+    0x090338 mov     x3, x19                                     
+    0x090340 bl      #0x90340                                    
+=== [ 34] hdd_we_dbglog_module_enable 0x090358 size=184
+    0x09036c mov     x2, #0                                      
+    0x090384 mov     w20, w1                                     
+    0x0903a8 mov     w1, #8                                      
+    0x0903ac mov     x3, x19                                     
+    0x0903b4 bl      #0x903b4                                    
+    0x0903bc mov     w1, #4                                      
+    0x0903c0 mov     w2, w20                                     
+    0x0903c4 mov     w3, #4                                      
+    0x0903c8 bl      #0x903c8                                    
+    0x0903d0 cbz     w0, #0x903fc                                
+    0x0903d4 mov     x2, #0                                      
+    0x0903e8 mov     w1, #2                                      
+    0x0903f0 mov     x3, x19                                     
+    0x0903f8 bl      #0x903f8                                    
+=== [ 35] hdd_we_dbglog_module_disable 0x090410 size=184
+    0x090424 mov     x2, #0                                      
+    0x09043c mov     w20, w1                                     
+    0x090460 mov     w1, #8                                      
+    0x090464 mov     x3, x19                                     
+    0x09046c bl      #0x9046c                                    
+    0x090474 mov     w1, #5                                      
+    0x090478 mov     w2, w20                                     
+    0x09047c mov     w3, #4                                      
+    0x090480 bl      #0x90480                                    
+    0x090488 cbz     w0, #0x904b4                                
+    0x09048c mov     x2, #0                                      
+    0x0904a0 mov     w1, #2                                      
+    0x0904a8 mov     x3, x19                                     
+    0x0904b0 bl      #0x904b0                                    
+=== [ 36] hdd_we_dbglog_mod_log_level 0x0904c8 size=184
+    0x0904dc mov     x2, #0                                      
+    0x0904f4 mov     w20, w1                                     
+    0x090518 mov     w1, #8                                      
+    0x09051c mov     x3, x19                                     
+    0x090524 bl      #0x90524                                    
+    0x09052c mov     w1, #6                                      
+    0x090530 mov     w2, w20                                     
+    0x090534 mov     w3, #4                                      
+    0x090538 bl      #0x90538                                    
+    0x090540 cbz     w0, #0x9056c                                
+    0x090544 mov     x2, #0                                      
+    0x090558 mov     w1, #2                                      
+    0x090560 mov     x3, x19                                     
+    0x090568 bl      #0x90568                                    
+=== [ 37] hdd_we_dbglog_type 0x090580 size=184
+    0x090594 mov     x2, #0                                      
+    0x0905ac mov     w20, w1                                     
+    0x0905d0 mov     w1, #8                                      
+    0x0905d4 mov     x3, x19                                     
+    0x0905dc bl      #0x905dc                                    
+    0x0905e4 mov     w1, #7                                      
+    0x0905e8 mov     w2, w20                                     
+    0x0905ec mov     w3, #4                                      
+    0x0905f0 bl      #0x905f0                                    
+    0x0905f8 cbz     w0, #0x90624                                
+    0x0905fc mov     x2, #0                                      
+    0x090610 mov     w1, #2                                      
+    0x090618 mov     x3, x19                                     
+    0x090620 bl      #0x90620                                    
+=== [ 38] hdd_we_set_txrx_fwstats 0x090638 size=188
+    0x09064c mov     x2, #0                                      
+    0x090664 mov     w20, w1                                     
+    0x090688 mov     w1, #8                                      
+    0x09068c mov     x3, x19                                     
+    0x090694 bl      #0x90694                                    
+    0x09069c mov     w1, #0xe004                                 
+    0x0906a4 mov     w2, w20                                     
+    0x0906a8 mov     w3, #1                                      
+    0x0906ac bl      #0x906ac                                    
+    0x0906b4 cbz     w0, #0x906e0                                
+    0x0906b8 mov     x2, #0                                      
+    0x0906cc mov     w1, #2                                      
+    0x0906d4 mov     x3, x19                                     
+    0x0906dc bl      #0x906dc                                    
+=== [ 39] hdd_we_set_vht_rate 0x0906f8 size=296
+    0x090714 mov     x2, #0                                      
+    0x090724 mov     w22, w1                                     
+    0x090740 mov     w1, #8                                      
+    0x090744 mov     x3, x19                                     
+    0x09074c bl      #0x9074c                                    
+    0x090768 b       #0x9078c                                    
+    0x090778 mov     w1, w22                                     
+    0x09077c mov     w2, w21                                     
+    0x090784 bl      #0x90784                                    
+    0x09078c mov     x2, #0                                      
+    0x0907a0 mov     w1, #8                                      
+    0x0907a8 mov     x3, x19                                     
+    0x0907bc bl      #0x907bc                                    
+    0x0907c4 mov     w1, #0x1b                                   
+    0x0907c8 mov     w2, w23                                     
+    0x0907cc mov     w3, #1                                      
+    0x0907d0 bl      #0x907d0                                    
+    0x0907d8 cbz     w0, #0x90804                                
+    0x0907dc mov     x2, #0                                      
+    0x0907f0 mov     w1, #2                                      
+    0x0907f8 mov     x3, x19                                     
+    0x090800 bl      #0x90800                                    
+=== [ 40] hdd_we_dbglog_report_enable 0x090820 size=184
+    0x090834 mov     x2, #0                                      
+    0x09084c mov     w20, w1                                     
+    0x090870 mov     w1, #8                                      
+    0x090874 mov     x3, x19                                     
+    0x09087c bl      #0x9087c                                    
+    0x090884 mov     w1, #8                                      
+    0x090888 mov     w2, w20                                     
+    0x09088c mov     w3, #4                                      
+    0x090890 bl      #0x90890                                    
+    0x090898 cbz     w0, #0x908c4                                
+    0x09089c mov     x2, #0                                      
+    0x0908b0 mov     w1, #2                                      
+    0x0908b8 mov     x3, x19                                     
+    0x0908c0 bl      #0x908c0                                    
+=== [ 41] hdd_we_txrx_fwstats_reset 0x0908d8 size=188
+    0x0908ec mov     x2, #0                                      
+    0x090904 mov     w20, w1                                     
+    0x090928 mov     w1, #8                                      
+    0x09092c mov     x3, x19                                     
+    0x090934 bl      #0x90934                                    
+    0x09093c mov     w1, #0xe005                                 
+    0x090944 mov     w2, w20                                     
+    0x090948 mov     w3, #1                                      
+    0x09094c bl      #0x9094c                                    
+    0x090954 cbz     w0, #0x90980                                
+    0x090958 mov     x2, #0                                      
+    0x09096c mov     w1, #2                                      
+    0x090974 mov     x3, x19                                     
+    0x09097c bl      #0x9097c                                    
+=== [ 42] hdd_we_set_max_tx_power_2_4 0x090998 size=164
+    0x0909ac mov     x2, #0                                      
+    0x0909bc mov     w19, w1                                     
+    0x0909d4 mov     w1, #8                                      
+    0x0909d8 mov     x3, x20                                     
+    0x0909e0 bl      #0x909e0                                    
+    0x0909e8 mov     w1, w19                                     
+    0x0909ec bl      #0x909ec                                    
+    0x0909f4 cbz     w0, #0x90a24                                
+    0x0909f8 mov     x2, #0                                      
+    0x090a0c mov     w1, #2                                      
+    0x090a14 mov     x3, x20                                     
+    0x090a20 bl      #0x90a20                                    
+    0x090a28 bl      #0x90a28                                    
+=== [ 43] hdd_we_set_max_tx_power_5_0 0x090a40 size=164
+    0x090a54 mov     x2, #0                                      
+    0x090a64 mov     w19, w1                                     
+    0x090a7c mov     w1, #8                                      
+    0x090a80 mov     x3, x20                                     
+    0x090a88 bl      #0x90a88                                    
+    0x090a90 mov     w1, w19                                     
+    0x090a94 bl      #0x90a94                                    
+    0x090a9c cbz     w0, #0x90acc                                
+    0x090aa0 mov     x2, #0                                      
+    0x090ab4 mov     w1, #2                                      
+    0x090abc mov     x3, x20                                     
+    0x090ac8 bl      #0x90ac8                                    
+    0x090ad0 bl      #0x90ad0                                    
+=== [ 45] hdd_we_pps_paid_match 0x090ae8 size=44
+    0x090af0 mov     x2, #0                                      
+    0x090af4 mov     w3, w1                                      
+    0x090afc mov     w1, wzr                                     
+    0x090b08 bl      #0x92500                                    
+=== [ 46] hdd_we_pps_gid_match 0x090b18 size=44
+    0x090b20 mov     x2, #0                                      
+    0x090b24 mov     w3, w1                                      
+    0x090b2c mov     w1, #1                                      
+    0x090b38 bl      #0x92500                                    
+=== [ 47] hdd_we_pps_early_tim_clear 0x090b48 size=44
+    0x090b50 mov     x2, #0                                      
+    0x090b54 mov     w3, w1                                      
+    0x090b5c mov     w1, #2                                      
+    0x090b68 bl      #0x92500                                    
+=== [ 48] hdd_we_pps_early_dtim_clear 0x090b78 size=44
+    0x090b80 mov     x2, #0                                      
+    0x090b84 mov     w3, w1                                      
+    0x090b8c mov     w1, #3                                      
+    0x090b98 bl      #0x92500                                    
+=== [ 49] hdd_we_pps_eof_pad_delim 0x090ba8 size=44
+    0x090bb0 mov     x2, #0                                      
+    0x090bb4 mov     w3, w1                                      
+    0x090bbc mov     w1, #4                                      
+    0x090bc8 bl      #0x92500                                    
+=== [ 50] hdd_we_pps_macaddr_mismatch 0x090bd8 size=44
+    0x090be0 mov     x2, #0                                      
+    0x090be4 mov     w3, w1                                      
+    0x090bec mov     w1, #5                                      
+    0x090bf8 bl      #0x92500                                    
+=== [ 51] hdd_we_pps_delim_crc_fail 0x090c08 size=44
+    0x090c10 mov     x2, #0                                      
+    0x090c14 mov     w3, w1                                      
+    0x090c1c mov     w1, #6                                      
+    0x090c28 bl      #0x92500                                    
+=== [ 52] hdd_we_pps_gid_nsts_zero 0x090c38 size=44
+    0x090c40 mov     x2, #0                                      
+    0x090c44 mov     w3, w1                                      
+    0x090c4c mov     w1, #7                                      
+    0x090c58 bl      #0x92500                                    
+=== [ 53] hdd_we_pps_rssi_check 0x090c68 size=44
+    0x090c70 mov     x2, #0                                      
+    0x090c74 mov     w3, w1                                      
+    0x090c7c mov     w1, #8                                      
+    0x090c88 bl      #0x92500                                    
+=== [ 55] hdd_we_set_htsmps 0x090c98 size=188
+    0x090cac mov     x2, #0                                      
+    0x090cc4 mov     w20, w1                                     
+    0x090ce8 mov     w1, #8                                      
+    0x090cec mov     x3, x19                                     
+    0x090cf4 bl      #0x90cf4                                    
+    0x090cfc mov     w1, #0x2001                                 
+    0x090d04 mov     w2, w20                                     
+    0x090d08 mov     w3, #1                                      
+    0x090d0c bl      #0x90d0c                                    
+    0x090d14 cbz     w0, #0x90d40                                
+    0x090d18 mov     x2, #0                                      
+    0x090d2c mov     w1, #2                                      
+    0x090d34 mov     x3, x19                                     
+    0x090d3c bl      #0x90d3c                                    
+=== [ 56] hdd_we_set_qpower_max_pspoll_count 0x090d58 size=184
+    0x090d6c mov     x2, #0                                      
+    0x090d84 mov     w20, w1                                     
+    0x090da8 mov     w1, #8                                      
+    0x090dac mov     x3, x19                                     
+    0x090db4 bl      #0x90db4                                    
+    0x090dbc mov     w1, #5                                      
+    0x090dc0 mov     w2, w20                                     
+    0x090dc4 mov     w3, #6                                      
+    0x090dc8 bl      #0x90dc8                                    
+    0x090dd0 cbz     w0, #0x90dfc                                
+    0x090dd4 mov     x2, #0                                      
+    0x090de8 mov     w1, #2                                      
+    0x090df0 mov     x3, x19                                     
+    0x090df8 bl      #0x90df8                                    
+=== [ 57] hdd_we_set_qpower_max_tx_before_wake 0x090e10 size=184
+    0x090e24 mov     x2, #0                                      
+    0x090e3c mov     w20, w1                                     
+    0x090e60 mov     w1, #8                                      
+    0x090e64 mov     x3, x19                                     
+    0x090e6c bl      #0x90e6c                                    
+    0x090e74 mov     w1, #7                                      
+    0x090e78 mov     w2, w20                                     
+    0x090e7c mov     w3, #6                                      
+    0x090e80 bl      #0x90e80                                    
+    0x090e88 cbz     w0, #0x90eb4                                
+    0x090e8c mov     x2, #0                                      
+    0x090ea0 mov     w1, #2                                      
+    0x090ea8 mov     x3, x19                                     
+    0x090eb0 bl      #0x90eb0                                    
+=== [ 58] hdd_we_set_qpower_spec_pspoll_wake_interval 0x090ec8 size=184
+    0x090edc mov     x2, #0                                      
+    0x090ef4 mov     w20, w1                                     
+    0x090f18 mov     w1, #8                                      
+    0x090f1c mov     x3, x19                                     
+    0x090f24 bl      #0x90f24                                    
+    0x090f2c mov     w1, #8                                      
+    0x090f30 mov     w2, w20                                     
+    0x090f34 mov     w3, #6                                      
+    0x090f38 bl      #0x90f38                                    
+    0x090f40 cbz     w0, #0x90f6c                                
+    0x090f44 mov     x2, #0                                      
+    0x090f58 mov     w1, #2                                      
+    0x090f60 mov     x3, x19                                     
+    0x090f68 bl      #0x90f68                                    
+=== [ 59] hdd_we_set_qpower_spec_max_spec_nodata_pspoll 0x090f80 size=184
+    0x090f94 mov     x2, #0                                      
+    0x090fac mov     w20, w1                                     
+    0x090fd0 mov     w1, #8                                      
+    0x090fd4 mov     x3, x19                                     
+    0x090fdc bl      #0x90fdc                                    
+    0x090fe4 mov     w1, #9                                      
+    0x090fe8 mov     w2, w20                                     
+    0x090fec mov     w3, #6                                      
+    0x090ff0 bl      #0x90ff0                                    
+    0x090ff8 cbz     w0, #0x91024                                
+    0x090ffc mov     x2, #0                                      
+    0x091010 mov     w1, #2                                      
+    0x091018 mov     x3, x19                                     
+    0x091020 bl      #0x91020                                    
+=== [ 62] hdd_we_set_gtx_ht_mcs 0x091038 size=184
+    0x09104c mov     x2, #0                                      
+    0x091064 mov     w20, w1                                     
+    0x091088 mov     w1, #8                                      
+    0x09108c mov     x3, x19                                     
+    0x091094 bl      #0x91094                                    
+    0x09109c mov     w1, wzr                                     
+    0x0910a0 mov     w2, w20                                     
+    0x0910a4 mov     w3, #7                                      
+    0x0910a8 bl      #0x910a8                                    
+    0x0910b0 cbz     w0, #0x910dc                                
+    0x0910b4 mov     x2, #0                                      
+    0x0910c8 mov     w1, #2                                      
+    0x0910d0 mov     x3, x19                                     
+    0x0910d8 bl      #0x910d8                                    
+=== [ 63] hdd_we_set_gtx_vht_mcs 0x0910f0 size=184
+    0x091104 mov     x2, #0                                      
+    0x09111c mov     w20, w1                                     
+    0x091140 mov     w1, #8                                      
+    0x091144 mov     x3, x19                                     
+    0x09114c bl      #0x9114c                                    
+    0x091154 mov     w1, #1                                      
+    0x091158 mov     w2, w20                                     
+    0x09115c mov     w3, #7                                      
+    0x091160 bl      #0x91160                                    
+    0x091168 cbz     w0, #0x91194                                
+    0x09116c mov     x2, #0                                      
+    0x091180 mov     w1, #2                                      
+    0x091188 mov     x3, x19                                     
+    0x091190 bl      #0x91190                                    
+=== [ 64] hdd_we_set_gtx_usrcfg 0x0911a8 size=184
+    0x0911bc mov     x2, #0                                      
+    0x0911d4 mov     w20, w1                                     
+    0x0911f8 mov     w1, #8                                      
+    0x0911fc mov     x3, x19                                     
+    0x091204 bl      #0x91204                                    
+    0x09120c mov     w1, #2                                      
+    0x091210 mov     w2, w20                                     
+    0x091214 mov     w3, #7                                      
+    0x091218 bl      #0x91218                                    
+    0x091220 cbz     w0, #0x9124c                                
+    0x091224 mov     x2, #0                                      
+    0x091238 mov     w1, #2                                      
+    0x091240 mov     x3, x19                                     
+    0x091248 bl      #0x91248                                    
+=== [ 65] hdd_we_set_gtx_thre 0x091260 size=184
+    0x091274 mov     x2, #0                                      
+    0x09128c mov     w20, w1                                     
+    0x0912b0 mov     w1, #8                                      
+    0x0912b4 mov     x3, x19                                     
+    0x0912bc bl      #0x912bc                                    
+    0x0912c4 mov     w1, #3                                      
+    0x0912c8 mov     w2, w20                                     
+    0x0912cc mov     w3, #7                                      
+    0x0912d0 bl      #0x912d0                                    
+    0x0912d8 cbz     w0, #0x91304                                
+    0x0912dc mov     x2, #0                                      
+    0x0912f0 mov     w1, #2                                      
+    0x0912f8 mov     x3, x19                                     
+    0x091300 bl      #0x91300                                    
+=== [ 66] hdd_we_set_gtx_margin 0x091318 size=184
+    0x09132c mov     x2, #0                                      
+    0x091344 mov     w20, w1                                     
+    0x091368 mov     w1, #8                                      
+    0x09136c mov     x3, x19                                     
+    0x091374 bl      #0x91374                                    
+    0x09137c mov     w1, #4                                      
+    0x091380 mov     w2, w20                                     
+    0x091384 mov     w3, #7                                      
+    0x091388 bl      #0x91388                                    
+    0x091390 cbz     w0, #0x913bc                                
+    0x091394 mov     x2, #0                                      
+    0x0913a8 mov     w1, #2                                      
+    0x0913b0 mov     x3, x19                                     
+    0x0913b8 bl      #0x913b8                                    
+=== [ 67] hdd_we_set_gtx_step 0x0913d0 size=184
+    0x0913e4 mov     x2, #0                                      
+    0x0913fc mov     w20, w1                                     
+    0x091420 mov     w1, #8                                      
+    0x091424 mov     x3, x19                                     
+    0x09142c bl      #0x9142c                                    
+    0x091434 mov     w1, #5                                      
+    0x091438 mov     w2, w20                                     
+    0x09143c mov     w3, #7                                      
+    0x091440 bl      #0x91440                                    
+    0x091448 cbz     w0, #0x91474                                
+    0x09144c mov     x2, #0                                      
+    0x091460 mov     w1, #2                                      
+    0x091468 mov     x3, x19                                     
+    0x091470 bl      #0x91470                                    
+=== [ 68] hdd_we_set_gtx_mintpc 0x091488 size=184
+    0x09149c mov     x2, #0                                      
+    0x0914b4 mov     w20, w1                                     
+    0x0914d8 mov     w1, #8                                      
+    0x0914dc mov     x3, x19                                     
+    0x0914e4 bl      #0x914e4                                    
+    0x0914ec mov     w1, #6                                      
+    0x0914f0 mov     w2, w20                                     
+    0x0914f4 mov     w3, #7                                      
+    0x0914f8 bl      #0x914f8                                    
+    0x091500 cbz     w0, #0x9152c                                
+    0x091504 mov     x2, #0                                      
+    0x091518 mov     w1, #2                                      
+    0x091520 mov     x3, x19                                     
+    0x091528 bl      #0x91528                                    
+=== [ 69] hdd_we_set_gtx_bwmask 0x091540 size=184
+    0x091554 mov     x2, #0                                      
+    0x09156c mov     w20, w1                                     
+    0x091590 mov     w1, #8                                      
+    0x091594 mov     x3, x19                                     
+    0x09159c bl      #0x9159c                                    
+    0x0915a4 mov     w1, #7                                      
+    0x0915a8 mov     w2, w20                                     
+    0x0915ac mov     w3, #7                                      
+    0x0915b0 bl      #0x915b0                                    
+    0x0915b8 cbz     w0, #0x915e4                                
+    0x0915bc mov     x2, #0                                      
+    0x0915d0 mov     w1, #2                                      
+    0x0915d8 mov     x3, x19                                     
+    0x0915e0 bl      #0x915e0                                    
+=== [ 70] hdd_we_mcc_config_latency 0x0915f8 size=100
+    0x091604 mov     x2, #0                                      
+    0x091608 mov     x3, #0                                      
+    0x091614 mov     w19, w1                                     
+    0x091634 mov     w1, #8                                      
+    0x09163c bl      #0x9163c                                    
+    0x091644 mov     w1, w19                                     
+    0x091648 bl      #0x91648                                    
+=== [ 71] hdd_we_mcc_config_quota 0x091660 size=96
+    0x09166c mov     x2, #0                                      
+    0x091670 mov     x3, #0                                      
+    0x09167c mov     w19, w1                                     
+    0x09169c mov     w1, #8                                      
+    0x0916a4 bl      #0x916a4                                    
+    0x0916ac mov     w1, w19                                     
+    0x0916b0 bl      #0x916b0                                    
+=== [ 72] hdd_we_set_debug_log 0x0916c0 size=48
+    0x0916d0 cbz     x0, #0x916e4                                
+    0x0916d4 bl      #0x916d4                                    
+=== [ 74] hdd_we_set_tx_power 0x0916f0 size=160
+    0x091704 cbz     x8, #0x91780                                
+    0x09170c mov     w19, w1                                     
+    0x091714 ldr     w3, [x0, #0xa8]                             
+    0x091718 ldrb    w1, [x0, #0x98]                             
+    0x091728 ldr     w2, [x9]                                    
+    0x09172c bfi     x2, x10, #0x20, #0x10                       
+    0x091730 bl      #0x91730                                    
+    0x091738 cbz     w0, #0x91774                                
+    0x09173c mov     x2, #0                                      
+    0x091740 mov     x3, #0                                      
+    0x091764 mov     w1, #2                                      
+    0x091770 bl      #0x91770                                    
+    0x091778 bl      #0x91778                                    
+    0x09177c b       #0x91784                                    
+=== [ 75] hdd_we_set_early_rx_adjust_enable 0x091790 size=200
+    0x0917a0 cmp     w1, #1                                      
+    0x0917ac mov     x2, #0                                      
+    0x0917c4 mov     w20, w1                                     
+    0x0917e8 mov     w1, #8                                      
+    0x0917ec mov     x3, x19                                     
+    0x0917f4 bl      #0x917f4                                    
+    0x0917fc mov     w1, #0x32                                   
+    0x091800 mov     w2, w20                                     
+    0x091804 mov     w3, #1                                      
+    0x091808 bl      #0x91808                                    
+    0x091810 cbz     w0, #0x91844                                
+    0x091814 mov     x2, #0                                      
+    0x091828 mov     w1, #2                                      
+    0x091830 mov     x3, x19                                     
+    0x091838 bl      #0x91838                                    
+    0x09183c b       #0x91844                                    
+=== [ 76] hdd_we_set_early_rx_tgt_bmiss_num 0x091858 size=188
+    0x09186c mov     x2, #0                                      
+    0x091884 mov     w20, w1                                     
+    0x0918ac mov     w1, #8                                      
+    0x0918b0 mov     x3, x19                                     
+    0x0918b8 bl      #0x918b8                                    
+    0x0918c0 mov     w1, w22                                     
+    0x0918c4 mov     w2, w20                                     
+    0x0918c8 mov     w3, #1                                      
+    0x0918cc bl      #0x918cc                                    
+    0x0918d4 cbz     w0, #0x91900                                
+    0x0918d8 mov     x2, #0                                      
+    0x0918ec mov     w1, #2                                      
+    0x0918f4 mov     x3, x19                                     
+    0x0918fc bl      #0x918fc                                    
+=== [ 77] hdd_we_set_early_rx_bmiss_sample_cycle 0x091918 size=184
+    0x09192c mov     x2, #0                                      
+    0x091944 mov     w20, w1                                     
+    0x091968 mov     w1, #8                                      
+    0x09196c mov     x3, x19                                     
+    0x091974 bl      #0x91974                                    
+    0x09197c mov     w1, #0x34                                   
+    0x091980 mov     w2, w20                                     
+    0x091984 mov     w3, #1                                      
+    0x091988 bl      #0x91988                                    
+    0x091990 cbz     w0, #0x919bc                                
+    0x091994 mov     x2, #0                                      
+    0x0919a8 mov     w1, #2                                      
+    0x0919b0 mov     x3, x19                                     
+    0x0919b8 bl      #0x919b8                                    
+=== [ 78] hdd_we_set_early_rx_slop_step 0x0919d0 size=184
+    0x0919e4 mov     x2, #0                                      
+    0x0919fc mov     w20, w1                                     
+    0x091a20 mov     w1, #8                                      
+    0x091a24 mov     x3, x19                                     
+    0x091a2c bl      #0x91a2c                                    
+    0x091a34 mov     w1, #0x35                                   
+    0x091a38 mov     w2, w20                                     
+    0x091a3c mov     w3, #1                                      
+    0x091a40 bl      #0x91a40                                    
+    0x091a48 cbz     w0, #0x91a74                                
+    0x091a4c mov     x2, #0                                      
+    0x091a60 mov     w1, #2                                      
+    0x091a68 mov     x3, x19                                     
+    0x091a70 bl      #0x91a70                                    
+=== [ 79] hdd_we_set_early_rx_init_slop 0x091a88 size=184
+    0x091a9c mov     x2, #0                                      
+    0x091ab4 mov     w20, w1                                     
+    0x091ad8 mov     w1, #8                                      
+    0x091adc mov     x3, x19                                     
+    0x091ae4 bl      #0x91ae4                                    
+    0x091aec mov     w1, #0x36                                   
+    0x091af0 mov     w2, w20                                     
+    0x091af4 mov     w3, #1                                      
+    0x091af8 bl      #0x91af8                                    
+    0x091b00 cbz     w0, #0x91b2c                                
+    0x091b04 mov     x2, #0                                      
+    0x091b18 mov     w1, #2                                      
+    0x091b20 mov     x3, x19                                     
+    0x091b28 bl      #0x91b28                                    
+=== [ 80] hdd_we_set_early_rx_adjust_pause 0x091b40 size=200
+    0x091b50 cmp     w1, #1                                      
+    0x091b5c mov     x2, #0                                      
+    0x091b74 mov     w20, w1                                     
+    0x091b98 mov     w1, #8                                      
+    0x091b9c mov     x3, x19                                     
+    0x091ba4 bl      #0x91ba4                                    
+    0x091bac mov     w1, #0x37                                   
+    0x091bb0 mov     w2, w20                                     
+    0x091bb4 mov     w3, #1                                      
+    0x091bb8 bl      #0x91bb8                                    
+    0x091bc0 cbz     w0, #0x91bf4                                
+    0x091bc4 mov     x2, #0                                      
+    0x091bd8 mov     w1, #2                                      
+    0x091be0 mov     x3, x19                                     
+    0x091be8 bl      #0x91be8                                    
+    0x091bec b       #0x91bf4                                    
+=== [ 81] wlan_hdd_set_mc_rate 0x0373d8 size=568
+    0x037418 cbz     x22, #0x3747c                               
+    0x037444 mov     w19, w1                                     
+    0x037448 add     x1, sp, #0xc                                
+    0x03744c bl      #0x3744c                                    
+    0x037450 cbz     w0, #0x374e4                                
+    0x037454 mov     x2, #0                                      
+    0x037458 mov     x3, #0                                      
+    0x037478 b       #0x374a0                                    
+    0x03747c mov     x2, #0                                      
+    0x037480 mov     x3, #0                                      
+    0x0374a4 mov     w1, #2                                      
+    0x0374a8 bl      #0x374a8                                    
+    0x03751c bl      #0x3751c                                    
+    0x037528 mov     x2, #0                                      
+    0x037550 mov     w1, #8                                      
+    0x037554 mov     x3, x20                                     
+    0x037564 bl      #0x37564                                    
+    0x03756c add     x1, sp, #0x10                               
+    0x037570 bl      #0x37570                                    
+    0x037574 cbz     w0, #0x374b0                                
+    0x037578 mov     x2, #0                                      
+    0x03758c mov     w1, #2                                      
+    0x037594 mov     x3, x20                                     
+    0x037598 bl      #0x37598                                    
+    0x0375a0 b       #0x374b0                                    
+    0x0375a4 bl      #0x375a4                                    
+    0x0375ac mov     x2, #0                                      
+    0x0375d8 mov     w1, #2                                      
+    0x0375e0 mov     x3, x19                                     
+    0x0375e4 bl      #0x375e4                                    
+    0x0375e8 mov     x2, #0                                      
+    0x0375fc mov     w1, #2                                      
+    0x037604 mov     x3, x19                                     
+    0x037608 b       #0x374a8                                    
+    0x03760c bl      #0x3760c                                    
+=== [ 82] hdd_we_set_early_rx_drift_sample 0x091c08 size=184
+    0x091c1c mov     x2, #0                                      
+    0x091c34 mov     w20, w1                                     
+    0x091c58 mov     w1, #8                                      
+    0x091c5c mov     x3, x19                                     
+    0x091c64 bl      #0x91c64                                    
+    0x091c6c mov     w1, #0x3e                                   
+    0x091c70 mov     w2, w20                                     
+    0x091c74 mov     w3, #1                                      
+    0x091c78 bl      #0x91c78                                    
+    0x091c80 cbz     w0, #0x91cac                                
+    0x091c84 mov     x2, #0                                      
+    0x091c98 mov     w1, #2                                      
+    0x091ca0 mov     x3, x19                                     
+    0x091ca8 bl      #0x91ca8                                    
+=== [ 83] hdd_we_pps_5g_ebt 0x091cc0 size=44
+    0x091cc8 mov     x2, #0                                      
+    0x091ccc mov     w3, w1                                      
+    0x091cd4 mov     w1, #0xa                                    
+    0x091ce0 bl      #0x92500                                    
+=== [ 84] hdd_we_set_cts_cbw 0x091cf0 size=184
+    0x091d04 mov     x2, #0                                      
+    0x091d1c mov     w20, w1                                     
+    0x091d40 mov     w1, #8                                      
+    0x091d44 mov     x3, x19                                     
+    0x091d4c bl      #0x91d4c                                    
+    0x091d54 mov     w1, #0x3c                                   
+    0x091d58 mov     w2, w20                                     
+    0x091d5c mov     w3, #2                                      
+    0x091d60 bl      #0x91d60                                    
+    0x091d68 cbz     w0, #0x91d94                                
+    0x091d6c mov     x2, #0                                      
+    0x091d80 mov     w1, #2                                      
+    0x091d88 mov     x3, x19                                     
+    0x091d90 bl      #0x91d90                                    
+=== [ 85] hdd_wlan_dump_stats 0x085b88 size=872
+    0x085b9c mov     x2, #0                                      
+    0x085bac mov     w19, w1                                     
+    0x085bcc mov     w1, #8                                      
+    0x085bd0 mov     x3, x20                                     
+    0x085bd8 bl      #0x85bd8                                    
+    0x085c00 ldrb    w11, [x9, x8]                                  <== REG-INDEXED
+    0x085c08 br      x10                                         
+    0x085c10 bl      #0x85c10                                    
+    0x085c14 b       #0x85edc                                    
+    0x085c1c bl      #0x85c1c                                    
+    0x085c20 cbz     x0, #0x85e8c                                
+    0x085c28 cbz     x8, #0x85e8c                                
+    0x085c30 cbz     x8, #0x85edc                                
+    0x085c38 cbz     x8, #0x85edc                                
+    0x085c3c mov     w1, w19                                     
+    0x085c40 mov     w2, #1                                      
+    0x085c44 blr     x8                                          
+    0x085c50 mov     x2, #0                                      
+    0x085c64 mov     w1, #4                                      
+    0x085c6c bl      #0x85c6c                                    
+    0x085c70 mov     x2, #0                                      
+    0x085c7c mov     w1, #4                                      
+    0x085c88 bl      #0x85c88                                    
+    0x085c8c mov     x2, #0                                      
+    0x085c98 mov     w1, #4                                      
+    0x085ca4 bl      #0x85ca4                                    
+    0x085ccc mov     w1, #4                                      
+    0x085cd0 mov     x2, x20                                     
+    0x085cd4 mov     w3, #1                                      
+    0x085cd8 bl      #0x85cd8                                    
+    0x085ce8 mov     w1, #4                                      
+    0x085cf0 mov     x2, x20                                     
+    0x085cf8 mov     w3, #2                                      
+    0x085cfc bl      #0x85cfc                                    
+    0x085d0c mov     w1, #4                                      
+    0x085d14 mov     x2, x20                                     
+    0x085d1c mov     w3, #3                                      
+    0x085d20 bl      #0x85d20                                    
+    0x085d30 mov     w1, #4                                      
+    0x085d38 mov     x2, x20                                     
+    0x085d40 mov     w3, #4                                      
+    0x085d44 bl      #0x85d44                                    
+    0x085d4c mov     w3, #5                                      
+    0x085d5c mov     w1, #4                                      
+    0x085d64 mov     x2, x20                                     
+    0x085d68 bl      #0x85d68                                    
+    0x085d78 mov     w1, #4                                      
+    0x085d80 mov     x2, x20                                     
+    0x085d88 mov     w3, #6                                      
+    0x085d8c bl      #0x85d8c                                    
+    0x085d9c mov     w1, #4                                      
+    0x085da4 mov     x2, x20                                     
+    0x085dac mov     w3, #7                                      
+    0x085db0 bl      #0x85db0                                    
+    0x085db8 mov     w3, #9                                      
+    0x085dc8 mov     w1, #4                                      
+    0x085dd0 mov     x2, x20                                     
+    0x085dd4 bl      #0x85dd4                                    
+    0x085de4 mov     w1, #4                                      
+    0x085dec mov     x2, x20                                     
+    0x085df4 mov     w3, #0xc                                    
+    0x085df8 bl      #0x85df8                                    
+    0x085e00 mov     w3, #0xd                                    
+    0x085e10 mov     w1, #4                                      
+    0x085e18 mov     x2, x20                                     
+    0x085e1c bl      #0x85e1c                                    
+    0x085e24 b       #0x85ee0                                    
+    0x085e2c bl      #0x85e2c                                    
+    0x085e30 b       #0x85edc                                    
+    0x085e34 bl      #0x85e34                                    
+    0x085e38 b       #0x85edc                                    
+    0x085e3c bl      #0x85e3c                                    
+    0x085e40 cbz     w0, #0x85ee0                                
+    0x085e44 mov     x2, #0                                      
+    0x085e58 mov     w1, #2                                      
+    0x085e60 mov     x3, x20                                     
+    0x085e64 bl      #0x85e64                                    
+    0x085e6c b       #0x85ee0                                    
+    0x085e74 bl      #0x85e74                                    
+    0x085e78 b       #0x85edc                                    
+    0x085e80 ldrb    w1, [x21, #0x98]                            
+    0x085e84 bl      #0x85e84                                    
+    0x085e88 b       #0x85edc                                    
+    0x085e90 mov     x2, #0                                      
+    0x085eb0 mov     w1, #8                                      
+    0x085eb4 mov     x3, x19                                     
+    0x085eb8 bl      #0x85eb8                                    
+    0x085ec0 mov     w2, #0x668                                  
+    0x085ec8 mov     x1, x19                                     
+    0x085ed4 bl      #0x85ed4                                    
+    0x085ed8 bl      #0x85ed8                                    
+=== [ 86] hdd_we_clear_stats 0x091da8 size=396
+    0x091dbc mov     x2, #0                                      
+    0x091dcc mov     w19, w1                                     
+    0x091de8 mov     w1, #8                                      
+    0x091dec mov     x3, x20                                     
+    0x091df4 bl      #0x91df4                                    
+    0x091e18 ldrb    w11, [x8, x9]                                  <== REG-INDEXED
+    0x091e20 br      x10                                         
+    0x091e28 mov     w2, #0xb8                                   
+    0x091e2c mov     w1, wzr                                     
+    0x091e30 bl      #0x91e30                                    
+    0x091e38 mov     w2, #0x260                                  
+    0x091e3c mov     w1, wzr                                     
+    0x091e40 bl      #0x91e40                                    
+    0x091e44 b       #0x91f20                                    
+    0x091e4c bl      #0x91e4c                                    
+    0x091e50 cbz     x0, #0x91ea8                                
+    0x091e58 cbz     x8, #0x91ea8                                
+    0x091e60 cbz     x8, #0x91ef8                                
+    0x091e68 cbz     x8, #0x91ef8                                
+    0x091e6c mov     w1, wzr                                     
+    0x091e70 mov     w2, w19                                     
+    0x091e74 blr     x8                                          
+    0x091e78 cbnz    w0, #0x91ef8                                
+    0x091e7c b       #0x91f20                                    
+    0x091e84 bl      #0x91e84                                    
+    0x091e88 b       #0x91f20                                    
+    0x091e90 bl      #0x91e90                                    
+    0x091e94 b       #0x91f20                                    
+    0x091e98 bl      #0x91e98                                    
+    0x091e9c b       #0x91f20                                    
+    0x091ea0 bl      #0x91ea0                                    
+    0x091ea4 b       #0x91f20                                    
+    0x091eac mov     x2, #0                                      
+    0x091ecc mov     w1, #8                                      
+    0x091ed0 mov     x3, x21                                     
+    0x091ed4 bl      #0x91ed4                                    
+    0x091edc mov     w2, #0x23                                   
+    0x091ee4 mov     x1, x21                                     
+    0x091ef0 bl      #0x91ef0                                    
+    0x091ef4 bl      #0x91ef4                                    
+    0x091ef8 mov     x2, #0                                      
+    0x091f0c mov     w1, #8                                      
+    0x091f14 mov     x3, x20                                     
+    0x091f1c bl      #0x91f1c                                    
+=== [ 87] hdd_we_start_fw_profile 0x091f38 size=184
+    0x091f4c mov     x2, #0                                      
+    0x091f64 mov     w20, w1                                     
+    0x091f88 mov     w1, #8                                      
+    0x091f8c mov     x3, x19                                     
+    0x091f94 bl      #0x91f94                                    
+    0x091f9c mov     w1, #0x10001                                
+    0x091fa0 mov     w2, w20                                     
+    0x091fa4 mov     w3, #4                                      
+    0x091fa8 bl      #0x91fa8                                    
+    0x091fb0 cbz     w0, #0x91fdc                                
+    0x091fb4 mov     x2, #0                                      
+    0x091fc8 mov     w1, #2                                      
+    0x091fd0 mov     x3, x19                                     
+    0x091fd8 bl      #0x91fd8                                    
+=== [ 88] hdd_we_set_channel 0x091ff0 size=244
+    0x092004 mov     x2, #0                                      
+    0x09201c mov     w21, w1                                     
+    0x09203c mov     w1, #8                                      
+    0x092040 mov     x3, x19                                     
+    0x092048 bl      #0x92048                                    
+    0x092050 cbz     x0, #0x920d0                                
+    0x092064 ldrb    w2, [x20, #0x98]                            
+    0x092068 mov     w1, w21                                     
+    0x09206c bl      #0x9206c                                    
+    0x092074 cbz     w0, #0x920a0                                
+    0x092078 mov     x2, #0                                      
+    0x09208c mov     w1, #2                                      
+    0x092094 mov     x3, x19                                     
+    0x09209c bl      #0x9209c                                    
+    0x0920a4 bl      #0x920a4                                    
+    0x0920a8 b       #0x920d4                                    
+    0x0920ac mov     x2, #0                                      
+    0x0920c0 mov     w1, #2                                      
+    0x0920c8 mov     x3, x19                                     
+    0x0920cc bl      #0x920cc                                    
+=== [ 89] hdd_we_set_conc_system_pref 0x0920e8 size=112
+    0x0920f4 mov     x2, #0                                      
+    0x0920f8 mov     x3, #0                                      
+    0x092104 mov     w19, w1                                     
+    0x092124 mov     w1, #8                                      
+    0x09212c bl      #0x9212c                                    
+    0x092134 cbz     x0, #0x92148                                
+    0x092138 mov     w1, w19                                     
+    0x09213c bl      #0x9213c                                    
+    0x092144 b       #0x9214c                                    
+=== [ 91] hdd_we_set_11ax_rate 0x092158 size=24
+    0x092160 mov     x2, xzr                                     
+    0x092164 bl      #0x92164                                    
+=== [ 92] hdd_we_set_dcm 0x092170 size=184
+    0x092184 mov     x2, #0                                      
+    0x09219c mov     w20, w1                                     
+    0x0921c0 mov     w1, #8                                      
+    0x0921c4 mov     x3, x19                                     
+    0x0921cc bl      #0x921cc                                    
+    0x0921d4 mov     w1, #0x6a                                   
+    0x0921d8 mov     w2, w20                                     
+    0x0921dc mov     w3, #1                                      
+    0x0921e0 bl      #0x921e0                                    
+    0x0921e8 cbz     w0, #0x92214                                
+    0x0921ec mov     x2, #0                                      
+    0x092200 mov     w1, #2                                      
+    0x092208 mov     x3, x19                                     
+    0x092210 bl      #0x92210                                    
+=== [ 93] hdd_we_set_range_ext 0x092228 size=184
+    0x09223c mov     x2, #0                                      
+    0x092254 mov     w20, w1                                     
+    0x092278 mov     w1, #8                                      
+    0x09227c mov     x3, x19                                     
+    0x092284 bl      #0x92284                                    
+    0x09228c mov     w1, #0x6b                                   
+    0x092290 mov     w2, w20                                     
+    0x092294 mov     w3, #1                                      
+    0x092298 bl      #0x92298                                    
+    0x0922a0 cbz     w0, #0x922cc                                
+    0x0922a4 mov     x2, #0                                      
+    0x0922b8 mov     w1, #2                                      
+    0x0922c0 mov     x3, x19                                     
+    0x0922c8 bl      #0x922c8                                    
+=== [ 94] hdd_we_set_wow_data_inactivity_timeout 0x0922e0 size=188
+    0x0922f4 cbz     x9, #0x92350                                
+    0x0922f8 mov     w5, w1                                      
+    0x0922fc sub     w9, w1, #1                                  
+    0x09230c mov     w1, w5                                      
+    0x092310 bl      #0x92310                                    
+    0x092318 b       #0x92354                                    
+    0x092360 mov     x2, #0                                      
+    0x092364 mov     x3, #0                                      
+    0x092388 mov     w1, #2                                      
+    0x09238c bl      #0x9238c                                    
+    0x092398 b       #0x92354                                    
+=== [ 95] hdd_handle_pdev_reset 0x0923a0 size=176
+    0x0923ac mov     x2, #0                                      
+    0x0923b0 mov     x3, #0                                      
+    0x0923bc mov     w19, w1                                     
+    0x0923dc mov     w1, #8                                      
+    0x0923e4 bl      #0x923e4                                    
+    0x0923f4 mov     x2, #0                                      
+    0x0923f8 mov     x3, #0                                      
+    0x09241c mov     w1, #3                                      
+    0x092424 bl      #0x92424                                    
+    0x09242c b       #0x92444                                    
+    0x092434 mov     w1, #0x75                                   
+    0x092438 mov     w2, w19                                     
+    0x09243c mov     w3, #2                                      
+    0x092440 bl      #0x92440                                    
+=== [ 96] hdd_we_set_modulated_dtim 0x092450 size=172
+    0x092464 mov     x2, #0                                      
+    0x092474 mov     w19, w1                                     
+    0x092490 mov     w1, #8                                      
+    0x092494 mov     x3, x20                                     
+    0x09249c bl      #0x9249c                                    
+    0x0924a4 cbz     x0, #0x924e8                                
+    0x0924b0 mov     w1, #5                                      
+    0x0924b4 bl      #0x924b4                                    
+    0x0924bc b       #0x924ec                                    
+    0x0924c0 mov     x2, #0                                      
+    0x0924d4 mov     w1, #2                                      
+    0x0924dc mov     x3, x20                                     
+    0x0924e4 bl      #0x924e4                                    
+=== [ 99] wlan_hdd_set_btcoex_mode 0x086e68 size=364
+    0x086e7c cmp     w1, #3                                      
+    0x086ea8 stp     w8, w1, [sp, #0xc]                          
+    0x086ee8 mov     x2, #0                                      
+    0x086eec mov     x3, #0                                      
+    0x086f00 mov     w5, w1                                      
+    0x086f14 mov     w1, #2                                      
+    0x086f18 bl      #0x86f18                                    
+    0x086f1c b       #0x86f98                                    
+    0x086f24 bl      #0x86f24                                    
+    0x086f28 cbz     w0, #0x86fa0                                
+    0x086f64 b       #0x86fa0                                    
+    0x086f68 mov     x2, #0                                      
+    0x086f6c mov     x3, #0                                      
+    0x086f90 mov     w1, #2                                      
+    0x086f94 bl      #0x86f94                                    
+    0x086fd0 bl      #0x86fd0                                    
+=== [100] wlan_hdd_set_btcoex_rssi_threshold 0x086fd8 size=368
+    0x086fec add     w10, w1, #0x64                              
+    0x08701c stp     w8, w1, [sp, #0xc]                          
+    0x08705c mov     x2, #0                                      
+    0x087060 mov     x3, #0                                      
+    0x087074 mov     w5, w1                                      
+    0x087088 mov     w1, #2                                      
+    0x08708c bl      #0x8708c                                    
+    0x087090 b       #0x8710c                                    
+    0x087098 bl      #0x87098                                    
+    0x08709c cbz     w0, #0x87114                                
+    0x0870d8 b       #0x87114                                    
+    0x0870dc mov     x2, #0                                      
+    0x0870e0 mov     x3, #0                                      
+    0x087104 mov     w1, #2                                      
+    0x087108 bl      #0x87108                                    
+    0x087144 bl      #0x87144                                    
