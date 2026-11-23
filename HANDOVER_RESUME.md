@@ -6,7 +6,7 @@
 
 ## 0. v13.2 一句话
 
-**审核 v0132 的 P1「先证明调用链，再审漏洞」已按"证否 + 重定向"完成**：`0x89f1 → hdd_driver_command` 的调用链**存在**，但主语是 `wpa_supplicant` 的 `DRIVER` 通道，不是 `iwpriv`；`/odm/bin/iwpriv` 只发 **WEXT 私有**（`0x8BE0..0x8BFF`，32 handler / 223 参数），所以 **OPPO HAL `executeDriverCommand` 的真实内核端点是 WEXT 私有面**。受限 UID 0 代理对 WEXT SET 面"域满足"，但对 wpa 控制 socket **无 SELinux 权限** ⇒ 走不到 98 项 `hdd_driver_command`。**没有发现新的提权原语；可用 ROOT / 持久 ROOT 仍 NO-GO。**
+**审核 v0132 的 P1「先证明调用链，再审漏洞」已按"证否 + 重定向"完成**：`0x89f1 → hdd_driver_command` 的调用链**存在**，但主语是 `wpa_supplicant` 的 `DRIVER` 通道，不是 `iwpriv`；`/odm/bin/iwpriv` 只发 **WEXT 私有**（`0x8BE0..0x8BFF`，23 父项 / 101 子命令（223 参数）），所以 **OPPO HAL `executeDriverCommand` 的真实内核端点是 WEXT 私有面**。受限 UID 0 代理对 WEXT SET 面"域满足"，但对 wpa 控制 socket **无 SELinux 权限** ⇒ 走不到 98 项 `hdd_driver_command`。**没有发现新的提权原语；可用 ROOT / 持久 ROOT 仍 NO-GO。**
 
 ---
 
