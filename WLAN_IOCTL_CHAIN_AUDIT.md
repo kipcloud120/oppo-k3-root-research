@@ -207,13 +207,13 @@ python tools/scan_ioctl_const.py .build/odm_bin/wpa_supplicant --vals 0x89f0,0x8
 按审核 v0132 的三种可能结论：
 
 1. **调用链不存在 ⇒ 关闭该调用路径。** 适用于 `executeDriverCommand → hdd_driver_command`：**不成立，关闭**。
-2. **调用链存在，但参数/生命周期符合预期 ⇒ 关闭候选。** 适用于 `wpa_supplicant → 0x89f1 → hdd_driver_command`：连接**存在且完整**（本文 §2.2 + §3.1），但（a）输入长度被 `wpa_supplicant` 侧 `0xF8` 与驱动侧 `0x2000` 双重约束，（b）98 handler 的逐项审计见 `WLAN_HANDLER_AUDIT.md`（本轮并行交付）。若该审计未发现具体反例，则此路在"可达主体"层面也不构成新能力——因为**代理打不到它**。
-3. **存在明确的静态安全缺陷 ⇒ 独立报告。** 若 `WLAN_WEXT_HANDLER_AUDIT.md` 报告长度未校验/结构体越界读，则缺陷属于**受限 UID 0 域内的 WEXT 私有面**，影响边界是"驱动状态与内核内存读"，不是"首次 uid 0"（该域命令执行已由 §23 达成）。
+2. **调用链存在，但参数/生命周期符合预期 ⇒ 关闭候选。** 适用于 `wpa_supplicant → 0x89f1 → hdd_driver_command`：连接**存在且完整**（本文 §2.2 + §3.1），输入长度被 `wpa_supplicant` 侧 `0xF8` 与驱动侧 `0x2000` 双重约束；98 handler 审计已完成（`WLAN_HANDLER_AUDIT.md` + `WLAN_RESIDUAL_AUDIT.md`）：**0 个内存破坏反例**（仅 2 个非内存破坏的 H1/H2）。⇒ **关闭候选**；且在"可达主体"层面它本来就不构成新能力——**代理打不到它**。
+3. **存在明确的静态安全缺陷 ⇒ 独立报告。** WEXT 面审计已完成（`WLAN_WEXT_HANDLER_AUDIT.md` + `WLAN_WEXT_HANDLER_AUDIT_2.md`）：**23 父项 + 101 子命令全部可判定（21 有界 / 2 无功能 / 0 未决），0 越界读写反例** ⇒ **本面不产生独立安全报告**；其价值定位为"受限 UID 0 域内的驱动状态/信息面"，且该面已被压到最小（信息泄露方向关闭、唯一写入点与目标尺寸相等或更小）。
 
 **价值排序（本轮结论）**：
-- 候选 A 的正确内核端点 = **WEXT 私有面**（`0x8BE0..0x8BFF`，223 条参数/32 handler），而非 `hdd_driver_command`；
+- 候选 A 的正确内核端点 = **WEXT 私有面**（`0x8BE0..0x8BFF`，223 条参数 / 23 父项 / 101 子命令），而非 `hdd_driver_command`；
 - `hdd_driver_command` 98 项表的正确主语 = **wpa_supplicant DRIVER 通道**，对本项目的可达主体**不构成新面**（除非未来证明代理能拿到 wpa socket，或 shell 的 neverallowx 在内核层不生效）；
-- 因此下一轮深审优先级应改为：**WEXT 私有 handler（代理可达）> 98 handler（wpa 可达，但代理不可达）> FTM（需 con_mode=5）**。
+- **深审已完成**：WEXT 23 父项 + 101 子命令 = 21 有界 / 2 无功能 / 0 未决；98 项 = 0 内存破坏反例。后续只剩**下游/配置级抽样**（`wma_cli_set_command` 的 value 域、`0x8BE5` 输出函数截断、INI `wext_control` 默认值），不再有"未审 handler"。
 
 ---
 
@@ -235,11 +235,11 @@ python tools/scan_ioctl_const.py .build/odm_bin/wpa_supplicant --vals 0x89f0,0x8
 
 ## 7. 未覆盖 / 未决（不得外推）
 
-1. **offline 未做动态验证**：`iwpriv` 在代理域内是否真能完成 `SIOCGIWPRIV` 与私有 ioctl（`SIOCGIWPRIV` 需要 `dev->wireless_handlers` 已注册；`hdd_register_wext` 在模块初始化路径上的实际调用时机未逐行核到）。**未决**，需要一次只读动态（`iwpriv wlan0 -a` 之类的只读枚举）并有独立授权。
+1. **offline 未做动态验证**：`iwpriv` 在代理域内是否真能完成 `SIOCGIWPRIV` 与私有 ioctl（`SIOCGIWPRIV` 需要 `dev->wireless_handlers` 已注册）。**注册侧已核**：`hdd_register_wext` 由 `hdd_init_station_mode+0xc8` / `hdd_start_adapter+0x1c8` / `hdd_init_nan_data_mode+0xfc` 以 CALL26 调用（STA 启动路径注册 `we_handler_def`）。剩余是"运行时返回值"：需一次只读动态（`iwpriv wlan0 -a` 之类的只读枚举）并有独立授权。
 2. **SELinux xperm 对 socket fd 的生效性**：本机内核树无 `socket_ioctl` 钩子，`file_ioctl` 对 socket inode 的 `sclass` 处理未逐行定论；`neverallowx` 是策略层证据，不等于运行时拒绝。**未决**。
-3. **`wpa_supplicant` 第 3/4 处 `0x89f1` 的具体命令族**：本轮只逐指令确认了结构一致与 1/2 处语义；3/4 处的命令字符串未全部还原。**不影响"连接存在"的结论**，但影响"哪些 DRIVER 子命令能打到 98 表"的完备枚举。
+3. **`wpa_supplicant` 4 处 `0x89f1` 的命令族**：已由 `ioctl_const_inventory.md` §4 归属——`0x2a22f4` PNOFORCE、`0x2ac688` `ops->sched_scan`（PNOSETUP）、`0x2c2a14` `wpa_driver_nl80211_driver_cmd` 通用透传、`0x2c2edc` `GETCOUNTRYREV` helper；控制链 `"DRIVER "`（`0x213bdc`）→ `0x226748` → `wpa_drv_driver_cmd`（`0x212924`）→ `ops+0x308`（`0x314510`）。**已闭合**。
 4. **`/odm/bin/iwpriv_vendor`**：与 iwpriv 结构同源，本文按同版处理；未逐字节 diff。
-5. **FTM `0x89fd`**：不在本文范围，见 `WLAN_FTM_AUDIT.md`。
+5. **FTM `0x89fd`**：不在本文范围，见 `WLAN_FTM_AUDIT.md` + `WLAN_RESIDUAL_AUDIT.md`（U1/U2 已收口）。
 6. **厂商源码缺失**：qcacld-3.0 完整源码未取得；所有驱动侧结论为**本机 .ko 反汇编 + 厂商 WEXT 表结构**，不外推到"源码里没有校验"。
 
 ---
