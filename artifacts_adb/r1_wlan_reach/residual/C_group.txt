@@ -1,0 +1,575 @@
+# FTM 用户态工具 ioctl 面（纯离线）
+
+== .build/vendor_bins/vendor/bin/myftm  (225752 B, PLT 95, DT_NEEDED 7)
+   DT_NEEDED: libcutils.so libz.so libnl.so libc++.so libc.so libm.so libdl.so
+   通道相关导入: netlink=['bind', 'genl_connect', 'nl_send_auto_complete', 'nl_socket_add_membership', 'nl_socket_alloc', 'socket'] chardev=['open'] libnl=['libnl.so'] libdiag=-
+   ioctl 导入: NO ；bl ioctl@plt 调用点: 0
+   32 位常量（ioctl-like 粗清单，0 个；真实请求码以调用点为准）:
+   0x89fd/0x89f1 字面量命中: 无
+   设备/通道字符串:
+     .dynstr @0xf1d  'genl_connect'
+     .dynstr @0xf2a  'genl_ctrl_alloc_cache'
+     .dynstr @0xf40  'genl_ctrl_search_by_name'
+     .dynstr @0xf59  'genl_family_get_id'
+     .dynstr @0xf6c  'genl_family_put'
+     .dynstr @0xf7c  'genlmsg_attrdata'
+     .dynstr @0xf8d  'genlmsg_attrlen'
+     .dynstr @0xf9d  'genlmsg_put'
+     .rodata @0x4b1f  "couldn't init nl80211!: %s"
+     .rodata @0x54a4  'nl80211'
+     .rodata @0x5993  'nl80211: cb wrapper called'
+     .rodata @0x5df5  'nl80211 not found.'
+     .rodata @0x68db  'nl80211: sending message'
+     .rodata @0x720b  'nl80211: unknown ep!'
+     .rodata @0x82bb  'nl80211: waiting for response'
+     .rodata @0x8741  'nl80211: resp received, calling custom cb'
+     .rodata @0x9238  'nl80211: Failed to allocate generic netlink cache'
+   >>> 通道判定: netlink
+
+== .build/vendor_bins/vendor/bin/ftmdaemon  (163632 B, PLT 150, DT_NEEDED 11)
+   DT_NEEDED: libnl.so libbt-hidlclient.so libdiag.so libcutils.so liblog.so libhardware.so libbtnv.so libc++.so libc.so libm.so libdl.so
+   通道相关导入: netlink=['genl_connect', 'nl_send_auto_complete', 'nl_socket_add_membership', 'nl_socket_alloc'] chardev=['ioctl', 'open', '__open_2'] libnl=['libnl.so'] libdiag=['libdiag.so']
+   ioctl 导入: YES ；bl ioctl@plt 调用点: 32
+     ioctl@0xd4fc  request=0x707  fd_const=-  fd_slot=-  func=0xd450
+        00d4d0 sturh   wzr, [x29, #-0x16]
+        00d4d4 sturh   w24, [x29, #-0x14]
+        00d4dc sub     x8, x29, #0x18
+        00d4e0 mov     w9, #1
+        00d4e4 stp     x8, xzr, [x29, #-0x28]
+        00d4e8 stur    w9, [x29, #-0x20]
+        00d4ec tbnz    w19, #0x1f, #0xd508
+        00d4f0 sub     x2, x29, #0x28
+        00d4f4 mov     w1, #0x707
+        00d4f8 mov     w0, w19
+     ioctl@0xd5a4  request=0x707  fd_const=-  fd_slot=-  func=0xd538
+        00d57c stp     xzr, x2, [sp, #0x28]
+        00d580 strh    w4, [sp, #0x18]
+        00d584 strh    w4, [sp, #0x28]
+        00d588 strh    w9, [sp, #0x2a]
+        00d58c strh    w10, [sp, #0x2c]
+        00d590 stp     x8, xzr, [sp]
+        00d594 str     w11, [sp, #8]
+        00d598 tbnz    w0, #0x1f, #0xd5b0
+        00d59c mov     x2, sp
+        00d5a0 mov     w1, #0x707
+     ioctl@0xdf30  request=0x4004e901  fd_const=-  fd_slot=('stack', 16)  func=0xdf0c
+        00df08 ret     
+        00df0c stp     x29, x30, [sp, #-0x20]!
+        00df10 str     x19, [sp, #0x10]
+        00df14 mov     x29, sp
+        00df18 adrp    x19, #0x27000
+        00df1c ldr     w0, [x19, #0x4dc]
+        00df20 tbnz    w0, #0x1f, #0xdf58
+        00df24 mov     w1, #0xe901
+        00df28 movk    w1, #0x4004, lsl #16
+        00df2c mov     w2, #1
+     ioctl@0xdf78  request=0x4004e901  fd_const=-  fd_slot=-  func=0xdf60
+        00df48 add     x1, x1, #0x55
+        00df50 mov     w0, #-2
+        00df54 b       #0xdfdc
+        00df58 mov     w0, #-1
+        00df5c b       #0xdfdc
+        00df60 mov     w0, #0x3e8
+        00df68 ldr     w0, [x19, #0x4dc]
+        00df6c mov     w1, #0xe901
+        00df70 movk    w1, #0x4004, lsl #16
+        00df74 mov     w2, wzr
+     ioctl@0xdfb8  request=0x4004e901  fd_const=-  fd_slot=-  func=0xdfa0
+        00df88 adrp    x1, #0x9000
+        00df8c add     x0, x0, #0xb7d
+        00df90 add     x1, x1, #0x55
+        00df98 mov     w0, #-3
+        00df9c b       #0xdfdc
+        00dfa0 mov     w0, #0x3e8
+        00dfa8 ldr     w0, [x19, #0x4dc]
+        00dfac mov     w1, #0xe901
+        00dfb0 movk    w1, #0x4004, lsl #16
+        00dfb4 mov     w2, #1
+     ioctl@0xe858  request=0x4004e909  fd_const=-  fd_slot=-  func=0xe83c
+        00e830 adrp    x0, #0x4000
+        00e834 add     x0, x0, #0x308
+        00e838 b       #0xe6ac
+        00e83c cmn     w19, #1
+        00e840 b.eq    #0xe830
+        00e844 cbz     w24, #0xe874
+        00e848 ldr     w0, [x20, #0x4dc]
+        00e84c mov     w1, #0xe909
+        00e850 movk    w1, #0x4004, lsl #16
+        00e854 mov     w2, wzr
+     ioctl@0xe9a8  request=0x4004e901  fd_const=-  fd_slot=-  func=0xe998
+        00e97c cbnz    w8, #0xe9cc
+        00e984 tbz     w0, #0x1f, #0xe9e0
+        00e988 mov     w2, w0
+        00e98c adrp    x0, #0x4000
+        00e990 add     x0, x0, #0x63d
+        00e994 b       #0xe9bc
+        00e998 ldr     w0, [x19, #0x4dc]
+        00e99c mov     w1, #0xe901
+        00e9a0 movk    w1, #0x4004, lsl #16
+        00e9a4 mov     w2, #2
+     ioctl@0xfb9c  request=reg/undetermined  fd_const=-  fd_slot=-  func=0xfb80
+        00fb6c add     x0, x0, #0xbb4
+        00fb70 adrp    x1, #0x4000
+        00fb74 add     x1, x1, #0x92a
+        00fb7c b       #0xfd8c
+        00fb84 tbnz    w0, #0x1f, #0xfc4c
+        00fb88 ldr     w0, [x28]
+        00fb8c mov     w8, #0xe901
+        00fb90 movk    w8, #0x4004, lsl #16
+        00fb94 orr     w1, w8, #8
+        00fb98 mov     w2, wzr
+     ioctl@0xfd50  request=0x4004e901  fd_const=-  fd_slot=-  func=0xfc8c
+        func strings: '/vendor/lib/libpn548ad_fw.so' | '/vendor/lib/libpn553_fw.so' | 'gphDnldNfc_DlSeq' | 'gphDnldNfc_DlSeqSz'
+        00fd28 and     w10, w8, #0xffff
+        00fd2c mov     w11, #2
+        00fd30 mov     w12, #4
+        00fd34 cmp     w9, #1
+        00fd38 mov     w1, #0xe901
+        00fd3c csel    w8, w8, w10, eq
+        00fd40 csel    w2, w12, w11, eq
+        00fd44 movk    w1, #0x4004, lsl #16
+        00fd48 str     x20, [sp, #0x10]
+        00fd4c str     w8, [sp, #0x18]
+     ioctl@0x10088  request=0x4004e901  fd_const=-  fd_slot=-  func=0x1003c
+        func strings: 'After firmware update...'
+        01005c add     x0, sp, #0x10
+        010060 add     x19, sp, #0x10
+        010068 adrp    x8, #0x27000
+        01006c ldr     w8, [x8, #0x69c]
+        010070 cmp     w8, #1
+        010074 b.ne    #0x1009c
+        010078 ldr     w0, [x28]
+        01007c mov     w1, #0xe901
+        010080 movk    w1, #0x4004, lsl #16
+        010084 mov     w2, #6
+     ioctl@0x10540  request=reg/undetermined  fd_const=-  fd_slot=-  func=0x1043c
+        func strings: '/dev/ese'
+        010514 mov     w19, w0
+        010518 tbnz    w0, #0x1f, #0x10680
+        01051c adrp    x0, #0x7000
+        010520 mov     w22, #0xea01
+        010524 add     x0, x0, #0xf95
+        010528 mov     w1, w19
+        01052c movk    w22, #0x4004, lsl #16
+        010534 add     w1, w22, #1
+        010538 mov     w2, #1
+        01053c mov     w0, w19
+     ioctl@0x10568  request=0x4004ea01  fd_const=-  fd_slot=-  func=0x1043c
+        func strings: '/dev/ese'
+        01053c mov     w0, w19
+        010544 adrp    x8, #0x1e000
+        010548 ldr     x8, [x8, #0x500]
+        01054c ldr     w8, [x8]
+        010550 cmp     w8, #0x37
+        010554 b.eq    #0x1056c
+        010558 mov     w1, #0xea01
+        01055c movk    w1, #0x4004, lsl #16
+        010560 mov     w2, #1
+        010564 mov     w0, w19
+     ioctl@0x10578  request=reg/undetermined  fd_const=-  fd_slot=-  func=0x1043c
+        func strings: '/dev/ese'
+        01054c ldr     w8, [x8]
+        010550 cmp     w8, #0x37
+        010554 b.eq    #0x1056c
+        010558 mov     w1, #0xea01
+        01055c movk    w1, #0x4004, lsl #16
+        010560 mov     w2, #1
+        010564 mov     w0, w19
+        01056c add     w1, w22, #2
+        010570 mov     w0, w19
+        010574 mov     w2, w20
+     ioctl@0x109d0  request=reg/undetermined  fd_const=-  fd_slot=-  func=0x109b4
+        0109a4 adrp    x0, #0x23000
+        0109a8 add     x0, x0, #0x594
+        0109ac mov     w1, #0xd
+        0109b0 b       #0x10c38
+        0109b8 tbnz    w0, #0x1f, #0x10a64
+        0109bc ldr     w0, [x26]
+        0109c0 mov     w8, #0xe902
+        0109c4 movk    w8, #0x4004, lsl #16
+        0109c8 add     w1, w8, #7
+        0109cc mov     w2, wzr
+     ioctl@0x10c00  request=0x4004e902  fd_const=-  fd_slot=-  func=0x10bf0
+        010bd8 mov     w8, #1
+        010bdc b       #0x10cc8
+        010be0 mov     w2, w0
+        010be4 adrp    x0, #0x8000
+        010be8 add     x0, x0, #0xa5f
+        010bec b       #0x10da8
+        010bf0 ldr     w0, [x26]
+        010bf4 mov     w1, #0xe902
+        010bf8 movk    w1, #0x4004, lsl #16
+        010bfc mov     w2, #1
+     ioctl@0x12600  request=0xbfac  fd_const=-  fd_slot=-  func=0x12584
+        func strings: '/dev/btpower'
+        0125d0 add     x0, x0, #0x4b5
+        0125d8 adrp    x0, #0x8000
+        0125dc add     x0, x0, #0x886
+        0125e0 mov     w2, #0x800
+        0125e4 mov     w1, wzr
+        0125ec adrp    x22, #0x27000
+        0125f0 str     w0, [x22, #0x258]
+        0125f4 tbnz    w0, #0x1f, #0x128ac
+        0125f8 mov     w1, #0xbfac
+        0125fc mov     x2, xzr
+     ioctl@0x174f4  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17490
+        0174c8 stur    x8, [x29, #-8]
+        0174cc stp     x9, xzr, [sp]
+        0174d0 stp     q0, q0, [sp, #0x20]
+        0174d4 str     xzr, [sp, #0x10]
+        0174d8 str     wzr, [sp, #0x18]
+        0174e0 adrp    x21, #0x27000
+        0174e4 ldr     w0, [x21, #0x290]
+        0174e8 mov     w1, #0x561c
+        0174ec mov     x2, sp
+        0174f0 movk    w1, #0xc008, lsl #16
+     ioctl@0x1751c  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17490
+        0174f0 movk    w1, #0xc008, lsl #16
+        0174f8 tbnz    w0, #0x1f, #0x175b0
+        0174fc ldrh    w8, [x19, #8]
+        017500 ldr     w0, [x21, #0x290]
+        017504 mov     w22, #0x902
+        017508 mov     w1, #0x561c
+        01750c movk    w22, #0x9b, lsl #16
+        017510 mov     x2, sp
+        017514 movk    w1, #0xc008, lsl #16
+        017518 stp     w22, w8, [sp]
+     ioctl@0x17548  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17490
+        017520 tbnz    w0, #0x1f, #0x175c0
+        017524 mov     w8, #0x15
+        017528 movk    w8, #0x800, lsl #16
+        01752c str     w8, [sp]
+        017530 ldr     w8, [x19, #4]
+        017534 ldr     w0, [x21, #0x290]
+        017538 mov     w1, #0x561c
+        01753c mov     x2, sp
+        017540 movk    w1, #0xc008, lsl #16
+        017544 str     w8, [sp, #4]
+     ioctl@0x1758c  request=0xc0205648  fd_const=-  fd_slot=-  func=0x17490
+        017564 ldr     d0, [x10, #0xe70]
+        017568 ldr     w8, [x19]
+        01756c ldr     w0, [x21, #0x290]
+        017570 mov     w1, #0x5648
+        017574 add     x9, sp, #8
+        017578 add     x2, sp, #0x20
+        01757c movk    w1, #0xc020, lsl #16
+        017580 str     d0, [sp, #0x20]
+        017584 str     w8, [sp, #0xc]
+        017588 str     x9, [sp, #0x38]
+     ioctl@0x17664  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17618
+        017638 adrp    x0, #0x5000
+        01763c movk    w9, #0x800, lsl #16
+        017640 add     x0, x0, #0x727
+        017644 str     x8, [sp, #8]
+        017648 str     x9, [sp]
+        017650 adrp    x8, #0x27000
+        017654 ldr     w0, [x8, #0x290]
+        017658 mov     w1, #0x561c
+        01765c mov     x2, sp
+        017660 movk    w1, #0xc008, lsl #16
+     ioctl@0x17750  request=0xc008561c  fd_const=-  fd_slot=-  func=0x176b8
+        017728 ldr     d0, [x9, #0xe88]
+        01772c ldr     w0, [x21, #0x290]
+        017730 mov     w22, #0x902
+        017734 movk    w22, #0x9b, lsl #16
+        017738 mov     w1, #0x561c
+        01773c orr     w10, w22, #4
+        017740 add     x2, sp, #8
+        017744 movk    w1, #0xc008, lsl #16
+        017748 stp     w10, w8, [sp, #0x10]
+        01774c str     d0, [sp, #8]
+     ioctl@0x17770  request=0xc008561c  fd_const=-  fd_slot=-  func=0x176b8
+        017744 movk    w1, #0xc008, lsl #16
+        017748 stp     w10, w8, [sp, #0x10]
+        01774c str     d0, [sp, #8]
+        017754 tbnz    w0, #0x1f, #0x177b4
+        017758 ldrh    w8, [x19, #4]
+        01775c ldr     w0, [x21, #0x290]
+        017760 mov     w1, #0x561c
+        017764 add     x2, sp, #8
+        017768 movk    w1, #0xc008, lsl #16
+        01776c stp     w22, w8, [sp, #8]
+     ioctl@0x17788  request=0xc0205648  fd_const=-  fd_slot=-  func=0x176b8
+        01775c ldr     w0, [x21, #0x290]
+        017760 mov     w1, #0x561c
+        017764 add     x2, sp, #8
+        017768 movk    w1, #0xc008, lsl #16
+        01776c stp     w22, w8, [sp, #8]
+        017774 tbnz    w0, #0x1f, #0x177c0
+        017778 ldr     w0, [x21, #0x290]
+        01777c mov     w1, #0x5648
+        017780 add     x2, sp, #0x28
+        017784 movk    w1, #0xc020, lsl #16
+     ioctl@0x1784c  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17800
+        017820 add     x0, x0, #0xa95
+        017824 str     x8, [sp, #8]
+        01782c adrp    x8, #0x27000
+        017830 ldr     w0, [x8, #0x290]
+        017834 mov     w8, #0x17
+        017838 mov     w1, #0x561c
+        01783c movk    w8, #0x800, lsl #16
+        017840 mov     x2, sp
+        017844 movk    w1, #0xc008, lsl #16
+        017848 str     x8, [sp]
+     ioctl@0x17eb0  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17e08
+        017e84 adrp    x23, #0x28000
+        017e88 ldrb    w8, [x23, #0x24]
+        017e8c cbz     w8, #0x17ee0
+        017e90 adrp    x0, #0x5000
+        017e94 add     x0, x0, #0x727
+        017e98 str     x22, [sp, #8]
+        017ea0 ldr     w0, [x21, #0x290]
+        017ea4 mov     w1, #0x561c
+        017ea8 add     x2, sp, #8
+        017eac movk    w1, #0xc008, lsl #16
+     ioctl@0x17f10  request=0xc008561c  fd_const=-  fd_slot=-  func=0x17ed4
+        func strings: 'Failed to stop Transmit PS'
+        017ee4 ldrb    w8, [x23, #0x20]
+        017ee8 cbz     w8, #0x17f38
+        017eec adrp    x0, #0x5000
+        017ef0 add     x0, x0, #0xa95
+        017ef8 ldr     w0, [x21, #0x290]
+        017efc mov     w1, #0x561c
+        017f00 add     x8, x22, #1
+        017f04 add     x2, sp, #8
+        017f08 movk    w1, #0xc008, lsl #16
+        017f0c str     x8, [sp, #8]
+     ioctl@0x17f4c  request=0xc054561d  fd_const=-  fd_slot=-  func=0x17f2c
+        func strings: 'Failed to stop Transmit RT'
+        017f1c add     x0, x0, #0xad7
+        017f24 strb    wzr, [x23, #0x20]
+        017f28 b       #0x17f38
+        017f2c adrp    x0, #0x7000
+        017f30 add     x0, x0, #0x2d3
+        017f38 ldr     w0, [x21, #0x290]
+        017f3c mov     w1, #0x561d
+        017f40 add     x2, sp, #0x10
+        017f44 movk    w1, #0xc054, lsl #16
+        017f48 str     wzr, [sp, #0x10]
+     ioctl@0x17fd4  request=0x402c5639  fd_const=-  fd_slot=('stack', 192)  func=0x17fc4
+        017fac ldp     x20, x19, [sp, #0xe0]
+        017fb0 ldp     x22, x21, [sp, #0xd0]
+        017fb4 ldr     x23, [sp, #0xc0]
+        017fb8 ldp     x29, x30, [sp, #0xb0]
+        017fbc add     sp, sp, #0xf0
+        017fc0 ret     
+        017fc4 ldr     w0, [x21, #0x290]
+        017fc8 mov     w1, #0x5639
+        017fcc sub     x2, x29, #0x40
+        017fd0 movk    w1, #0x402c, lsl #16
+     ioctl@0x185d0  request=0xc008561c  fd_const=-  fd_slot=('stack', 16)  func=0x18590
+        0185a8 and     w19, w0, #0xff
+        0185ac mov     w1, #0x561c
+        0185b0 mov     x2, sp
+        0185b4 str     x8, [sp, #8]
+        0185b8 adrp    x8, #0x27000
+        0185bc ldr     w0, [x8, #0x290]
+        0185c0 mov     w8, #0x971
+        0185c4 movk    w8, #0x9b, lsl #16
+        0185c8 movk    w1, #0xc008, lsl #16
+        0185cc stp     w8, w19, [sp]
+     ioctl@0x18668  request=0xc008561c  fd_const=-  fd_slot=('stack', 8)  func=0x18624
+        018640 and     w9, w0, #0xff
+        018644 mov     w1, #0x561c
+        018648 mov     x2, sp
+        01864c str     x8, [sp, #8]
+        018650 adrp    x8, #0x27000
+        018654 ldr     w0, [x8, #0x290]
+        018658 mov     w8, #0x26
+        01865c movk    w8, #0x800, lsl #16
+        018660 movk    w1, #0xc008, lsl #16
+        018664 stp     w8, w9, [sp]
+     ioctl@0x188e8  request=0xc0205648  fd_const=-  fd_slot=-  func=0x18864
+        0188bc add     w8, w8, #2
+        0188c0 add     x0, x0, #0xfd9
+        0188c4 str     d0, [sp, #0x20]
+        0188c8 str     w8, [sp, #0xc]
+        0188cc str     x9, [sp, #0x38]
+        0188d4 adrp    x8, #0x27000
+        0188d8 ldr     w0, [x8, #0x290]
+        0188dc mov     w1, #0x5648
+        0188e0 add     x2, sp, #0x20
+        0188e4 movk    w1, #0xc020, lsl #16
+   32 位常量（ioctl-like 粗清单，28 个；真实请求码以调用点为准）:
+     0x4004e901  @0xdf28  mov+movk     
+     0x4004e901  @0xdf70  mov+movk     
+     0x4004e901  @0xdfb0  mov+movk     
+     0x4004e909  @0xe850  mov+movk     
+     0x4004e901  @0xe9a0  mov+movk     
+     0x4004e901  @0xfb90  mov+movk     
+     0x4004e901  @0xfd44  mov+movk     
+     0x4004e901  @0x10080  mov+movk     
+     0x4004ea01  @0x1052c  mov+movk     
+     0x4004ea01  @0x1055c  mov+movk     
+     0x4004e902  @0x109c4  mov+movk     
+     0x4004e902  @0x10bf8  mov+movk     
+     0xc008561c  @0x174f0  mov+movk     
+     0xc008561c  @0x17514  mov+movk     
+     0xc008561c  @0x17540  mov+movk     
+     0xc0205648  @0x1757c  mov+movk     
+     0xc008561c  @0x17660  mov+movk     
+     0xc008561c  @0x17744  mov+movk     
+     0xc008561c  @0x17768  mov+movk     
+     0xc0205648  @0x17784  mov+movk     
+     0xc008561c  @0x17844  mov+movk     
+     0xc008561c  @0x17eac  mov+movk     
+     0xc008561c  @0x17f08  mov+movk     
+     0xc054561d  @0x17f44  mov+movk     
+   0x89fd/0x89f1 字面量命中: 无
+   设备/通道字符串:
+     .dynstr @0x17ea  'genl_connect'
+     .dynstr @0x17f7  'genl_ctrl_alloc_cache'
+     .dynstr @0x180d  'genl_ctrl_search_by_name'
+     .dynstr @0x1826  'genl_family_get_id'
+     .dynstr @0x1839  'genl_family_put'
+     .dynstr @0x1849  'genlmsg_attrdata'
+     .dynstr @0x185a  'genlmsg_attrlen'
+     .dynstr @0x186a  'genlmsg_put'
+     .rodata @0x3874  '/dev/ttyHS0'
+     .rodata @0x3ab1  "couldn't init nl80211!: %s"
+     .rodata @0x45b1  'nl80211'
+     .rodata @0x4c28  'nl80211: cb wrapper called'
+     .rodata @0x528e  '/dev/i2c-4'
+     .rodata @0x5458  'nl80211 not found.'
+     .rodata @0x61a2  '/dev/smd5'
+     .rodata @0x64f3  'nl80211: sending message'
+     .rodata @0x69aa  '/dev/ese'
+     .rodata @0x6a52  '/dev/smd3'
+     .rodata @0x73ea  'nl80211: unknown ep!'
+     .rodata @0x848a  '/dev/nq-nci'
+     .rodata @0x8886  '/dev/btpower'
+     .rodata @0x89c4  'nl80211: waiting for response'
+     .rodata @0x8fb2  'nl80211: resp received, calling custom cb'
+     .rodata @0x9642  'nl80211: Failed to allocate generic netlink cache'
+   >>> 通道判定: chardev+ioctl
+   /dev 节点 → 引用函数 → 是否含 ioctl:
+     /dev/ttyHS0    xref@0x013420 func=0x0133d0 ioctl_in_func=N
+     /dev/i2c-4     xref@0x01156c func=0x01133c ioctl_in_func=N
+     /dev/smd5      xref@0x01a304 func=0x01a2f0 ioctl_in_func=N
+     /dev/ese       xref@0x010508 func=0x01043c ioctl_in_func=Y
+     /dev/smd3      xref@0x01341c func=0x0133d0 ioctl_in_func=N
+     /dev/nq-nci    xref@0x00def0 func=0x00dee4 ioctl_in_func=N
+     /dev/nq-nci    xref@0x00ea0c func=0x00e9cc ioctl_in_func=N
+     /dev/nq-nci    xref@0x00eb0c func=0x00eb08 ioctl_in_func=N
+     /dev/btpower   xref@0x0125dc func=0x012584 ioctl_in_func=Y
+
+== .build/vendor_bins/vendor/bin/ftmtest  (29952 B, PLT 65, DT_NEEDED 6)
+   DT_NEEDED: libnl.so libaoa.so libc++.so libc.so libm.so libdl.so
+   通道相关导入: netlink=['genl_connect', 'nl_send_auto_complete', 'nl_socket_get_fd'] chardev=- libnl=['libnl.so'] libdiag=-
+   ioctl 导入: NO ；bl ioctl@plt 调用点: 0
+   32 位常量（ioctl-like 粗清单，0 个；真实请求码以调用点为准）:
+   0x89fd/0x89f1 字面量命中: 无
+   设备/通道字符串:
+     .dynstr @0xb2a  'genl_connect'
+     .dynstr @0xb37  'genl_ctrl_resolve'
+     .dynstr @0xb49  'genlmsg_attrdata'
+     .dynstr @0xb5a  'genlmsg_attrlen'
+     .dynstr @0xb6a  'genlmsg_put'
+     .rodata @0x1a07  'nl80211'
+     .rodata @0x1a9c  'failed to get nl80211 family, error %d'
+   >>> 通道判定: netlink
+
+== .build/odm_bin/iwpriv  (20488 B, PLT 37, DT_NEEDED 4)
+   DT_NEEDED: libc++.so libc.so libm.so libdl.so
+   通道相关导入: netlink=['socket'] chardev=['ioctl'] libnl=- libdiag=-
+   ioctl 导入: YES ；bl ioctl@plt 调用点: 8
+     ioctl@0x2a24  request=reg/undetermined  fd_const=-  fd_slot=('stack', 16)  func=0x29f8
+        0029fc add     x9, sp, #0xa0
+        002a00 str     x8, [x9, #0x1010]
+        002a04 ldr     w8, [sp, #0xc]
+        002a08 sturh   w8, [x29, #-0x26]
+        002a0c ldr     x26, [sp, #0x10]
+        002a10 mov     w8, #0x18
+        002a14 madd    x22, x23, x8, x21
+        002a18 ldr     w1, [x22]
+        002a1c sub     x2, x29, #0x40
+        002a20 mov     w0, w28
+     ioctl@0x2f38  request=0x8912  fd_const=-  fd_slot=-  func=0x2f24
+        002f08 mov     x0, x24
+        002f0c ldr     x3, [x8]
+        002f14 b       #0x2ee0
+        002f18 mov     x0, x23
+        002f20 b       #0x2f88
+        002f24 add     x2, sp, #8
+        002f28 mov     w1, #0x8912
+        002f2c mov     w0, w22
+        002f30 str     w24, [sp, #8]
+        002f34 str     x25, [sp, #0x10]
+     ioctl@0x325c  request=0x8b01  fd_const=-  fd_slot=-  func=0x31f0
+        00322c stur    x8, [x29, #-8]
+        003230 stp     q0, q0, [x9]
+        003234 mov     w22, #0x498
+        003238 add     x23, sp, #8
+        003240 sub     x0, x29, #0x30
+        003244 mov     w2, #0x10
+        003248 mov     x1, x19
+        003250 sub     x2, x29, #0x30
+        003254 mov     w1, #0x8b01
+        003258 mov     w0, w20
+     ioctl@0x3298  request=0x8b0b  fd_const=-  fd_slot=-  func=0x31f0
+        003268 mov     w2, #0x498
+        00326c mov     w1, wzr
+        003274 sub     x0, x29, #0x30
+        003278 mov     w2, #0x10
+        00327c mov     x1, x19
+        003280 stur    x23, [x29, #-0x20]
+        003284 stur    w22, [x29, #-0x18]
+        00328c sub     x2, x29, #0x30
+        003290 mov     w1, #0x8b0b
+        003294 mov     w0, w20
+     ioctl@0x33c0  request=0x8b0d  fd_const=-  fd_slot=-  func=0x3338
+        003394 mov     x23, x0
+        003398 str     x0, [sp, #0x10]
+        00339c mov     x0, sp
+        0033a0 mov     w2, #0x10
+        0033a4 mov     x1, x20
+        0033a8 strh    w25, [sp, #0x18]
+        0033ac strh    wzr, [sp, #0x1a]
+        0033b4 mov     x2, sp
+        0033b8 mov     w1, #0x8b0d
+        0033bc mov     w0, w21
+     ioctl@0x3600  request=0x8927  fd_const=-  fd_slot=-  func=0x35b0
+        0035d4 movi    v0.2d, #0000000000000000
+        0035d8 mov     x0, sp
+        0035dc mov     w2, #0x10
+        0035e0 mov     x19, x1
+        0035e4 stur    x8, [x29, #-8]
+        0035e8 str     xzr, [sp, #0x20]
+        0035ec stp     q0, q0, [sp]
+        0035f4 mov     x2, sp
+        0035f8 mov     w1, #0x8927
+        0035fc mov     w0, w20
+     ioctl@0x36b4  request=0x8915  fd_const=-  fd_slot=('stack', 64)  func=0x3664
+        003688 movi    v0.2d, #0000000000000000
+        00368c mov     x0, sp
+        003690 mov     w2, #0x10
+        003694 mov     x19, x1
+        003698 stur    x8, [x29, #-8]
+        00369c str     xzr, [sp, #0x20]
+        0036a0 stp     q0, q0, [sp]
+        0036a8 mov     x2, sp
+        0036ac mov     w1, #0x8915
+        0036b0 mov     w0, w20
+     ioctl@0x3a24  request=0x8954  fd_const=-  fd_slot=-  func=0x39c0
+        0039f8 mov     x24, sp
+        0039fc add     x0, x24, #0x34
+        003a00 mov     w2, #0x10
+        003a04 mov     x1, x20
+        003a08 strh    wzr, [sp, #0x10]
+        003a0c str     wzr, [sp, #0x20]
+        003a10 str     q0, [sp]
+        003a18 mov     x2, sp
+        003a1c mov     w1, #0x8954
+        003a20 mov     w0, w22
+   32 位常量（ioctl-like 粗清单，7 个；真实请求码以调用点为准）:
+     0x00008912  @0x2f28  mov          
+     0x00008b01  @0x3254  mov          
+     0x00008b0b  @0x3290  mov          
+     0x00008b0d  @0x33b8  mov          
+     0x00008927  @0x35f8  mov          
+     0x00008915  @0x36ac  mov          
+     0x00008954  @0x3a1c  mov          
+   0x89fd/0x89f1 字面量命中: 无
+   设备/通道字符串:
+   >>> 通道判定: chardev+ioctl
+

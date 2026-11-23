@@ -1,0 +1,88 @@
+== mem_alloc_copy_from_user_helper @0x85520 size=0x15c ==
+0x085520  stp      x29, x30, [sp, #-0x30]!
+0x085524  stp      x22, x21, [sp, #0x10]
+0x085528  mov      x29, sp
+0x08552c  stp      x20, x19, [sp, #0x20]
+0x085530  mov      x20, x1
+0x085534  cmp      x1, #1, lsl #12
+0x085538  b.ls     #0x8557c
+0x08553c  mov      x2, #0        ; = .rodata.str1.1+0x28070   ; "%s: %d: Invalid length: %zu max: %u"
+0x085540  mov      x3, #0        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085544  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28070   ; "%s: %d: Invalid length: %zu max: %u"
+0x085548  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x08554c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28070   ; "%s: %d: Invalid length: %zu max: %u"
+0x085550  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085554  mov      w0, #0x33
+0x085558  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28070   ; "%s: %d: Invalid length: %zu max: %u"
+0x08555c  mov      w4, #0xba6
+0x085560  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085564  mov      w1, #2
+0x085568  mov      x5, x20
+0x08556c  mov      w6, #0x1000
+0x085570  bl       #0x85570        ; -> qdf_trace_msg
+0x085574  mov      x21, xzr
+0x085578  b        #0x85624
+0x08557c  mov      x19, #0        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085580  mov      x22, x0
+0x085584  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085588  add      x0, x20, #1
+0x08558c  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085590  mov      w2, #0xbaa
+0x085594  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x28094   ; "mem_alloc_copy_from_user_helper"
+0x085598  mov      x1, x19
+0x08559c  bl       #0x8559c        ; -> __qdf_mem_malloc
+0x0855a0  mov      x21, x0
+0x0855a4  cbz      x0, #0x85600
+0x0855a8  mov      x0, x21
+0x0855ac  mov      x1, x20
+0x0855b0  mov      w2, wzr
+0x0855b4  bl       #0x855b4        ; -> __check_object_size
+0x0855b8  mov      x2, x20
+0x0855bc  mrs      x8, sp_el0
+0x0855c0  ldr      x8, [x8, #0x40]
+0x0855c4  mov      x9, x22
+0x0855c8  adds     x9, x9, x20
+0x0855cc  csel     x8, xzr, x8, hi
+0x0855d0  csinv    x9, x9, xzr, lo
+0x0855d4  sbcs     xzr, x9, x8
+0x0855d8  cset     x9, ls
+0x0855dc  cbz      x9, #0x855f4
+0x0855e0  mov      x0, x21
+0x0855e4  mov      x1, x22
+0x0855e8  mov      x2, x20
+0x0855ec  bl       #0x855ec        ; -> __arch_copy_from_user
+0x0855f0  mov      x2, x0
+0x0855f4  cbnz     x2, #0x85638
+0x0855f8  strb     wzr, [x21, x20]
+0x0855fc  b        #0x85624
+0x085600  mov      x2, #0        ; = .rodata.str1.1+0x280b4   ; "%s: %d: unable to allocate memory"
+0x085604  mov      w0, #0x33
+0x085608  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x280b4   ; "%s: %d: unable to allocate memory"
+0x08560c  mov      w4, #0xbac
+0x085610  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x280b4   ; "%s: %d: unable to allocate memory"
+0x085614  mov      w1, #2
+0x085618  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x280b4   ; "%s: %d: unable to allocate memory"
+0x08561c  mov      x3, x19
+0x085620  bl       #0x85620        ; -> qdf_trace_msg
+0x085624  mov      x0, x21
+0x085628  ldp      x20, x19, [sp, #0x20]
+0x08562c  ldp      x22, x21, [sp, #0x10]
+0x085630  ldp      x29, x30, [sp], #0x30
+0x085634  ret      
+0x085638  sub      x8, x20, x2
+0x08563c  mov      w1, wzr
+0x085640  add      x0, x21, x8
+0x085644  bl       #0x85644        ; -> memset
+0x085648  mov      x2, #0        ; = .rodata.str1.1+0x280d6   ; "%s: %d: failed to copy data to user buffer"
+0x08564c  mov      w0, #0x33
+0x085650  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x280d6   ; "%s: %d: failed to copy data to user buffer"
+0x085654  mov      w4, #0xbb1
+0x085658  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x280d6   ; "%s: %d: failed to copy data to user buffer"
+0x08565c  mov      w1, #2
+0x085660  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x280d6   ; "%s: %d: failed to copy data to user buffer"
+0x085664  mov      x3, x19
+0x085668  bl       #0x85668        ; -> qdf_trace_msg
+0x08566c  mov      x0, x21
+0x085670  bl       #0x85670        ; -> __qdf_mem_free
+0x085674  mov      x21, xzr
+0x085678  b        #0x85624

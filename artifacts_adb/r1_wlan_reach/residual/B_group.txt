@@ -1,0 +1,80 @@
+# HAL: .build/vendor/x/odm/bin/hw/vendor.oplus.hardware.wifi@1.1-service
+# build-id: 040000001000000003000000474e5500828f85aa2715c0d23592356e67791585
+# debugdata 符号: 92 个（已校验 build-id 同源）
+# PLT 导入: 89 个
+
+== 1. 全部 PLT 导入中"身份/权限类"命中 ==
+   0 个（89 个导入全部为 libc/libc++/liblog/libhidlbase/libbase 常规符号）
+   疑似项（须核参）:
+     syscall                  @0x9484  args=[273, None, None]
+     prctl                    @0xa548  args=[1, 9, None]
+
+== 2. 直接系统调用 / TLS 读取 ==
+   svc 指令: 0 条 []
+   mrs tpidr_el0: 49 条（bionic TLS，非权限检查）['0x90b8', '0x92c8', '0x94fc', '0x95c4', '0x96e4', '0x984c']
+   间接调用 blr: 89 条（std::function 回调 / 虚调用）
+
+== 3. .rodata/.dynstr 中的权限关键串 ==
+   0 条（无 permission / uid / caller 相关文案）
+
+== 4. vtable@0x1a0a0 的 9 个 HIDL 方法 ==
+slot code  entry    method                             size   perm-calls
+2    1     0x90a0   changeConnectionMode(int32)        536    NONE
+3    2     0xad20   catchSnifferLog(uint32,uint32)     1484   NONE
+4    3     0x9684   resetConnectionMode()              76     NONE
+5    4     0x992c   executeDriverCommand(string)       1592   NONE
+6    5     0xa0dc   setupFTMdaemon()                   692    NONE
+7    6     0xa568   sendSupplicantCommand(string)      816    NONE
+8    7     0xa898   runWiFiScript(string,string)       1160   NONE
+9    8     0xb2ec   sendIniContent(string)             796    NONE
+10   9     0xb65c   getIniVersion(string)              1112   NONE
+
+== 5. 逐方法的"无门直通"证据（特权原语调用点） ==
+-- slot2 code1 changeConnectionMode(int32) @0x90a0 (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20changeConnectionModeEj, 536 B)
+     0x009238  bl PLT:stat
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService16filterModuleNameENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0x9124, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService18isWifiDriverLoadedEv@0x9184, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10setConModeEj@0x9194, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0x91c8, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10loadDriverEPKcS7_@0x926c, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService18isWifiDriverLoadedEv@0x92a0
+-- slot3 code2 catchSnifferLog(uint32,uint32) @0xad20 (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService15catchSnifferLogEjj, 1484 B)
+     0x00b0fc  bl PLT:stat
+     0x00b13c  bl PLT:chown
+     0x00b230  bl PLT:_ZN7android4base11SetPropertyERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService16filterModuleNameENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0xad8c, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0xb0e8, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0xb124, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc@0xb1dc
+-- slot4 code3 resetConnectionMode() @0x9684 (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19resetConnectionModeEv, 76 B)
+     (无直接特权原语调用)
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService23cleanChildDaemonProcessEv@0x9698, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService21compressedSnifferFileEv@0x96ac
+-- slot5 code4 executeDriverCommand(string) @0x992c (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDriverCommandERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE, 1592 B)
+     0x009a70  bl PLT:stat
+     0x009b8c  bl PLT:stat
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0x9cb8, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService17checkIfStringSafeENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0x9db0, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0x9e20, __116__throw_bad_castEv@0x9f54
+     间接调用 blr ×6
+-- slot6 code5 setupFTMdaemon() @0xa0dc (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv, 692 B)
+     0x00a1ac  bl PLT:stat
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService16filterModuleNameENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0xa13c, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc@0xa2e4
+-- slot7 code6 sendSupplicantCommand(string) @0xa568 (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService21sendSupplicantCommandERKN7android8hardware11hidl_stringE, 816 B)
+     0x00a5c8  bl PLT:stat
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService17checkIfStringSafeENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0xa78c, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0xa7c0
+-- slot8 code7 runWiFiScript(string,string) @0xa898 (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService13runWiFiScriptERKN7android8hardware11hidl_stringESA_, 1160 B)
+     (无直接特权原语调用)
+     内部调用: vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService17checkIfStringSafeENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE@0xac58, vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc@0xac8c
+-- slot9 code8 sendIniContent(string) @0xb2ec (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14sendIniContentERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE, 796 B)
+     0x00b474  bl PLT:fopen
+     内部调用: sub_cf30@0xb43c, sub_cc68@0xb4c8, sub_c048@0xb5a0, __116__throw_bad_castEv@0xb600
+     间接调用 blr ×5
+-- slot10 code9 getIniVersion(string) @0xb65c (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService13getIniVersionERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE, 1112 B)
+     0x00b7dc  bl PLT:fopen
+     内部调用: sub_cf30@0xb798, sub_d030@0xb86c, sub_c048@0xba48, __116__throw_bad_castEv@0xbaac
+     间接调用 blr ×6
+
+== 6. 全 .text 中特权原语的 BL 调用点统计 ==
+   stat                                       6 处  0x9238 0x9a70 0x9b8c 0xa1ac 0xa5c8 0xb0fc
+   fopen                                      4 处  0x9524 0xb474 0xb7dc 0xbb48
+   signal                                     3 处  0x95f0 0x98e8 0xa3d8
+   _ZN7android4base11SetPropertyERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_   3 处  0x98b8 0xb230 0xbd78
+   vfork                                      2 处  0x95fc 0xa404
+   execv                                      2 处  0x9638 0xa558
+   __open_2                                   1 处  0x944c
+   syscall                                    1 处  0x9484
+   kill                                       1 处  0x9784
+   waitpid                                    1 处  0x9794
+   setitimer                                  1 处  0x9904
+   prctl                                      1 处  0xa548
+   chown                                      1 处  0xb13c

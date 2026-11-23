@@ -16,12 +16,13 @@
 |---|---|---|
 | **P0** 文档收口 | ① `live_probe/DUMPSTATE_KASLR_PATH.md` 头部更正（"当前 boot slide 不可得"作废，§8 已取得；`KASLR_EVIDENCE.md` 为权威台账，本文件只记方法过程）；② `HANDOVER.md` 顶部 v13.2 口径；③ `README.md` 审阅须知 v13.2；④ 本文件；⑤ `CLOSURE.md` 五层验收 | 完成 |
 | **P1-A** 用户态↔内核连接 | [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) | **连接成立但重定向**：`wpa_supplicant`（`android_priv_cmd`，4 处 ioctl；ctrl `"DRIVER "` → `wpa_drv_driver_cmd` → `ops+0x308`）→ `ioctl(0x89f1)` → `hdd_ioctl@0x38050` → `hdd_driver_command@0x38320`；`/odm/bin/iwpriv` **不发** `0x89f1/0x89fd`（指令级） |
-| **P1-B** 98 项 handler | [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) + `artifacts_adb/r1_wlan_reach/handler_audit.csv`（98 行） | **0 个内存安全反例**（无无界 `%s`；所有 `%s` 带 `%31s`；无"输入长度入拷贝"；栈槽重叠 0）；1 个**逻辑**不变量违反 H1（`SETMCRATE` 未检解析返回值，槽已清零 ⇒ 非内存破坏）；4 项未决（`FMT-UNRESOLVED` 70/71/90/92、`MAXTXPOWER` 值域门待确认） |
-| **P1-B 追加** 代理真实可达面（WEXT 32 handler） | [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) + `wext_audit.csv` | 4.9 wext 核心以 `kzalloc(extra_size)+copy_from_user(extra_size)` **归一化长度** ⇒ "用户长度 < 结构体 ⇒ 堆越界读"不成立；**8/32 逐指令核完 0 反例**，`iw_setchar_getnone`（0x8BE3）为唯一残留嫌疑（未核），15 父项未决 |
+| **P1-B** 98 项 handler | [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) + [`WLAN_RESIDUAL_AUDIT.md`](WLAN_RESIDUAL_AUDIT.md) + `handler_audit.csv`（98 行） | **0 个内存安全反例**（无无界 `%s`、无输入长度入拷贝、栈槽重叠 0）；5 项残留收口（`MAXTXPOWER` 值域 [-100,100]；4 个 `FMT-UNRESOLVED` 全为 `%31s`/`%d`）；2 个**非内存破坏**反例：H1 `SETMCRATE` 未检返回、H2 `MAXTXPOWER` 解析失败读未初始化栈（受值域门约束） |
+| **P1-B 追加** 代理真实可达面（WEXT 23 父项 + 101 子命令） | [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) + [`WLAN_WEXT_HANDLER_AUDIT_2.md`](WLAN_WEXT_HANDLER_AUDIT_2.md) + `wext_audit(_2).csv` | **全部收口：21 有界 / 2 无功能 / 0 未决；0 越界读写反例**；更正首轮 12 个 SET/GET 方向误判（偶数=SET 才用 `set_args`）；`0x8BFE` 8 B 空桩、`0x8BFF` extra=5 B；信息泄露方向关闭；剩余为下游 value 域/INI 配置门（WEXT-2 §4） |
 | **P1-C** 独立安全价值 | 同上两份 §结论 | 三分类：`executeDriverCommand → hdd_driver_command` **不存在⇒关闭**；`wpa_supplicant → 0x89f1` 连接存在但**代理不可达**；WEXT 私有面为代理可达面，价值是"扩展受控面"而非"首次 uid 0" |
 | **P1-D** 受限 UID 0 代理路径 | `WLAN_IOCTL_CHAIN_AUDIT.md` §4 | 代理可执行 `iwpriv` + `net_admin` ⇒ WEXT SET 域满足；**无 `wifi_vendor_wpa_socket` allow** ⇒ wpa 通道关闭；shell 无 `wcnss_service_exec` 执行权；`0x89f1` 内核层无 CAP 门，但 shell 的 `neverallowx` 生效性**未决** |
-| **P2** FTM | [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) | `0x89fd` 仅 `conparam==5` 受理（`0x38138/0x38144`）；正常启动 `init.wlan.target.rc` 无 con_mode 参数（默认 0），运行期改 con_mode 触发整驱动模式重启；**用户态 0x89fd 命中全在 RMNET（netmgrd/qti/adpl），无 WLAN 调用方**（`ioctl_const_inventory.md`） |
+| **P2** FTM | [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) + [`WLAN_RESIDUAL_AUDIT.md`](WLAN_RESIDUAL_AUDIT.md) | `0x89fd` 仅 `conparam==5` 受理（`0x38138/0x38144`）；正常启动 `init.wlan.target.rc` 无 con_mode 参数（默认 0），运行期改 con_mode 触发整驱动模式重启；**U2 已证 `myftm`/`ftmdaemon`/`ftmtest` 全部走 nl80211、不导入 ioctl（myftm）或 ioctl 只落 NFC/BT/tty ⇒ 固件无 `0x89fd` 调用方（收紧为 (a)）**；U1 已证 HAL 9 个 HIDL 方法**无方法级权限门**（89 个 PLT 导入无 caller/uid 检查、`.text` 0 条 `svc`） |
 | **P3** vendor 分诊 | [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md) | 37 个 `.ko` / **32 个实际加载**（`/proc/modules`）；非 WLAN 模块中"真实加载 + 用户态接口 + 两主体可达"合格者 **0** |
+| **P4** GhostLock 长期冻结 | 冻结维持；独立 G5/T3 会话给出 ② 机制性 NO-GO 的设备证据（[`HANDOVER_G5_T3_2026-11-20.md`](HANDOVER_G5_T3_2026-11-20.md)） | 冻结，不重开；G5/T3 结论以该独立文档为准，不入本文五层验收 |
 | **P5** 总验收 | `CLOSURE.md` §1 五层验收 | 已达成 3 / 已否证 5 / 阶段性关闭 3 / 已完成审计 4 / 条件性关闭 1 / 分诊 1 / 未解决 2 |
 
 **证据等级纪律**：`指令级`（本机 `.ko` / 固件二进制反汇编）、`源码级`（厂商内核树 `net/*`/`wext-priv.c`）、`策略级`（CIL）、`取证级`（设备文本）；正文逐条标注，未标注不引用。
@@ -46,10 +47,11 @@
 ## 3. 下一步（v13.2 收口后的可选项，均需用户决定）
 
 1. **[已完成]** 阶段 4 前半：WLAN 调用链（`WLAN_IOCTL_CHAIN_AUDIT.md`）。
-2. **[已完成]** 阶段 4 后半：98 handler + WEXT handler 审计（两份报告）；**[未做]** 动态验证（`iwpriv` 在代理域内的只读枚举、`0x89f1` 是否真被 shell 拒绝）——**需独立授权**。
-3. **[已完成]** 阶段 5：`CLOSURE.md` 五层验收。
-4. **[待决定]** 是否继续 WEXT 私有面的深审（代理可达面，剩余 ~12 个 handler 未逐条判定，见 `WLAN_WEXT_HANDLER_AUDIT.md` §未决）。
-5. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启**（重启需单独、逐次授权）；建议关闭 OTA；**不做任何动态 WLAN 输入测试**（审核 v0132 §三 P1-C 明文）。
+2. **[已完成]** 阶段 4 后半：98 handler + WEXT handler 审计（首轮两份报告；续做 `WLAN_RESIDUAL_AUDIT.md` + `WLAN_WEXT_HANDLER_AUDIT_2.md`）；**[未做]** 动态验证（`iwpriv` 在代理域内的只读枚举、`0x89f1` 是否真被 shell 拒绝）——**需独立授权**。
+3. **[已完成]** 阶段 5：`CLOSURE.md` 五层验收（已同步续做结果）。
+4. **[已完成]** WEXT 深审收口：23 父项 + 101 子命令 = 21 有界 / 2 无功能 / 0 未决（`WLAN_WEXT_HANDLER_AUDIT_2.md`）；剩余只是下游/配置级抽样（该报告 §4 的 2/3/5 条）。
+5. **[可选，需授权]** 下游抽样：`0x8BE5` 17 路输出函数是否真按上限截断、`wma_cli_set_command` 对 `value` 的二次解释、INI `wext_control` 默认值（决定可达性，不决定有界性）。
+6. **[维持]** ROOT NO-GO；不做 GhostLock 端到端 PoC；**不重启**（重启需单独、逐次授权）；建议关闭 OTA；**不做任何动态 WLAN 输入测试**（审核 v0132 §三 P1-C 明文）。
 
 ---
 
@@ -68,6 +70,10 @@ python tools/scan_ioctl_const.py .build/odm_bin/wpa_supplicant --vals 0x89f0,0x8
 python tools/scan_ioctl_bin.py                 # 全固件二进制常量盘点（见文件头用法）
 python tools/wlan_handler_scan.py              # 98 handler 结构化事实（CSV）
 python tools/wlan_wext_scan.py                 # WEXT handler 扫描
+python tools/wlan_wext_subcmd.py               # WEXT 23 父项/101 子命令（--args/--subcmd）
+python tools/wlan_residual_scan.py             # 98 handler 残留 5 项（FMT 跨 bl 数据流）
+python tools/hal_perm_gate.py                  # HAL HIDL 方法权限门（U1）
+python tools/ftm_tool_surface.py               # FTM 工具通道判定（U2）
 
 # —— 既有 ——
 python tools/b3_audit.py                       # B3 并发语义审计
@@ -88,14 +94,15 @@ python tools/kfn.py --list 'pattern'           # 符号查询
 
 ---
 
-## 6. 工作区并发写入事件（2026-11-20 19:02，务必知悉）
+## 6. 工作区并发写入事件与后续合并（2026-11-20 19:02 → 2026-11-23，务必知悉）
 
 - v13.2 会话期间，一个**非本代理的并发写入方**（另一个会话/进程）在 19:02 创建了 `GHOSTLOCK_HEAP_RECLAIM_FEASIBILITY.md`（自称 "G5 ② 同页 slab 回收"）与 `tools/reclaim_model.py`，并**修改** `HANDOVER.md`/`README.md`/`CLOSURE.md`/`HANDOVER_RESUME.md`/`GHOSTLOCK_ADDRESS_SOURCE_MATRIX.md` 为 "v13.3" 口径，随后 **commit 并 push 到 `origin/main`（提交 `e370348`）**。
-- 主代理的处置：本地 `git reset --mixed HEAD~1` 回到 `7d8c796`；把两份越界文件归档到 [`docs_archive/out_of_scope_v13.2/`](docs_archive/out_of_scope_v13.2/)（含 `README.md` 说明"未纳入判定、未复核"）；根目录文档恢复 v13.2 口径。
-- **未解决**：`origin/main` 仍指向 `e370348`（本地落后 1）。**未由主代理推送**任何提交；如需统一远端，由用户决定 revert / force-push。**本文件与 `CLOSURE.md` 的结论不含 G5 内容**；若未来要评估 G5，必须按 v0132 §六的三个重开条件独立复核并由用户授权。
+- 主代理当时的处置：本地 `git reset --mixed HEAD~1` 回到 `7d8c796`；把两份越界文件归档到 [`docs_archive/out_of_scope_v13.2/`](docs_archive/out_of_scope_v13.2/)（含 `README.md` 说明"未纳入判定、未复核"）；根目录文档恢复 v13.2 口径。
+- **后续（已解决）**：G5 会话继续完成了设备侧 T1/T2/T3 验证，产出**独立**交接 [`HANDOVER_G5_T3_2026-11-20.md`](HANDOVER_G5_T3_2026-11-20.md)（结论：GhostLock ② **机制性 NO-GO**；T3 五次在 `sched_setattr` 处 panic）。两条线已通过 merge 汇合，`origin/main` 与本地当前同为 `ccd3663`（0/0）；根目录 G5 离线文档已移除、归档保留。**v13.2 的五层验收与四层判定不因该线改变**；G5/T3 的证据与结论以 `HANDOVER_G5_T3_2026-11-20.md` 为准，本文不重复引用其数值。
+- **并发纪律（后续会话遵守）**：改根目录五份文档前先 `git status`；不要 push 与当前 HEAD 分叉的分支；G5/T3 这类独立研究线写独立 `HANDOVER_*.md`，不合并进 v13.2 收口文档。
 
 ---
 
 ## 7. 读法
 
-新对话：本文件 → `CLOSURE.md` §1（五层）→ `HANDOVER.md` §72 → `WLAN_IOCTL_CHAIN_AUDIT.md` → 两份 handler 报告 → `WLAN_FTM_AUDIT.md` / `VENDOR_SURFACE_MATRIX.md` → 需要时回溯 §71/§70/§69/§66/§63/§62/§61。
+新对话：本文件 → `CLOSURE.md` §1（五层）→ `HANDOVER.md` §72 → `WLAN_IOCTL_CHAIN_AUDIT.md` → 两份 handler 报告（`WLAN_HANDLER_AUDIT.md` / `WLAN_WEXT_HANDLER_AUDIT.md` + `_2`）→ `WLAN_RESIDUAL_AUDIT.md` → `WLAN_FTM_AUDIT.md` / `VENDOR_SURFACE_MATRIX.md` → 需要时回溯 §71/§70/§69/§66/§63/§62/§61。G5/T3 线单独读 `HANDOVER_G5_T3_2026-11-20.md`。

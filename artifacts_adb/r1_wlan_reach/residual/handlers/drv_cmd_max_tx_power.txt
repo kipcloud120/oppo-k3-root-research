@@ -1,0 +1,172 @@
+# drv_cmd_max_tx_power @0x3fad0 size=684
+03fad0  sub        sp, sp, #0x90
+03fad4  stp        x29, x30, [sp, #0x30]
+03fad8  add        x29, sp, #0x30
+03fadc  stp        x28, x27, [sp, #0x40]
+03fae0  stp        x26, x25, [sp, #0x50]
+03fae4  stp        x24, x23, [sp, #0x60]
+03fae8  stp        x22, x21, [sp, #0x70]
+03faec  stp        x20, x19, [sp, #0x80]
+03faf0  mov        x9, #0   ; abs __stack_chk_guard
+03faf4  mov        x8, #0   ; abs .rodata+0x3500  'ÿÿÿÿÿÿ'
+03faf8  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+03fafc  movk       x8, #0, lsl #16   ; abs .rodata+0x3500  'ÿÿÿÿÿÿ'
+03fb00  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+03fb04  movk       x8, #0, lsl #32   ; abs .rodata+0x3500  'ÿÿÿÿÿÿ'
+03fb08  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+03fb0c  movk       x8, #0, lsl #48   ; abs .rodata+0x3500  'ÿÿÿÿÿÿ'
+03fb10  mov        x20, x2
+03fb14  mov        x19, x1
+03fb18  ldr        x9, [x9]
+03fb1c  ldr        w10, [x8]
+03fb20  ldrh       w8, [x8, #4]
+03fb24  stur       x9, [x29, #-8]
+03fb28  str        x0, [sp, #8]
+03fb2c  mov        x0, x2
+03fb30  stur       w10, [x29, #-0x10]
+03fb34  sturh      w8, [x29, #-0xc]
+03fb38  str        w10, [sp, #0x18]
+03fb3c  strh       w8, [sp, #0x1c]
+03fb40  bl         #0x3fb40   ; strlen
+03fb44  mov        x1, x0
+03fb48  mov        x0, x20
+03fb4c  mov        w2, #0x20
+03fb50  bl         #0x3fb50   ; strnchr
+03fb54  cbz        x0, #0x3fba0
+03fb58  ldrb       w8, [x0]
+03fb5c  cmp        w8, #0x20
+03fb60  b.ne       #0x3fba0
+03fb64  and        w8, w8, #0xff
+03fb68  cmp        w8, #0x20
+03fb6c  b.ne       #0x3fb78
+03fb70  ldrb       w8, [x0, #1]!
+03fb74  b          #0x3fb64
+03fb78  cbnz       w8, #0x3fb84
+03fb7c  mov        w20, wzr
+03fb80  b          #0x3fc48
+03fb84  mov        w1, #0xa
+03fb88  add        x2, sp, #0x14
+03fb8c  bl         #0x3fb8c   ; kstrtoint
+03fb90  ldr        w20, [sp, #0x14]
+03fb94  add        w8, w20, #0x64
+03fb98  cmp        w8, #0xc8
+03fb9c  b.ls       #0x3fc14
+03fba0  mov        x2, #0   ; abs .rodata.str1.1+0x145cf  '%s: %d: Invalid MAXTXPOWER command'
+03fba4  mov        x3, #0   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fba8  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x145cf  '%s: %d: Invalid MAXTXPOWER command'
+03fbac  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fbb0  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x145cf  '%s: %d: Invalid MAXTXPOWER command'
+03fbb4  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fbb8  mov        w0, #0x33
+03fbbc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x145cf  '%s: %d: Invalid MAXTXPOWER command'
+03fbc0  mov        w4, #0x17fd
+03fbc4  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fbc8  mov        w1, #2
+03fbcc  bl         #0x3fbcc   ; qdf_trace_msg
+03fbd0  mov        w0, #-0x16
+03fbd4  mov        x9, #0   ; abs __stack_chk_guard
+03fbd8  ldur       x8, [x29, #-8]
+03fbdc  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+03fbe0  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+03fbe4  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+03fbe8  ldr        x9, [x9]
+03fbec  cmp        x9, x8
+03fbf0  b.ne       #0x3fd78
+03fbf4  ldp        x20, x19, [sp, #0x80]
+03fbf8  ldp        x22, x21, [sp, #0x70]
+03fbfc  ldp        x24, x23, [sp, #0x60]
+03fc00  ldp        x26, x25, [sp, #0x50]
+03fc04  ldp        x28, x27, [sp, #0x40]
+03fc08  ldp        x29, x30, [sp, #0x30]
+03fc0c  add        sp, sp, #0x90
+03fc10  ret        
+03fc14  mov        x2, #0   ; abs .rodata.str1.1+0x14687  '%s: %d: SETMAXTXPOWER: %d'
+03fc18  mov        x3, #0   ; abs .rodata.str1.1+0x146a1  'hdd_parse_setmaxtxpower_command'
+03fc1c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14687  '%s: %d: SETMAXTXPOWER: %d'
+03fc20  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x146a1  'hdd_parse_setmaxtxpower_command'
+03fc24  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14687  '%s: %d: SETMAXTXPOWER: %d'
+03fc28  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x146a1  'hdd_parse_setmaxtxpower_command'
+03fc2c  mov        w0, #0x33
+03fc30  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14687  '%s: %d: SETMAXTXPOWER: %d'
+03fc34  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x146a1  'hdd_parse_setmaxtxpower_command'
+03fc38  mov        w4, #0xafb
+03fc3c  mov        w1, #8
+03fc40  mov        w5, w20
+03fc44  bl         #0x3fc44   ; qdf_trace_msg
+03fc48  add        x1, sp, #8
+03fc4c  mov        x0, x19
+03fc50  bl         #0x3fc50   ; hdd_get_front_adapter
+03fc54  ldr        x8, [sp, #8]
+03fc58  cbz        x8, #0x3fd4c
+03fc5c  mov        x22, #0   ; abs .rodata.str1.1+0x14607  '%s: %d: Device mode %d max tx power %d selfMac: %pM bssId: %pM'
+03fc60  mov        x21, #0   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fc64  mov        x23, #0   ; abs .rodata.str1.1+0x14666  '%s: %d: Set max tx power success'
+03fc68  movk       x22, #0, lsl #16   ; abs .rodata.str1.1+0x14607  '%s: %d: Device mode %d max tx power %d selfMac: %pM bssId: %pM'
+03fc6c  movk       x21, #0, lsl #16   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fc70  movk       x23, #0, lsl #16   ; abs .rodata.str1.1+0x14666  '%s: %d: Set max tx power success'
+03fc74  movk       x22, #0, lsl #32   ; abs .rodata.str1.1+0x14607  '%s: %d: Device mode %d max tx power %d selfMac: %pM bssId: %pM'
+03fc78  movk       x21, #0, lsl #32   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fc7c  movk       x23, #0, lsl #32   ; abs .rodata.str1.1+0x14666  '%s: %d: Set max tx power success'
+03fc80  movk       x22, #0, lsl #48   ; abs .rodata.str1.1+0x14607  '%s: %d: Device mode %d max tx power %d selfMac: %pM bssId: %pM'
+03fc84  movk       x21, #0, lsl #48   ; abs .rodata.str1.1+0x145f2  'drv_cmd_max_tx_power'
+03fc88  mov        w24, #0x33
+03fc8c  mov        w25, #0x180c
+03fc90  movk       x23, #0, lsl #48   ; abs .rodata.str1.1+0x14666  '%s: %d: Set max tx power success'
+03fc94  mov        w26, #0x1815
+03fc98  ldr        w9, [x8, #0x270]
+03fc9c  add        x7, sp, #0x18
+03fca0  ldrh       w10, [x8, #0x274]
+03fca4  mov        w0, w24
+03fca8  ldr        w5, [x8, #0xa8]
+03fcac  mov        w1, #8
+03fcb0  mov        x2, x22
+03fcb4  mov        x3, x21
+03fcb8  mov        w4, w25
+03fcbc  mov        w6, w20
+03fcc0  sub        x8, x29, #0x10
+03fcc4  stur       w9, [x29, #-0x10]
+03fcc8  sturh      w10, [x29, #-0xc]
+03fccc  str        w9, [sp, #0x18]
+03fcd0  strh       w10, [sp, #0x1c]
+03fcd4  str        x8, [sp]
+03fcd8  bl         #0x3fcd8   ; qdf_trace_msg
+03fcdc  ldurh      w8, [x29, #-0xc]
+03fce0  and        x12, x28, #0xffff000000000000
+03fce4  ldur       w9, [x29, #-0x10]
+03fce8  and        x13, x27, #0xffff000000000000
+03fcec  ldrh       w10, [sp, #0x1c]
+03fcf0  mov        w3, w20
+03fcf4  ldr        w11, [sp, #0x18]
+03fcf8  ldr        x0, [x19, #0x10]
+03fcfc  bfi        x9, x8, #0x20, #0x10
+03fd00  orr        x28, x12, x9
+03fd04  mov        x1, x28
+03fd08  bfi        x11, x10, #0x20, #0x10
+03fd0c  orr        x27, x13, x11
+03fd10  mov        x2, x27
+03fd14  bl         #0x3fd14   ; sme_set_max_tx_power
+03fd18  cbnz       w0, #0x3fd54
+03fd1c  mov        w0, w24
+03fd20  mov        w1, #8
+03fd24  mov        x2, x23
+03fd28  mov        x3, x21
+03fd2c  mov        w4, w26
+03fd30  bl         #0x3fd30   ; qdf_trace_msg
+03fd34  ldr        x1, [sp, #8]
+03fd38  add        x2, sp, #8
+03fd3c  mov        x0, x19
+03fd40  bl         #0x3fd40   ; hdd_get_next_adapter
+03fd44  ldr        x8, [sp, #8]
+03fd48  cbnz       x8, #0x3fc98
+03fd4c  mov        w0, wzr
+03fd50  b          #0x3fbd4
+03fd54  mov        x2, #0   ; abs .rodata.str1.1+0x14646  '%s: %d: Set max tx power failed'
+03fd58  mov        w0, #0x33
+03fd5c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14646  '%s: %d: Set max tx power failed'
+03fd60  mov        w4, #0x1811
+03fd64  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14646  '%s: %d: Set max tx power failed'
+03fd68  mov        w1, #2
+03fd6c  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14646  '%s: %d: Set max tx power failed'
+03fd70  mov        x3, x21
+03fd74  b          #0x3fbcc
+03fd78  bl         #0x3fd78   ; __stack_chk_fail

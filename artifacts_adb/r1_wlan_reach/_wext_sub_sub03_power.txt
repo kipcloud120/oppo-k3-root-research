@@ -1,0 +1,60 @@
+0x08ee60  stp      x29, x30, [sp, #-0x20]!
+0x08ee64  stp      x20, x19, [sp, #0x10]
+0x08ee68  mov      x29, sp
+0x08ee6c  ldr      x8, [x0, #0x18]
+0x08ee70  ldr      x19, [x8, #0x10]
+0x08ee74  cbz      x19, #0x8eefc
+0x08ee78  mov      w5, w1
+0x08ee7c  sub      w8, w1, #1
+0x08ee80  cmp      w8, #3
+0x08ee84  b.hi     #0x8eecc
+0x08ee88  mov      x9, #0        ; = .rodata+0x4c5b
+0x08ee8c  mov      x20, x0
+0x08ee90  movk     x9, #0, lsl #16        ; = .rodata+0x4c5b
+0x08ee94  movk     x9, #0, lsl #32        ; = .rodata+0x4c5b
+0x08ee98  movk     x9, #0, lsl #48        ; = .rodata+0x4c5b
+0x08ee9c  adr      x10, #0x8eeac
+0x08eea0  ldrb     w11, [x9, x8]
+0x08eea4  add      x10, x10, x11, lsl #2
+0x08eea8  br       x10
+0x08eeac  mov      x0, x19
+0x08eeb0  mov      w1, #1
+0x08eeb4  bl       #0x8eeb4        ; -> sme_save_usr_ps_cfg
+0x08eeb8  ldrb     w1, [x20, #0x98]
+0x08eebc  mov      x0, x19
+0x08eec0  mov      w2, wzr
+0x08eec4  bl       #0x8eec4        ; -> sme_ps_enable_disable
+0x08eec8  b        #0x8ef40
+0x08eecc  mov      x2, #0        ; = .rodata.str1.1+0x287e5  ; "%s: %d: Invalid value %d"
+0x08eed0  mov      x3, #0        ; = .rodata.str1.1+0x2964f  ; "hdd_we_set_power"
+0x08eed4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x287e5  ; "%s: %d: Invalid value %d"
+0x08eed8  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x2964f  ; "hdd_we_set_power"
+0x08eedc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x287e5  ; "%s: %d: Invalid value %d"
+0x08eee0  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x2964f  ; "hdd_we_set_power"
+0x08eee4  mov      w0, #0x33
+0x08eee8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x287e5  ; "%s: %d: Invalid value %d"
+0x08eeec  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x2964f  ; "hdd_we_set_power"
+0x08eef0  mov      w4, #0x10da
+0x08eef4  mov      w1, #2
+0x08eef8  bl       #0x8eef8        ; -> qdf_trace_msg
+0x08eefc  mov      w0, #-0x16
+0x08ef00  b        #0x8ef44
+0x08ef04  ldrb     w1, [x20, #0x98]
+0x08ef08  mov      x0, x19
+0x08ef0c  mov      w2, #1
+0x08ef10  bl       #0x8ef10        ; -> sme_ps_enable_disable
+0x08ef14  mov      x0, x19
+0x08ef18  mov      w1, wzr
+0x08ef1c  bl       #0x8ef1c        ; -> sme_save_usr_ps_cfg
+0x08ef20  b        #0x8ef40
+0x08ef24  ldrb     w1, [x20, #0x98]
+0x08ef28  mov      x0, x19
+0x08ef2c  bl       #0x8ef2c        ; -> sme_ps_uapsd_enable
+0x08ef30  b        #0x8ef40
+0x08ef34  ldrb     w1, [x20, #0x98]
+0x08ef38  mov      x0, x19
+0x08ef3c  bl       #0x8ef3c        ; -> sme_ps_uapsd_disable
+0x08ef40  mov      w0, wzr
+0x08ef44  ldp      x20, x19, [sp, #0x10]
+0x08ef48  ldp      x29, x30, [sp], #0x20
+0x08ef4c  ret      

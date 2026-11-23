@@ -149,23 +149,23 @@ python tools/scan_ioctl_const.py .build/odm_bin/wpa_supplicant --vals 0x89f0,0x8
 | `we_private_args` | `.rodata+0x4d70`（223×0x18） | 23 个父项（真实 ioctl，`0x8BE0..0x8BFF`）+ 200 个子命令（id→name→父项，见 `tools/wlan_wext_table.py` 输出） |
 | 例：`setMonChan` | id=23，`set=0x4802`，父项 `0x8BFC` | `catchSnifferLog` 的实际落点 |
 | 例：`setpno` | `0x8BF8`，`set=0x27FF`（CHAR \| 2047） | 变长字符串面；核心层 `wext-priv.c` 会校验 `iwp->length > (set_args & 0x7FF)` → `-E2BIG` |
-| 例：`setPktFilter` | `0x8BF7`，`set=0x1067`（BYTE \| 103） | 定长二进制面；handler 内 `length == 3+20*buf[2]` 精确校验（`WLAN_WEXT_HANDLER_AUDIT.md`） |
+| 例：`setPktFilter` | `0x8BF7`（**奇数=GET**），`set=0x1067`（BYTE \| 103） | 定长二进制面；core 不按 set_args 夹长度；handler 内 `len >= 3 && len == 3+20*buf[2]` 精确校验（helper 上限 4096；见 `WLAN_WEXT_HANDLER_AUDIT_2.md` §0.2） |
 | 例：`setHostOffload` | `0x8BF2`，`set=0x1018`（BYTE \| 24） | 定长结构体面 |
 
 > 详细 handler 审计见 `WLAN_WEXT_HANDLER_AUDIT.md`（本轮并行交付）；98 项 `hdd_driver_command` handler 审计见 `WLAN_HANDLER_AUDIT.md`。
 
-### 3.3 WEXT 核心的"长度归一化"（决定 WEXT 面审计的基线）
+### 3.3 WEXT 核心的"长度归一化"（v13.2 续做更正：**SET/GET 方向决定用哪一侧声明**）
 
-`net/wireless/wext-priv.c` 在进入驱动 handler 之前已经做了长度归一化，这一点直接影响 P1-B 的判定口径：
+`net/wireless/wext-priv.c` 在进入驱动 handler 之前做长度归一化，但**用 `set_args` 还是 `get_args` 由 `cmd` 的奇偶决定，不是由表里两项同时决定**：
 
-- `get_priv_descr_and_size()`（`:93-134`）：按 `descr->set_args` 计算 `extra_size = get_priv_size(set_args)`（类型宽度 × 参数个数）；对 `FIXED` 且 `extra_size + offset <= IFNAMSIZ(16)` 的项走 `&iwr->u` 内联路径（`extra_size = 0`，不分配）。
-- `ioctl_private_iw_point()`（`:137-161`）：
-  - `if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK)) return -E2BIG;`（只设上界）；
-  - `extra = kzalloc(extra_size, GFP_KERNEL);`（**按声明尺寸分配，零填充**）；
-  - `copy_from_user(extra, iwp->pointer, extra_size);`（**按声明尺寸拷贝**，不是按用户给的 `length`）。
-- 因此：对"定长结构体"类 handler（如 `iw_set_host_offload` 24 B、`iw_set_packet_filter_params` 103 B），用户传入任意小的 `length` 也只会让核心拒绝（`length==0`）或忽略，**handler 拿到的始终是 `kzalloc` 的定长零填充缓冲**——"用户长度小于结构体 ⇒ 堆越界读"这一朴素假设在 4.9 wext 核心上**不成立**。
-- 对"变长"类（`CHAR | 0x7FF` 等），核心按 2047 B 分配/拷贝，用户指针必须可读满 2047 B，否则 `copy_from_user` 失败返回 `-EFAULT`。
-- 结论：WEXT 私有面的安全属性主要取决于**各 handler 对已归一化缓冲的字段/索引校验**（例如 `iw_set_packet_filter_params` 的 `length == 3+20*buf[2]` 精确校验、`iw_set_two_ints_getnone` 的子命令跳表是否越界），而不是"copy_from_user 长度"本身。详见 `WLAN_WEXT_HANDLER_AUDIT.md`。
+- `include/uapi/linux/wireless.h:353`：`#define IW_IS_SET(cmd) (!((cmd) & 0x1))` ⇒ **偶数 = SET、奇数 = GET**。
+- `get_priv_descr_and_size()`（`:93-134`）：
+  - `IW_IS_SET(cmd)` 为真（偶数）：按 `descr->set_args` 计算 `extra_size = get_priv_size(set_args)`；`FIXED && extra_size + offset <= IFNAMSIZ(16)` ⇒ `extra_size = 0`（走 `&iwr->u` 16 B union）。
+  - 否则（奇数）：按 `descr->get_args` 计算；`FIXED && extra_size <= 16` ⇒ `extra_size = 0`。
+- `ioctl_private_iw_point()`（`:137-161`）：**只有 SET 分支**执行 `if (iwp->length > (descr->set_args & IW_PRIV_SIZE_MASK)) return -E2BIG;`，随后 `kzalloc(extra_size)` + `copy_from_user(extra_size)`。**GET 分支不会用 `set_args` 夹长度**；`extra` 是 `kzalloc(extra_size)`（清零），handler 若要读用户数据，必须自己从 `iwr->u.data`（内核已拷贝的 16 B union）取 `pointer/length` 再 `mem_alloc_copy_from_user_helper`（该 helper 有 `length <= 0x1000` 上限）。
+- 本机 23 个父项按奇偶分组：**11 个 SET（偶数）** = `0x8BE0/0x8BE4/0x8BE6/0x8BE8/0x8BF2/0x8BF4/0x8BF6/0x8BF8/0x8BFA/0x8BFC/0x8BFE`；**12 个 GET（奇数）** = `0x8BE1/0x8BE3/0x8BE5/0x8BE7/0x8BE9/0x8BEB/0x8BED/0x8BEF/0x8BF5/0x8BF7/0x8BF9/0x8BFF`。
+- 因此 **v13.2 首轮的"核心按 set_args 夹住 GET handler 长度"的说法对 12 个奇数项不成立**（已由 [`WLAN_WEXT_HANDLER_AUDIT_2.md`](WLAN_WEXT_HANDLER_AUDIT_2.md) §0.2 更正）：例如 `0x8BF7` 的 103、`0x8BE3` 的 512 都不是 core 门；`0x8BF7` 真正的门是 handler 内的 `len >= 3 && len == 3+20*buf[2]`（helper 上限 4096），`0x8BE3` 真正的门是 helper 的 4096 + 下游 `hdd_add_wowl_ptrn` 的 offset/plen 上界。结论（有界）不变，但**理由必须按方向重写**。
+- 结论：WEXT 私有面的安全属性取决于**各 handler 对 `iwr->u`/helper 缓冲的字段、索引与精确长度等式校验**，而不是"core 用 set_args 一把夹住"。逐项结果见两轮 WEXT 报告（首轮 8 项 + 续做 23 父项/101 子命令全部收口）。
 
 ---
 

@@ -1,0 +1,3 @@
+== iw_set_dot11p_channel_sched @0x8eb40 size=0x8 ==
+0x08eb40  mov      w0, wzr
+0x08eb44  ret      

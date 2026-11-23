@@ -1,0 +1,55 @@
+== A1  drv_cmd_max_tx_power @0x3fad0  (kstrtoint@0x3fb8c, slot=sp+0x14)
+   gate: ldr x20,[sp+0x14] -> add x8,x20,#+0x64 ; cmp x8,#0xc8 @0x3fb98 ; b.ls @0x3fb9c -> 0x3fc14
+   accepted(compare value) = [0, 200] ; accepted(original) = [-100, 100]
+   ret-gate: None ; slot pre-initialised: NO (uninitialised)
+   verdict: 有界
+
+== A2  drv_cmd_ccx_beacon_req @0x3ebf8 size=1396
+   sscanf@0x3ed10  fmt='%31s '  level=bounded need=32
+            chain: x25@0x3ed0c load@0x3ed08(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3ee14  fmt='%31s '  level=bounded need=32
+            chain: x25@0x3ee10 load@0x3ed08(.rodata.str1.1+0x12a09) "%31s "
+== A2  drv_cmd_ccx_plm_req @0x3f170 size=1860
+   sscanf@0x3f230  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f22c load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f29c  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f298 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f328  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f324 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f400  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f3fc load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f480  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f47c load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f504  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f500 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f588  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f584 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f60c  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f608 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f694  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f690 load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f720  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f71c load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+   sscanf@0x3f7d0  fmt='%31s '  level=bounded need=32
+            chain: x22@0x3f7cc load@0x3f228(.rodata.str1.1+0x12a09) "%31s "
+== A2  drv_cmd_set_disable_chan_list @0x41268 size=1756
+   sscanf@0x41304  fmt='%d '  level=bounded need=4
+            chain: x23@0x41300 load@0x412fc(.rodata.str1.1+0x14f4d) "%d "
+   sscanf@0x4153c  fmt='%d '  level=bounded need=4
+            chain: x23@0x41538 load@0x412fc(.rodata.str1.1+0x14f4d) "%d "
+== A2  drv_cmd_get_ani_level @0x41be0 size=1348
+   sscanf@0x41cb4  fmt='%d '  level=bounded need=4
+            chain: x25@0x41cb0 load@0x41cac(.rodata.str1.1+0x14f4d) "%d "
+   sscanf@0x41df0  fmt='%d '  level=bounded need=4
+            chain: x25@0x41dec load@0x41cac(.rodata.str1.1+0x14f4d) "%d "
+
+== 全量复算：14 个 handler / 27 处 sscanf / unresolved=0 / unbounded=0
+   fmt='%31s '     18 处
+   fmt='%d'        4 处
+   fmt='%d '       4 处
+   fmt='%u %u'     1 处
+dumped artifacts_adb\r1_wlan_reach\residual\handlers\drv_cmd_max_tx_power.txt
+dumped artifacts_adb\r1_wlan_reach\residual\handlers\drv_cmd_ccx_beacon_req.txt
+dumped artifacts_adb\r1_wlan_reach\residual\handlers\drv_cmd_ccx_plm_req.txt
+dumped artifacts_adb\r1_wlan_reach\residual\handlers\drv_cmd_set_disable_chan_list.txt
+dumped artifacts_adb\r1_wlan_reach\residual\handlers\drv_cmd_get_ani_level.txt

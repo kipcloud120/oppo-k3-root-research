@@ -26,7 +26,7 @@
 
 > **v13 证据收口（2026-11-20，见 [`HANDOVER.md`](HANDOVER.md) §66 与权威台账 [`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)；文档/离线收口 + 一次用户明确授权的重启）**：**当前 boot 的 `.text` KASLR slide 已实证取得**——dumpstate 第三主体路径（shell → init → dumpstate → bugreport，内核日志含未哈希的原始 pc/lr）+ 一次授权重启：当前 boot（`b9f9f06a-…`）slide = **`0x1953600000`**、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机、再重启即失效**；全部物料 SHA-256、地址归属区分（当前 boot / 重启前 boot / 10 份历史 last_kmsg）与 dumpstate 日志保留边界、成功/失败条件已在 `KASLR_EVIDENCE.md` 固化（审核 v013 P0.1–P0.4）。**判定语义不变：slide ≠ 可用 root**——GhostLock ②（可控 rt_mutex 堆地址）/ ③（W 线程栈基址）缺口不变，dumpstate 附带的 `sp` 属 init/swapper 栈、不满足 ③ 判据；v008 口径在"已审接口范围"内仍成立。**v13 主线从"找 slide"转为"地址发现 → 利用条件闭合"：阶段 1 证据收口、阶段 2 WARNING 观察面审计 + 候选裁决（厂商内核源码 `oppo-source/android_kernel_oppo_sdm710` 落地并双锚点校准；futex PI 路径 68 个 WARN 候选点全部排除——唯一用户路径候选 `futex.c:1302` 被 4 处 `-EINVAL` 前置检查拦截，③ 的 WARN-oracle 假设被否决，见 `WARN_ADDRESS_SURFACE_AUDIT.md` §8 + `HANDOVER.md` §68/§69）与阶段 3 GhostLock ②/③ 复评（缺口收敛为单一 N1，维持冻结，见 `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档与 §67）已完成；**厂商源码补做（§69.4/§70）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（地址可由 slide 复算，G2 §2.3 / G3 §6），waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证，`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）；阶段 3 收尾（v13.1，§71 + [`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)（G4），纯离线）：B3 并发语义静态审计完成、结论为否——链走查 `:702` 无条件读 `lock->waiters_leftmost`（空树 ⇒ `NULL+0x38` fault；非空树 ⇒ 必有地址不可知的真实 waiter），`:705` `rb_erase(fake)` 只能产生孤儿/幽灵 waiter 或不可控写 ⇒ B3 不满足 N1 的"可控"，由"待审计候选"改为"已审计否决"（复算 `python tools/b3_audit.py`），GhostLock ②/③ 维持冻结**；阶段 4 WLAN 调用链审计与阶段 5 总验收待启动，改代码与调试待用户通知。四层判定不变：NO-GO。**
 
-> **v13.2 WLAN 调用链与项目收口（2026-11-20，见 [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) / [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) / [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) / [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) / [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)；纯离线、零上机，不改变四层判定）**：① **候选 A 重定向**——`0x89f1 → hdd_driver_command` 的真实用户态调用方是 **`wpa_supplicant` 的 `DRIVER` 通道**（Android `android_priv_cmd`，4 处 ioctl；控制接口 `"DRIVER "` → `wpa_drv_driver_cmd`），而 `/odm/bin/iwpriv`（含 `iwpriv_vendor`）**只发 WEXT 私有**（`0x8BE0..0x8BFF`，32 handler / 223 参数）与 7 个固定常量，**不发 `0x89f1/0x89fd`**；因此 OPPO HAL `executeDriverCommand` 的真实内核端点是 **WEXT 私有面**，不是 `hdd_driver_command`。② **可达性（P1-D）**——受限 UID 0 代理（`oplus_wifi_service`）可执行 `iwpriv` 且持 `net_admin` ⇒ WEXT SET 面**域满足**；但它对 `wifi_vendor_wpa_socket` **无任何 SELinux allow** ⇒ wpa_cli/supplicant 通道对代理**关闭**；shell 无 `wcnss_service_exec` 执行权 ⇒ 不能跑 `iwpriv`；`0x89f1` 在内核层**无 `CAP_NET_ADMIN` 门**（`dev_ioctl` 源码），但 shell 的 `neverallowx` 与内核 xperm 生效性**未决**。③ **handler 审计**——98 项 `hdd_drv_cmds` 与 WEXT 32 handler 分别见两份报告；4.9 wext 核心以 `kzalloc(extra_size)+copy_from_user(extra_size)` 归一化长度，"用户长度 < 结构体 ⇒ 堆越界读"不成立。④ **FTM `0x89fd` 条件性关闭**——仅 `conparam==5` 受理；正常启动 `insmod` 无 con_mode 参数（默认 0），运行期改 con_mode 触发整驱动模式重启；随固件出货的用户态程序无 `0x89fd` 调用方。⑤ **vendor 分诊**——37 个 `.ko` / 32 个实际加载，非 WLAN 模块中"真实加载 + 用户态接口 + 两主体可达"合格者 **0**。⑥ **结论不变：受限 UID 0 命令执行已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
+> **v13.2 WLAN 调用链与项目收口（2026-11-20，见 [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) / [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) / [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) / [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) / [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)；纯离线、零上机，不改变四层判定）**：① **候选 A 重定向**——`0x89f1 → hdd_driver_command` 的真实用户态调用方是 **`wpa_supplicant` 的 `DRIVER` 通道**（Android `android_priv_cmd`，4 处 ioctl；控制接口 `"DRIVER "` → `wpa_drv_driver_cmd`），而 `/odm/bin/iwpriv`（含 `iwpriv_vendor`）**只发 WEXT 私有**（`0x8BE0..0x8BFF`，32 handler / 223 参数）与 7 个固定常量，**不发 `0x89f1/0x89fd`**；因此 OPPO HAL `executeDriverCommand` 的真实内核端点是 **WEXT 私有面**，不是 `hdd_driver_command`。② **可达性（P1-D）**——受限 UID 0 代理（`oplus_wifi_service`）可执行 `iwpriv` 且持 `net_admin` ⇒ WEXT SET 面**域满足**；但它对 `wifi_vendor_wpa_socket` **无任何 SELinux allow** ⇒ wpa_cli/supplicant 通道对代理**关闭**；shell 无 `wcnss_service_exec` 执行权 ⇒ 不能跑 `iwpriv`；`0x89f1` 在内核层**无 `CAP_NET_ADMIN` 门**（`dev_ioctl` 源码），但 shell 的 `neverallowx` 与内核 xperm 生效性**未决**。③ **handler 审计**——98 项 `hdd_drv_cmds`：**0 内存破坏反例**，5 项残留收口（`MAXTXPOWER` 值域 [-100,100]、4 个 `FMT-UNRESOLVED` 全为 `%31s`/`%d`），2 个**非内存破坏**反例（H1 `SETMCRATE` 未检返回、H2 `MAXTXPOWER` 解析失败读未初始化栈）；WEXT 私有面（代理可达）：23 父项 + 101 子命令**全部收口**（21 有界 / 2 无功能 / 0 未决），**0 越界读写反例**；更正首轮 12 个 SET/GET 方向误判，`0x8BFE` 是 8 B 空桩、`0x8BFF` extra 只有 5 B，信息泄露方向关闭。④ **FTM `0x89fd` 条件性关闭**——仅 `conparam==5` 受理；正常启动 `insmod` 无 con_mode 参数（默认 0），运行期改 con_mode 触发整驱动模式重启；随固件出货的用户态程序无 `0x89fd` 调用方。⑤ **vendor 分诊**——37 个 `.ko` / 32 个实际加载，非 WLAN 模块中"真实加载 + 用户态接口 + 两主体可达"合格者 **0**。⑥ **结论不变：受限 UID 0 命令执行已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
 
 | | |
 |---|---|
@@ -39,9 +39,9 @@
 
 ---
 
-## 当前状态一览（v12）
+## 当前状态一览（v13.2）
 
-| 面 | 机制 | 卡点 / v12 状态 |
+| 面 | 机制 | 卡点 / v13.2 状态 |
 |---|---|---|
 | **KGSL 对象生命周期**（v12 主线，已阶段性收口） | shell 可 open `/dev/kgsl-3d0` 且 `DRAWCTXT_CREATE` 成功（实测） | 长度维度 **14/14 有界**（§58）；所有权 **I1–I5 成立**；KO-1 已关闭（sparse 面 `ENOTSUPP`，§62）；**非 sparse 释放链自洽（I10–I12）+ I4 上机证实（无 double-free，§63）** ⇒ **K2 达成、主线阶段性关闭**；K3 并发登记不作 |
 | **GhostLock** `CVE-2026-43499` | 成立（`-EDEADLK` 10+ 次复现），栈载体已闭合（3 条 xattr 候选） | **冻结（v12）**：① 类**已闭合**（G1 18/19 genuine + 3.68× 缩放；G2 两套数据唯一解、全量 100%，§48/§49）；**缺 ② 可控 rt_mutex 堆地址（时间流锚定于 §50 证伪）/ ③ 栈地址（已审接口范围内无可用 oracle，§53/§60）**；**①-s `.text` slide 已于 v13 实证取得（dumpstate 路径，`0x1953600000`，当前 boot）但 ②/③ 缺口不变**；**B3（4 个静态实例）地址可得但 G4 审计否证其可用性（空树必 fault / 非空树不可控），不构成 N1 替代** |
@@ -50,10 +50,10 @@
 | binder `CVE-2022-20421` | pre-fix | ticket spinlock 使原语退化为常数加法 |
 | FastRPC `CVE-2023-33063` | 面存在 | uid 0 域下更封闭（权限并集 ∅） |
 | `/dev/diag` | 入口层无缺陷；**DCI 解析子树 v10.1 已否证**（三条回传路径均有"声明长度⇄实收长度"门） | 余量 R1–R3（`extract_dci_ctrl_pkt` 控制语义、两条非 apps 入口、长度字段功能边界）；依赖内核指针的利用仍被 ②/③ 阻断 |
-| **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限，两次回显 `uid=0(root)`，§23）；缺口 = 域逃逸（§24 判无路径）。**v12.3.1**：该 UID 0 子进程（域 `oplus_wifi_service`、含 NET_ADMIN/NET_RAW/SYS_MODULE）同时是 WLAN 驱动面的**间接可达主体**——`0x89f1 → hdd_driver_command` 已列为首选离线审计候选（见 `docs_archive/R1_WLAN非配置输入可达性矩阵` §6）；用户态 iwpriv ↔ 内核态 ioctl 的连接点未证，不做动态输入 |
+| **OPPO Wi-Fi 私有事务**（非内核） | **已利用** | `\n`/反引号绕过 11 字符黑名单 → `sh -c` 以 `uid=0` 执行（域受限，两次回显 `uid=0(root)`，§23）；缺口 = 域逃逸（§24 判无路径）。**v13.2 更正**：该 UID 0 子进程（域 `oplus_wifi_service`、含 NET_ADMIN/NET_RAW/SYS_MODULE）可执行 `/odm/bin/iwpriv` 并驱动 **WEXT 私有 ioctl**（`0x8BE0..0x8BFF`，32 handler/223 参数）；但 **`iwpriv` 不发 `0x89f1`**，而 `0x89f1` 的真实调用方 `wpa_supplicant` 的控制 socket 对该域**无 SELinux 权限** ⇒ "代理 → `hdd_driver_command`"不成立。详见 [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md)；不做动态 WLAN 输入 |
 | 私有 Binder / `system_server` / Wi-Fi 消费者 | 方法级否证 | 7/7 闭合、`system_server` 取句柄处断开、消费者三道门全封（§33–§37） |
 
-**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v13.1 分层判定）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**；**v13 权威证据台账：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)**；**阶段 3 收尾（B3 审计）：[`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)**——新对话从 `HANDOVER_RESUME.md` 开始，再读 §71 → §70 → §69 → §66 → §63 → §62 → §61 → §60。
+**最终判定：[`CLOSURE.md`](CLOSURE.md)**（v13.2 五层验收）。完整证据链：**[`HANDOVER.md`](HANDOVER.md)**；**v13 权威证据台账：[`KASLR_EVIDENCE.md`](KASLR_EVIDENCE.md)**；**B3 审计：[`GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`](GHOSTLOCK_B3_CONCURRENCY_AUDIT.md)**；**v13.2 WLAN：[`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) / [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) / [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) / [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) / [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md)**；G5/T3 独立线：`HANDOVER_G5_T3_2026-11-20.md`（不并入本文结论）——新对话从 `HANDOVER_RESUME.md` 开始，再读 §72 → §71 → §70 → §69 → §66 → §63 → §62 → §61 → §60。
 
 ---
 
@@ -109,8 +109,17 @@
 ## 仓库结构
 
 ```
-HANDOVER.md                 # 主文档：§1–§37 历史证据链 + §38–§42 v3（GhostLock 重开）
-README.md / HANDOVER_RESUME.md / CLOSURE.md   # 入口 / 一页摘要 / 分层判定
+HANDOVER.md                 # 主文档：§1–§37 历史 + §38–§42 v3 + §61–§71 v12/v13 + §72 v13.2
+README.md / HANDOVER_RESUME.md / CLOSURE.md   # 入口 / 一页摘要 / 五层验收（唯一最终判定）
+KASLR_EVIDENCE.md           # v13 slide 权威证据台账（哈希/归属/保留边界）
+GHOSTLOCK_B3_CONCURRENCY_AUDIT.md / GHOSTLOCK_PHASE3_DECISION.md / GHOSTLOCK_ADDRESS_*.md  # 阶段 3（G0–G4）
+WARN_ADDRESS_SURFACE_AUDIT.md  # 阶段 2 WARNING 观察面审计
+WLAN_IOCTL_CHAIN_AUDIT.md   # v13.2 P1-A/C/D：调用链 + 可达性 + 候选 A 重定向
+WLAN_HANDLER_AUDIT.md       # v13.2 P1-B：98 项 hdd_drv_cmds handler（+ handler_audit.csv）
+WLAN_WEXT_HANDLER_AUDIT.md  # v13.2：WEXT 32 handler（代理可达面）
+WLAN_FTM_AUDIT.md           # v13.2 P2：FTM 0x89fd 条件性关闭
+VENDOR_SURFACE_MATRIX.md    # v13.2 P3：37 .ko / 32 加载分诊
+HANDOVER_G5_T3_2026-11-20.md  # 独立 G5/T3 线（② NO-GO；不并入 v13.2 五层验收）
 FEASIBILITY_v007.md         # v007 方案评估 + 可行性评估（§12.1 已加 v008 更正块）
 FEASIBILITY_v008.md         # v008 响应：三类地址独立关系 + oracle/唯一性分离 + 研究重排（权威）
 DUAL_TRACK_RESULT.md        # 双方向预研综合结论
@@ -121,9 +130,16 @@ tools/
 ├── gl_frame_calc.py / gl_carrier_rescan.py / gl_nul_analysis.py   # GhostLock 几何/NUL
 ├── kgsl_ioctl_scan.py                      # v11：KGSL ioctl 拷贝点与长度来源
 ├── kgsl_lifecycle.py                       # v12：KGSL 取/放点普查 + pending_free 访问点
+├── wlan_cmd_table.py                       # v13.2：98 项 hdd_drv_cmds 复算
+├── wlan_wext_table.py / wlan_wext_scan.py  # v13.2：WEXT 32 handler + 223 参数/扫描
+├── wlan_handler_scan.py                    # v13.2：98 handler 结构化事实（CSV）
+├── scan_ioctl_bin.py / scan_ioctl_const.py # v13.2：固件二进制 0x89f1/0x89fd 盘点
+├── disasm_user.py / fn_around.py           # v13.2：无符号用户态反汇编辅助
 └── ...                                      # 其余分析器与探针
 artifacts_adb/
 ├── binder_audit/           # AUDIT_REPORT / GHOSTLOCK_NUL_ANALYSIS / WAITER_ADDRESS_ANALYSIS 等
+├── r1_wlan_reach/          # v13.2：handler_audit.csv / wext_audit.csv / iwpriv.dis.txt / ioctl_const_inventory.md
+├── vendor_triage/          # v13.2：32 加载模块 / 37 .ko 的接口面矩阵原始产物
 └── ...
 live_probe/                 # 真机只读探针源码 + LIVE_PROBE_RESULT.md（二进制不入库）
 ref_pc/（不入库）           # 克隆的 PCKM00 参考项目（第三方 GPL，仅本地比对）
@@ -234,7 +250,7 @@ adb shell 'rm -f /data/local/tmp/kgsl_sparse_probe'
 
 ## 何时应重开 / 已重开
 
-1. **【v3 已重开 · v12 冻结 · v13 slide 已取得】GhostLock**：重开理由是侧信道真机可用（① 类地址可得），而非"任一地址泄露"。**v12 起冻结**：②/③ 在已审接口范围内均无路径，重开条件收紧为"出现新的、可独立验证的内核对象地址来源"。**v13 更新**：`.text` slide 已由 dumpstate 路径取得（`KASLR_EVIDENCE.md`），重开复评按审核 v013 P2 进行（②③ 分别评审，不以 slide 替代堆/栈地址；M2 维持关闭）。**注意：路径重开 ≠ 已 root。**
+1. **【v3 已重开 · v12 冻结 · v13 slide 已取得 · v13.2 WLAN 收口】GhostLock**：重开理由是侧信道真机可用（① 类地址可得），而非"任一地址泄露"。**v12 起冻结**：②/③ 在已审接口范围内均无路径，重开条件收紧为"出现新的、可独立验证的内核对象地址来源"。**v13 更新**：`.text` slide 已由 dumpstate 路径取得（`KASLR_EVIDENCE.md`），重开复评按审核 v013 P2 进行（②③ 分别评审，不以 slide 替代堆/栈地址；M2 维持关闭）。**v13.2 补充**：② 另有独立 G5/T3 设备线（`HANDOVER_G5_T3_2026-11-20.md`，结论 ② 机制性 NO-GO；不并入本项目五层验收）。**注意：路径重开 ≠ 已 root。**
 2. **【v12 主线 · v12.2 阶段性收口】KGSL 生命周期**：KO-1（§61.6）已由 §62 上机关闭（sparse 面 `ENOTSUPP`）；非 sparse 释放链自洽（I10–I12）+ I4 上机证实 ⇒ K2 达成、主线阶段性关闭，K3 并发登记不作。重开条件收紧为：新同 SPL 的 sparse 可达面、K3 新证据（可承受重启的独立设备 + 新授权）、或违反 I10–I12 的可复算非 sparse 不变量反例。
 3. binder 线：出现面向 4.9 / ticket spinlock 的 UAF 原语研究 → 靶点、pre-fix 证据、堆条件已备。
 4. SPL / 内核构建变化 → 全部偏移/形态/策略作废，须整体重跑（故建议关闭 OTA）。

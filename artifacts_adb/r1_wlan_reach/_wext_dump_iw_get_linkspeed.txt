@@ -1,0 +1,151 @@
+== iw_get_linkspeed @0x8eb48 size=0x258 ==
+0x08eb48  sub      sp, sp, #0x70
+0x08eb4c  stp      x29, x30, [sp, #0x20]
+0x08eb50  add      x29, sp, #0x20
+0x08eb54  stp      x26, x25, [sp, #0x30]
+0x08eb58  stp      x24, x23, [sp, #0x40]
+0x08eb5c  stp      x22, x21, [sp, #0x50]
+0x08eb60  stp      x20, x19, [sp, #0x60]
+0x08eb64  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08eb68  mov      x19, #0        ; = .rodata.str1.1+0x2c288   ; "iw_get_linkspeed"
+0x08eb6c  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08eb70  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x2c288   ; "iw_get_linkspeed"
+0x08eb74  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08eb78  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x2c288   ; "iw_get_linkspeed"
+0x08eb7c  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08eb80  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x2c288   ; "iw_get_linkspeed"
+0x08eb84  mov      x22, x2
+0x08eb88  mov      x23, x1
+0x08eb8c  add      x1, sp, #8
+0x08eb90  mov      x2, x19
+0x08eb94  ldr      x8, [x8]
+0x08eb98  mov      x21, x3
+0x08eb9c  mov      x24, x0
+0x08eba0  stur     x8, [x29, #-8]
+0x08eba4  bl       #0x8eba4        ; -> __osif_vdev_sync_op_start
+0x08eba8  mov      w25, w0
+0x08ebac  cbnz     w0, #0x8ec10
+0x08ebb0  mov      x20, #0        ; = .rodata.str1.1+0x2c299   ; "__iw_get_linkspeed"
+0x08ebb4  mov      x2, #0        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08ebb8  movk     x20, #0, lsl #16        ; = .rodata.str1.1+0x2c299   ; "__iw_get_linkspeed"
+0x08ebbc  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08ebc0  movk     x20, #0, lsl #32        ; = .rodata.str1.1+0x2c299   ; "__iw_get_linkspeed"
+0x08ebc4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08ebc8  movk     x20, #0, lsl #48        ; = .rodata.str1.1+0x2c299   ; "__iw_get_linkspeed"
+0x08ebcc  mov      w0, #0x33
+0x08ebd0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08ebd4  mov      w4, #0xe23
+0x08ebd8  mov      w1, #8
+0x08ebdc  mov      x3, x20
+0x08ebe0  mov      x5, x24
+0x08ebe4  stur     wzr, [x29, #-0xc]
+0x08ebe8  bl       #0x8ebe8        ; -> qdf_trace_msg
+0x08ebec  ldr      x26, [x24, #0x918]
+0x08ebf0  mov      x1, x20
+0x08ebf4  mov      x0, x26
+0x08ebf8  bl       #0x8ebf8        ; -> __wlan_hdd_validate_context
+0x08ebfc  mov      w25, w0
+0x08ec00  cbz      w0, #0x8ec50
+0x08ec04  ldr      x0, [sp, #8]
+0x08ec08  mov      x1, x19
+0x08ec0c  bl       #0x8ec0c        ; -> __osif_vdev_sync_op_stop
+0x08ec10  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x08ec14  ldur     x8, [x29, #-8]
+0x08ec18  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ec1c  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08ec20  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08ec24  ldr      x9, [x9]
+0x08ec28  cmp      x9, x8
+0x08ec2c  b.ne     #0x8ed9c
+0x08ec30  mov      w0, w25
+0x08ec34  ldp      x20, x19, [sp, #0x60]
+0x08ec38  ldp      x22, x21, [sp, #0x50]
+0x08ec3c  ldp      x24, x23, [sp, #0x40]
+0x08ec40  ldp      x26, x25, [sp, #0x30]
+0x08ec44  ldp      x29, x30, [sp, #0x20]
+0x08ec48  add      sp, sp, #0x70
+0x08ec4c  ret      
+0x08ec50  ldr      x8, [x26, #0xc0]
+0x08ec54  ldr      w8, [x8, #0x20f0]
+0x08ec58  cmp      w8, #1
+0x08ec5c  b.eq     #0x8eca4
+0x08ec60  cmp      w8, #2
+0x08ec64  b.eq     #0x8ecc4
+0x08ec68  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08ec6c  mov      x20, #0        ; = .bss+0xfc8
+0x08ec70  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ec74  movk     x20, #0, lsl #16        ; = .bss+0xfc8
+0x08ec78  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08ec7c  movk     x20, #0, lsl #32        ; = .bss+0xfc8
+0x08ec80  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08ec84  movk     x20, #0, lsl #48        ; = .bss+0xfc8
+0x08ec88  ldr      x21, [x8]
+0x08ec8c  ldr      x8, [x20]
+0x08ec90  sub      x8, x8, x21
+0x08ec94  cmn      x8, #0x32
+0x08ec98  b.mi     #0x8ed5c
+0x08ec9c  mov      w25, #-0x20c
+0x08eca0  b        #0x8ec04
+0x08eca4  mov      x2, #0        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08eca8  ldrh     w3, [x23]
+0x08ecac  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08ecb0  mov      w0, #0x33
+0x08ecb4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08ecb8  mov      w1, #8
+0x08ecbc  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08ecc0  bl       #0x8ecc0        ; -> qdf_trace_msg
+0x08ecc4  add      x0, x24, #0x900
+0x08ecc8  sub      x1, x29, #0xc
+0x08eccc  bl       #0x8eccc        ; -> wlan_hdd_get_link_speed
+0x08ecd0  mov      w25, w0
+0x08ecd4  cbnz     w0, #0x8ec04
+0x08ecd8  mov      x2, #0        ; = .rodata.str1.1+0x2c2ac   ; "%u"
+0x08ecdc  ldur     w3, [x29, #-0xc]
+0x08ece0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2c2ac   ; "%u"
+0x08ece4  mov      w1, #5
+0x08ece8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2c2ac   ; "%u"
+0x08ecec  mov      x0, x21
+0x08ecf0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2c2ac   ; "%u"
+0x08ecf4  strh     w1, [x22, #8]
+0x08ecf8  bl       #0x8ecf8        ; -> snprintf
+0x08ecfc  cmp      w0, #5
+0x08ed00  b.lo     #0x8ed30
+0x08ed04  mov      x2, #0        ; = .rodata.str1.1+0x2c2af   ; "%s: %d: Unable to encode link speed"
+0x08ed08  mov      w0, #0x33
+0x08ed0c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2c2af   ; "%s: %d: Unable to encode link speed"
+0x08ed10  mov      w4, #0xe37
+0x08ed14  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2c2af   ; "%s: %d: Unable to encode link speed"
+0x08ed18  mov      w1, #2
+0x08ed1c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2c2af   ; "%s: %d: Unable to encode link speed"
+0x08ed20  mov      x3, x20
+0x08ed24  bl       #0x8ed24        ; -> qdf_trace_msg
+0x08ed28  mov      w25, #-5
+0x08ed2c  b        #0x8ec04
+0x08ed30  mov      x2, #0        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ed34  mov      w0, #0x33
+0x08ed38  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ed3c  mov      w4, #0xe3b
+0x08ed40  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ed44  mov      w1, #8
+0x08ed48  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ed4c  mov      x3, x20
+0x08ed50  bl       #0x8ed50        ; -> qdf_trace_msg
+0x08ed54  mov      w25, wzr
+0x08ed58  b        #0x8ec04
+0x08ed5c  mov      x2, #0        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08ed60  mov      x3, #0        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08ed64  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08ed68  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08ed6c  ldrh     w5, [x23]
+0x08ed70  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08ed74  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08ed78  mov      w0, #0x33
+0x08ed7c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08ed80  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08ed84  mov      w4, #0xbe6
+0x08ed88  mov      w1, #2
+0x08ed8c  bl       #0x8ed8c        ; -> qdf_trace_msg
+0x08ed90  mov      w25, #-0x20c
+0x08ed94  str      x21, [x20]
+0x08ed98  b        #0x8ec04
+0x08ed9c  bl       #0x8ed9c        ; -> __stack_chk_fail

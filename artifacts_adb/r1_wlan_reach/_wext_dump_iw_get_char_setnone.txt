@@ -1,0 +1,99 @@
+== iw_get_char_setnone @0x96270 size=0x188 ==
+0x096270  sub      sp, sp, #0x70
+0x096274  stp      x29, x30, [sp, #0x10]
+0x096278  add      x29, sp, #0x10
+0x09627c  str      x27, [sp, #0x20]
+0x096280  stp      x26, x25, [sp, #0x30]
+0x096284  stp      x24, x23, [sp, #0x40]
+0x096288  stp      x22, x21, [sp, #0x50]
+0x09628c  stp      x20, x19, [sp, #0x60]
+0x096290  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x096294  mov      x19, #0        ; = .rodata.str1.1+0x2d597   ; "iw_get_char_setnone"
+0x096298  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x09629c  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x2d597   ; "iw_get_char_setnone"
+0x0962a0  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x0962a4  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x2d597   ; "iw_get_char_setnone"
+0x0962a8  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x0962ac  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x2d597   ; "iw_get_char_setnone"
+0x0962b0  mov      x21, x2
+0x0962b4  mov      x24, x1
+0x0962b8  mov      x1, sp
+0x0962bc  mov      x2, x19
+0x0962c0  ldr      x8, [x8]
+0x0962c4  mov      x20, x3
+0x0962c8  mov      x23, x0
+0x0962cc  str      x8, [sp, #8]
+0x0962d0  bl       #0x962d0        ; -> __osif_vdev_sync_op_start
+0x0962d4  mov      w25, w0
+0x0962d8  cbnz     w0, #0x963b0
+0x0962dc  mov      x22, #0        ; = .rodata.str1.1+0x2d5ab   ; "__iw_get_char_setnone"
+0x0962e0  mov      x2, #0        ; = .rodata.str1.1+0x2c30a   ; "%s: %d: enter(%s)"
+0x0962e4  movk     x22, #0, lsl #16        ; = .rodata.str1.1+0x2d5ab   ; "__iw_get_char_setnone"
+0x0962e8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2c30a   ; "%s: %d: enter(%s)"
+0x0962ec  movk     x22, #0, lsl #32        ; = .rodata.str1.1+0x2d5ab   ; "__iw_get_char_setnone"
+0x0962f0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2c30a   ; "%s: %d: enter(%s)"
+0x0962f4  movk     x22, #0, lsl #48        ; = .rodata.str1.1+0x2d5ab   ; "__iw_get_char_setnone"
+0x0962f8  ldrh     w27, [x21, #0xa]
+0x0962fc  mov      w0, #0x33
+0x096300  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2c30a   ; "%s: %d: enter(%s)"
+0x096304  mov      w4, #0x7da
+0x096308  mov      w1, #8
+0x09630c  mov      x3, x22
+0x096310  mov      x5, x23
+0x096314  bl       #0x96314        ; -> qdf_trace_msg
+0x096318  ldr      x26, [x23, #0x918]
+0x09631c  mov      x1, x22
+0x096320  mov      x0, x26
+0x096324  bl       #0x96324        ; -> __wlan_hdd_validate_context
+0x096328  mov      w25, w0
+0x09632c  cbnz     w0, #0x963a4
+0x096330  mov      x0, x26
+0x096334  mov      x1, x24
+0x096338  bl       #0x96338        ; -> hdd_check_private_wext_control
+0x09633c  mov      w25, w0
+0x096340  cbnz     w0, #0x963a4
+0x096344  cmp      w27, #2
+0x096348  b.eq     #0x9636c
+0x09634c  cmp      w27, #1
+0x096350  b.ne     #0x9637c
+0x096354  add      x0, x23, #0x900
+0x096358  add      x1, x21, #8
+0x09635c  mov      x2, x20
+0x096360  mov      w3, #0x7ff
+0x096364  bl       #0x96364        ; -> hdd_wlan_get_stats
+0x096368  b        #0x9637c
+0x09636c  add      x0, x21, #8
+0x096370  mov      x1, x20
+0x096374  mov      w2, #0x7ff
+0x096378  bl       #0x96378        ; -> hdd_wlan_list_fw_profile
+0x09637c  mov      x2, #0        ; = .rodata.str1.1+0x2c364   ; "%s: %d: exit"
+0x096380  mov      w0, #0x33
+0x096384  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2c364   ; "%s: %d: exit"
+0x096388  mov      w1, #8
+0x09638c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2c364   ; "%s: %d: exit"
+0x096390  mov      x3, x22
+0x096394  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2c364   ; "%s: %d: exit"
+0x096398  mov      w4, #0x7f0
+0x09639c  bl       #0x9639c        ; -> qdf_trace_msg
+0x0963a0  mov      w25, wzr
+0x0963a4  ldr      x0, [sp]
+0x0963a8  mov      x1, x19
+0x0963ac  bl       #0x963ac        ; -> __osif_vdev_sync_op_stop
+0x0963b0  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x0963b4  ldr      x8, [sp, #8]
+0x0963b8  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x0963bc  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x0963c0  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x0963c4  ldr      x9, [x9]
+0x0963c8  cmp      x9, x8
+0x0963cc  b.ne     #0x963f4
+0x0963d0  mov      w0, w25
+0x0963d4  ldr      x27, [sp, #0x20]
+0x0963d8  ldp      x20, x19, [sp, #0x60]
+0x0963dc  ldp      x22, x21, [sp, #0x50]
+0x0963e0  ldp      x24, x23, [sp, #0x40]
+0x0963e4  ldp      x26, x25, [sp, #0x30]
+0x0963e8  ldp      x29, x30, [sp, #0x10]
+0x0963ec  add      sp, sp, #0x70
+0x0963f0  ret      
+0x0963f4  bl       #0x963f4        ; -> __stack_chk_fail

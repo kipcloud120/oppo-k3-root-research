@@ -1,0 +1,908 @@
+== iw_setnone_getint @0x88f68 size=0xe2c ==
+0x088f68  sub      sp, sp, #0x70
+0x088f6c  stp      x29, x30, [sp, #0x20]
+0x088f70  add      x29, sp, #0x20
+0x088f74  str      x25, [sp, #0x30]
+0x088f78  stp      x24, x23, [sp, #0x40]
+0x088f7c  stp      x22, x21, [sp, #0x50]
+0x088f80  stp      x20, x19, [sp, #0x60]
+0x088f84  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x088f88  mov      x19, #0        ; = .rodata.str1.1+0x2a2b2   ; "iw_setnone_getint"
+0x088f8c  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x088f90  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x2a2b2   ; "iw_setnone_getint"
+0x088f94  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x088f98  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x2a2b2   ; "iw_setnone_getint"
+0x088f9c  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x088fa0  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x2a2b2   ; "iw_setnone_getint"
+0x088fa4  mov      x21, x1
+0x088fa8  add      x1, sp, #8
+0x088fac  mov      x2, x19
+0x088fb0  mov      x22, x3
+0x088fb4  ldr      x8, [x8]
+0x088fb8  mov      x23, x0
+0x088fbc  stur     x8, [x29, #-8]
+0x088fc0  bl       #0x88fc0        ; -> __osif_vdev_sync_op_start
+0x088fc4  mov      w24, w0
+0x088fc8  cbnz     w0, #0x8902c
+0x088fcc  mov      x20, #0        ; = .rodata.str1.1+0x2a2c4   ; "__iw_setnone_getint"
+0x088fd0  mov      x2, #0        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x088fd4  movk     x20, #0, lsl #16        ; = .rodata.str1.1+0x2a2c4   ; "__iw_setnone_getint"
+0x088fd8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x088fdc  movk     x20, #0, lsl #32        ; = .rodata.str1.1+0x2a2c4   ; "__iw_setnone_getint"
+0x088fe0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x088fe4  movk     x20, #0, lsl #48        ; = .rodata.str1.1+0x2a2c4   ; "__iw_setnone_getint"
+0x088fe8  mov      w0, #0x33
+0x088fec  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x088ff0  mov      w4, #0x17d2
+0x088ff4  mov      w1, #8
+0x088ff8  mov      x3, x20
+0x088ffc  mov      x5, x23
+0x089000  sturb    wzr, [x29, #-0xc]
+0x089004  bl       #0x89004        ; -> qdf_trace_msg
+0x089008  ldr      x25, [x23, #0x918]
+0x08900c  mov      x1, x20
+0x089010  mov      x0, x25
+0x089014  bl       #0x89014        ; -> __wlan_hdd_validate_context
+0x089018  mov      w24, w0
+0x08901c  cbz      w0, #0x8906c
+0x089020  ldr      x0, [sp, #8]
+0x089024  mov      x1, x19
+0x089028  bl       #0x89028        ; -> __osif_vdev_sync_op_stop
+0x08902c  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x089030  ldur     x8, [x29, #-8]
+0x089034  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x089038  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08903c  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x089040  ldr      x9, [x9]
+0x089044  cmp      x9, x8
+0x089048  b.ne     #0x89d90
+0x08904c  mov      w0, w24
+0x089050  ldr      x25, [sp, #0x30]
+0x089054  ldp      x20, x19, [sp, #0x60]
+0x089058  ldp      x22, x21, [sp, #0x50]
+0x08905c  ldp      x24, x23, [sp, #0x40]
+0x089060  ldp      x29, x30, [sp, #0x20]
+0x089064  add      sp, sp, #0x70
+0x089068  ret      
+0x08906c  ldr      x8, [x25, #0xc0]
+0x089070  ldr      w8, [x8, #0x20f0]
+0x089074  cmp      w8, #1
+0x089078  b.eq     #0x890c0
+0x08907c  cmp      w8, #2
+0x089080  b.eq     #0x890e0
+0x089084  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x089088  mov      x20, #0        ; = .bss+0xfc8
+0x08908c  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x089090  movk     x20, #0, lsl #16        ; = .bss+0xfc8
+0x089094  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x089098  movk     x20, #0, lsl #32        ; = .bss+0xfc8
+0x08909c  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x0890a0  movk     x20, #0, lsl #48        ; = .bss+0xfc8
+0x0890a4  ldr      x22, [x8]
+0x0890a8  ldr      x8, [x20]
+0x0890ac  sub      x8, x8, x22
+0x0890b0  cmn      x8, #0x32
+0x0890b4  b.mi     #0x891b4
+0x0890b8  mov      w24, #-0x20c
+0x0890bc  b        #0x89020
+0x0890c0  mov      x2, #0        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x0890c4  ldrh     w3, [x21]
+0x0890c8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x0890cc  mov      w0, #0x33
+0x0890d0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x0890d4  mov      w1, #8
+0x0890d8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x0890dc  bl       #0x890dc        ; -> qdf_trace_msg
+0x0890e0  mov      w0, #0x568
+0x0890e4  mov      w2, #0x17dd
+0x0890e8  mov      x1, x20
+0x0890ec  bl       #0x890ec        ; -> __qdf_mem_malloc
+0x0890f0  cbz      x0, #0x89188
+0x0890f4  ldr      w5, [x22]
+0x0890f8  mov      x21, x0
+0x0890fc  sub      w8, w5, #1
+0x089100  cmp      w8, #0x3c
+0x089104  b.hi     #0x891f4
+0x089108  mov      x9, #0        ; = .rodata+0x4b02
+0x08910c  add      x24, x23, #0x900
+0x089110  movk     x9, #0, lsl #16        ; = .rodata+0x4b02
+0x089114  movk     x9, #0, lsl #32        ; = .rodata+0x4b02
+0x089118  movk     x9, #0, lsl #48        ; = .rodata+0x4b02
+0x08911c  adr      x10, #0x8912c
+0x089120  ldrh     w11, [x9, x8, lsl #1]
+0x089124  add      x10, x10, x11, lsl #2
+0x089128  br       x10
+0x08912c  ldr      x0, [x25]
+0x089130  sub      x1, x29, #0xc
+0x089134  bl       #0x89134        ; -> wlan_mlme_is_11d_enabled
+0x089138  cbz      w0, #0x89160
+0x08913c  mov      x2, #0        ; = .rodata.str1.1+0x29605   ; "%s: %d: Invalid 11d_enable flag"
+0x089140  mov      w0, #0x33
+0x089144  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x29605   ; "%s: %d: Invalid 11d_enable flag"
+0x089148  mov      w4, #0x17e9
+0x08914c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x29605   ; "%s: %d: Invalid 11d_enable flag"
+0x089150  mov      w1, #2
+0x089154  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x29605   ; "%s: %d: Invalid 11d_enable flag"
+0x089158  mov      x3, x20
+0x08915c  bl       #0x8915c        ; -> qdf_trace_msg
+0x089160  ldurb    w5, [x29, #-0xc]
+0x089164  mov      x2, #0        ; = .rodata.str1.1+0x2a2d8   ; "%s: %d: 11D state=%d!!"
+0x089168  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a2d8   ; "%s: %d: 11D state=%d!!"
+0x08916c  mov      w0, #0x33
+0x089170  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a2d8   ; "%s: %d: 11D state=%d!!"
+0x089174  mov      w4, #0x17eb
+0x089178  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a2d8   ; "%s: %d: 11D state=%d!!"
+0x08917c  mov      w1, #8
+0x089180  str      w5, [x22]
+0x089184  b        #0x8980c
+0x089188  mov      x2, #0        ; = .rodata.str1.1+0x29822   ; "%s: %d: failed to allocate memory for sme_config"
+0x08918c  mov      w0, #0x33
+0x089190  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x29822   ; "%s: %d: failed to allocate memory for sme_config"
+0x089194  mov      w4, #0x17df
+0x089198  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x29822   ; "%s: %d: failed to allocate memory for sme_config"
+0x08919c  mov      w1, #2
+0x0891a0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x29822   ; "%s: %d: failed to allocate memory for sme_config"
+0x0891a4  mov      x3, x20
+0x0891a8  bl       #0x891a8        ; -> qdf_trace_msg
+0x0891ac  mov      w24, #-0xc
+0x0891b0  b        #0x89020
+0x0891b4  mov      x2, #0        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x0891b8  mov      x3, #0        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x0891bc  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x0891c0  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x0891c4  ldrh     w5, [x21]
+0x0891c8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x0891cc  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x0891d0  mov      w0, #0x33
+0x0891d4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x0891d8  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x0891dc  mov      w4, #0xbe6
+0x0891e0  mov      w1, #2
+0x0891e4  bl       #0x891e4        ; -> qdf_trace_msg
+0x0891e8  mov      w24, #-0x20c
+0x0891ec  str      x22, [x20]
+0x0891f0  b        #0x89020
+0x0891f4  mov      x2, #0        ; = .rodata.str1.1+0x2a95d   ; "%s: %d: Invalid IOCTL get_value command %d"
+0x0891f8  mov      w0, #0x33
+0x0891fc  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a95d   ; "%s: %d: Invalid IOCTL get_value command %d"
+0x089200  mov      w4, #0x19a0
+0x089204  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a95d   ; "%s: %d: Invalid IOCTL get_value command %d"
+0x089208  mov      w1, #2
+0x08920c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a95d   ; "%s: %d: Invalid IOCTL get_value command %d"
+0x089210  b        #0x8980c
+0x089214  bl       #0x89214        ; -> qdf_trace_display
+0x089218  mov      w24, wzr
+0x08921c  str      wzr, [x22]
+0x089220  b        #0x89c4c
+0x089224  ldr      x0, [x25]
+0x089228  mov      w1, #6
+0x08922c  bl       #0x8922c        ; -> wlan_mlme_set_assoc_sta_limit
+0x089230  cbz      w0, #0x89814
+0x089234  mov      x2, #0        ; = .rodata.str1.1+0x2a2ef   ; "%s: %d: CFG_ASSOC_STA_LIMIT failed"
+0x089238  mov      w0, #0x33
+0x08923c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a2ef   ; "%s: %d: CFG_ASSOC_STA_LIMIT failed"
+0x089240  mov      w4, #0x17fa
+0x089244  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a2ef   ; "%s: %d: CFG_ASSOC_STA_LIMIT failed"
+0x089248  mov      w1, #2
+0x08924c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a2ef   ; "%s: %d: CFG_ASSOC_STA_LIMIT failed"
+0x089250  mov      x3, x20
+0x089254  bl       #0x89254        ; -> qdf_trace_msg
+0x089258  mov      w24, #-5
+0x08925c  b        #0x89c4c
+0x089260  ldr      x0, [x25]
+0x089264  bl       #0x89264        ; -> policy_mgr_get_concurrency_mode
+0x089268  mov      x2, #0        ; = .rodata.str1.1+0x2a312   ; "%s: %d: concurrency mode=%d"
+0x08926c  mov      w5, w0
+0x089270  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a312   ; "%s: %d: concurrency mode=%d"
+0x089274  str      w0, [x22]
+0x089278  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a312   ; "%s: %d: concurrency mode=%d"
+0x08927c  mov      w0, #0x33
+0x089280  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a312   ; "%s: %d: concurrency mode=%d"
+0x089284  mov      w4, #0x1805
+0x089288  b        #0x89808
+0x08928c  ldr      x0, [x25, #0x10]
+0x089290  mov      x1, x21
+0x089294  bl       #0x89294        ; -> sme_get_config_param
+0x089298  ldr      x0, [x25]
+0x08929c  sub      x1, x29, #0xc
+0x0892a0  bl       #0x892a0        ; -> wlan_mlme_get_vht_enable2x2
+0x0892a4  cbz      w0, #0x892cc
+0x0892a8  mov      x2, #0        ; = .rodata.str1.1+0x2a32e   ; "%s: %d: unable to get vht_enable2x2"
+0x0892ac  mov      w0, #0x33
+0x0892b0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a32e   ; "%s: %d: unable to get vht_enable2x2"
+0x0892b4  mov      w4, #0x180e
+0x0892b8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a32e   ; "%s: %d: unable to get vht_enable2x2"
+0x0892bc  mov      w1, #2
+0x0892c0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a32e   ; "%s: %d: unable to get vht_enable2x2"
+0x0892c4  mov      x3, x20
+0x0892c8  bl       #0x892c8        ; -> qdf_trace_msg
+0x0892cc  ldurb    w8, [x29, #-0xc]
+0x0892d0  cmp      w8, #0
+0x0892d4  mov      w8, #1
+0x0892d8  cinc     w8, w8, ne
+0x0892dc  str      w8, [x22]
+0x0892e0  ldr      x0, [x25]
+0x0892e4  bl       #0x892e4        ; -> policy_mgr_is_hw_dbs_2x2_capable
+0x0892e8  tbnz     w0, #0, #0x89304
+0x0892ec  ldr      x0, [x25]
+0x0892f0  bl       #0x892f0        ; -> policy_mgr_is_current_hwmode_dbs
+0x0892f4  tbz      w0, #0, #0x89304
+0x0892f8  ldr      w8, [x22]
+0x0892fc  sub      w8, w8, #1
+0x089300  str      w8, [x22]
+0x089304  ldr      w5, [x22]
+0x089308  mov      x2, #0        ; = .rodata.str1.1+0x2a352   ; "%s: %d: GET_NSS: Current NSS:%d"
+0x08930c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a352   ; "%s: %d: GET_NSS: Current NSS:%d"
+0x089310  mov      w0, #0x33
+0x089314  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a352   ; "%s: %d: GET_NSS: Current NSS:%d"
+0x089318  mov      w4, #0x1814
+0x08931c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a352   ; "%s: %d: GET_NSS: Current NSS:%d"
+0x089320  b        #0x89808
+0x089324  ldr      x8, [x23, #0x918]
+0x089328  mov      x25, #0        ; = .rodata.str1.1+0x283c1   ; "hdd_get_ldpc"
+0x08932c  mov      x2, #0        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089330  movk     x25, #0, lsl #16        ; = .rodata.str1.1+0x283c1   ; "hdd_get_ldpc"
+0x089334  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089338  movk     x25, #0, lsl #32        ; = .rodata.str1.1+0x283c1   ; "hdd_get_ldpc"
+0x08933c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089340  movk     x25, #0, lsl #48        ; = .rodata.str1.1+0x283c1   ; "hdd_get_ldpc"
+0x089344  ldr      x24, [x8, #0x10]
+0x089348  mov      w0, #0x33
+0x08934c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089350  mov      w4, #0xd51
+0x089354  mov      w1, #8
+0x089358  mov      x3, x25
+0x08935c  bl       #0x8935c        ; -> qdf_trace_msg
+0x089360  ldrb     w1, [x23, #0x998]
+0x089364  mov      x0, x24
+0x089368  mov      w2, wzr
+0x08936c  bl       #0x8936c        ; -> sme_get_ht_config
+0x089370  sxth     w24, w0
+0x089374  tbz      w24, #0x1f, #0x89458
+0x089378  mov      x2, #0        ; = .rodata.str1.1+0x283ce   ; "%s: %d: Failed to get LDPC value"
+0x08937c  mov      w0, #0x33
+0x089380  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x283ce   ; "%s: %d: Failed to get LDPC value"
+0x089384  mov      w4, #0xd55
+0x089388  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x283ce   ; "%s: %d: Failed to get LDPC value"
+0x08938c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x283ce   ; "%s: %d: Failed to get LDPC value"
+0x089390  b        #0x89d80
+0x089394  ldr      x8, [x23, #0x918]
+0x089398  mov      x25, #0        ; = .rodata.str1.1+0x284b6   ; "hdd_get_tx_stbc"
+0x08939c  mov      x2, #0        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x0893a0  movk     x25, #0, lsl #16        ; = .rodata.str1.1+0x284b6   ; "hdd_get_tx_stbc"
+0x0893a4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x0893a8  movk     x25, #0, lsl #32        ; = .rodata.str1.1+0x284b6   ; "hdd_get_tx_stbc"
+0x0893ac  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x0893b0  movk     x25, #0, lsl #48        ; = .rodata.str1.1+0x284b6   ; "hdd_get_tx_stbc"
+0x0893b4  ldr      x24, [x8, #0x10]
+0x0893b8  mov      w0, #0x33
+0x0893bc  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x0893c0  mov      w4, #0xd97
+0x0893c4  mov      w1, #8
+0x0893c8  mov      x3, x25
+0x0893cc  bl       #0x893cc        ; -> qdf_trace_msg
+0x0893d0  ldrb     w1, [x23, #0x998]
+0x0893d4  mov      x0, x24
+0x0893d8  mov      w2, #7
+0x0893dc  bl       #0x893dc        ; -> sme_get_ht_config
+0x0893e0  sxth     w24, w0
+0x0893e4  tbz      w24, #0x1f, #0x89458
+0x0893e8  mov      x2, #0        ; = .rodata.str1.1+0x284c6   ; "%s: %d: Failed to get TX STBC value"
+0x0893ec  mov      w0, #0x33
+0x0893f0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x284c6   ; "%s: %d: Failed to get TX STBC value"
+0x0893f4  mov      w4, #0xd9b
+0x0893f8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x284c6   ; "%s: %d: Failed to get TX STBC value"
+0x0893fc  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x284c6   ; "%s: %d: Failed to get TX STBC value"
+0x089400  b        #0x89d80
+0x089404  ldr      x8, [x23, #0x918]
+0x089408  mov      x25, #0        ; = .rodata.str1.1+0x2853c   ; "hdd_get_rx_stbc"
+0x08940c  mov      x2, #0        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089410  movk     x25, #0, lsl #16        ; = .rodata.str1.1+0x2853c   ; "hdd_get_rx_stbc"
+0x089414  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089418  movk     x25, #0, lsl #32        ; = .rodata.str1.1+0x2853c   ; "hdd_get_rx_stbc"
+0x08941c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089420  movk     x25, #0, lsl #48        ; = .rodata.str1.1+0x2853c   ; "hdd_get_rx_stbc"
+0x089424  ldr      x24, [x8, #0x10]
+0x089428  mov      w0, #0x33
+0x08942c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x283b3   ; "%s: %d: enter"
+0x089430  mov      w4, #0xdd8
+0x089434  mov      w1, #8
+0x089438  mov      x3, x25
+0x08943c  bl       #0x8943c        ; -> qdf_trace_msg
+0x089440  ldrb     w1, [x23, #0x998]
+0x089444  mov      x0, x24
+0x089448  mov      w2, #8
+0x08944c  bl       #0x8944c        ; -> sme_get_ht_config
+0x089450  sxth     w24, w0
+0x089454  tbnz     w24, #0x1f, #0x89d68
+0x089458  str      w24, [x22]
+0x08945c  b        #0x89814
+0x089460  mov      x2, #0        ; = .rodata.str1.1+0x2a4a1   ; "%s: %d: GET WMI_VDEV_PARAM_SGI"
+0x089464  mov      w0, #0x33
+0x089468  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a4a1   ; "%s: %d: GET WMI_VDEV_PARAM_SGI"
+0x08946c  mov      w4, #0x1874
+0x089470  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a4a1   ; "%s: %d: GET WMI_VDEV_PARAM_SGI"
+0x089474  mov      w1, #8
+0x089478  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a4a1   ; "%s: %d: GET WMI_VDEV_PARAM_SGI"
+0x08947c  mov      x3, x20
+0x089480  bl       #0x89480        ; -> qdf_trace_msg
+0x089484  ldrb     w0, [x23, #0x998]
+0x089488  mov      w1, #0x1c
+0x08948c  mov      w2, #1
+0x089490  b        #0x89c40
+0x089494  mov      x2, #0        ; = .rodata.str1.1+0x2a4c0   ; "%s: %d: GET WMI_VDEV_PARAM_ENABLE_RTSCTS"
+0x089498  mov      w0, #0x33
+0x08949c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a4c0   ; "%s: %d: GET WMI_VDEV_PARAM_ENABLE_RTSCTS"
+0x0894a0  mov      w4, #0x187d
+0x0894a4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a4c0   ; "%s: %d: GET WMI_VDEV_PARAM_ENABLE_RTSCTS"
+0x0894a8  mov      w1, #8
+0x0894ac  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a4c0   ; "%s: %d: GET WMI_VDEV_PARAM_ENABLE_RTSCTS"
+0x0894b0  mov      x3, x20
+0x0894b4  bl       #0x894b4        ; -> qdf_trace_msg
+0x0894b8  ldrb     w0, [x23, #0x998]
+0x0894bc  mov      w1, #0x2c
+0x0894c0  mov      w2, #1
+0x0894c4  b        #0x89c40
+0x0894c8  mov      x2, #0        ; = .rodata.str1.1+0x2a4e9   ; "%s: %d: GET WMI_VDEV_PARAM_CHWIDTH"
+0x0894cc  mov      w0, #0x33
+0x0894d0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a4e9   ; "%s: %d: GET WMI_VDEV_PARAM_CHWIDTH"
+0x0894d4  mov      w4, #0x1886
+0x0894d8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a4e9   ; "%s: %d: GET WMI_VDEV_PARAM_CHWIDTH"
+0x0894dc  mov      w1, #8
+0x0894e0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a4e9   ; "%s: %d: GET WMI_VDEV_PARAM_CHWIDTH"
+0x0894e4  mov      x3, x20
+0x0894e8  bl       #0x894e8        ; -> qdf_trace_msg
+0x0894ec  ldrb     w0, [x23, #0x998]
+0x0894f0  mov      w1, #0x15
+0x0894f4  mov      w2, #1
+0x0894f8  b        #0x89c40
+0x0894fc  mov      x2, #0        ; = .rodata.str1.1+0x2a50c   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_ENABLE"
+0x089500  mov      w0, #0x33
+0x089504  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a50c   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_ENABLE"
+0x089508  mov      w4, #0x188f
+0x08950c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a50c   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_ENABLE"
+0x089510  mov      w1, #8
+0x089514  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a50c   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_ENABLE"
+0x089518  mov      x3, x20
+0x08951c  bl       #0x8951c        ; -> qdf_trace_msg
+0x089520  ldrb     w0, [x23, #0x998]
+0x089524  mov      w1, #0x25
+0x089528  mov      w2, #2
+0x08952c  b        #0x89c40
+0x089530  mov      x2, #0        ; = .rodata.str1.1+0x2a532   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_POLL_PERIOD"
+0x089534  mov      w0, #0x33
+0x089538  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a532   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_POLL_PERIOD"
+0x08953c  mov      w4, #0x1898
+0x089540  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a532   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_POLL_PERIOD"
+0x089544  mov      w1, #8
+0x089548  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a532   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_POLL_PERIOD"
+0x08954c  mov      x3, x20
+0x089550  bl       #0x89550        ; -> qdf_trace_msg
+0x089554  ldrb     w0, [x23, #0x998]
+0x089558  mov      w1, #0x26
+0x08955c  mov      w2, #2
+0x089560  b        #0x89c40
+0x089564  mov      x2, #0        ; = .rodata.str1.1+0x2a55d   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_LISTEN_PERIOD"
+0x089568  mov      w0, #0x33
+0x08956c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a55d   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_LISTEN_PERIOD"
+0x089570  mov      w4, #0x18a1
+0x089574  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a55d   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_LISTEN_PERIOD"
+0x089578  mov      w1, #8
+0x08957c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a55d   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_LISTEN_PERIOD"
+0x089580  mov      x3, x20
+0x089584  bl       #0x89584        ; -> qdf_trace_msg
+0x089588  ldrb     w0, [x23, #0x998]
+0x08958c  mov      w1, #0x27
+0x089590  mov      w2, #2
+0x089594  b        #0x89c40
+0x089598  mov      x2, #0        ; = .rodata.str1.1+0x2a58a   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_OFDM_LEVEL"
+0x08959c  mov      w0, #0x33
+0x0895a0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a58a   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_OFDM_LEVEL"
+0x0895a4  mov      w4, #0x18aa
+0x0895a8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a58a   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_OFDM_LEVEL"
+0x0895ac  mov      w1, #8
+0x0895b0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a58a   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_OFDM_LEVEL"
+0x0895b4  mov      x3, x20
+0x0895b8  bl       #0x895b8        ; -> qdf_trace_msg
+0x0895bc  ldrb     w0, [x23, #0x998]
+0x0895c0  mov      w1, #0x28
+0x0895c4  mov      w2, #2
+0x0895c8  b        #0x89c40
+0x0895cc  mov      x2, #0        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x0895d0  mov      w0, #0x33
+0x0895d4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x0895d8  mov      w4, #0x18b3
+0x0895dc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x0895e0  mov      w1, #8
+0x0895e4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x0895e8  mov      x3, x20
+0x0895ec  bl       #0x895ec        ; -> qdf_trace_msg
+0x0895f0  ldrb     w0, [x23, #0x998]
+0x0895f4  mov      w1, #0x29
+0x0895f8  mov      w2, #2
+0x0895fc  b        #0x89c40
+0x089600  mov      x2, #0        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x089604  mov      w0, #0x33
+0x089608  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x08960c  mov      w4, #0x18bc
+0x089610  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x089614  mov      w1, #8
+0x089618  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a5b4   ; "%s: %d: GET WMI_PDEV_PARAM_ANI_CCK_LEVEL"
+0x08961c  mov      x3, x20
+0x089620  bl       #0x89620        ; -> qdf_trace_msg
+0x089624  ldrb     w0, [x23, #0x998]
+0x089628  mov      w1, #0xa
+0x08962c  mov      w2, #2
+0x089630  b        #0x89c40
+0x089634  mov      x2, #0        ; = .rodata.str1.1+0x2a644   ; "%s: %d: GET WMI_PDEV_PARAM_TX_CHAIN_MASK"
+0x089638  mov      w0, #0x33
+0x08963c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a644   ; "%s: %d: GET WMI_PDEV_PARAM_TX_CHAIN_MASK"
+0x089640  mov      w4, #0x18e9
+0x089644  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a644   ; "%s: %d: GET WMI_PDEV_PARAM_TX_CHAIN_MASK"
+0x089648  mov      w1, #8
+0x08964c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a644   ; "%s: %d: GET WMI_PDEV_PARAM_TX_CHAIN_MASK"
+0x089650  mov      x3, x20
+0x089654  bl       #0x89654        ; -> qdf_trace_msg
+0x089658  ldrb     w0, [x23, #0x998]
+0x08965c  mov      w1, #1
+0x089660  mov      w2, #2
+0x089664  b        #0x89c40
+0x089668  mov      x2, #0        ; = .rodata.str1.1+0x2a66d   ; "%s: %d: GET WMI_PDEV_PARAM_RX_CHAIN_MASK"
+0x08966c  mov      w0, #0x33
+0x089670  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a66d   ; "%s: %d: GET WMI_PDEV_PARAM_RX_CHAIN_MASK"
+0x089674  mov      w4, #0x18f2
+0x089678  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a66d   ; "%s: %d: GET WMI_PDEV_PARAM_RX_CHAIN_MASK"
+0x08967c  mov      w1, #8
+0x089680  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a66d   ; "%s: %d: GET WMI_PDEV_PARAM_RX_CHAIN_MASK"
+0x089684  mov      x3, x20
+0x089688  bl       #0x89688        ; -> qdf_trace_msg
+0x08968c  ldrb     w0, [x23, #0x998]
+0x089690  mov      w1, #2
+0x089694  mov      w2, #2
+0x089698  b        #0x89c40
+0x08969c  mov      x2, #0        ; = .rodata.str1.1+0x2a5dd   ; "%s: %d: GET WMI_VDEV_PARAM_FIXED_RATE"
+0x0896a0  mov      w0, #0x33
+0x0896a4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a5dd   ; "%s: %d: GET WMI_VDEV_PARAM_FIXED_RATE"
+0x0896a8  mov      w4, #0x18c5
+0x0896ac  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a5dd   ; "%s: %d: GET WMI_VDEV_PARAM_FIXED_RATE"
+0x0896b0  mov      w1, #8
+0x0896b4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a5dd   ; "%s: %d: GET WMI_VDEV_PARAM_FIXED_RATE"
+0x0896b8  mov      x3, x20
+0x0896bc  bl       #0x896bc        ; -> qdf_trace_msg
+0x0896c0  ldrb     w0, [x23, #0x998]
+0x0896c4  mov      w1, #0x1b
+0x0896c8  mov      w2, #1
+0x0896cc  b        #0x89c40
+0x0896d0  mov      x2, #0        ; = .rodata.str1.1+0x2a603   ; "%s: %d: GET AMPDU"
+0x0896d4  mov      w0, #0x33
+0x0896d8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a603   ; "%s: %d: GET AMPDU"
+0x0896dc  mov      w4, #0x18ce
+0x0896e0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a603   ; "%s: %d: GET AMPDU"
+0x0896e4  mov      w1, #8
+0x0896e8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a603   ; "%s: %d: GET AMPDU"
+0x0896ec  mov      x3, x20
+0x0896f0  bl       #0x896f0        ; -> qdf_trace_msg
+0x0896f4  ldrb     w0, [x23, #0x998]
+0x0896f8  mov      w1, #1
+0x0896fc  mov      w2, #3
+0x089700  b        #0x89c40
+0x089704  mov      x2, #0        ; = .rodata.str1.1+0x2a615   ; "%s: %d: GET AMSDU"
+0x089708  mov      w0, #0x33
+0x08970c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a615   ; "%s: %d: GET AMSDU"
+0x089710  mov      w4, #0x18d7
+0x089714  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a615   ; "%s: %d: GET AMSDU"
+0x089718  mov      w1, #8
+0x08971c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a615   ; "%s: %d: GET AMSDU"
+0x089720  mov      x3, x20
+0x089724  bl       #0x89724        ; -> qdf_trace_msg
+0x089728  ldrb     w0, [x23, #0x998]
+0x08972c  mov      w1, #2
+0x089730  mov      w2, #3
+0x089734  b        #0x89c40
+0x089738  mov      x2, #0        ; = .rodata.str1.1+0x2a696   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT2G"
+0x08973c  mov      w24, #0x33
+0x089740  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a696   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT2G"
+0x089744  mov      w4, #0x18fd
+0x089748  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a696   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT2G"
+0x08974c  mov      w1, #8
+0x089750  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a696   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT2G"
+0x089754  mov      w0, w24
+0x089758  mov      x3, x20
+0x08975c  strb     wzr, [sp, #0x10]
+0x089760  bl       #0x89760        ; -> qdf_trace_msg
+0x089764  ldrb     w0, [x23, #0x998]
+0x089768  mov      w1, #3
+0x08976c  mov      w2, #2
+0x089770  bl       #0x89770        ; -> wma_cli_get_command
+0x089774  str      w0, [x22]
+0x089778  add      x1, sp, #0x10
+0x08977c  ldr      x0, [x25]
+0x089780  bl       #0x89780        ; -> ucfg_mlme_get_current_tx_power_level
+0x089784  mov      x2, #0        ; = .rodata.str1.1+0x2a6c1   ; "%s: %d: 2G tx_power %d"
+0x089788  ldrb     w5, [sp, #0x10]
+0x08978c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a6c1   ; "%s: %d: 2G tx_power %d"
+0x089790  mov      w4, #0x1902
+0x089794  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a6c1   ; "%s: %d: 2G tx_power %d"
+0x089798  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a6c1   ; "%s: %d: 2G tx_power %d"
+0x08979c  b        #0x89804
+0x0897a0  mov      x2, #0        ; = .rodata.str1.1+0x2a6d8   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT5G"
+0x0897a4  mov      w24, #0x33
+0x0897a8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a6d8   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT5G"
+0x0897ac  mov      w4, #0x190a
+0x0897b0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a6d8   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT5G"
+0x0897b4  mov      w1, #8
+0x0897b8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a6d8   ; "%s: %d: GET WMI_PDEV_PARAM_TXPOWER_LIMIT5G"
+0x0897bc  mov      w0, w24
+0x0897c0  mov      x3, x20
+0x0897c4  strb     wzr, [sp, #0x10]
+0x0897c8  bl       #0x897c8        ; -> qdf_trace_msg
+0x0897cc  ldrb     w0, [x23, #0x998]
+0x0897d0  mov      w1, #4
+0x0897d4  mov      w2, #2
+0x0897d8  bl       #0x897d8        ; -> wma_cli_get_command
+0x0897dc  str      w0, [x22]
+0x0897e0  add      x1, sp, #0x10
+0x0897e4  ldr      x0, [x25]
+0x0897e8  bl       #0x897e8        ; -> ucfg_mlme_get_current_tx_power_level
+0x0897ec  ldrb     w5, [sp, #0x10]
+0x0897f0  mov      x2, #0        ; = .rodata.str1.1+0x2a703   ; "%s: %d: 5G tx_power %d"
+0x0897f4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a703   ; "%s: %d: 5G tx_power %d"
+0x0897f8  mov      w4, #0x190f
+0x0897fc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a703   ; "%s: %d: 5G tx_power %d"
+0x089800  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a703   ; "%s: %d: 5G tx_power %d"
+0x089804  mov      w0, w24
+0x089808  mov      w1, #8
+0x08980c  mov      x3, x20
+0x089810  bl       #0x89810        ; -> qdf_trace_msg
+0x089814  mov      w24, wzr
+0x089818  b        #0x89c4c
+0x08981c  mov      x2, #0        ; = .rodata.str1.1+0x2a71a   ; "%s: %d: GET WMI_VDEV_PPS_PAID_MATCH"
+0x089820  mov      w0, #0x33
+0x089824  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a71a   ; "%s: %d: GET WMI_VDEV_PPS_PAID_MATCH"
+0x089828  mov      w4, #0x1915
+0x08982c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a71a   ; "%s: %d: GET WMI_VDEV_PPS_PAID_MATCH"
+0x089830  mov      w1, #8
+0x089834  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a71a   ; "%s: %d: GET WMI_VDEV_PPS_PAID_MATCH"
+0x089838  mov      x3, x20
+0x08983c  bl       #0x8983c        ; -> qdf_trace_msg
+0x089840  ldrb     w0, [x23, #0x998]
+0x089844  mov      w2, #5
+0x089848  mov      w1, wzr
+0x08984c  b        #0x89c40
+0x089850  mov      x2, #0        ; = .rodata.str1.1+0x2a73e   ; "%s: %d: GET WMI_VDEV_PPS_GID_MATCH"
+0x089854  mov      w0, #0x33
+0x089858  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a73e   ; "%s: %d: GET WMI_VDEV_PPS_GID_MATCH"
+0x08985c  mov      w4, #0x191e
+0x089860  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a73e   ; "%s: %d: GET WMI_VDEV_PPS_GID_MATCH"
+0x089864  mov      w1, #8
+0x089868  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a73e   ; "%s: %d: GET WMI_VDEV_PPS_GID_MATCH"
+0x08986c  mov      x3, x20
+0x089870  bl       #0x89870        ; -> qdf_trace_msg
+0x089874  ldrb     w0, [x23, #0x998]
+0x089878  mov      w2, #5
+0x08987c  mov      w1, #1
+0x089880  b        #0x89c40
+0x089884  mov      x2, #0        ; = .rodata.str1.1+0x2a761   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_TIM_CLEAR"
+0x089888  mov      w0, #0x33
+0x08988c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a761   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_TIM_CLEAR"
+0x089890  mov      w4, #0x1927
+0x089894  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a761   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_TIM_CLEAR"
+0x089898  mov      w1, #8
+0x08989c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a761   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_TIM_CLEAR"
+0x0898a0  mov      x3, x20
+0x0898a4  bl       #0x898a4        ; -> qdf_trace_msg
+0x0898a8  ldrb     w0, [x23, #0x998]
+0x0898ac  mov      w2, #5
+0x0898b0  mov      w1, #2
+0x0898b4  b        #0x89c40
+0x0898b8  mov      x2, #0        ; = .rodata.str1.1+0x2a78a   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_DTIM_CLEAR"
+0x0898bc  mov      w0, #0x33
+0x0898c0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a78a   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_DTIM_CLEAR"
+0x0898c4  mov      w4, #0x1930
+0x0898c8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a78a   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_DTIM_CLEAR"
+0x0898cc  mov      w1, #8
+0x0898d0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a78a   ; "%s: %d: GET WMI_VDEV_PPS_EARLY_DTIM_CLEAR"
+0x0898d4  mov      x3, x20
+0x0898d8  bl       #0x898d8        ; -> qdf_trace_msg
+0x0898dc  ldrb     w0, [x23, #0x998]
+0x0898e0  mov      w2, #5
+0x0898e4  mov      w1, #3
+0x0898e8  b        #0x89c40
+0x0898ec  mov      x2, #0        ; = .rodata.str1.1+0x2a7b4   ; "%s: %d: GET WMI_VDEV_PPS_EOF_PAD_DELIM"
+0x0898f0  mov      w0, #0x33
+0x0898f4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a7b4   ; "%s: %d: GET WMI_VDEV_PPS_EOF_PAD_DELIM"
+0x0898f8  mov      w4, #0x1939
+0x0898fc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a7b4   ; "%s: %d: GET WMI_VDEV_PPS_EOF_PAD_DELIM"
+0x089900  mov      w1, #8
+0x089904  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a7b4   ; "%s: %d: GET WMI_VDEV_PPS_EOF_PAD_DELIM"
+0x089908  mov      x3, x20
+0x08990c  bl       #0x8990c        ; -> qdf_trace_msg
+0x089910  ldrb     w0, [x23, #0x998]
+0x089914  mov      w2, #5
+0x089918  mov      w1, #4
+0x08991c  b        #0x89c40
+0x089920  mov      x2, #0        ; = .rodata.str1.1+0x2a7db   ; "%s: %d: GET WMI_VDEV_PPS_MACADDR_MISMATCH"
+0x089924  mov      w0, #0x33
+0x089928  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a7db   ; "%s: %d: GET WMI_VDEV_PPS_MACADDR_MISMATCH"
+0x08992c  mov      w4, #0x1942
+0x089930  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a7db   ; "%s: %d: GET WMI_VDEV_PPS_MACADDR_MISMATCH"
+0x089934  mov      w1, #8
+0x089938  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a7db   ; "%s: %d: GET WMI_VDEV_PPS_MACADDR_MISMATCH"
+0x08993c  mov      x3, x20
+0x089940  bl       #0x89940        ; -> qdf_trace_msg
+0x089944  ldrb     w0, [x23, #0x998]
+0x089948  mov      w1, #5
+0x08994c  mov      w2, w1
+0x089950  b        #0x89c40
+0x089954  mov      x2, #0        ; = .rodata.str1.1+0x2a805   ; "%s: %d: GET WMI_VDEV_PPS_DELIM_CRC_FAIL"
+0x089958  mov      w0, #0x33
+0x08995c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a805   ; "%s: %d: GET WMI_VDEV_PPS_DELIM_CRC_FAIL"
+0x089960  mov      w4, #0x194b
+0x089964  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a805   ; "%s: %d: GET WMI_VDEV_PPS_DELIM_CRC_FAIL"
+0x089968  mov      w1, #8
+0x08996c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a805   ; "%s: %d: GET WMI_VDEV_PPS_DELIM_CRC_FAIL"
+0x089970  mov      x3, x20
+0x089974  bl       #0x89974        ; -> qdf_trace_msg
+0x089978  ldrb     w0, [x23, #0x998]
+0x08997c  mov      w2, #5
+0x089980  mov      w1, #6
+0x089984  b        #0x89c40
+0x089988  mov      x2, #0        ; = .rodata.str1.1+0x2a82d   ; "%s: %d: GET WMI_VDEV_PPS_GID_NSTS_ZERO"
+0x08998c  mov      w0, #0x33
+0x089990  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a82d   ; "%s: %d: GET WMI_VDEV_PPS_GID_NSTS_ZERO"
+0x089994  mov      w4, #0x1954
+0x089998  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a82d   ; "%s: %d: GET WMI_VDEV_PPS_GID_NSTS_ZERO"
+0x08999c  mov      w1, #8
+0x0899a0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a82d   ; "%s: %d: GET WMI_VDEV_PPS_GID_NSTS_ZERO"
+0x0899a4  mov      x3, x20
+0x0899a8  bl       #0x899a8        ; -> qdf_trace_msg
+0x0899ac  ldrb     w0, [x23, #0x998]
+0x0899b0  mov      w2, #5
+0x0899b4  mov      w1, #7
+0x0899b8  b        #0x89c40
+0x0899bc  mov      x2, #0        ; = .rodata.str1.1+0x2a854   ; "%s: %d: GET WMI_VDEV_PPS_RSSI_CHECK"
+0x0899c0  mov      w0, #0x33
+0x0899c4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a854   ; "%s: %d: GET WMI_VDEV_PPS_RSSI_CHECK"
+0x0899c8  mov      w4, #0x195e
+0x0899cc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a854   ; "%s: %d: GET WMI_VDEV_PPS_RSSI_CHECK"
+0x0899d0  mov      w1, #8
+0x0899d4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a854   ; "%s: %d: GET WMI_VDEV_PPS_RSSI_CHECK"
+0x0899d8  mov      x3, x20
+0x0899dc  bl       #0x899dc        ; -> qdf_trace_msg
+0x0899e0  ldrb     w0, [x23, #0x998]
+0x0899e4  mov      w2, #5
+0x0899e8  mov      w1, #8
+0x0899ec  b        #0x89c40
+0x0899f0  mov      x2, #0        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x0899f4  mov      w0, #0x33
+0x0899f8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x0899fc  mov      w4, #0x1967
+0x089a00  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089a04  mov      w1, #8
+0x089a08  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089a0c  mov      x3, x20
+0x089a10  bl       #0x89a10        ; -> qdf_trace_msg
+0x089a14  ldrb     w0, [x23, #0x998]
+0x089a18  mov      w1, #5
+0x089a1c  mov      w2, #6
+0x089a20  b        #0x89c40
+0x089a24  mov      x2, #0        ; = .rodata.str1.1+0x2a89f   ; "%s: %d: WE_GET_QPOWER_MAX_TX_BEFORE_WAKE"
+0x089a28  mov      w0, #0x33
+0x089a2c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a89f   ; "%s: %d: WE_GET_QPOWER_MAX_TX_BEFORE_WAKE"
+0x089a30  mov      w4, #0x1970
+0x089a34  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a89f   ; "%s: %d: WE_GET_QPOWER_MAX_TX_BEFORE_WAKE"
+0x089a38  mov      w1, #8
+0x089a3c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a89f   ; "%s: %d: WE_GET_QPOWER_MAX_TX_BEFORE_WAKE"
+0x089a40  mov      x3, x20
+0x089a44  bl       #0x89a44        ; -> qdf_trace_msg
+0x089a48  ldrb     w0, [x23, #0x998]
+0x089a4c  mov      w1, #7
+0x089a50  mov      w2, #6
+0x089a54  b        #0x89c40
+0x089a58  mov      x2, #0        ; = .rodata.str1.1+0x2a8c8   ; "%s: %d: WE_GET_QPOWER_SPEC_PSPOLL_WAKE_INTERVAL"
+0x089a5c  mov      w0, #0x33
+0x089a60  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a8c8   ; "%s: %d: WE_GET_QPOWER_SPEC_PSPOLL_WAKE_INTERVAL"
+0x089a64  mov      w4, #0x1979
+0x089a68  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a8c8   ; "%s: %d: WE_GET_QPOWER_SPEC_PSPOLL_WAKE_INTERVAL"
+0x089a6c  mov      w1, #8
+0x089a70  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a8c8   ; "%s: %d: WE_GET_QPOWER_SPEC_PSPOLL_WAKE_INTERVAL"
+0x089a74  mov      x3, x20
+0x089a78  bl       #0x89a78        ; -> qdf_trace_msg
+0x089a7c  ldrb     w0, [x23, #0x998]
+0x089a80  mov      w1, #8
+0x089a84  mov      w2, #6
+0x089a88  b        #0x89c40
+0x089a8c  mov      x2, #0        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089a90  mov      w0, #0x33
+0x089a94  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089a98  mov      w4, #0x1982
+0x089a9c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089aa0  mov      w1, #8
+0x089aa4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a878   ; "%s: %d: WE_GET_QPOWER_MAX_PSPOLL_COUNT"
+0x089aa8  mov      x3, x20
+0x089aac  bl       #0x89aac        ; -> qdf_trace_msg
+0x089ab0  ldrb     w0, [x23, #0x998]
+0x089ab4  mov      w1, #9
+0x089ab8  mov      w2, #6
+0x089abc  b        #0x89c40
+0x089ac0  mov      x2, #0        ; = .rodata.str1.1+0x2a372   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_HT_MCS"
+0x089ac4  mov      w0, #0x33
+0x089ac8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a372   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_HT_MCS"
+0x089acc  mov      w4, #0x181a
+0x089ad0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a372   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_HT_MCS"
+0x089ad4  mov      w1, #8
+0x089ad8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a372   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_HT_MCS"
+0x089adc  mov      x3, x20
+0x089ae0  bl       #0x89ae0        ; -> qdf_trace_msg
+0x089ae4  ldrb     w0, [x23, #0x998]
+0x089ae8  mov      w1, wzr
+0x089aec  b        #0x89c3c
+0x089af0  mov      x2, #0        ; = .rodata.str1.1+0x2a398   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_VHT_MCS"
+0x089af4  mov      w0, #0x33
+0x089af8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a398   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_VHT_MCS"
+0x089afc  mov      w4, #0x1823
+0x089b00  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a398   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_VHT_MCS"
+0x089b04  mov      w1, #8
+0x089b08  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a398   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_VHT_MCS"
+0x089b0c  mov      x3, x20
+0x089b10  bl       #0x89b10        ; -> qdf_trace_msg
+0x089b14  ldrb     w0, [x23, #0x998]
+0x089b18  mov      w1, #1
+0x089b1c  b        #0x89c3c
+0x089b20  mov      x2, #0        ; = .rodata.str1.1+0x2a3bf   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_USR_CFG"
+0x089b24  mov      w0, #0x33
+0x089b28  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a3bf   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_USR_CFG"
+0x089b2c  mov      w4, #0x182c
+0x089b30  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a3bf   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_USR_CFG"
+0x089b34  mov      w1, #8
+0x089b38  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a3bf   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_USR_CFG"
+0x089b3c  mov      x3, x20
+0x089b40  bl       #0x89b40        ; -> qdf_trace_msg
+0x089b44  ldrb     w0, [x23, #0x998]
+0x089b48  mov      w1, #2
+0x089b4c  b        #0x89c3c
+0x089b50  mov      x2, #0        ; = .rodata.str1.1+0x2a3e6   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_THRE"
+0x089b54  mov      w0, #0x33
+0x089b58  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a3e6   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_THRE"
+0x089b5c  mov      w4, #0x1835
+0x089b60  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a3e6   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_THRE"
+0x089b64  mov      w1, #8
+0x089b68  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a3e6   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_THRE"
+0x089b6c  mov      x3, x20
+0x089b70  bl       #0x89b70        ; -> qdf_trace_msg
+0x089b74  ldrb     w0, [x23, #0x998]
+0x089b78  mov      w1, #3
+0x089b7c  b        #0x89c3c
+0x089b80  mov      x2, #0        ; = .rodata.str1.1+0x2a40a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MARGIN"
+0x089b84  mov      w0, #0x33
+0x089b88  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a40a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MARGIN"
+0x089b8c  mov      w4, #0x183e
+0x089b90  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a40a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MARGIN"
+0x089b94  mov      w1, #8
+0x089b98  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a40a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MARGIN"
+0x089b9c  mov      x3, x20
+0x089ba0  bl       #0x89ba0        ; -> qdf_trace_msg
+0x089ba4  ldrb     w0, [x23, #0x998]
+0x089ba8  mov      w1, #4
+0x089bac  b        #0x89c3c
+0x089bb0  mov      x2, #0        ; = .rodata.str1.1+0x2a430   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_STEP"
+0x089bb4  mov      w0, #0x33
+0x089bb8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a430   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_STEP"
+0x089bbc  mov      w4, #0x1847
+0x089bc0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a430   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_STEP"
+0x089bc4  mov      w1, #8
+0x089bc8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a430   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_STEP"
+0x089bcc  mov      x3, x20
+0x089bd0  bl       #0x89bd0        ; -> qdf_trace_msg
+0x089bd4  ldrb     w0, [x23, #0x998]
+0x089bd8  mov      w1, #5
+0x089bdc  b        #0x89c3c
+0x089be0  mov      x2, #0        ; = .rodata.str1.1+0x2a454   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MINTPC"
+0x089be4  mov      w0, #0x33
+0x089be8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a454   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MINTPC"
+0x089bec  mov      w4, #0x1850
+0x089bf0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a454   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MINTPC"
+0x089bf4  mov      w1, #8
+0x089bf8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a454   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_MINTPC"
+0x089bfc  mov      x3, x20
+0x089c00  bl       #0x89c00        ; -> qdf_trace_msg
+0x089c04  ldrb     w0, [x23, #0x998]
+0x089c08  mov      w1, #6
+0x089c0c  b        #0x89c3c
+0x089c10  mov      x2, #0        ; = .rodata.str1.1+0x2a47a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_BW_MASK"
+0x089c14  mov      w0, #0x33
+0x089c18  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a47a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_BW_MASK"
+0x089c1c  mov      w4, #0x1859
+0x089c20  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a47a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_BW_MASK"
+0x089c24  mov      w1, #8
+0x089c28  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a47a   ; "%s: %d: GET WMI_VDEV_PARAM_GTX_BW_MASK"
+0x089c2c  mov      x3, x20
+0x089c30  bl       #0x89c30        ; -> qdf_trace_msg
+0x089c34  ldrb     w0, [x23, #0x998]
+0x089c38  mov      w1, #7
+0x089c3c  mov      w2, #7
+0x089c40  bl       #0x89c40        ; -> wma_cli_get_command
+0x089c44  mov      w24, wzr
+0x089c48  str      w0, [x22]
+0x089c4c  mov      x2, #0        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x089c50  mov      w0, #0x33
+0x089c54  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x089c58  mov      w4, #0x19a4
+0x089c5c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x089c60  mov      w1, #8
+0x089c64  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x089c68  mov      x3, x20
+0x089c6c  bl       #0x89c6c        ; -> qdf_trace_msg
+0x089c70  mov      x0, x21
+0x089c74  bl       #0x89c74        ; -> __qdf_mem_free
+0x089c78  b        #0x89020
+0x089c7c  mov      x2, #0        ; = .rodata.str1.1+0x2a8f8   ; "%s: %d: WE_GET_TEMPERATURE"
+0x089c80  mov      w0, #0x33
+0x089c84  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a8f8   ; "%s: %d: WE_GET_TEMPERATURE"
+0x089c88  mov      w4, #0x198d
+0x089c8c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a8f8   ; "%s: %d: WE_GET_TEMPERATURE"
+0x089c90  mov      w1, #8
+0x089c94  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a8f8   ; "%s: %d: WE_GET_TEMPERATURE"
+0x089c98  mov      x3, x20
+0x089c9c  bl       #0x89c9c        ; -> qdf_trace_msg
+0x089ca0  mov      x0, x24
+0x089ca4  mov      x1, x22
+0x089ca8  bl       #0x89ca8        ; -> wlan_hdd_get_temperature
+0x089cac  mov      w24, w0
+0x089cb0  b        #0x89c4c
+0x089cb4  mov      x0, x24
+0x089cb8  mov      x1, x22
+0x089cbc  mov      w2, #1
+0x089cc0  bl       #0x89cc0        ; -> hdd_capture_tsf
+0x089cc4  mov      w24, w0
+0x089cc8  b        #0x89c4c
+0x089ccc  mov      x2, #0        ; = .rodata.str1.1+0x2a627   ; "%s: %d: GET ROAM SYNCH DELAY"
+0x089cd0  mov      w0, #0x33
+0x089cd4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a627   ; "%s: %d: GET ROAM SYNCH DELAY"
+0x089cd8  mov      w4, #0x18e0
+0x089cdc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a627   ; "%s: %d: GET ROAM SYNCH DELAY"
+0x089ce0  mov      w1, #8
+0x089ce4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a627   ; "%s: %d: GET ROAM SYNCH DELAY"
+0x089ce8  mov      x3, x20
+0x089cec  bl       #0x89cec        ; -> qdf_trace_msg
+0x089cf0  ldrb     w0, [x23, #0x998]
+0x089cf4  mov      w1, #6
+0x089cf8  mov      w2, #3
+0x089cfc  b        #0x89c40
+0x089d00  mov      x2, #0        ; = .rodata.str1.1+0x2a913   ; "%s: %d: GET WMI_VDEV_PARAM_HE_DCM"
+0x089d04  mov      w0, #0x33
+0x089d08  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a913   ; "%s: %d: GET WMI_VDEV_PARAM_HE_DCM"
+0x089d0c  mov      w4, #0x1992
+0x089d10  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a913   ; "%s: %d: GET WMI_VDEV_PARAM_HE_DCM"
+0x089d14  mov      w1, #8
+0x089d18  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a913   ; "%s: %d: GET WMI_VDEV_PARAM_HE_DCM"
+0x089d1c  mov      x3, x20
+0x089d20  bl       #0x89d20        ; -> qdf_trace_msg
+0x089d24  ldrb     w0, [x23, #0x998]
+0x089d28  mov      w1, #0x6a
+0x089d2c  mov      w2, #1
+0x089d30  b        #0x89c40
+0x089d34  mov      x2, #0        ; = .rodata.str1.1+0x2a935   ; "%s: %d: GET WMI_VDEV_PARAM_HE_RANGE_EXT"
+0x089d38  mov      w0, #0x33
+0x089d3c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a935   ; "%s: %d: GET WMI_VDEV_PARAM_HE_RANGE_EXT"
+0x089d40  mov      w4, #0x1998
+0x089d44  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a935   ; "%s: %d: GET WMI_VDEV_PARAM_HE_RANGE_EXT"
+0x089d48  mov      w1, #8
+0x089d4c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a935   ; "%s: %d: GET WMI_VDEV_PARAM_HE_RANGE_EXT"
+0x089d50  mov      x3, x20
+0x089d54  bl       #0x89d54        ; -> qdf_trace_msg
+0x089d58  ldrb     w0, [x23, #0x998]
+0x089d5c  mov      w1, #0x6b
+0x089d60  mov      w2, #1
+0x089d64  b        #0x89c40
+0x089d68  mov      x2, #0        ; = .rodata.str1.1+0x2854c   ; "%s: %d: Failed to get RX STBC value"
+0x089d6c  mov      w0, #0x33
+0x089d70  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2854c   ; "%s: %d: Failed to get RX STBC value"
+0x089d74  mov      w4, #0xddc
+0x089d78  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2854c   ; "%s: %d: Failed to get RX STBC value"
+0x089d7c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2854c   ; "%s: %d: Failed to get RX STBC value"
+0x089d80  mov      w1, #2
+0x089d84  mov      x3, x25
+0x089d88  bl       #0x89d88        ; -> qdf_trace_msg
+0x089d8c  b        #0x89c4c
+0x089d90  bl       #0x89d90        ; -> __stack_chk_fail

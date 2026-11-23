@@ -1,0 +1,261 @@
+== iw_get_statistics @0x8c960 size=0x410 ==
+0x08c960  sub      sp, sp, #0x60
+0x08c964  stp      x29, x30, [sp, #0x10]
+0x08c968  add      x29, sp, #0x10
+0x08c96c  stp      x26, x25, [sp, #0x20]
+0x08c970  stp      x24, x23, [sp, #0x30]
+0x08c974  stp      x22, x21, [sp, #0x40]
+0x08c978  stp      x20, x19, [sp, #0x50]
+0x08c97c  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08c980  mov      x19, #0        ; = .rodata.str1.1+0x2b62a   ; "iw_get_statistics"
+0x08c984  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08c988  movk     x19, #0, lsl #16        ; = .rodata.str1.1+0x2b62a   ; "iw_get_statistics"
+0x08c98c  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08c990  movk     x19, #0, lsl #32        ; = .rodata.str1.1+0x2b62a   ; "iw_get_statistics"
+0x08c994  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08c998  movk     x19, #0, lsl #48        ; = .rodata.str1.1+0x2b62a   ; "iw_get_statistics"
+0x08c99c  mov      x20, x2
+0x08c9a0  mov      x24, x1
+0x08c9a4  mov      x1, sp
+0x08c9a8  mov      x2, x19
+0x08c9ac  ldr      x8, [x8]
+0x08c9b0  mov      x21, x3
+0x08c9b4  mov      x22, x0
+0x08c9b8  str      x8, [sp, #8]
+0x08c9bc  bl       #0x8c9bc        ; -> __osif_vdev_sync_op_start
+0x08c9c0  mov      w26, w0
+0x08c9c4  cbnz     w0, #0x8ca24
+0x08c9c8  mov      x23, #0        ; = .rodata.str1.1+0x2b63c   ; "__iw_get_statistics"
+0x08c9cc  mov      x2, #0        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08c9d0  movk     x23, #0, lsl #16        ; = .rodata.str1.1+0x2b63c   ; "__iw_get_statistics"
+0x08c9d4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08c9d8  movk     x23, #0, lsl #32        ; = .rodata.str1.1+0x2b63c   ; "__iw_get_statistics"
+0x08c9dc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08c9e0  movk     x23, #0, lsl #48        ; = .rodata.str1.1+0x2b63c   ; "__iw_get_statistics"
+0x08c9e4  ldr      x25, [x22, #0x918]
+0x08c9e8  mov      w0, #0x33
+0x08c9ec  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ca   ; "%s: %d: enter(%s)"
+0x08c9f0  mov      w4, #0x2355
+0x08c9f4  mov      w1, #8
+0x08c9f8  mov      x3, x23
+0x08c9fc  mov      x5, x22
+0x08ca00  bl       #0x8ca00        ; -> qdf_trace_msg
+0x08ca04  mov      x0, x25
+0x08ca08  mov      x1, x23
+0x08ca0c  bl       #0x8ca0c        ; -> __wlan_hdd_validate_context
+0x08ca10  mov      w26, w0
+0x08ca14  cbz      w0, #0x8ca64
+0x08ca18  ldr      x0, [sp]
+0x08ca1c  mov      x1, x19
+0x08ca20  bl       #0x8ca20        ; -> __osif_vdev_sync_op_stop
+0x08ca24  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x08ca28  ldr      x8, [sp, #8]
+0x08ca2c  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ca30  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08ca34  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08ca38  ldr      x9, [x9]
+0x08ca3c  cmp      x9, x8
+0x08ca40  b.ne     #0x8cd6c
+0x08ca44  mov      w0, w26
+0x08ca48  ldp      x20, x19, [sp, #0x50]
+0x08ca4c  ldp      x22, x21, [sp, #0x40]
+0x08ca50  ldp      x24, x23, [sp, #0x30]
+0x08ca54  ldp      x26, x25, [sp, #0x20]
+0x08ca58  ldp      x29, x30, [sp, #0x10]
+0x08ca5c  add      sp, sp, #0x60
+0x08ca60  ret      
+0x08ca64  ldr      x8, [x25, #0xc0]
+0x08ca68  ldr      w8, [x8, #0x20f0]
+0x08ca6c  cmp      w8, #1
+0x08ca70  b.eq     #0x8cab8
+0x08ca74  cmp      w8, #2
+0x08ca78  b.eq     #0x8cad8
+0x08ca7c  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x08ca80  mov      x20, #0        ; = .bss+0xfc8
+0x08ca84  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08ca88  movk     x20, #0, lsl #16        ; = .bss+0xfc8
+0x08ca8c  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x08ca90  movk     x20, #0, lsl #32        ; = .bss+0xfc8
+0x08ca94  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08ca98  movk     x20, #0, lsl #48        ; = .bss+0xfc8
+0x08ca9c  ldr      x21, [x8]
+0x08caa0  ldr      x8, [x20]
+0x08caa4  sub      x8, x8, x21
+0x08caa8  cmn      x8, #0x32
+0x08caac  b.mi     #0x8cd2c
+0x08cab0  mov      w26, #-0x20c
+0x08cab4  b        #0x8ca18
+0x08cab8  mov      x2, #0        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cabc  ldrh     w3, [x24]
+0x08cac0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cac4  mov      w0, #0x33
+0x08cac8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cacc  mov      w1, #8
+0x08cad0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a4a   ; "Using deprecated ioctl %x"
+0x08cad4  bl       #0x8cad4        ; -> qdf_trace_msg
+0x08cad8  mov      w8, #0xb194
+0x08cadc  ldr      w8, [x22, x8]
+0x08cae0  cmp      w8, #2
+0x08cae4  b.ne     #0x8cd20
+0x08cae8  add      x0, x22, #0x900
+0x08caec  bl       #0x8caec        ; -> wlan_hdd_get_station_stats
+0x08caf0  mov      w8, #0x1001
+0x08caf4  add      x0, x21, #2
+0x08caf8  add      x1, x22, #0xe08
+0x08cafc  mov      w2, #0x10
+0x08cb00  strh     w8, [x21]
+0x08cb04  bl       #0x8cb04        ; -> memcpy
+0x08cb08  mov      w8, #0x1002
+0x08cb0c  add      x0, x21, #0x14
+0x08cb10  add      x1, x22, #0xe18
+0x08cb14  mov      w2, #0x10
+0x08cb18  strh     w8, [x21, #0x12]
+0x08cb1c  bl       #0x8cb1c        ; -> memcpy
+0x08cb20  mov      w8, #0x1003
+0x08cb24  add      x0, x21, #0x26
+0x08cb28  add      x1, x22, #0xe28
+0x08cb2c  mov      w2, #0x10
+0x08cb30  strh     w8, [x21, #0x24]
+0x08cb34  bl       #0x8cb34        ; -> memcpy
+0x08cb38  mov      w8, #0x404
+0x08cb3c  add      x0, x21, #0x38
+0x08cb40  add      x1, x22, #0xe38
+0x08cb44  mov      w2, #4
+0x08cb48  strh     w8, [x21, #0x36]
+0x08cb4c  bl       #0x8cb4c        ; -> memcpy
+0x08cb50  mov      w8, #0x405
+0x08cb54  add      x0, x21, #0x3e
+0x08cb58  add      x1, x22, #0xe3c
+0x08cb5c  mov      w2, #4
+0x08cb60  strh     w8, [x21, #0x3c]
+0x08cb64  bl       #0x8cb64        ; -> memcpy
+0x08cb68  mov      w8, #0x1006
+0x08cb6c  add      x0, x21, #0x44
+0x08cb70  add      x1, x22, #0xe40
+0x08cb74  mov      w2, #0x10
+0x08cb78  strh     w8, [x21, #0x42]
+0x08cb7c  bl       #0x8cb7c        ; -> memcpy
+0x08cb80  mov      w8, #0x407
+0x08cb84  add      x0, x21, #0x56
+0x08cb88  add      x1, x22, #0xe50
+0x08cb8c  mov      w2, #4
+0x08cb90  strh     w8, [x21, #0x54]
+0x08cb94  bl       #0x8cb94        ; -> memcpy
+0x08cb98  mov      w8, #0x408
+0x08cb9c  add      x0, x21, #0x5c
+0x08cba0  add      x1, x22, #0xe54
+0x08cba4  mov      w2, #4
+0x08cba8  strh     w8, [x21, #0x5a]
+0x08cbac  bl       #0x8cbac        ; -> memcpy
+0x08cbb0  mov      w8, #0x409
+0x08cbb4  add      x0, x21, #0x62
+0x08cbb8  add      x1, x22, #0xe58
+0x08cbbc  mov      w2, #4
+0x08cbc0  strh     w8, [x21, #0x60]
+0x08cbc4  bl       #0x8cbc4        ; -> memcpy
+0x08cbc8  mov      w8, #0x40a
+0x08cbcc  add      x0, x21, #0x68
+0x08cbd0  add      x1, x22, #0xe5c
+0x08cbd4  mov      w2, #4
+0x08cbd8  strh     w8, [x21, #0x66]
+0x08cbdc  bl       #0x8cbdc        ; -> memcpy
+0x08cbe0  mov      w8, #0x40b
+0x08cbe4  add      x0, x21, #0x6e
+0x08cbe8  add      x1, x22, #0xe60
+0x08cbec  mov      w2, #4
+0x08cbf0  strh     w8, [x21, #0x6c]
+0x08cbf4  bl       #0x8cbf4        ; -> memcpy
+0x08cbf8  add      x24, x22, #0xeb0
+0x08cbfc  mov      w8, #0x40c
+0x08cc00  add      x0, x21, #0x74
+0x08cc04  mov      x1, x24
+0x08cc08  mov      w2, #4
+0x08cc0c  strh     w8, [x21, #0x72]
+0x08cc10  bl       #0x8cc10        ; -> memcpy
+0x08cc14  mov      w8, #0x40d
+0x08cc18  add      x0, x21, #0x7a
+0x08cc1c  add      x1, x22, #0xee0
+0x08cc20  mov      w2, #4
+0x08cc24  strh     w8, [x21, #0x78]
+0x08cc28  bl       #0x8cc28        ; -> memcpy
+0x08cc2c  mov      w8, #0x40e
+0x08cc30  add      x0, x21, #0x80
+0x08cc34  add      x1, x22, #0xee8
+0x08cc38  mov      w2, #4
+0x08cc3c  strh     w8, [x21, #0x7e]
+0x08cc40  bl       #0x8cc40        ; -> memcpy
+0x08cc44  mov      w8, #0x40f
+0x08cc48  add      x0, x21, #0x86
+0x08cc4c  add      x1, x22, #0xe70
+0x08cc50  mov      w2, #4
+0x08cc54  strh     w8, [x21, #0x84]
+0x08cc58  bl       #0x8cc58        ; -> memcpy
+0x08cc5c  mov      w8, #0x410
+0x08cc60  add      x0, x21, #0x8c
+0x08cc64  add      x1, x22, #0xec8
+0x08cc68  mov      w2, #4
+0x08cc6c  strh     w8, [x21, #0x8a]
+0x08cc70  bl       #0x8cc70        ; -> memcpy
+0x08cc74  mov      w8, #0x411
+0x08cc78  add      x0, x21, #0x92
+0x08cc7c  add      x1, x22, #0xed8
+0x08cc80  mov      w2, #4
+0x08cc84  strh     w8, [x21, #0x90]
+0x08cc88  bl       #0x8cc88        ; -> memcpy
+0x08cc8c  mov      w8, #0x412
+0x08cc90  add      x0, x21, #0x98
+0x08cc94  add      x1, x22, #0xedc
+0x08cc98  mov      w2, #4
+0x08cc9c  strh     w8, [x21, #0x96]
+0x08cca0  bl       #0x8cca0        ; -> memcpy
+0x08cca4  mov      w8, #0x413
+0x08cca8  add      x0, x21, #0x9e
+0x08ccac  mov      x1, x24
+0x08ccb0  mov      w2, #4
+0x08ccb4  strh     w8, [x21, #0x9c]
+0x08ccb8  bl       #0x8ccb8        ; -> memcpy
+0x08ccbc  mov      w8, #0x414
+0x08ccc0  add      x0, x21, #0xa4
+0x08ccc4  add      x1, x22, #0xec0
+0x08ccc8  mov      w2, #4
+0x08cccc  strh     w8, [x21, #0xa2]
+0x08ccd0  bl       #0x8ccd0        ; -> memcpy
+0x08ccd4  mov      w8, #0x415
+0x08ccd8  add      x0, x21, #0xaa
+0x08ccdc  add      x1, x22, #0xec4
+0x08cce0  mov      w2, #4
+0x08cce4  strh     w8, [x21, #0xa8]
+0x08cce8  bl       #0x8cce8        ; -> memcpy
+0x08ccec  mov      x2, #0        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ccf0  mov      w8, #0xae
+0x08ccf4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08ccf8  mov      w0, #0x33
+0x08ccfc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08cd00  mov      w4, #0x23c0
+0x08cd04  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x289ee   ; "%s: %d: exit"
+0x08cd08  mov      w1, #8
+0x08cd0c  mov      x3, x23
+0x08cd10  strh     w8, [x20, #8]
+0x08cd14  bl       #0x8cd14        ; -> qdf_trace_msg
+0x08cd18  mov      w26, wzr
+0x08cd1c  b        #0x8ca18
+0x08cd20  mov      w26, wzr
+0x08cd24  strh     wzr, [x20, #8]
+0x08cd28  b        #0x8ca18
+0x08cd2c  mov      x2, #0        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cd30  mov      x3, #0        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cd34  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cd38  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cd3c  ldrh     w5, [x24]
+0x08cd40  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cd44  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cd48  mov      w0, #0x33
+0x08cd4c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a0f   ; "%s: %d: Rejecting disabled ioctl %x"
+0x08cd50  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28a33   ; "hdd_check_wext_control"
+0x08cd54  mov      w4, #0xbe6
+0x08cd58  mov      w1, #2
+0x08cd5c  bl       #0x8cd5c        ; -> qdf_trace_msg
+0x08cd60  mov      w26, #-0x20c
+0x08cd64  str      x21, [x20]
+0x08cd68  b        #0x8ca18
+0x08cd6c  bl       #0x8cd6c        ; -> __stack_chk_fail

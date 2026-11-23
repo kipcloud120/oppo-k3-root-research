@@ -1,0 +1,99 @@
+0x091da8  stp      x29, x30, [sp, #-0x30]!
+0x091dac  str      x21, [sp, #0x10]
+0x091db0  mov      x29, sp
+0x091db4  stp      x20, x19, [sp, #0x20]
+0x091db8  mov      x20, #0        ; = .rodata.str1.1+0x2a035  ; "hdd_we_clear_stats"
+0x091dbc  mov      x2, #0        ; = .rodata.str1.1+0x2a023  ; "%s: %d: option %d"
+0x091dc0  movk     x20, #0, lsl #16        ; = .rodata.str1.1+0x2a035  ; "hdd_we_clear_stats"
+0x091dc4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a023  ; "%s: %d: option %d"
+0x091dc8  movk     x20, #0, lsl #32        ; = .rodata.str1.1+0x2a035  ; "hdd_we_clear_stats"
+0x091dcc  mov      w19, w1
+0x091dd0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a023  ; "%s: %d: option %d"
+0x091dd4  movk     x20, #0, lsl #48        ; = .rodata.str1.1+0x2a035  ; "hdd_we_clear_stats"
+0x091dd8  mov      x21, x0
+0x091ddc  mov      w0, #0x33
+0x091de0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a023  ; "%s: %d: option %d"
+0x091de4  mov      w4, #0x12bb
+0x091de8  mov      w1, #8
+0x091dec  mov      x3, x20
+0x091df0  mov      w5, w19
+0x091df4  bl       #0x91df4        ; -> qdf_trace_msg
+0x091df8  cmp      w19, #9
+0x091dfc  b.hi     #0x91e48
+0x091e00  mov      x8, #0        ; = .rodata+0x4c5f
+0x091e04  mov      w9, w19
+0x091e08  movk     x8, #0, lsl #16        ; = .rodata+0x4c5f
+0x091e0c  movk     x8, #0, lsl #32        ; = .rodata+0x4c5f
+0x091e10  movk     x8, #0, lsl #48        ; = .rodata+0x4c5f
+0x091e14  adr      x10, #0x91e24
+0x091e18  ldrb     w11, [x8, x9]
+0x091e1c  add      x10, x10, x11, lsl #2
+0x091e20  br       x10
+0x091e24  add      x0, x21, #0x448
+0x091e28  mov      w2, #0xb8
+0x091e2c  mov      w1, wzr
+0x091e30  bl       #0x91e30        ; -> memset
+0x091e34  add      x0, x21, #0x500
+0x091e38  mov      w2, #0x260
+0x091e3c  mov      w1, wzr
+0x091e40  bl       #0x91e40        ; -> memset
+0x091e44  b        #0x91f20
+0x091e48  mov      w0, #0x47
+0x091e4c  bl       #0x91e4c        ; -> cds_get_context
+0x091e50  cbz      x0, #0x91ea8
+0x091e54  ldr      x8, [x0]
+0x091e58  cbz      x8, #0x91ea8
+0x091e5c  ldr      x8, [x8, #0x58]
+0x091e60  cbz      x8, #0x91ef8
+0x091e64  ldr      x8, [x8]
+0x091e68  cbz      x8, #0x91ef8
+0x091e6c  mov      w1, wzr
+0x091e70  mov      w2, w19
+0x091e74  blr      x8
+0x091e78  cbnz     w0, #0x91ef8
+0x091e7c  b        #0x91f20
+0x091e80  ldr      x0, [x21, #0x18]
+0x091e84  bl       #0x91e84        ; -> wlan_hdd_clear_tx_rx_histogram
+0x091e88  b        #0x91f20
+0x091e8c  ldr      x0, [x21, #0x18]
+0x091e90  bl       #0x91e90        ; -> wlan_hdd_clear_netif_queue_history
+0x091e94  b        #0x91f20
+0x091e98  bl       #0x91e98        ; -> hdd_clear_hif_stats
+0x091e9c  b        #0x91f20
+0x091ea0  bl       #0x91ea0        ; -> hdd_clear_napi_stats
+0x091ea4  b        #0x91f20
+0x091ea8  mov      x21, #0        ; = .rodata.str1.1+0x2a074  ; "cdp_clear_stats"
+0x091eac  mov      x2, #0        ; = .rodata.str1.1+0x28a64  ; "%s: Invalid Instance"
+0x091eb0  movk     x21, #0, lsl #16        ; = .rodata.str1.1+0x2a074  ; "cdp_clear_stats"
+0x091eb4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a64  ; "%s: Invalid Instance"
+0x091eb8  movk     x21, #0, lsl #32        ; = .rodata.str1.1+0x2a074  ; "cdp_clear_stats"
+0x091ebc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a64  ; "%s: Invalid Instance"
+0x091ec0  movk     x21, #0, lsl #48        ; = .rodata.str1.1+0x2a074  ; "cdp_clear_stats"
+0x091ec4  mov      w0, #0x5a
+0x091ec8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a64  ; "%s: Invalid Instance"
+0x091ecc  mov      w1, #8
+0x091ed0  mov      x3, x21
+0x091ed4  bl       #0x91ed4        ; -> qdf_trace_msg
+0x091ed8  mov      x0, #0        ; = .rodata.str1.1+0x28a83
+0x091edc  mov      w2, #0x23
+0x091ee0  movk     x0, #0, lsl #16        ; = .rodata.str1.1+0x28a83
+0x091ee4  mov      x1, x21
+0x091ee8  movk     x0, #0, lsl #32        ; = .rodata.str1.1+0x28a83
+0x091eec  movk     x0, #0, lsl #48        ; = .rodata.str1.1+0x28a83
+0x091ef0  bl       #0x91ef0        ; -> printk
+0x091ef4  bl       #0x91ef4        ; -> __qdf_bug
+0x091ef8  mov      x2, #0        ; = .rodata.str1.1+0x2a048  ; "%s: %d: Failed to dump stats for option: %d"
+0x091efc  mov      w0, #0x33
+0x091f00  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2a048  ; "%s: %d: Failed to dump stats for option: %d"
+0x091f04  mov      w4, #0x12d4
+0x091f08  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2a048  ; "%s: %d: Failed to dump stats for option: %d"
+0x091f0c  mov      w1, #8
+0x091f10  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2a048  ; "%s: %d: Failed to dump stats for option: %d"
+0x091f14  mov      x3, x20
+0x091f18  mov      w5, w19
+0x091f1c  bl       #0x91f1c        ; -> qdf_trace_msg
+0x091f20  ldp      x20, x19, [sp, #0x20]
+0x091f24  mov      w0, wzr
+0x091f28  ldr      x21, [sp, #0x10]
+0x091f2c  ldp      x29, x30, [sp], #0x30
+0x091f30  ret      

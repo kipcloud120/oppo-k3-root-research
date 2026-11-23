@@ -1,0 +1,466 @@
+# drv_cmd_ccx_plm_req @0x3f170 size=1860
+03f170  sub        sp, sp, #0x90
+03f174  stp        x29, x30, [sp, #0x30]
+03f178  add        x29, sp, #0x30
+03f17c  stp        x28, x27, [sp, #0x40]
+03f180  stp        x26, x25, [sp, #0x50]
+03f184  stp        x24, x23, [sp, #0x60]
+03f188  stp        x22, x21, [sp, #0x70]
+03f18c  stp        x20, x19, [sp, #0x80]
+03f190  mov        x8, #0   ; abs __stack_chk_guard
+03f194  mov        x19, x1
+03f198  movk       x8, #0, lsl #16   ; abs __stack_chk_guard
+03f19c  mov        x1, #0   ; abs .rodata.str1.1+0x14416  'drv_cmd_ccx_plm_req'
+03f1a0  movk       x8, #0, lsl #32   ; abs __stack_chk_guard
+03f1a4  movk       x1, #0, lsl #16   ; abs .rodata.str1.1+0x14416  'drv_cmd_ccx_plm_req'
+03f1a8  movk       x8, #0, lsl #48   ; abs __stack_chk_guard
+03f1ac  movk       x1, #0, lsl #32   ; abs .rodata.str1.1+0x14416  'drv_cmd_ccx_plm_req'
+03f1b0  mov        x22, x2
+03f1b4  mov        x21, x0
+03f1b8  mov        w0, #0x1a8
+03f1bc  movk       x1, #0, lsl #48   ; abs .rodata.str1.1+0x14416  'drv_cmd_ccx_plm_req'
+03f1c0  ldr        x8, [x8]
+03f1c4  mov        w2, #0x1788
+03f1c8  stur       x8, [x29, #-8]
+03f1cc  bl         #0x3f1cc   ; __qdf_mem_malloc
+03f1d0  cbz        x0, #0x3f86c
+03f1d4  mov        x20, x0
+03f1d8  mov        x0, x22
+03f1dc  str        wzr, [sp, #4]
+03f1e0  bl         #0x3f1e0   ; strlen
+03f1e4  mov        x1, x0
+03f1e8  mov        x0, x22
+03f1ec  mov        w2, #0x20
+03f1f0  bl         #0x3f1f0   ; strnchr
+03f1f4  cbz        x0, #0x3f854
+03f1f8  ldrb       w8, [x0]
+03f1fc  mov        x24, x0
+03f200  cmp        w8, #0x20
+03f204  b.ne       #0x3f854
+03f208  ldrb       w8, [x24, #1]!
+03f20c  cmp        w8, #0x20
+03f210  b.eq       #0x3f208
+03f214  mov        x22, #0   ; abs .rodata.str1.1+0x12a09  '%31s '
+03f218  add        x2, sp, #8
+03f21c  movk       x22, #0, lsl #16   ; abs .rodata.str1.1+0x12a09  '%31s '
+03f220  mov        x0, x24
+03f224  movk       x22, #0, lsl #32   ; abs .rodata.str1.1+0x12a09  '%31s '
+03f228  movk       x22, #0, lsl #48   ; abs .rodata.str1.1+0x12a09  '%31s '
+03f22c  mov        x1, x22
+03f230  bl         #0x3f230   ; sscanf
+03f234  cmp        w0, #1
+03f238  b.ne       #0x3f854
+03f23c  mov        w1, #0xa
+03f240  add        x0, sp, #8
+03f244  add        x2, sp, #4
+03f248  bl         #0x3f248   ; kstrtoint
+03f24c  tbnz       w0, #0x1f, #0x3f854
+03f250  ldr        w8, [sp, #4]
+03f254  mov        x23, #0   ; abs .rodata.str1.1+0x12a48  ' '
+03f258  movk       x23, #0, lsl #16   ; abs .rodata.str1.1+0x12a48  ' '
+03f25c  mov        x0, x24
+03f260  movk       x23, #0, lsl #32   ; abs .rodata.str1.1+0x12a48  ' '
+03f264  movk       x23, #0, lsl #48   ; abs .rodata.str1.1+0x12a48  ' '
+03f268  cmp        w8, #0
+03f26c  mov        x1, x23
+03f270  cset       w8, ne
+03f274  strb       w8, [x20, #0x1a5]
+03f278  bl         #0x3f278   ; strpbrk
+03f27c  cbz        x0, #0x3f854
+03f280  sub        x25, x0, #1
+03f284  ldrb       w8, [x25, #1]!
+03f288  cmp        w8, #0x20
+03f28c  b.eq       #0x3f284
+03f290  add        x2, sp, #8
+03f294  mov        x0, x25
+03f298  mov        x1, x22
+03f29c  bl         #0x3f29c   ; sscanf
+03f2a0  cmp        w0, #1
+03f2a4  b.ne       #0x3f854
+03f2a8  mov        w1, #0xa
+03f2ac  add        x0, sp, #8
+03f2b0  add        x2, sp, #4
+03f2b4  bl         #0x3f2b4   ; kstrtoint
+03f2b8  tbnz       w0, #0x1f, #0x3f854
+03f2bc  ldr        w8, [sp, #4]
+03f2c0  mov        x24, #0   ; abs .rodata.str1.1+0x14440  'hdd_parse_plm_cmd'
+03f2c4  mov        x2, #0   ; abs .rodata.str1.1+0x1442a  '%s: %d: diag token %d'
+03f2c8  movk       x24, #0, lsl #16   ; abs .rodata.str1.1+0x14440  'hdd_parse_plm_cmd'
+03f2cc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1442a  '%s: %d: diag token %d'
+03f2d0  movk       x24, #0, lsl #32   ; abs .rodata.str1.1+0x14440  'hdd_parse_plm_cmd'
+03f2d4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1442a  '%s: %d: diag token %d'
+03f2d8  movk       x24, #0, lsl #48   ; abs .rodata.str1.1+0x14440  'hdd_parse_plm_cmd'
+03f2dc  and        w5, w8, #0xffff
+03f2e0  mov        w0, #0x33
+03f2e4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1442a  '%s: %d: diag token %d'
+03f2e8  mov        w4, #0x8bc
+03f2ec  mov        w1, #8
+03f2f0  mov        x3, x24
+03f2f4  strh       w8, [x20]
+03f2f8  bl         #0x3f2f8   ; qdf_trace_msg
+03f2fc  mov        x0, x25
+03f300  mov        x1, x23
+03f304  bl         #0x3f304   ; strpbrk
+03f308  cbz        x0, #0x3f854
+03f30c  sub        x25, x0, #1
+03f310  ldrb       w8, [x25, #1]!
+03f314  cmp        w8, #0x20
+03f318  b.eq       #0x3f310
+03f31c  add        x2, sp, #8
+03f320  mov        x0, x25
+03f324  mov        x1, x22
+03f328  bl         #0x3f328   ; sscanf
+03f32c  cmp        w0, #1
+03f330  b.ne       #0x3f854
+03f334  mov        w1, #0xa
+03f338  add        x0, sp, #8
+03f33c  add        x2, sp, #4
+03f340  bl         #0x3f340   ; kstrtoint
+03f344  tbnz       w0, #0x1f, #0x3f854
+03f348  ldr        w8, [sp, #4]
+03f34c  mov        x2, #0   ; abs .rodata.str1.1+0x14452  '%s: %d: meas token %d'
+03f350  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14452  '%s: %d: meas token %d'
+03f354  mov        w26, #0x33
+03f358  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14452  '%s: %d: meas token %d'
+03f35c  mov        w4, #0x8d0
+03f360  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14452  '%s: %d: meas token %d'
+03f364  mov        w1, #8
+03f368  and        w5, w8, #0xffff
+03f36c  mov        x3, x24
+03f370  mov        w0, w26
+03f374  strh       w8, [x20, #2]
+03f378  bl         #0x3f378   ; qdf_trace_msg
+03f37c  ldrb       w8, [x20, #0x1a5]
+03f380  mov        x9, #0   ; abs .rodata.str1.1+0x1447b  'START'
+03f384  mov        x10, #0   ; abs .rodata.str1.1+0x122f7  'STOP'
+03f388  movk       x9, #0, lsl #16   ; abs .rodata.str1.1+0x1447b  'START'
+03f38c  movk       x10, #0, lsl #16   ; abs .rodata.str1.1+0x122f7  'STOP'
+03f390  mov        x2, #0   ; abs .rodata.str1.1+0x14468  '%s: %d: PLM req %s'
+03f394  movk       x9, #0, lsl #32   ; abs .rodata.str1.1+0x1447b  'START'
+03f398  movk       x10, #0, lsl #32   ; abs .rodata.str1.1+0x122f7  'STOP'
+03f39c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14468  '%s: %d: PLM req %s'
+03f3a0  movk       x9, #0, lsl #48   ; abs .rodata.str1.1+0x1447b  'START'
+03f3a4  movk       x10, #0, lsl #48   ; abs .rodata.str1.1+0x122f7  'STOP'
+03f3a8  cmp        w8, #0
+03f3ac  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14468  '%s: %d: PLM req %s'
+03f3b0  csel       x5, x10, x9, eq
+03f3b4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14468  '%s: %d: PLM req %s'
+03f3b8  mov        w4, #0x8d2
+03f3bc  mov        w0, w26
+03f3c0  mov        w1, #8
+03f3c4  mov        x3, x24
+03f3c8  bl         #0x3f3c8   ; qdf_trace_msg
+03f3cc  ldrb       w8, [x20, #0x1a5]
+03f3d0  cbz        w8, #0x3f838
+03f3d4  mov        x0, x25
+03f3d8  mov        x1, x23
+03f3dc  bl         #0x3f3dc   ; strpbrk
+03f3e0  cbz        x0, #0x3f854
+03f3e4  sub        x25, x0, #1
+03f3e8  ldrb       w8, [x25, #1]!
+03f3ec  cmp        w8, #0x20
+03f3f0  b.eq       #0x3f3e8
+03f3f4  add        x2, sp, #8
+03f3f8  mov        x0, x25
+03f3fc  mov        x1, x22
+03f400  bl         #0x3f400   ; sscanf
+03f404  cmp        w0, #1
+03f408  b.ne       #0x3f854
+03f40c  mov        w1, #0xa
+03f410  add        x0, sp, #8
+03f414  add        x2, sp, #4
+03f418  bl         #0x3f418   ; kstrtoint
+03f41c  ldr        w8, [sp, #4]
+03f420  orr        w9, w8, w0
+03f424  tbnz       w9, #0x1f, #0x3f854
+03f428  mov        x2, #0   ; abs .rodata.str1.1+0x14481  '%s: %d: num bursts %d'
+03f42c  and        w5, w8, #0xffff
+03f430  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14481  '%s: %d: num bursts %d'
+03f434  mov        w0, #0x33
+03f438  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14481  '%s: %d: num bursts %d'
+03f43c  mov        w4, #0x8eb
+03f440  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14481  '%s: %d: num bursts %d'
+03f444  mov        w1, #8
+03f448  mov        x3, x24
+03f44c  strh       w8, [x20, #4]
+03f450  bl         #0x3f450   ; qdf_trace_msg
+03f454  mov        x0, x25
+03f458  mov        x1, x23
+03f45c  bl         #0x3f45c   ; strpbrk
+03f460  cbz        x0, #0x3f854
+03f464  sub        x25, x0, #1
+03f468  ldrb       w8, [x25, #1]!
+03f46c  cmp        w8, #0x20
+03f470  b.eq       #0x3f468
+03f474  add        x2, sp, #8
+03f478  mov        x0, x25
+03f47c  mov        x1, x22
+03f480  bl         #0x3f480   ; sscanf
+03f484  cmp        w0, #1
+03f488  b.ne       #0x3f854
+03f48c  mov        w1, #0xa
+03f490  add        x0, sp, #8
+03f494  add        x2, sp, #4
+03f498  bl         #0x3f498   ; kstrtoint
+03f49c  tbnz       w0, #0x1f, #0x3f854
+03f4a0  ldr        w8, [sp, #4]
+03f4a4  cmp        w8, #1
+03f4a8  b.lt       #0x3f854
+03f4ac  mov        x2, #0   ; abs .rodata.str1.1+0x14497  '%s: %d: burst int %d'
+03f4b0  and        w5, w8, #0xffff
+03f4b4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14497  '%s: %d: burst int %d'
+03f4b8  mov        w0, #0x33
+03f4bc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14497  '%s: %d: burst int %d'
+03f4c0  mov        w4, #0x902
+03f4c4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14497  '%s: %d: burst int %d'
+03f4c8  mov        w1, #8
+03f4cc  mov        x3, x24
+03f4d0  strh       w8, [x20, #6]
+03f4d4  bl         #0x3f4d4   ; qdf_trace_msg
+03f4d8  mov        x0, x25
+03f4dc  mov        x1, x23
+03f4e0  bl         #0x3f4e0   ; strpbrk
+03f4e4  cbz        x0, #0x3f854
+03f4e8  sub        x25, x0, #1
+03f4ec  ldrb       w8, [x25, #1]!
+03f4f0  cmp        w8, #0x20
+03f4f4  b.eq       #0x3f4ec
+03f4f8  add        x2, sp, #8
+03f4fc  mov        x0, x25
+03f500  mov        x1, x22
+03f504  bl         #0x3f504   ; sscanf
+03f508  cmp        w0, #1
+03f50c  b.ne       #0x3f854
+03f510  mov        w1, #0xa
+03f514  add        x0, sp, #8
+03f518  add        x2, sp, #4
+03f51c  bl         #0x3f51c   ; kstrtoint
+03f520  tbnz       w0, #0x1f, #0x3f854
+03f524  ldr        w8, [sp, #4]
+03f528  cmp        w8, #1
+03f52c  b.lt       #0x3f854
+03f530  mov        x2, #0   ; abs .rodata.str1.1+0x144ac  '%s: %d: meas duration %d'
+03f534  and        w5, w8, #0xffff
+03f538  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x144ac  '%s: %d: meas duration %d'
+03f53c  mov        w0, #0x33
+03f540  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x144ac  '%s: %d: meas duration %d'
+03f544  mov        w4, #0x919
+03f548  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x144ac  '%s: %d: meas duration %d'
+03f54c  mov        w1, #8
+03f550  mov        x3, x24
+03f554  strh       w8, [x20, #8]
+03f558  bl         #0x3f558   ; qdf_trace_msg
+03f55c  mov        x0, x25
+03f560  mov        x1, x23
+03f564  bl         #0x3f564   ; strpbrk
+03f568  cbz        x0, #0x3f854
+03f56c  sub        x25, x0, #1
+03f570  ldrb       w8, [x25, #1]!
+03f574  cmp        w8, #0x20
+03f578  b.eq       #0x3f570
+03f57c  add        x2, sp, #8
+03f580  mov        x0, x25
+03f584  mov        x1, x22
+03f588  bl         #0x3f588   ; sscanf
+03f58c  cmp        w0, #1
+03f590  b.ne       #0x3f854
+03f594  mov        w1, #0xa
+03f598  add        x0, sp, #8
+03f59c  add        x2, sp, #4
+03f5a0  bl         #0x3f5a0   ; kstrtoint
+03f5a4  tbnz       w0, #0x1f, #0x3f854
+03f5a8  ldr        w8, [sp, #4]
+03f5ac  cmp        w8, #1
+03f5b0  b.lt       #0x3f854
+03f5b4  mov        x2, #0   ; abs .rodata.str1.1+0x144c5  '%s: %d: burst len %d'
+03f5b8  and        w5, w8, #0xff
+03f5bc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x144c5  '%s: %d: burst len %d'
+03f5c0  mov        w0, #0x33
+03f5c4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x144c5  '%s: %d: burst len %d'
+03f5c8  mov        w4, #0x930
+03f5cc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x144c5  '%s: %d: burst len %d'
+03f5d0  mov        w1, #8
+03f5d4  mov        x3, x24
+03f5d8  strb       w8, [x20, #0xa]
+03f5dc  bl         #0x3f5dc   ; qdf_trace_msg
+03f5e0  mov        x0, x25
+03f5e4  mov        x1, x23
+03f5e8  bl         #0x3f5e8   ; strpbrk
+03f5ec  cbz        x0, #0x3f854
+03f5f0  sub        x25, x0, #1
+03f5f4  ldrb       w8, [x25, #1]!
+03f5f8  cmp        w8, #0x20
+03f5fc  b.eq       #0x3f5f4
+03f600  add        x2, sp, #8
+03f604  mov        x0, x25
+03f608  mov        x1, x22
+03f60c  bl         #0x3f60c   ; sscanf
+03f610  cmp        w0, #1
+03f614  b.ne       #0x3f854
+03f618  mov        w1, #0xa
+03f61c  add        x0, sp, #8
+03f620  add        x2, sp, #4
+03f624  bl         #0x3f624   ; kstrtoint
+03f628  tbnz       w0, #0x1f, #0x3f854
+03f62c  ldr        w8, [sp, #4]
+03f630  cmp        w8, #1
+03f634  b.lt       #0x3f854
+03f638  mov        x2, #0   ; abs .rodata.str1.1+0x144da  '%s: %d: desired tx pwr %d'
+03f63c  mov        w0, #0x33
+03f640  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x144da  '%s: %d: desired tx pwr %d'
+03f644  mov        w4, #0x947
+03f648  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x144da  '%s: %d: desired tx pwr %d'
+03f64c  mov        w1, #8
+03f650  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x144da  '%s: %d: desired tx pwr %d'
+03f654  mov        x3, x24
+03f658  sxtb       w5, w8
+03f65c  strb       w8, [x20, #0xb]
+03f660  bl         #0x3f660   ; qdf_trace_msg
+03f664  mov        x26, xzr
+03f668  mov        x0, x25
+03f66c  mov        x1, x23
+03f670  bl         #0x3f670   ; strpbrk
+03f674  cbz        x0, #0x3f854
+03f678  sub        x25, x0, #1
+03f67c  ldrb       w8, [x25, #1]!
+03f680  cmp        w8, #0x20
+03f684  b.eq       #0x3f67c
+03f688  add        x2, sp, #8
+03f68c  mov        x0, x25
+03f690  mov        x1, x22
+03f694  bl         #0x3f694   ; sscanf
+03f698  cmp        w0, #1
+03f69c  b.ne       #0x3f854
+03f6a0  add        x0, sp, #8
+03f6a4  add        x2, sp, #4
+03f6a8  mov        w1, #0x10
+03f6ac  bl         #0x3f6ac   ; kstrtoint
+03f6b0  tbnz       w0, #0x1f, #0x3f854
+03f6b4  ldr        w8, [sp, #4]
+03f6b8  add        x9, x20, x26
+03f6bc  add        x26, x26, #1
+03f6c0  cmp        x26, #6
+03f6c4  strb       w8, [x9, #0xc]
+03f6c8  b.ne       #0x3f668
+03f6cc  mov        x2, #0   ; abs .rodata.str1.1+0x144f4  '%s: %d: MAC addr %pM'
+03f6d0  add        x5, x20, #0xc
+03f6d4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x144f4  '%s: %d: MAC addr %pM'
+03f6d8  mov        w0, #0x33
+03f6dc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x144f4  '%s: %d: MAC addr %pM'
+03f6e0  mov        w4, #0x960
+03f6e4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x144f4  '%s: %d: MAC addr %pM'
+03f6e8  mov        w1, #8
+03f6ec  mov        x3, x24
+03f6f0  bl         #0x3f6f0   ; qdf_trace_msg
+03f6f4  mov        x0, x25
+03f6f8  mov        x1, x23
+03f6fc  bl         #0x3f6fc   ; strpbrk
+03f700  cbz        x0, #0x3f854
+03f704  sub        x25, x0, #1
+03f708  ldrb       w8, [x25, #1]!
+03f70c  cmp        w8, #0x20
+03f710  b.eq       #0x3f708
+03f714  add        x2, sp, #8
+03f718  mov        x0, x25
+03f71c  mov        x1, x22
+03f720  bl         #0x3f720   ; sscanf
+03f724  cmp        w0, #1
+03f728  b.ne       #0x3f854
+03f72c  mov        w1, #0xa
+03f730  add        x0, sp, #8
+03f734  add        x2, sp, #4
+03f738  bl         #0x3f738   ; kstrtoint
+03f73c  ldr        w8, [sp, #4]
+03f740  orr        w9, w8, w0
+03f744  tbnz       w9, #0x1f, #0x3f854
+03f748  mov        x2, #0   ; abs .rodata.str1.1+0x14509  '%s: %d: num ch: %d'
+03f74c  cmp        w8, #0x64
+03f750  mov        w9, #0x64
+03f754  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14509  '%s: %d: num ch: %d'
+03f758  csel       w8, w8, w9, lt
+03f75c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14509  '%s: %d: num ch: %d'
+03f760  and        w5, w8, #0xff
+03f764  mov        w0, #0x33
+03f768  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14509  '%s: %d: num ch: %d'
+03f76c  mov        w4, #0x979
+03f770  mov        w1, #8
+03f774  mov        x3, x24
+03f778  str        w8, [sp, #4]
+03f77c  strb       w8, [x20, #0x12]
+03f780  bl         #0x3f780   ; qdf_trace_msg
+03f784  ldrb       w8, [x20, #0x12]
+03f788  cbz        w8, #0x3f838
+03f78c  mov        x26, #0   ; abs .rodata.str1.1+0x1451c  '%s: %d:  ch-freq- %d'
+03f790  mov        x27, xzr
+03f794  movk       x26, #0, lsl #16   ; abs .rodata.str1.1+0x1451c  '%s: %d:  ch-freq- %d'
+03f798  mov        w28, #0x992
+03f79c  movk       x26, #0, lsl #32   ; abs .rodata.str1.1+0x1451c  '%s: %d:  ch-freq- %d'
+03f7a0  movk       x26, #0, lsl #48   ; abs .rodata.str1.1+0x1451c  '%s: %d:  ch-freq- %d'
+03f7a4  mov        x0, x25
+03f7a8  mov        x1, x23
+03f7ac  bl         #0x3f7ac   ; strpbrk
+03f7b0  cbz        x0, #0x3f854
+03f7b4  sub        x25, x0, #1
+03f7b8  ldrb       w8, [x25, #1]!
+03f7bc  cmp        w8, #0x20
+03f7c0  b.eq       #0x3f7b8
+03f7c4  add        x2, sp, #8
+03f7c8  mov        x0, x25
+03f7cc  mov        x1, x22
+03f7d0  bl         #0x3f7d0   ; sscanf
+03f7d4  cmp        w0, #1
+03f7d8  b.ne       #0x3f854
+03f7dc  add        x0, sp, #8
+03f7e0  add        x2, sp, #4
+03f7e4  mov        w1, #0xa
+03f7e8  bl         #0x3f7e8   ; kstrtoint
+03f7ec  tbnz       w0, #0x1f, #0x3f854
+03f7f0  ldr        w0, [sp, #4]
+03f7f4  sub        w8, w0, #1
+03f7f8  cmp        w8, #0xac
+03f7fc  b.hi       #0x3f854
+03f800  bl         #0x3f800   ; cds_chan_to_freq
+03f804  add        x8, x20, x27, lsl #2
+03f808  mov        w5, w0
+03f80c  mov        w1, #8
+03f810  mov        x2, x26
+03f814  mov        x3, x24
+03f818  mov        w4, w28
+03f81c  str        w0, [x8, #0x14]
+03f820  mov        w0, #0x33
+03f824  bl         #0x3f824   ; qdf_trace_msg
+03f828  ldrb       w8, [x20, #0x12]
+03f82c  add        x27, x27, #1
+03f830  cmp        x27, x8
+03f834  b.lo       #0x3f7a4
+03f838  ldrb       w8, [x21, #0x98]
+03f83c  mov        x1, x20
+03f840  strb       w8, [x20, #0x1a4]
+03f844  ldr        x0, [x19, #0x10]
+03f848  bl         #0x3f848   ; sme_set_plm_request
+03f84c  mov        w19, w0
+03f850  b          #0x3f858
+03f854  mov        w19, #0x10
+03f858  mov        x0, x20
+03f85c  bl         #0x3f85c   ; __qdf_mem_free
+03f860  mov        w0, w19
+03f864  bl         #0x3f864   ; qdf_status_to_os_return
+03f868  b          #0x3f870
+03f86c  mov        w0, #-0xc
+03f870  mov        x9, #0   ; abs __stack_chk_guard
+03f874  ldur       x8, [x29, #-8]
+03f878  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+03f87c  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+03f880  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+03f884  ldr        x9, [x9]
+03f888  cmp        x9, x8
+03f88c  b.ne       #0x3f8b0
+03f890  ldp        x20, x19, [sp, #0x80]
+03f894  ldp        x22, x21, [sp, #0x70]
+03f898  ldp        x24, x23, [sp, #0x60]
+03f89c  ldp        x26, x25, [sp, #0x50]
+03f8a0  ldp        x28, x27, [sp, #0x40]
+03f8a4  ldp        x29, x30, [sp, #0x30]
+03f8a8  add        sp, sp, #0x90
+03f8ac  ret        
+03f8b0  bl         #0x3f8b0   ; __stack_chk_fail

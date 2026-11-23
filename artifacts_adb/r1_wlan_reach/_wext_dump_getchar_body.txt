@@ -1,0 +1,256 @@
+0x08a43c  ldur     x2, [x29, #-0x30]
+0x08a440  mov      x0, x26
+0x08a444  mov      w1, #0x7ff
+0x08a448  bl       #0x8a448        ; -> hdd_wlan_get_version
+0x08a44c  mov      w23, wzr
+0x08a450  strh     w0, [x21, #8]
+0x08a454  b        #0x8afa0
+0x08a458  mov      x2, #0        ; = .rodata.str1.1+0x28a0f  ; "%s: %d: Rejecting disabled ioctl %x"
+0x08a45c  mov      x3, #0        ; = .rodata.str1.1+0x28a33  ; "hdd_check_wext_control"
+0x08a460  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28a0f  ; "%s: %d: Rejecting disabled ioctl %x"
+0x08a464  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x28a33  ; "hdd_check_wext_control"
+0x08a468  ldrh     w5, [x25]
+0x08a46c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28a0f  ; "%s: %d: Rejecting disabled ioctl %x"
+0x08a470  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x28a33  ; "hdd_check_wext_control"
+0x08a474  mov      w0, #0x33
+0x08a478  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28a0f  ; "%s: %d: Rejecting disabled ioctl %x"
+0x08a47c  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x28a33  ; "hdd_check_wext_control"
+0x08a480  mov      w4, #0xbe6
+0x08a484  mov      w1, #2
+0x08a488  bl       #0x8a488        ; -> qdf_trace_msg
+0x08a48c  mov      w23, #-0x20c
+0x08a490  str      x21, [x20]
+0x08a494  b        #0x8afc4
+0x08a498  mov      x2, #0        ; = .rodata.str1.1+0x28d14  ; "%s: %d: Invalid IOCTL command %d"
+0x08a49c  mov      w0, #0x33
+0x08a4a0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x28d14  ; "%s: %d: Invalid IOCTL command %d"
+0x08a4a4  mov      w4, #0x1ca9
+0x08a4a8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x28d14  ; "%s: %d: Invalid IOCTL command %d"
+0x08a4ac  mov      w1, #2
+0x08a4b0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x28d14  ; "%s: %d: Invalid IOCTL command %d"
+0x08a4b4  mov      x3, x20
+0x08a4b8  mov      w5, w27
+0x08a4bc  bl       #0x8a4bc        ; -> qdf_trace_msg
+0x08a4c0  b        #0x8ae4c
+0x08a4c4  ldur     x2, [x29, #-0x30]
+0x08a4c8  add      x1, x21, #8
+0x08a4cc  mov      x0, x27
+0x08a4d0  mov      w3, #0x7ff
+0x08a4d4  bl       #0x8a4d4        ; -> hdd_wlan_get_stats
+0x08a4d8  b        #0x8ae4c
+0x08a4dc  mov      x2, #0        ; = .rodata.str1.1+0x2ac84  ; "%s: %d: Printing CLD global INI Config"
+0x08a4e0  mov      w0, #0x33
+0x08a4e4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2ac84  ; "%s: %d: Printing CLD global INI Config"
+0x08a4e8  mov      w4, #0x1b67
+0x08a4ec  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2ac84  ; "%s: %d: Printing CLD global INI Config"
+0x08a4f0  mov      w1, #8
+0x08a4f4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2ac84  ; "%s: %d: Printing CLD global INI Config"
+0x08a4f8  mov      x3, x20
+0x08a4fc  bl       #0x8a4fc        ; -> qdf_trace_msg
+0x08a500  ldur     x22, [x29, #-0x30]
+0x08a504  mov      w2, #0x400
+0x08a508  ldr      x0, [x24, #0x918]
+0x08a50c  mov      x1, x22
+0x08a510  bl       #0x8a510        ; -> hdd_cfg_get_global_config
+0x08a514  mov      x0, x22
+0x08a518  b        #0x8af90
+0x08a51c  ldrb     w9, [x22, #0x71d]
+0x08a520  mov      x8, #0        ; = .rodata.str1.1+0x2adaf  ; "YES"
+0x08a524  mov      x10, #0        ; = .rodata.str1.1+0x2adb3  ; "NO"
+0x08a528  ldrb     w11, [x22, #0x54d]
+0x08a52c  movk     x8, #0, lsl #16        ; = .rodata.str1.1+0x2adaf  ; "YES"
+0x08a530  movk     x10, #0, lsl #16        ; = .rodata.str1.1+0x2adb3  ; "NO"
+0x08a534  movk     x8, #0, lsl #32        ; = .rodata.str1.1+0x2adaf  ; "YES"
+0x08a538  movk     x10, #0, lsl #32        ; = .rodata.str1.1+0x2adb3  ; "NO"
+0x08a53c  movk     x8, #0, lsl #48        ; = .rodata.str1.1+0x2adaf  ; "YES"
+0x08a540  movk     x10, #0, lsl #48        ; = .rodata.str1.1+0x2adb3  ; "NO"
+0x08a544  cmp      w9, #0
+0x08a548  ldrb     w9, [x22, #0x37d]
+0x08a54c  csel     x4, x10, x8, eq
+0x08a550  cmp      w11, #0
+0x08a554  ldrb     w11, [x22, #0x1ad]
+0x08a558  mov      x2, #0        ; = .rodata.str1.1+0x2acb3
+0x08a55c  ldrb     w3, [x22, #0x718]
+0x08a560  csel     x7, x10, x8, eq
+0x08a564  ldrb     w6, [x22, #0x548]
+0x08a568  cmp      w9, #0
+0x08a56c  ldrb     w13, [x22, #0x378]
+0x08a570  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2acb3
+0x08a574  ldrb     w15, [x22, #0x1a8]
+0x08a578  csel     x14, x10, x8, eq
+0x08a57c  ldur     x22, [x29, #-0x30]
+0x08a580  cmp      w11, #0
+0x08a584  ldr      w5, [x24, #0x1788]
+0x08a588  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2acb3
+0x08a58c  ldr      w12, [x24, #0x15b8]
+0x08a590  csel     x8, x10, x8, eq
+0x08a594  ldr      w9, [x24, #0x13e8]
+0x08a598  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2acb3
+0x08a59c  ldr      w11, [x24, #0x1218]
+0x08a5a0  mov      x0, x22
+0x08a5a4  mov      w1, #0x7ff
+0x08a5a8  str      w15, [sp, #0x20]
+0x08a5ac  str      w13, [sp, #8]
+0x08a5b0  str      w9, [sp, #0x18]
+0x08a5b4  str      w11, [sp, #0x30]
+0x08a5b8  str      w12, [sp]
+0x08a5bc  str      x8, [sp, #0x28]
+0x08a5c0  str      x14, [sp, #0x10]
+0x08a5c4  bl       #0x8a5c4        ; -> snprintf
+0x08a5c8  mov      x0, x22
+0x08a5cc  b        #0x8af90
+0x08a5d0  ldur     x4, [x29, #-0x30]
+0x08a5d4  mov      x0, x24
+0x08a5d8  mov      x1, x23
+0x08a5dc  mov      x2, x25
+0x08a5e0  mov      x3, x21
+0x08a5e4  bl       #0x8a5e4        ; -> iw_get_channel_list_with_cc
+0x08a5e8  cbz      w0, #0x8ae4c
+0x08a5ec  mov      w23, #-0x16
+0x08a5f0  b        #0x8afc4
+0x08a5f4  sub      x1, x29, #0x18
+0x08a5f8  mov      x0, x27
+0x08a5fc  sturb    wzr, [x29, #-0x18]
+0x08a600  bl       #0x8a600        ; -> wlan_hdd_get_rssi
+0x08a604  ldursb   w3, [x29, #-0x18]
+0x08a608  mov      x2, #0        ; = .rodata.str1.1+0x2acab  ; "rssi=%d"
+0x08a60c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2acab  ; "rssi=%d"
+0x08a610  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2acab  ; "rssi=%d"
+0x08a614  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2acab  ; "rssi=%d"
+0x08a618  ldur     x22, [x29, #-0x30]
+0x08a61c  mov      w1, #0x7ff
+0x08a620  mov      x0, x22
+0x08a624  bl       #0x8a624        ; -> snprintf
+0x08a628  mov      x0, x22
+0x08a62c  b        #0x8af90
+0x08a630  ldur     x23, [x29, #-0x30]
+0x08a634  mov      x2, #0        ; = .rodata.str1.1+0x2b095
+0x08a638  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b095
+0x08a63c  ldr      w3, [x26, #0x904]
+0x08a640  ldr      w4, [x26, #0x908]
+0x08a644  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b095
+0x08a648  ldr      w5, [x26, #0x90c]
+0x08a64c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b095
+0x08a650  ldr      w6, [x26, #0x910]
+0x08a654  mov      x0, x23
+0x08a658  ldr      w7, [x26, #0x914]
+0x08a65c  mov      w1, #0x7ff
+0x08a660  ldr      w8, [x26, #0x918]
+0x08a664  mov      w22, #0x7ff
+0x08a668  ldr      w9, [x26, #0x91c]
+0x08a66c  str      w8, [sp]
+0x08a670  str      w9, [sp, #8]
+0x08a674  bl       #0x8a674        ; -> scnprintf
+0x08a678  stur     w0, [x29, #-0x18]
+0x08a67c  sub      w2, w22, w0
+0x08a680  ldr      x8, [x26]
+0x08a684  add      x1, x23, w0, sxtw
+0x08a688  sub      x3, x29, #0x18
+0x08a68c  mov      x0, x8
+0x08a690  bl       #0x8a690        ; -> ucfg_mc_cp_stats_write_wow_stats
+0x08a694  cbz      w0, #0x8abc4
+0x08a698  mov      x2, #0        ; = .rodata.str1.1+0x2b103  ; "%s: %d: Failed to get WoW stats"
+0x08a69c  mov      x3, #0        ; = .rodata.str1.1+0x2b123  ; "wlan_hdd_write_suspend_resume_stats"
+0x08a6a0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2b103  ; "%s: %d: Failed to get WoW stats"
+0x08a6a4  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x2b123  ; "wlan_hdd_write_suspend_resume_stats"
+0x08a6a8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2b103  ; "%s: %d: Failed to get WoW stats"
+0x08a6ac  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x2b123  ; "wlan_hdd_write_suspend_resume_stats"
+0x08a6b0  mov      w22, w0
+0x08a6b4  mov      w0, #0x33
+0x08a6b8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2b103  ; "%s: %d: Failed to get WoW stats"
+0x08a6bc  mov      w4, #0xc75
+0x08a6c0  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x2b123  ; "wlan_hdd_write_suspend_resume_stats"
+0x08a6c4  mov      w1, #2
+0x08a6c8  bl       #0x8a6c8        ; -> qdf_trace_msg
+0x08a6cc  mov      w0, w22
+0x08a6d0  bl       #0x8a6d0        ; -> qdf_status_to_os_return
+0x08a6d4  mov      w23, w0
+0x08a6d8  b        #0x8abc8
+0x08a6dc  ldur     x1, [x29, #-0x30]
+0x08a6e0  mov      x0, x27
+0x08a6e4  mov      w2, #0x7ff
+0x08a6e8  bl       #0x8a6e8        ; -> wlan_hdd_tdls_get_all_peers
+0x08a6ec  b        #0x8aad0
+0x08a6f0  mov      x2, #0        ; = .rodata.str1.1+0x2aea8  ; "%s: %d: WE_GET_11W_ENABLED = %d"
+0x08a6f4  ldrb     w5, [x28, #0x18c]
+0x08a6f8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2aea8  ; "%s: %d: WE_GET_11W_ENABLED = %d"
+0x08a6fc  mov      w0, #0x33
+0x08a700  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2aea8  ; "%s: %d: WE_GET_11W_ENABLED = %d"
+0x08a704  mov      w4, #0x1bdf
+0x08a708  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2aea8  ; "%s: %d: WE_GET_11W_ENABLED = %d"
+0x08a70c  mov      w1, #8
+0x08a710  mov      x3, x20
+0x08a714  bl       #0x8a714        ; -> qdf_trace_msg
+0x08a718  ldr      x8, [x28]
+0x08a71c  mov      x2, #0        ; = .rodata.str1.1+0x2aec8
+0x08a720  ldrb     w10, [x22, #1]
+0x08a724  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2aec8
+0x08a728  ldrb     w11, [x22]
+0x08a72c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2aec8
+0x08a730  ldur     x22, [x29, #-0x30]
+0x08a734  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2aec8
+0x08a738  ldrb     w3, [x8]
+0x08a73c  mov      w1, #0x7ff
+0x08a740  ldrb     w4, [x8, #1]
+0x08a744  ldrb     w5, [x8, #2]
+0x08a748  ldrb     w6, [x8, #3]
+0x08a74c  mov      x0, x22
+0x08a750  ldrb     w7, [x8, #4]
+0x08a754  ldrb     w8, [x8, #5]
+0x08a758  ldrb     w9, [x28, #0x18c]
+0x08a75c  str      w11, [sp, #0x18]
+0x08a760  str      w10, [sp, #0x10]
+0x08a764  str      w8, [sp]
+0x08a768  str      w9, [sp, #8]
+0x08a76c  bl       #0x8a76c        ; -> snprintf
+0x08a770  mov      x0, x22
+0x08a774  b        #0x8af90
+0x08a778  ldur     x25, [x29, #-0x30]
+0x08a77c  mov      x2, #0        ; = .rodata.str1.1+0x2ab2e
+0x08a780  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x2ab2e
+0x08a784  ldr      x26, [x24, #0x918]
+0x08a788  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x2ab2e
+0x08a78c  mov      w1, #0x7ff
+0x08a790  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x2ab2e
+0x08a794  mov      w22, #0x7ff
+0x08a798  mov      x0, x25
+0x08a79c  bl       #0x8a79c        ; -> scnprintf
+0x08a7a0  mov      w27, w0
+0x08a7a4  sub      w8, w22, w0
+0x08a7a8  add      x0, x25, w0, sxtw
+0x08a7ac  sxtw     x1, w8
+0x08a7b0  cbz      x23, #0x8ab54
+0x08a7b4  mov      x25, #0        ; = .rodata.str1.1+0x2b1fd  ; "UNKNOWN"
+0x08a7b8  stp      x0, x1, [sp, #0x38]
+0x08a7bc  movk     x25, #0, lsl #16        ; = .rodata.str1.1+0x2b1fd  ; "UNKNOWN"
+0x08a7c0  ldrsw    x8, [x28, #0xc8c]
+0x08a7c4  movk     x25, #0, lsl #32        ; = .rodata.str1.1+0x2b1fd  ; "UNKNOWN"
+0x08a7c8  stur     x26, [x29, #-0x38]
+0x08a7cc  movk     x25, #0, lsl #48        ; = .rodata.str1.1+0x2b1fd  ; "UNKNOWN"
+0x08a7d0  mov      x22, x25
+0x08a7d4  cmp      w8, #6
+0x08a7d8  b.hs     #0x8a7f0
+0x08a7dc  mov      x9, #0        ; = .rodata+0x65a8
+0x08a7e0  movk     x9, #0, lsl #16        ; = .rodata+0x65a8
+0x08a7e4  movk     x9, #0, lsl #32        ; = .rodata+0x65a8
+0x08a7e8  movk     x9, #0, lsl #48        ; = .rodata+0x65a8
+0x08a7ec  ldr      x22, [x9, x8, lsl #3]
+0x08a7f0  ldrb     w1, [x24, #0x998]
+0x08a7f4  mov      x0, x23
+0x08a7f8  bl       #0x8a7f8        ; -> sme_get_neighbor_roam_state
+0x08a7fc  bl       #0x8a7fc        ; -> mac_trace_get_neighbour_roam_state
+0x08a800  ldrb     w1, [x24, #0x998]
+0x08a804  mov      x26, x0
+0x08a808  mov      x0, x23
+0x08a80c  bl       #0x8a80c        ; -> sme_get_current_roam_state
+0x08a810  bl       #0x8a810        ; -> mac_trace_getcsr_roam_state
+0x08a814  ldrb     w1, [x24, #0x998]
+0x08a818  mov      x28, x0
+0x08a81c  mov      x0, x23
+0x08a820  bl       #0x8a820        ; -> sme_get_current_roam_sub_state
+0x08a824  bl       #0x8a824        ; -> mac_trace_getcsr_roam_sub_state
+0x08a828  mov      x24, #0        ; = .rodata.str1.1+0x2ab9f
+0x08a82c  mov      x6, x0
+0x08a830  movk     x24, #0, lsl #16        ; = .rodata.str1.1+0x2ab9f
+0x08a834  mov      x3, x22
+0x08a838  movk     x24, #0, lsl #32        ; = .rodata.str1.1+0x2ab9f

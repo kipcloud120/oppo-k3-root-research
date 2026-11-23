@@ -22,7 +22,7 @@
 > ① **`.text` KASLR slide（①-s 类）已实证取得**：dumpstate 第三主体路径 + 用户明确授权的一次重启。当前 boot（`b9f9f06a-…`）slide = `0x1953600000`、运行时 `_text = 0xffffff995b680000`（pc/lr 两路独立 + 寄存器族一致 + 2 MB 对齐）；重启前 boot（`27520eec-…`）slide = `0x16a000000`（last_kmsg 四路一致），跨 boot 预测复现命中。**slide 每 boot 随机，再重启即失效，须重走流程**。
 > ② **本文此前"`.text` slide 拿不到（v008）"的表述自本轮起仅在"已审接口范围 + 未授权重启"这一限定下成立**——v008 口径在其原范围内不被推翻，但事实状态已由 dumpstate 路径（该范围外第三主体）补齐。证据、哈希与归属台账见 `KASLR_EVIDENCE.md`。
 > ③ **判定语义不变**：slide ≠ 可用 root。GhostLock **②（可控 rt_mutex 堆地址）与 ③（W 线程栈基址）仍未闭合**；dumpstate 附带的 `sp` 属 init/swapper 栈，不满足 ③ 判据；M2 固定 delta 维持关闭。
-> ④ **v13 阶段进度**：阶段 1（证据收口）、阶段 2（WARNING 观察面审计 + 候选裁决，`WARN_ADDRESS_SURFACE_AUDIT.md` §1–§9 + §68/§69/§70：WARN dump 通道实证但 futex 68 点候选集经厂商源码裁决**全部排除**，③ 的 WARN-oracle 假设被否决，③ 回到"无可用 oracle"）与阶段 3（GhostLock ②/③ 复评，§67 + `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档：**缺口收敛为单一 N1，GhostLock 维持冻结**）已完成；**厂商源码补做（§69.4/§70，2026-11-20）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（`uid_lock`/`msm_bus_adhoc_lock`/`msm_bus_dbg_cllist_lock`/`proc_uid_lock`，地址可由 slide 复算，G2 §2.3 / G3 §6）；waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证；`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）**；**阶段 3 收尾（v13.1，§71 + `GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`（G4），纯离线）：B3 并发语义静态审计完成、结论为否——链走查 `:702` 无条件读 `lock->waiters_leftmost`（空树 ⇒ `NULL+0x38` fault；非空树 ⇒ 必有地址不可知的真实 waiter），`:705` `rb_erase(fake)` 只能产生孤儿/幽灵 waiter 或不可控写 ⇒ B3 不满足 N1 的"可控"，由"待审计候选"改为"已审计否决"（复算 `python tools/b3_audit.py`）**；阶段 4（WLAN 调用链）与阶段 5（总验收）待用户通知。
+> ④ **v13 阶段进度**：阶段 1（证据收口）、阶段 2（WARNING 观察面审计 + 候选裁决，`WARN_ADDRESS_SURFACE_AUDIT.md` §1–§9 + §68/§69/§70：WARN dump 通道实证但 futex 68 点候选集经厂商源码裁决**全部排除**，③ 的 WARN-oracle 假设被否决，③ 回到"无可用 oracle"）与阶段 3（GhostLock ②/③ 复评，§67 + `GHOSTLOCK_PHASE3_DECISION.md` 等 G0–G3 文档：**缺口收敛为单一 N1，GhostLock 维持冻结**）已完成；**厂商源码补做（§69.4/§70，2026-11-20）：B3 全局 rt_mutex 静态枚举完成——4 个已编入内核的静态实例（`uid_lock`/`msm_bus_adhoc_lock`/`msm_bus_dbg_cllist_lock`/`proc_uid_lock`，地址可由 slide 复算，G2 §2.3 / G3 §6）；waiter 布局修正为 0x50 字节（内嵌 `deadline@0x48`，厂商源码 + 二进制双证；`MAX_DL_PRIO=0` ⇒ 该字段永不被解引用）**；**阶段 3 收尾（v13.1，§71 + `GHOSTLOCK_B3_CONCURRENCY_AUDIT.md`（G4），纯离线）：B3 并发语义静态审计完成、结论为否——链走查 `:702` 无条件读 `lock->waiters_leftmost`（空树 ⇒ `NULL+0x38` fault；非空树 ⇒ 必有地址不可知的真实 waiter），`:705` `rb_erase(fake)` 只能产生孤儿/幽灵 waiter 或不可控写 ⇒ B3 不满足 N1 的"可控"，由"待审计候选"改为"已审计否决"（复算 `python tools/b3_audit.py`）**；阶段 4（WLAN 调用链）与阶段 5（总验收）**已于 v13.2 完成**（见本节顶部 v13.2 摘要与 `CLOSURE.md` §1 五层验收）。
 > ⑤ **四层判定不变：Wi-Fi 域内受限 UID 0 命令执行已达成；可用 ROOT / 持久 ROOT 仍 NO-GO。**
 
 > **v12.3.1 分诊摘要（2026-11-20，`HANDOVER.md` §64/§65，纯离线、零上机，不改变四层判定）**：
@@ -163,12 +163,14 @@ GhostLock 那面"无地址泄露"的墙，从 v3 起就被报告"有一道缝"�
 | **已阶段性关闭** | KGSL sparse（KO-1） | **本机不可达**（六入口 `ENOTSUPP`） | 上机判定 | §62 |
 | **已阶段性关闭** | WLAN 配置解析链 C1 | **无可达输入路径** | 只读实测 | §56 |
 | **已完成审计** | WLAN `0x89f1 → hdd_driver_command` 调用链 | **连接成立，主语 = `wpa_supplicant`**；`iwpriv` 负结果（只发 WEXT 私有） | 指令级 + 内核源码 + CIL | [`WLAN_IOCTL_CHAIN_AUDIT.md`](WLAN_IOCTL_CHAIN_AUDIT.md) |
-| **已完成审计** | 98 项 `hdd_drv_cmds` handler | **0 个内存安全反例**（无无界 `%s`、无输入长度入拷贝、无栈槽重叠）；1 个逻辑不变量违反 H1（`SETMCRATE` 未检解析返回值，**非内存安全**）；4 项未决（格式串未解析/值域门待确认） | 指令级（本机 `.ko`） | [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) |
-| **已完成审计** | WEXT 32 私有 handler（代理可达面） | **8/32 逐指令核完：0 个可确认越界反例**；`iw_setchar_getnone`（0x8BE3）为唯一残留"经典形态"嫌疑（未核）；15 个父项未决；核心长度归一化 + 多数父项走 16 B union 免拷贝 | 指令级 + WEXT 源码 | [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) |
-| **条件性关闭** | FTM testmode `0x89fd` | **需 `con_mode==5` + 驱动模式重启**；正常启动不可达 | 指令级 + 固件脚本 + CIL | [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) |
+| **已完成审计** | 98 项 `hdd_drv_cmds` handler | **0 个内存安全反例**；5 项残留已收口（`MAXTXPOWER` 值域 [-100,100]；4 个 `FMT-UNRESOLVED` 全为 `%31s`/`%d`）；2 个**非内存破坏**反例：H1 `SETMCRATE` 未检解析返回值、H2 `MAXTXPOWER` 解析失败读未初始化栈（受值域门约束） | 指令级（本机 `.ko`） | [`WLAN_HANDLER_AUDIT.md`](WLAN_HANDLER_AUDIT.md) + [`WLAN_RESIDUAL_AUDIT.md`](WLAN_RESIDUAL_AUDIT.md) |
+| **已完成审计** | WEXT 23 父项 + 101 子命令（代理可达面） | **全部收口：21 有界 / 2 无功能 / 0 未决；未发现越界读/写**；更正首轮 12 个 SET/GET 方向误判（core 只对偶数用 `set_args` 夹长度）；`0x8BFE` 是 8 B 空桩、`0x8BFF` 的 `extra` 只有 5 B；信息泄露方向关闭（GET 缓冲均 `kzalloc` 清零、回填长度自洽）；剩余为下游 `value` 域与 INI `wext_control` 配置门 | 指令级 + WEXT 源码 | [`WLAN_WEXT_HANDLER_AUDIT.md`](WLAN_WEXT_HANDLER_AUDIT.md) + [`WLAN_WEXT_HANDLER_AUDIT_2.md`](WLAN_WEXT_HANDLER_AUDIT_2.md) |
+| **条件性关闭** | FTM testmode `0x89fd` | **需 `con_mode==5` + 驱动模式重启**；正常启动不可达；U2 已证 `myftm`/`ftmdaemon` 全走 nl80211、**固件无 `0x89fd` 调用方**（收紧为 (a)）；U1 已证 HAL 9 个 HIDL 方法**无方法级权限门** | 指令级 + 固件脚本 + CIL | [`WLAN_FTM_AUDIT.md`](WLAN_FTM_AUDIT.md) + [`WLAN_RESIDUAL_AUDIT.md`](WLAN_RESIDUAL_AUDIT.md) |
 | **已完成分诊** | 其余 vendor 模块 | **两主体可达的合格者 0** | 取证 + 源码 + CIL | [`VENDOR_SURFACE_MATRIX.md`](VENDOR_SURFACE_MATRIX.md) |
 | **未解决** | 可用 ROOT（脱离 SELinux 域的系统管理能力） | **NO-GO** | 域逃逸静态无路径 | §24 / §32 |
 | **未解决** | 持久 ROOT | **NO-GO** | 且全程未做持久化写入 | 项目约定 |
+
+> **注（独立线，不并入本判定）**：GhostLock ② 另有一个**独立**的 G5/T3 设备线（T1/T2/KernelSnitch 设备验证 + T3 触发，结论"② 机制性 NO-GO"，T3 五次在 `sched_setattr` 处 panic）。按该会话的明确要求，其内容**不并入本五层验收**；如需引用，以 [`HANDOVER_G5_T3_2026-11-20.md`](HANDOVER_G5_T3_2026-11-20.md) 为准。本文的 GhostLock 结论仍为"① 闭合、②/③ 冻结（B3 已否证）"。
 
 ### 1.1 四层判定（历史口径，保留）
 

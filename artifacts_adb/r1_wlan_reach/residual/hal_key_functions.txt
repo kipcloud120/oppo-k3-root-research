@@ -1,0 +1,651 @@
+
+===== 90a0:218 =====
+0090a0  sub      sp, sp, #0xd0             
+0090a4  stp      x29, x30, [sp, #0x90]     
+0090a8  str      x23, [sp, #0xa0]          
+0090ac  stp      x22, x21, [sp, #0xb0]     
+0090b0  stp      x20, x19, [sp, #0xc0]     
+0090b4  add      x29, sp, #0x90            
+0090b8  mrs      x23, tpidr_el0            
+0090bc  mov      x19, x8                   
+0090c0  ldr      x8, [x23, #0x28]          
+0090c4  mov      w20, w1                   
+0090c8  adrp     x1, #0x6000               
+0090cc  adrp     x2, #0x6000               
+0090d0  mov      x21, x0                   
+0090d4  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+0090d8  add      x2, x2, #0x914               ; "Enter changeConnectionMode with connection mode %d" @0x6914
+0090dc  mov      w0, #3                    
+0090e0  mov      w3, w20                   
+0090e4  stur     x8, [x29, #-8]            
+0090e8  bl       #0x18d50                     ; -> PLT:__android_log_print
+0090ec  cmp      w20, #5                   
+0090f0  b.hi     #0x9140                   
+0090f4  mov      w9, #0x6d77               
+0090f8  mov      w10, #0x645f              
+0090fc  mov      w8, #0xe                  
+009100  movk     w9, #0x5f74, lsl #16      
+009104  movk     w10, #0x7672, lsl #16     
+009108  mov      x1, sp                    
+00910c  stp      xzr, xzr, [sp]            
+009110  str      xzr, [sp, #0x10]          
+009114  strb     w8, [sp]                  
+009118  stur     w9, [sp, #1]              
+00911c  str      w10, [sp, #4]             
+009120  strb     wzr, [sp, #8]             
+009124  bl       #0xbb08                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService16filterModuleNameENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE
+009128  ldrb     w8, [sp]                  
+00912c  mov      w22, w0                   
+009130  tbz      w8, #0, #0x913c           
+009134  ldr      x0, [sp, #0x10]           
+009138  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00913c  tbz      w22, #0, #0x9168          
+009140  adrp     x1, #0x6000               
+009144  adrp     x2, #0x6000               
+009148  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00914c  add      x2, x2, #0xa64               ; "inVaild connection mode or running in MTK platform" @0x6a64
+009150  mov      w0, #6                    
+009154  bl       #0x18d50                     ; -> PLT:__android_log_print
+009158  movi     v0.2d, #0000000000000000  
+00915c  strb     wzr, [x19, #0x20]         
+009160  mov      w8, #-1                   
+009164  b        #0x91e0                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20changeConnectionModeEj
+009168  movi     v0.2d, #0000000000000000  
+00916c  mov      x0, x21                   
+009170  str      w20, [x21, #8]            
+009174  stp      q0, q0, [sp, #0x60]       
+009178  stp      q0, q0, [sp, #0x40]       
+00917c  stp      q0, q0, [sp, #0x20]       
+009180  stp      q0, q0, [sp]              
+009184  bl       #0x92b8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService18isWifiDriverLoadedEv
+009188  tbz      w0, #0, #0x9210           
+00918c  mov      w22, wzr                  
+009190  mov      w1, w20                   
+009194  bl       #0x94e8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10setConModeEj
+009198  tbnz     w0, #0, #0x91b4           
+00919c  adrp     x1, #0x6000               
+0091a0  adrp     x2, #0x6000               
+0091a4  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+0091a8  add      x2, x2, #0xe36               ; "Fail to change Connection mode" @0x6e36
+0091ac  mov      w0, #6                    
+0091b0  bl       #0x18d50                     ; -> PLT:__android_log_print
+0091b4  mov      w0, #0x3500               
+0091b8  movk     w0, #0xc, lsl #16         
+0091bc  bl       #0x18d70                     ; -> PLT:usleep
+0091c0  adrp     x1, #0x6000               
+0091c4  add      x1, x1, #0xc9d               ; "/vendor/bin/ifconfig wlan0 up" @0x6c9d
+0091c8  bl       #0x95b4                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc
+0091cc  cmp      w22, #0                   
+0091d0  mov      w8, #-5                   
+0091d4  movi     v0.2d, #0000000000000000  
+0091d8  csel     w8, wzr, w8, eq           
+0091dc  strb     wzr, [x19, #0x20]         
+0091e0  stp      q0, q0, [x19]             
+0091e4  str      w8, [x19, #0x24]          
+0091e8  ldr      x8, [x23, #0x28]          
+0091ec  ldur     x9, [x29, #-8]            
+0091f0  cmp      x8, x9                    
+0091f4  b.ne     #0x92b4                   
+0091f8  ldp      x20, x19, [sp, #0xc0]     
+0091fc  ldp      x22, x21, [sp, #0xb0]     
+009200  ldr      x23, [sp, #0xa0]          
+009204  ldp      x29, x30, [sp, #0x90]     
+009208  add      sp, sp, #0xd0             
+00920c  ret                                
+009210  adrp     x1, #0x6000               
+009214  adrp     x2, #0x6000               
+009218  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00921c  add      x2, x2, #0xd5e               ; "isWifiDriverLoaded enter" @0x6d5e
+009220  mov      w0, #3                    
+009224  bl       #0x18d50                     ; -> PLT:__android_log_print
+009228  adrp     x22, #0x6000              
+00922c  add      x22, x22, #0xd05             ; "/vendor/lib/modules/qca_cld3_wlan.ko" @0x6d05
+009230  mov      x1, sp                    
+009234  mov      x0, x22                   
+009238  bl       #0x18d80                     ; -> PLT:stat
+00923c  cbz      w0, #0x9260               
+009240  adrp     x1, #0x6000               
+009244  adrp     x2, #0x6000               
+009248  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00924c  add      x2, x2, #0xd2a               ; "Try secondary driver path" @0x6d2a
+009250  mov      w0, #3                    
+009254  bl       #0x18d50                     ; -> PLT:__android_log_print
+009258  adrp     x22, #0x6000              
+00925c  add      x22, x22, #0xd77             ; "/vendor/lib/modules/qca_cld3/qca_cld3_wlan.ko" @0x6d77
+009260  adrp     x2, #0x6000               
+009264  add      x2, x2, #0xe35            
+009268  mov      x1, x22                   
+00926c  bl       #0x9428                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10loadDriverEPKcS7_
+009270  mov      w22, w0                   
+009274  adrp     x1, #0x6000               
+009278  adrp     x2, #0x6000               
+00927c  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+009280  add      x2, x2, #0xd44               ; "loadDriver result is= %d," @0x6d44
+009284  mov      w0, #3                    
+009288  mov      w3, w22                   
+00928c  bl       #0x18d50                     ; -> PLT:__android_log_print
+009290  mov      w0, #0xa120               
+009294  movk     w0, #7, lsl #16           
+009298  bl       #0x18d70                     ; -> PLT:usleep
+00929c  mov      x0, x21                   
+0092a0  bl       #0x92b8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService18isWifiDriverLoadedEv
+0092a4  tbnz     w0, #0, #0x9190           
+0092a8  mov      w0, #0x86a0               
+0092ac  movk     w0, #1, lsl #16           
+0092b0  b        #0x9298                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20changeConnectionModeEj
+0092b4  bl       #0x18d90                     ; -> PLT:__stack_chk_fail
+
+===== 94e8:cc =====
+0094e8  sub      sp, sp, #0x60             
+0094ec  stp      x29, x30, [sp, #0x30]     
+0094f0  str      x21, [sp, #0x40]          
+0094f4  stp      x20, x19, [sp, #0x50]     
+0094f8  add      x29, sp, #0x30            
+0094fc  mrs      x21, tpidr_el0            
+009500  ldr      x8, [x21, #0x28]          
+009504  mov      w20, w1                   
+009508  adrp     x0, #0x6000               
+00950c  adrp     x1, #0x6000               
+009510  movi     v0.2d, #0000000000000000  
+009514  add      x0, x0, #0xa0f               ; "/sys/module/wlan/parameters/con_mode" @0x6a0f
+009518  add      x1, x1, #0xf92               ; "w+" @0x6f92
+00951c  stur     x8, [x29, #-8]            
+009520  stp      q0, q0, [sp]              
+009524  bl       #0x18de0                     ; -> PLT:fopen
+009528  cbz      x0, #0x9570               
+00952c  mov      x19, x0                   
+009530  mov      x0, sp                    
+009534  mov      w4, w20                   
+009538  bl       #0xbc38                      ; -> _ZL8snprintfPcU17pass_object_size1mPKcz
+00953c  mov      x0, sp                    
+009540  mov      w1, #0x20                 
+009544  bl       #0x18df0                     ; -> PLT:__strlen_chk
+009548  mov      x2, x0                    
+00954c  mov      x0, sp                    
+009550  mov      w1, #1                    
+009554  mov      w4, #0x20                 
+009558  mov      x3, x19                   
+00955c  mov      w20, #1                   
+009560  bl       #0x18e00                     ; -> PLT:__fwrite_chk
+009564  mov      x0, x19                   
+009568  bl       #0x18e10                     ; -> PLT:fclose
+00956c  b        #0x9588                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10setConModeEj
+009570  adrp     x2, #0x6000               
+009574  add      x2, x2, #0x8f5            
+009578  mov      w0, #6                    
+00957c  mov      x1, xzr                   
+009580  bl       #0x18d50                     ; -> PLT:__android_log_print
+009584  mov      w20, wzr                  
+009588  ldr      x8, [x21, #0x28]          
+00958c  ldur     x9, [x29, #-8]            
+009590  cmp      x8, x9                    
+009594  b.ne     #0x95b0                   
+009598  mov      w0, w20                   
+00959c  ldp      x20, x19, [sp, #0x50]     
+0095a0  ldr      x21, [sp, #0x40]          
+0095a4  ldp      x29, x30, [sp, #0x30]     
+0095a8  add      sp, sp, #0x60             
+0095ac  ret                                
+0095b0  bl       #0x18d90                     ; -> PLT:__stack_chk_fail
+
+===== 9428:c0 =====
+009428  stp      x29, x30, [sp, #-0x30]!   
+00942c  str      x21, [sp, #0x10]          
+009430  stp      x20, x19, [sp, #0x20]     
+009434  mov      x29, sp                   
+009438  mov      x19, x2                   
+00943c  mov      x21, x1                   
+009440  mov      w1, #0x8000               
+009444  movk     w1, #8, lsl #16           
+009448  mov      x0, x21                   
+00944c  bl       #0x18da0                     ; -> PLT:__open_2
+009450  cmn      w0, #1                    
+009454  b.ne     #0x946c                   
+009458  bl       #0x18db0                     ; -> PLT:__errno
+00945c  ldr      w8, [x0]                  
+009460  cmp      w8, #4                    
+009464  b.eq     #0x9440                   
+009468  b        #0x94b8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10loadDriverEPKcS7_
+00946c  mov      w20, w0                   
+009470  tbnz     w0, #0x1f, #0x94b8        
+009474  mov      w0, #0x111                
+009478  mov      w1, w20                   
+00947c  mov      x2, x19                   
+009480  mov      w3, wzr                   
+009484  bl       #0x18dc0                     ; -> PLT:syscall
+009488  mov      x19, x0                   
+00948c  mov      w0, w20                   
+009490  bl       #0x18dd0                     ; -> PLT:close
+009494  tbz      w19, #0x1f, #0x94d4       
+009498  adrp     x1, #0x6000               
+00949c  adrp     x2, #0x6000               
+0094a0  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+0094a4  add      x2, x2, #0x9f7               ; "finit_module return %d " @0x69f7
+0094a8  mov      w0, #6                    
+0094ac  mov      w3, w19                   
+0094b0  bl       #0x18d50                     ; -> PLT:__android_log_print
+0094b4  b        #0x94d4                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10loadDriverEPKcS7_
+0094b8  adrp     x1, #0x6000               
+0094bc  adrp     x2, #0x6000               
+0094c0  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+0094c4  add      x2, x2, #0x899               ; "Failed to open fd" @0x6899
+0094c8  mov      w0, #6                    
+0094cc  bl       #0x18d50                     ; -> PLT:__android_log_print
+0094d0  mov      w19, #-1                  
+0094d4  mov      w0, w19                   
+0094d8  ldp      x20, x19, [sp, #0x20]     
+0094dc  ldr      x21, [sp, #0x10]          
+0094e0  ldp      x29, x30, [sp], #0x30     
+0094e4  ret                                
+
+===== a0dc:2b4 =====
+00a0dc  sub      sp, sp, #0x160            
+00a0e0  stp      x29, x30, [sp, #0x120]    
+00a0e4  stp      x28, x23, [sp, #0x130]    
+00a0e8  stp      x22, x21, [sp, #0x140]    
+00a0ec  stp      x20, x19, [sp, #0x150]    
+00a0f0  add      x29, sp, #0x120           
+00a0f4  mrs      x22, tpidr_el0            
+00a0f8  mov      x19, x8                   
+00a0fc  ldr      x8, [x22, #0x28]          
+00a100  add      x23, sp, #0x90            
+00a104  add      x1, sp, #0x90             
+00a108  mov      x20, x0                   
+00a10c  stur     x8, [x29, #-8]            
+00a110  mov      w8, #0xe                  
+00a114  stp      xzr, xzr, [sp, #0x90]     
+00a118  strb     w8, [sp, #0x90]           
+00a11c  mov      w8, #0x6d77               
+00a120  movk     w8, #0x5f74, lsl #16      
+00a124  str      xzr, [sp, #0xa0]          
+00a128  stur     w8, [x23, #1]             
+00a12c  mov      w8, #0x645f               
+00a130  movk     w8, #0x7672, lsl #16      
+00a134  str      w8, [sp, #0x94]           
+00a138  strb     wzr, [sp, #0x98]          
+00a13c  bl       #0xbb08                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService16filterModuleNameENSt3__112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEE
+00a140  ldrb     w8, [sp, #0x90]           
+00a144  mov      w21, w0                   
+00a148  tbz      w8, #0, #0xa154           
+00a14c  ldr      x0, [sp, #0xa0]           
+00a150  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a154  tbz      w21, #0, #0xa188          
+00a158  adrp     x1, #0x6000               
+00a15c  adrp     x2, #0x6000               
+00a160  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a164  add      x2, x2, #0xa34               ; "inVaild on MTK platform" @0x6a34
+00a168  mov      w0, #6                    
+00a16c  bl       #0x18d50                     ; -> PLT:__android_log_print
+00a170  movi     v0.2d, #0000000000000000  
+00a174  mov      w8, #-1                   
+00a178  strb     wzr, [x19, #0x20]         
+00a17c  stp      q0, q0, [x19]             
+00a180  str      w8, [x19, #0x24]          
+00a184  b        #0xa364                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv
+00a188  adrp     x21, #0x6000              
+00a18c  add      x21, x21, #0xb30             ; "/vendor/bin/ftmdaemon" @0x6b30
+00a190  movi     v0.2d, #0000000000000000  
+00a194  add      x1, sp, #0x90             
+00a198  mov      x0, x21                   
+00a19c  stp      q0, q0, [x23, #0x60]      
+00a1a0  stp      q0, q0, [x23, #0x40]      
+00a1a4  stp      q0, q0, [x23, #0x20]      
+00a1a8  stp      q0, q0, [x23]             
+00a1ac  bl       #0x18d80                     ; -> PLT:stat
+00a1b0  cbz      w0, #0xa1e4               
+00a1b4  adrp     x1, #0x6000               
+00a1b8  adrp     x2, #0x6000               
+00a1bc  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a1c0  add      x2, x2, #0xda5               ; "ftmdaemon is not found!" @0x6da5
+00a1c4  mov      w0, #6                    
+00a1c8  bl       #0x18d50                     ; -> PLT:__android_log_print
+00a1cc  movi     v0.2d, #0000000000000000  
+00a1d0  mov      w8, #-4                   
+00a1d4  stp      q0, q0, [x19]             
+00a1d8  strb     wzr, [x19, #0x20]         
+00a1dc  str      w8, [x19, #0x24]          
+00a1e0  b        #0xa364                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv
+00a1e4  mov      w8, #0x2a                 
+00a1e8  ldr      q0, [x21]                 
+00a1ec  ldur     x9, [x21, #0xd]           
+00a1f0  stp      xzr, xzr, [sp, #0x38]     
+00a1f4  strb     w8, [sp, #0x38]           
+00a1f8  mov      w8, #0x2002               
+00a1fc  stp      xzr, xzr, [sp, #0x20]     
+00a200  strh     w8, [sp, #0x20]           
+00a204  add      x8, sp, #0x20             
+00a208  orr      x1, x8, #1                
+00a20c  add      x0, sp, #0x38             
+00a210  mov      w2, #1                    
+00a214  stp      xzr, xzr, [sp, #0x70]     
+00a218  str      xzr, [sp, #0x80]          
+00a21c  str      xzr, [sp, #0x48]          
+00a220  strb     wzr, [sp, #0x4e]          
+00a224  str      xzr, [sp, #0x30]          
+00a228  stur     x9, [sp, #0x46]           
+00a22c  stur     q0, [sp, #0x39]           
+00a230  strb     wzr, [sp, #0x22]          
+00a234  bl       #0x18ef0                     ; -> PLT:_ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE6appendEPKcm
+00a238  ldr      x8, [x0, #0x10]           
+00a23c  ldr      q0, [x0]                  
+00a240  add      x9, sp, #8                
+00a244  orr      x1, x9, #1                
+00a248  str      x8, [sp, #0x60]           
+00a24c  mov      w8, #0xc                  
+00a250  str      q0, [sp, #0x50]           
+00a254  stp      xzr, xzr, [x0, #8]        
+00a258  str      xzr, [x0]                 
+00a25c  strb     w8, [sp, #8]              
+00a260  mov      w8, #0x642d               
+00a264  movk     w8, #0x2064, lsl #16      
+00a268  stur     w8, [sp, #9]              
+00a26c  mov      w8, #0x6e2d               
+00a270  add      x0, sp, #0x50             
+00a274  mov      w2, #6                    
+00a278  stp      xzr, xzr, [sp, #0x10]     
+00a27c  sturh    w8, [sp, #0xd]            
+00a280  strb     wzr, [sp, #0xf]           
+00a284  bl       #0x18ef0                     ; -> PLT:_ZNSt3__112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE6appendEPKcm
+00a288  ldr      x8, [x0, #0x10]           
+00a28c  ldr      q0, [x0]                  
+00a290  str      x8, [sp, #0x80]           
+00a294  str      q0, [sp, #0x70]           
+00a298  stp      xzr, xzr, [x0, #8]        
+00a29c  str      xzr, [x0]                 
+00a2a0  ldrb     w8, [sp, #8]              
+00a2a4  tbnz     w8, #0, #0xa2f4           
+00a2a8  ldrb     w8, [sp, #0x50]           
+00a2ac  tbnz     w8, #0, #0xa304           
+00a2b0  ldrb     w8, [sp, #0x20]           
+00a2b4  tbnz     w8, #0, #0xa314           
+00a2b8  ldrb     w8, [sp, #0x38]           
+00a2bc  tbz      w8, #0, #0xa2c8           
+00a2c0  ldr      x0, [sp, #0x48]           
+00a2c4  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a2c8  ldrb     w8, [sp, #0x70]           
+00a2cc  ldr      x9, [sp, #0x80]           
+00a2d0  add      x10, sp, #0x70            
+00a2d4  orr      x10, x10, #1              
+00a2d8  tst      w8, #1                    
+00a2dc  csel     x1, x10, x9, eq           
+00a2e0  mov      x0, x20                   
+00a2e4  bl       #0xa390                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a2e8  tbz      w0, #0, #0xa328           
+00a2ec  mov      w8, wzr                   
+00a2f0  b        #0xa344                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv
+00a2f4  ldr      x0, [sp, #0x18]           
+00a2f8  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a2fc  ldrb     w8, [sp, #0x50]           
+00a300  tbz      w8, #0, #0xa2b0           
+00a304  ldr      x0, [sp, #0x60]           
+00a308  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a30c  ldrb     w8, [sp, #0x20]           
+00a310  tbz      w8, #0, #0xa2b8           
+00a314  ldr      x0, [sp, #0x30]           
+00a318  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a31c  ldrb     w8, [sp, #0x38]           
+00a320  tbnz     w8, #0, #0xa2c0           
+00a324  b        #0xa2c8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv
+00a328  adrp     x1, #0x6000               
+00a32c  adrp     x2, #0x6000               
+00a330  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a334  add      x2, x2, #0xbe5               ; "failed to excute ftm command!" @0x6be5
+00a338  mov      w0, #6                    
+00a33c  bl       #0x18d50                     ; -> PLT:__android_log_print
+00a340  mov      w8, #-5                   
+00a344  ldrb     w9, [sp, #0x70]           
+00a348  movi     v0.2d, #0000000000000000  
+00a34c  strb     wzr, [x19, #0x20]         
+00a350  stp      q0, q0, [x19]             
+00a354  str      w8, [x19, #0x24]          
+00a358  tbz      w9, #0, #0xa364           
+00a35c  ldr      x0, [sp, #0x80]           
+00a360  bl       #0x18d60                     ; -> PLT:_ZdlPv
+00a364  ldr      x8, [x22, #0x28]          
+00a368  ldur     x9, [x29, #-8]            
+00a36c  cmp      x8, x9                    
+00a370  b.ne     #0xa38c                   
+00a374  ldp      x20, x19, [sp, #0x150]    
+00a378  ldp      x22, x21, [sp, #0x140]    
+00a37c  ldp      x28, x23, [sp, #0x130]    
+00a380  ldp      x29, x30, [sp, #0x120]    
+00a384  add      sp, sp, #0x160            
+00a388  ret                                
+00a38c  bl       #0x18d90                     ; -> PLT:__stack_chk_fail
+
+===== 18be4:120 =====
+018be4  sub      sp, sp, #0x50             
+018be8  stp      x29, x30, [sp, #0x30]     
+018bec  stp      x20, x19, [sp, #0x40]     
+018bf0  add      x29, sp, #0x30            
+018bf4  mrs      x20, tpidr_el0            
+018bf8  ldr      x8, [x20, #0x28]          
+018bfc  mov      w0, #0x58                 
+018c00  stur     x8, [x29, #-8]            
+018c04  bl       #0x18e80                     ; -> PLT:_Znwm
+018c08  mov      x19, x0                   
+018c0c  bl       #0x9048                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiServiceC1Ev
+018c10  eor      x8, x29, x19              
+018c14  cmp      x8, #0xfff                
+018c18  stur     x19, [x29, #-0x10]        
+018c1c  b.hi     #0x18c24                  
+018c20  bl       #0x19260                     ; -> PLT:_ZN7android23sp_report_stack_pointerEv
+018c24  ldr      x8, [x19]                 
+018c28  sub      x1, x29, #0x10            
+018c2c  ldur     x8, [x8, #-0x18]          
+018c30  add      x0, x19, x8               
+018c34  bl       #0x19270                     ; -> PLT:_ZNK7android7RefBase9incStrongEPKv
+018c38  mov      w0, #1                    
+018c3c  mov      w1, #1                    
+018c40  bl       #0x19280                     ; -> PLT:_ZN7android8hardware22configureRpcThreadpoolEmb
+018c44  ldur     x0, [x29, #-0x10]         
+018c48  mov      w8, #0xe                  
+018c4c  stp      xzr, xzr, [sp, #8]        
+018c50  mov      w9, #0x6564               
+018c54  strb     w8, [sp, #8]              
+018c58  mov      w8, #0x7561               
+018c5c  movk     w9, #0x6166, lsl #16      
+018c60  movk     w8, #0x746c, lsl #16      
+018c64  add      x1, sp, #8                
+018c68  str      xzr, [sp, #0x18]          
+018c6c  stur     w9, [sp, #9]              
+018c70  str      w8, [sp, #0xc]            
+018c74  strb     wzr, [sp, #0x10]          
+018c78  bl       #0x19290                     ; -> PLT:_ZN6vendor5oplus8hardware4wifi4V1_116IOppoWifiService17registerAsServiceERKNSt3__112basic_stringIcNS5_11char_traitsIcEENS5_9allocatorIcEEEE
+018c7c  ldrb     w8, [sp, #8]              
+018c80  mov      w19, w0                   
+018c84  tbnz     w8, #0, #0x18ccc          
+018c88  cbz      w19, #0x18cd8             
+018c8c  ldur     x8, [x29, #-0x10]         
+018c90  cbz      x8, #0x18ca8              
+018c94  ldr      x9, [x8]                  
+018c98  sub      x1, x29, #0x10            
+018c9c  ldur     x9, [x9, #-0x18]          
+018ca0  add      x0, x8, x9                
+018ca4  bl       #0x192a0                     ; -> PLT:_ZNK7android7RefBase9decStrongEPKv
+018ca8  ldr      x8, [x20, #0x28]          
+018cac  ldur     x9, [x29, #-8]            
+018cb0  cmp      x8, x9                    
+018cb4  b.ne     #0x18d00                  
+018cb8  ldp      x20, x19, [sp, #0x40]     
+018cbc  ldp      x29, x30, [sp, #0x30]     
+018cc0  mov      w0, #1                    
+018cc4  add      sp, sp, #0x50             
+018cc8  ret                                
+018ccc  ldr      x0, [sp, #0x18]           
+018cd0  bl       #0x18d60                     ; -> PLT:_ZdlPv
+018cd4  cbnz     w19, #0x18c8c             
+018cd8  adrp     x1, #0x6000               
+018cdc  adrp     x2, #0x6000               
+018ce0  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+018ce4  add      x2, x2, #0xc77               ; "Oplus WiFi native service is started!" @0x6c77
+018ce8  mov      w0, #3                    
+018cec  bl       #0x18d50                     ; -> PLT:__android_log_print
+018cf0  bl       #0x192b0                     ; -> PLT:_ZN7android8hardware17joinRpcThreadpoolEv
+018cf4  ldur     x8, [x29, #-0x10]         
+018cf8  cbnz     x8, #0x18c94              
+018cfc  b        #0x18ca8                     ; -> main
+018d00  bl       #0x18d90                     ; -> PLT:__stack_chk_fail
+
+===== a390:1d8 =====
+00a390  sub      sp, sp, #0x70             
+00a394  stp      x29, x30, [sp, #0x30]     
+00a398  str      x23, [sp, #0x40]          
+00a39c  stp      x22, x21, [sp, #0x50]     
+00a3a0  stp      x20, x19, [sp, #0x60]     
+00a3a4  add      x29, sp, #0x30            
+00a3a8  mrs      x21, tpidr_el0            
+00a3ac  ldr      x8, [x21, #0x28]          
+00a3b0  adrp     x9, #0x6000               
+00a3b4  adrp     x10, #0x6000              
+00a3b8  mov      x19, x0                   
+00a3bc  add      x9, x9, #0xae6               ; "/vendor/bin/sh" @0x6ae6
+00a3c0  add      x10, x10, #0xf69             ; "-c" @0x6f69
+00a3c4  stur     x8, [x29, #-8]            
+00a3c8  stp      x1, xzr, [sp, #0x18]      
+00a3cc  mov      w0, #0x11                 
+00a3d0  mov      w1, #1                    
+00a3d4  stp      x9, x10, [sp, #8]         
+00a3d8  bl       #0x18e20                     ; -> PLT:signal
+00a3dc  cmn      x0, #1                    
+00a3e0  b.eq     #0xa51c                   
+00a3e4  ldr      x8, [x19, #0x20]          
+00a3e8  cmp      x8, #6                    
+00a3ec  b.lo     #0xa404                   
+00a3f0  adrp     x1, #0x6000               
+00a3f4  adrp     x2, #0x6000               
+00a3f8  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a3fc  add      x2, x2, #0xdda               ; "too much daemon process created, return directly" @0x6dda
+00a400  b        #0xa478                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a404  bl       #0x18e30                     ; -> PLT:vfork
+00a408  cmn      w0, #1                    
+00a40c  b.eq     #0xa468                   
+00a410  mov      w20, w0                   
+00a414  cbz      w0, #0xa540               
+00a418  mov      x22, x19                  
+00a41c  ldr      x23, [x22, #0x18]!        
+00a420  cbz      x23, #0xa488              
+00a424  ldr      w8, [x19, #8]             
+00a428  add      x22, x19, #0x18           
+00a42c  ldr      w9, [x23, #0x1c]          
+00a430  cmp      w8, w9                    
+00a434  b.ge     #0xa44c                   
+00a438  ldr      x9, [x23]                 
+00a43c  cbz      x9, #0xa4c8               
+00a440  mov      x22, x23                  
+00a444  mov      x23, x9                   
+00a448  b        #0xa42c                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a44c  cmp      w9, w8                    
+00a450  b.ge     #0xa48c                   
+00a454  mov      x22, x23                  
+00a458  ldr      x9, [x22, #8]!            
+00a45c  cbz      x9, #0xa48c               
+00a460  mov      x23, x9                   
+00a464  b        #0xa42c                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a468  adrp     x1, #0x6000               
+00a46c  adrp     x2, #0x6000               
+00a470  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a474  add      x2, x2, #0xc10               ; "fork failed" @0x6c10
+00a478  mov      w0, #6                    
+00a47c  bl       #0x18d50                     ; -> PLT:__android_log_print
+00a480  mov      w0, wzr                   
+00a484  b        #0xa4f4                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a488  mov      x23, x22                  
+00a48c  ldr      x8, [x22]                 
+00a490  cbnz     x8, #0xa4f0               
+00a494  mov      w0, #0x28                 
+00a498  bl       #0x18e80                     ; -> PLT:_Znwm
+00a49c  ldr      w8, [x19, #8]             
+00a4a0  stp      xzr, xzr, [x0]            
+00a4a4  str      x23, [x0, #0x10]          
+00a4a8  stp      w8, w20, [x0, #0x1c]      
+00a4ac  str      x0, [x22]                 
+00a4b0  ldr      x8, [x19, #0x10]          
+00a4b4  ldr      x8, [x8]                  
+00a4b8  cbz      x8, #0xa4d8               
+00a4bc  str      x8, [x19, #0x10]          
+00a4c0  ldr      x1, [x22]                 
+00a4c4  b        #0xa4dc                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a4c8  mov      x22, x23                  
+00a4cc  ldr      x8, [x22]                 
+00a4d0  cbnz     x8, #0xa4f0               
+00a4d4  b        #0xa494                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDaemonCommandEPKc
+00a4d8  mov      x1, x0                    
+00a4dc  ldr      x0, [x19, #0x18]          
+00a4e0  bl       #0x18600                     ; -> sub_18600
+00a4e4  ldr      x8, [x19, #0x20]          
+00a4e8  add      x8, x8, #1                
+00a4ec  str      x8, [x19, #0x20]          
+00a4f0  mov      w0, #1                    
+00a4f4  ldr      x8, [x21, #0x28]          
+00a4f8  ldur     x9, [x29, #-8]            
+00a4fc  cmp      x8, x9                    
+00a500  b.ne     #0xa53c                   
+00a504  ldp      x20, x19, [sp, #0x60]     
+00a508  ldp      x22, x21, [sp, #0x50]     
+00a50c  ldr      x23, [sp, #0x40]          
+00a510  ldp      x29, x30, [sp, #0x30]     
+00a514  add      sp, sp, #0x70             
+00a518  ret                                
+00a51c  adrp     x1, #0x6000               
+00a520  adrp     x2, #0x6000               
+00a524  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+00a528  add      x2, x2, #0xc03               ; "signal error" @0x6c03
+00a52c  mov      w0, #6                    
+00a530  bl       #0x18d50                     ; -> PLT:__android_log_print
+00a534  mov      w0, #1                    
+00a538  bl       #0x18e50                     ; -> PLT:exit
+00a53c  bl       #0x18d90                     ; -> PLT:__stack_chk_fail
+00a540  mov      w0, #1                    
+00a544  mov      w1, #9                    
+00a548  bl       #0x18f90                     ; -> PLT:prctl
+00a54c  adrp     x0, #0x6000               
+00a550  add      x0, x0, #0xae6               ; "/vendor/bin/sh" @0x6ae6
+00a554  add      x1, sp, #8                
+00a558  bl       #0x18e40                     ; -> PLT:execv
+00a55c  bl       #0x18db0                     ; -> PLT:__errno
+00a560  ldr      w0, [x0]                  
+00a564  bl       #0x18fa0                     ; -> PLT:_exit
+
+===== 9190:3c =====
+009190  mov      w1, w20                   
+009194  bl       #0x94e8                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10setConModeEj
+009198  tbnz     w0, #0, #0x91b4           
+00919c  adrp     x1, #0x6000               
+0091a0  adrp     x2, #0x6000               
+0091a4  add      x1, x1, #0xaf5               ; "vendor.oplus.hardware.wifi@1.1-service" @0x6af5
+0091a8  add      x2, x2, #0xe36               ; "Fail to change Connection mode" @0x6e36
+0091ac  mov      w0, #6                    
+0091b0  bl       #0x18d50                     ; -> PLT:__android_log_print
+0091b4  mov      w0, #0x3500               
+0091b8  movk     w0, #0xc, lsl #16         
+0091bc  bl       #0x18d70                     ; -> PLT:usleep
+0091c0  adrp     x1, #0x6000               
+0091c4  add      x1, x1, #0xc9d               ; "/vendor/bin/ifconfig wlan0 up" @0x6c9d
+0091c8  bl       #0x95b4                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19executeShellCommandEPKc
+
+===== 9510:60 =====
+009510  movi     v0.2d, #0000000000000000  
+009514  add      x0, x0, #0xa0f            
+009518  add      x1, x1, #0xf92            
+00951c  stur     x8, [x29, #-8]            
+009520  stp      q0, q0, [sp]              
+009524  bl       #0x18de0                     ; -> PLT:fopen
+009528  cbz      x0, #0x9570               
+00952c  mov      x19, x0                   
+009530  mov      x0, sp                    
+009534  mov      w4, w20                   
+009538  bl       #0xbc38                      ; -> _ZL8snprintfPcU17pass_object_size1mPKcz
+00953c  mov      x0, sp                    
+009540  mov      w1, #0x20                 
+009544  bl       #0x18df0                     ; -> PLT:__strlen_chk
+009548  mov      x2, x0                    
+00954c  mov      x0, sp                    
+009550  mov      w1, #1                    
+009554  mov      w4, #0x20                 
+009558  mov      x3, x19                   
+00955c  mov      w20, #1                   
+009560  bl       #0x18e00                     ; -> PLT:__fwrite_chk
+009564  mov      x0, x19                   
+009568  bl       #0x18e10                     ; -> PLT:fclose
+00956c  b        #0x9588                      ; -> _ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService10setConModeEj

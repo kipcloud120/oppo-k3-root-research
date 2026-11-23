@@ -1,0 +1,205 @@
+== hdd_indicate_tsf @0xa6690 size=0x330 ==
+0x0a6690  stp      x29, x30, [sp, #-0x20]!
+0x0a6694  stp      x20, x19, [sp, #0x10]
+0x0a6698  mov      x29, sp
+0x0a669c  cbz      x0, #0xa6744
+0x0a66a0  mov      x19, x1
+0x0a66a4  cbz      x1, #0xa6744
+0x0a66a8  cmp      w2, #3
+0x0a66ac  b.ne     #0xa6774
+0x0a66b0  ldr      x20, [x0, #0x18]
+0x0a66b4  cbz      x20, #0xa6784
+0x0a66b8  stur     xzr, [x19, #4]
+0x0a66bc  ldr      x8, [x0, #0x18]
+0x0a66c0  cbz      x8, #0xa67ac
+0x0a66c4  ldr      w8, [x8, #0xa18]
+0x0a66c8  cbz      w8, #0xa67d8
+0x0a66cc  ldr      w8, [x0, #0xa8]
+0x0a66d0  cmp      w8, #3
+0x0a66d4  b.hi     #0xa6858
+0x0a66d8  mov      x9, #0        ; = .rodata+0x7d74
+0x0a66dc  movk     x9, #0, lsl #16        ; = .rodata+0x7d74
+0x0a66e0  movk     x9, #0, lsl #32        ; = .rodata+0x7d74
+0x0a66e4  movk     x9, #0, lsl #48        ; = .rodata+0x7d74
+0x0a66e8  adr      x10, #0xa66f8
+0x0a66ec  ldrb     w11, [x9, x8]
+0x0a66f0  add      x10, x10, x11, lsl #2
+0x0a66f4  br       x10
+0x0a66f8  mov      w8, #0xa894
+0x0a66fc  add      x8, x0, x8
+0x0a6700  ldr      w8, [x8]
+0x0a6704  cmp      w8, #2
+0x0a6708  b.eq     #0xa6858
+0x0a670c  mov      x2, #0        ; = .rodata.str1.1+0x32c9d   ; "%s: %d: failed to cap tsf, not connect with ap"
+0x0a6710  mov      x3, #0        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6714  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32c9d   ; "%s: %d: failed to cap tsf, not connect with ap"
+0x0a6718  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a671c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32c9d   ; "%s: %d: failed to cap tsf, not connect with ap"
+0x0a6720  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6724  mov      w0, #0x33
+0x0a6728  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32c9d   ; "%s: %d: failed to cap tsf, not connect with ap"
+0x0a672c  mov      w4, #0x71
+0x0a6730  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6734  mov      w1, #2
+0x0a6738  bl       #0xa6738        ; -> qdf_trace_msg
+0x0a673c  mov      w8, #1
+0x0a6740  b        #0xa680c
+0x0a6744  mov      x2, #0        ; = .rodata.str1.1+0x32bd7   ; "%s: %d: invalid pointer"
+0x0a6748  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a674c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32bd7   ; "%s: %d: invalid pointer"
+0x0a6750  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6754  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32bd7   ; "%s: %d: invalid pointer"
+0x0a6758  mov      w0, #0x33
+0x0a675c  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6760  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32bd7   ; "%s: %d: invalid pointer"
+0x0a6764  mov      w4, #0x227
+0x0a6768  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a676c  mov      w1, #2
+0x0a6770  bl       #0xa6770        ; -> qdf_trace_msg
+0x0a6774  mov      w0, #-0x16
+0x0a6778  ldp      x20, x19, [sp, #0x10]
+0x0a677c  ldp      x29, x30, [sp], #0x20
+0x0a6780  ret      
+0x0a6784  mov      x2, #0        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a6788  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a678c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a6790  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6794  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a6798  mov      w0, #0x33
+0x0a679c  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a67a0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a67a4  mov      w4, #0x230
+0x0a67a8  b        #0xa6768
+0x0a67ac  mov      x2, #0        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a67b0  mov      x3, #0        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67b4  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a67b8  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67bc  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a67c0  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67c4  mov      w0, #0x33
+0x0a67c8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32c08   ; "%s: %d: invalid hdd context"
+0x0a67cc  mov      w4, #0x89
+0x0a67d0  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67d4  b        #0xa6800
+0x0a67d8  mov      x2, #0        ; = .rodata.str1.1+0x32e18   ; "%s: %d: TSF is not initialized"
+0x0a67dc  mov      x3, #0        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67e0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32e18   ; "%s: %d: TSF is not initialized"
+0x0a67e4  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67e8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32e18   ; "%s: %d: TSF is not initialized"
+0x0a67ec  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67f0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32e18   ; "%s: %d: TSF is not initialized"
+0x0a67f4  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32e01   ; "hdd_tsf_is_initialized"
+0x0a67f8  mov      w0, #0x33
+0x0a67fc  mov      w4, #0x8f
+0x0a6800  mov      w1, #2
+0x0a6804  bl       #0xa6804        ; -> qdf_trace_msg
+0x0a6808  mov      w8, #8
+0x0a680c  mov      w0, wzr
+0x0a6810  str      w8, [x19]
+0x0a6814  b        #0xa6778
+0x0a6818  ldr      x8, [x0, #0x440]
+0x0a681c  tbnz     w8, #4, #0xa6858
+0x0a6820  mov      x2, #0        ; = .rodata.str1.1+0x32ce5   ; "%s: %d: Soft AP / P2p GO not beaconing"
+0x0a6824  mov      x3, #0        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6828  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32ce5   ; "%s: %d: Soft AP / P2p GO not beaconing"
+0x0a682c  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6830  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32ce5   ; "%s: %d: Soft AP / P2p GO not beaconing"
+0x0a6834  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6838  mov      w0, #0x33
+0x0a683c  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32ce5   ; "%s: %d: Soft AP / P2p GO not beaconing"
+0x0a6840  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32ccc   ; "hdd_tsf_check_conn_state"
+0x0a6844  mov      w1, #2
+0x0a6848  mov      w4, #0x78
+0x0a684c  bl       #0xa684c        ; -> qdf_trace_msg
+0x0a6850  mov      w8, #7
+0x0a6854  b        #0xa680c
+0x0a6858  mov      w8, #0xaf70
+0x0a685c  str      wzr, [x19]
+0x0a6860  add      x8, x0, x8
+0x0a6864  ldr      x9, [x8]
+0x0a6868  cbz      x9, #0xa690c
+0x0a686c  str      wzr, [x19]
+0x0a6870  ldr      w6, [x8]
+0x0a6874  str      w6, [x19, #4]
+0x0a6878  ldr      w7, [x8, #4]
+0x0a687c  str      w7, [x19, #8]
+0x0a6880  ldr      w8, [x20, #0xa1c]
+0x0a6884  cbz      w8, #0xa6944
+0x0a6888  ldrb     w0, [x0, #0x98]
+0x0a688c  mov      w1, #5
+0x0a6890  mov      w3, #3
+0x0a6894  mov      w2, w0
+0x0a6898  bl       #0xa6898        ; -> wma_cli_set_command
+0x0a689c  cbz      w0, #0xa6978
+0x0a68a0  mov      x2, #0        ; = .rodata.str1.1+0x32dd1   ; "%s: %d: tsf reset GPIO fail "
+0x0a68a4  mov      x3, #0        ; = .rodata.str1.1+0x32dee   ; "hdd_tsf_reset_gpio"
+0x0a68a8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32dd1   ; "%s: %d: tsf reset GPIO fail "
+0x0a68ac  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32dee   ; "hdd_tsf_reset_gpio"
+0x0a68b0  mov      w20, #0x33
+0x0a68b4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32dd1   ; "%s: %d: tsf reset GPIO fail "
+0x0a68b8  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32dee   ; "hdd_tsf_reset_gpio"
+0x0a68bc  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32dd1   ; "%s: %d: tsf reset GPIO fail "
+0x0a68c0  mov      w4, #0xc1
+0x0a68c4  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32dee   ; "hdd_tsf_reset_gpio"
+0x0a68c8  mov      w1, #2
+0x0a68cc  mov      w0, w20
+0x0a68d0  bl       #0xa68d0        ; -> qdf_trace_msg
+0x0a68d4  mov      x2, #0        ; = .rodata.str1.1+0x32d7e   ; "%s: %d: reset tsf gpio fail"
+0x0a68d8  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a68dc  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32d7e   ; "%s: %d: reset tsf gpio fail"
+0x0a68e0  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a68e4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32d7e   ; "%s: %d: reset tsf gpio fail"
+0x0a68e8  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a68ec  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32d7e   ; "%s: %d: reset tsf gpio fail"
+0x0a68f0  mov      w4, #0x253
+0x0a68f4  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a68f8  mov      w0, w20
+0x0a68fc  mov      w1, #2
+0x0a6900  bl       #0xa6900        ; -> qdf_trace_msg
+0x0a6904  mov      w8, #6
+0x0a6908  b        #0xa680c
+0x0a690c  mov      x2, #0        ; = .rodata.str1.1+0x32d2f   ; "%s: %d: TSF value not received"
+0x0a6910  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6914  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32d2f   ; "%s: %d: TSF value not received"
+0x0a6918  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a691c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32d2f   ; "%s: %d: TSF value not received"
+0x0a6920  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6924  mov      w0, #0x33
+0x0a6928  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32d2f   ; "%s: %d: TSF value not received"
+0x0a692c  mov      w4, #0x241
+0x0a6930  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6934  mov      w1, #4
+0x0a6938  bl       #0xa6938        ; -> qdf_trace_msg
+0x0a693c  mov      w8, #2
+0x0a6940  b        #0xa680c
+0x0a6944  mov      x2, #0        ; = .rodata.str1.1+0x32d4e   ; "%s: %d: old: status=%u, tsf_low=%u, tsf_high=%u"
+0x0a6948  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a694c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32d4e   ; "%s: %d: old: status=%u, tsf_low=%u, tsf_high=%u"
+0x0a6950  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6954  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32d4e   ; "%s: %d: old: status=%u, tsf_low=%u, tsf_high=%u"
+0x0a6958  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a695c  mov      w0, #0x33
+0x0a6960  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32d4e   ; "%s: %d: old: status=%u, tsf_low=%u, tsf_high=%u"
+0x0a6964  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6968  mov      w4, #0x24d
+0x0a696c  mov      w1, #4
+0x0a6970  mov      w5, wzr
+0x0a6974  b        #0xa69b4
+0x0a6978  mov      x2, #0        ; = .rodata.str1.1+0x32d9a   ; "%s: %d: get tsf cmd,status=%u, tsf_low=%u, tsf_high=%u"
+0x0a697c  mov      x3, #0        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6980  str      xzr, [x20, #0xa20]
+0x0a6984  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x32d9a   ; "%s: %d: get tsf cmd,status=%u, tsf_low=%u, tsf_high=%u"
+0x0a6988  str      wzr, [x20, #0xa1c]
+0x0a698c  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a6990  ldp      w5, w6, [x19]
+0x0a6994  ldr      w7, [x19, #8]
+0x0a6998  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x32d9a   ; "%s: %d: get tsf cmd,status=%u, tsf_low=%u, tsf_high=%u"
+0x0a699c  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a69a0  mov      w0, #0x33
+0x0a69a4  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x32d9a   ; "%s: %d: get tsf cmd,status=%u, tsf_low=%u, tsf_high=%u"
+0x0a69a8  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x32d15   ; "hdd_indicate_tsf_internal"
+0x0a69ac  mov      w4, #0x25a
+0x0a69b0  mov      w1, #4
+0x0a69b4  bl       #0xa69b4        ; -> qdf_trace_msg
+0x0a69b8  mov      w0, wzr
+0x0a69bc  b        #0xa6778

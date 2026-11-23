@@ -5021,8 +5021,8 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 
 ### 72.3 P1-B：98 项与 WEXT 32 handler
 
-- 98 项：`hdd_drv_cmds`（`.rodata+0x2bb8`，98×0x18）已全解（`tools/wlan_cmd_table.py`，0 未解析）；handler 解析事实与判定见 `WLAN_HANDLER_AUDIT.md` + `handler_audit.csv`（98 行）。入口长度上界 `0x2000` + NUL + 白名单 ⇒ 朴素长度越界不成立；具体反例/未决以报告为准。
-- WEXT 32 handler（**代理可达面**）：`we_handler_def`（`.rodata+0x6258`）→ `we_private`（`0x4c70`，32 指针）→ `we_private_args`（`0x4d70`，223×0x18，23 父项 + 200 子命令）。核心 `net/wireless/wext-priv.c:137-161`：`iwp->length > (set_args & 0x7FF)` → `-E2BIG`；`kzalloc(extra_size)` + `copy_from_user(extra_size)` ⇒ **长度被核心归一化**，"用户长度 < 结构体 ⇒ 堆越界读"不成立；handler 侧需按字段/索引校验重审（报告见 `WLAN_WEXT_HANDLER_AUDIT.md`）。
+- 98 项：`hdd_drv_cmds`（`.rodata+0x2bb8`，98×0x18）已全解（`tools/wlan_cmd_table.py`，0 未解析）；handler 解析事实与判定见 `WLAN_HANDLER_AUDIT.md` + `handler_audit.csv`（98 行）。入口长度上界 `0x2000` + NUL + 白名单 ⇒ 朴素长度越界不成立；**0 内存破坏反例**；续做收口 5 项残留（`WLAN_RESIDUAL_AUDIT.md`：`MAXTXPOWER` 值域 [-100,100]、4 个 `FMT-UNRESOLVED` 全为 `%31s`/`%d`），新增 2 个非内存破坏反例 H1（`SETMCRATE` 未检返回）/H2（`MAXTXPOWER` 解析失败读未初始化栈，受值域门约束）。
+- WEXT 面（**代理可达面**）：`we_handler_def`（`.rodata+0x6258`）→ `we_private`（`0x4c70`，32 指针）→ `we_private_args`（`0x4d70`，223×0x18，23 父项 + 200 子命令）。**重要更正**：`cmd` 的奇偶决定 SET/GET（`IW_IS_SET(cmd)=!(cmd&1)`），core 只对 **SET（偶数）** 用 `set_args` 夹长度；12 个奇数 GET 项不适用（首轮误判，已在 `WLAN_WEXT_HANDLER_AUDIT_2.md` §0.2 更正）。续做把 23 父项 + 101 子命令全部收口：**21 有界 / 2 无功能 / 0 未决、0 越界读写反例**；`0x8BFE` 是 8 B 空桩、`0x8BFF` 的 `extra` 只有 5 B；信息泄露方向关闭（GET 缓冲均 `kzalloc` 清零、回填长度自洽）；剩余为下游 `value` 域与 INI `wext_control` 配置门（WEXT-2 §4）。
 
 ### 72.4 P1-D：两个主体的可达性（不得用"域满足"代替"调用闭合"）
 
@@ -5054,4 +5054,45 @@ v13 评审（`docs_archive/项目评审与下一步规划_v13_2026-11-20.md`）�
 2. 未决：`iwpriv` 在代理域内是否真能完成 `SIOCGIWPRIV` + 私有 ioctl（只读枚举需新授权）；shell 的 `neverallowx` 与内核 xperm 生效性；WEXT 剩余 ~12 handler 的逐条判定。
 3. 结论范围限定 `qca_cld3_wlan.ko` SHA `f45c1c1c…d00` + F.16 固件（2025-03-26 构建）；换构建即作废。
 4. **工作区并发写入事件**：v13.2 会话期间另一写入方创建 `GHOSTLOCK_HEAP_RECLAIM_FEASIBILITY.md`（"G5"）并 push `e370348` 到 `origin/main`；主代理已本地回退并把两份文件归档 `docs_archive/out_of_scope_v13.2/`（未纳入判定、未复核）。**本 §72 与 `CLOSURE.md` 不含 G5 结论。**
+
+
+### 72.8 v13.2 续做（2026-11-23，纯离线、零上机）：残留项全部收口
+
+> 承接 §72。用户指示"把 P0–P5 未做完的接着做"。本轮只做**离线收口**，未连接设备、未做动态 WLAN 输入。新增交付：`WLAN_WEXT_HANDLER_AUDIT_2.md`、`WLAN_RESIDUAL_AUDIT.md`、`VENDOR_SURFACE_MATRIX.md` 附录 D、两份 CSV（`wext_audit_2.csv` / `residual_audit.csv`）、三个带 `--selftest` 的工具（`tools/wlan_wext_subcmd.py` / `wlan_residual_scan.py` / `hal_perm_gate.py` / `ftm_tool_surface.py`）。
+
+#### 72.8.1 P1 收口：WEXT（代理可达面）23 父项 + 101 子命令全部可判定
+
+| 项 | 结果 | 证据 |
+|---|---|---|
+| 父项总数 | **21 有界 / 2 无功能 / 0 未决**（首轮：7/1/15） | `WLAN_WEXT_HANDLER_AUDIT_2.md` §0.1 |
+| 方向误判更正 | **12 个奇数项是 GET**，core 只对偶数（SET）用 `set_args` 夹长度；首轮把它当 SET 分析（例：`0x8BE3` 的门不是 512 而是 helper 的 4096；`0x8BFF` 的 `extra` 不是 18 而是 **5**） | §0.2；`include/uapi/linux/wireless.h:353` + `wext-priv.c:93-161` |
+| `0x8BFE iw_set_dot11p_channel_sched` | **8 字节空桩**（`0x8eb40 mov w0,wzr; ret`），208 B 声明无人消费 | §0.2/§2.2 |
+| `0x8BE3 iw_setchar_getnone` | **有界**：`len>=1` + helper `len<=4096`；下游 `hdd_add_wowl_ptrn` 的 `offset<=0x92`、`plen<=0x14` 与目标字段**余量 0 字节**（回归基线） | §2.1/§3.1 |
+| `0x8BE8 hdd_fips_test` | **有界**：`len>=0x30` + `key_len∈{16,32}` + `data_len==len-0x30`；若缺 `len>=0x30` 会回绕（回归基线） | §2.8/§3.2 |
+| `0x8BE0` 101 个子命令 | 11 NULL / 51 标量 / 10 pps / 3 索引（均带 `b.hi` 上界）/ 26 本层标量；父项只传 `(adapter,u32)`，**子 handler 拿不到用户指针/长度** | §0.3/§2.10 |
+| 信息泄露方向 | **关闭**：GET 侧 `extra` 均 `kzalloc` 清零，回填 `iwp->length` 与 `copy_to_user` 夹取一致；回传的是统计/版本/INI 文本，不含内核指针 | §5 |
+| 仍未决（下游/配置，不在 handler 层） | ① INI `wext_control` 默认值（决定"是否可达"，不决定"是否有界"）；② `0x8BE5` 17 路输出函数内部是否真按上限截断（抽样建议）；③ `wma_cli_set_command` 等下游对 `value` 的二次解释；④ `0x8BE1` 61 路子命令语义；⑤ `hdd_add_wowl_ptrn` 全局数组元素个数（配置驱动） | §4 |
+
+#### 72.8.2 P1 收口：98 项 handler 的 5 个残留
+
+- `MAXTXPOWER`：**有界 [-100,100]**（`0x3fb90 ldr w20,[sp,#0x14]` → `0x3fb94 add w8,w20,#0x64` → `0x3fb98 cmp #0xc8` → `0x3fb9c b.ls`）。
+- 4 个 `FMT-UNRESOLVED`：格式串解出为 `"%31s "`（`.rodata.str1.1+0x12a09`）与 `"%d "`（`+0x14f4d`），**无裸 `%s`/`%[`/`%c`/`%n`**；全量复算 27 处 `sscanf` / 14 handler / unresolved=0 / unbounded=0。
+- **新增反例 H2**：`drv_cmd_max_tx_power` 的 `kstrtoint` 返回值未检查、`sp+0x14` 未预置 ⇒ 解析失败读未初始化栈（受值域门约束，**非内存破坏**）。
+
+#### 72.8.3 P2 收口：FTM 从"条件性关闭"收紧
+
+- **U2**：`myftm` **不导入 `ioctl`**（`libnl` + `genl_connect`）；`ftmdaemon` 的 32 个 ioctl 全落 NFC/BT/tty（`0x4004e9xx`/`0xbfac`/`0xc008561c` 等），**`0x89fd/0x89f1/0x89f0` 立即数+字面量双路 0 命中**；`ftmtest` 纯 netlink ⇒ **本构建无 `0x89fd` 调用方**（(a)）。
+- **U1**：HAL 9 个 HIDL 方法**无方法级权限门**（89 个 PLT 导入中 0 个 `IPCThreadState`/`getCallingUid`/`checkCallingPermission`/`selinux_*`；`.text` 0 条 `svc`）。真正的门是 SELinux：`oplus_wifi_hal_service` 的 `find` 只给 `engineermode_app`/`platform_app`/`system_server`/服务自身，shell 0 命中。
+- 附带：`changeConnectionMode(5)` 一次 HIDL 调用即可写 `/sys/module/wlan/parameters/con_mode`（`0x90ec cmp #5` → `0x9194 setConMode` → `fopen`+`snprintf`）⇒ 切 FTM 的入口存在，但**调用方限于上述三类域**，且仍触发整驱动模式重启。
+
+#### 72.8.4 P3 收口：`shell → 音频 HAL` 的 Binder 间接路径
+
+- `shell` 对 `hal_audio_default` **无任何 `binder` allow**；`service_manager` 只有 `list`、无 `find`；对 `hwservicemanager` 有 `binder call/transfer` 但无 `hwservice_manager find`。`oplus_wifi_service` 对 `servicemanager` 零规则。⇒ 与 v2.17 的 `shell → system_server` 同形，**在取句柄处断开**；该行从"未评估"改为"**静态关闭**"（`VENDOR_SURFACE_MATRIX.md` 附录 D）。
+
+#### 72.8.5 P4 / P5
+
+- **P4**：GhostLock 冻结维持；独立 G5/T3 设备线以 `HANDOVER_G5_T3_2026-11-20.md` 为准（② 机制性 NO-GO），按该会话要求**不并入**本文五层验收。
+- **P5**：`CLOSURE.md` §1 五层验收已同步本轮结果（98 项 5 残留收口、WEXT 21/2/0、FTM U1/U2、vendor 附录 D）。
+- **仍未做（需独立授权）**：动态验证（`iwpriv` 在代理域内的只读枚举、`0x89f1` 是否被 shell 的 neverallowx 真拒、`con_mode=5` 下的实际返回）；WEXT §4 的下游抽样（`0x8BE5` 输出函数截断、`wma_cli_set_command` value 域）。
+- **边界**：本续做全部为离线静态；结论范围限定 `qca_cld3_wlan.ko` SHA `f45c1c1c…d00` + F.16 固件（2025-03-26 构建）；四层判定不变（可用 ROOT / 持久 ROOT 仍 NO-GO）。
 

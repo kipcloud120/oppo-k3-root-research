@@ -248,3 +248,21 @@ Select-String -Path .build\sepolicy\*.cil -Pattern '^\(allow (shell|shell_30_0|o
 | `artifacts_adb/vendor_triage/ko_surface_1.json` / `_2.json` | 8 个候选模块的 init 调用链与名字候选 |
 | `artifacts_adb/vendor_triage/{ko_surface,ko_classify,loaded_map,fops,dis_win}.py` | 可复跑脚本（pyelftools + capstone） |
 
+
+---
+
+## 附录 D（v13.2 续做补充，主代理）："shell → 音频 HAL Binder 间接路径"的静态收口
+
+§6.1 表格最后一行登记了"shell → `hal_audio_default` 的 Binder 间接路径：未评估"。本轮按 WLAN 链同一方法（先看句柄获取，再看 binder 调用）做静态收口，结论是**该路径在句柄/调用两级都断开，不需要再评估**：
+
+| 检查点 | CIL 事实 | 判定 |
+|---|---|---|
+| shell 能否从 `servicemanager` **find** 到音频 HAL 的 AIDL 服务 | shell 只有 `(allow shell servicemanager (service_manager (list)))`；`service_manager (find)` 只经 `base_typeattr_511`（**不是** `hal_audio_default` 的注册名） | 否 |
+| shell 能否从 `hwservicemanager` **find** HIDL 服务 | shell 有 `(allow shell hwservicemanager (binder (call transfer)))` + `hwservice_manager (list)`，**无** `hwservice_manager (find)` | 否 |
+| shell 能否对 `hal_audio_default` 发 binder call/transfer | `(allow shell hal_audio_default (binder ...))` **零条**（CIL 全集 grep 为空） | 否 |
+| 另一主体 `oplus_wifi_service` 能否作为跳板 | 该域对 `servicemanager` **零规则**（v2.17 已证），对 `hal_audio_default` 亦无 binder 规则 | 否 |
+
+**结论**：`shell → 音频 HAL` 与 v2.17 的 `shell → system_server` 同形——**在"取句柄"处断开**，不存在"先拿句柄再谈方法级权限"的前提；因此 §4/#2、#3 的音频面消费者（`hal_audio_default`）虽然真实存在，但**不是本工程两个可达主体能驱动的面**。该行从"未评估"改为"**静态关闭（句柄/调用两级均无权限）**"，不做动态验证。
+
+> 边界：本结论只覆盖 Binder 句柄/调用路径；若未来出现"shell 可读的 fd/文件被传给音频 HAL"的新证据（例如某个 service 把 fd 转交 shell），需重新评估，不在本条覆盖范围内。
+

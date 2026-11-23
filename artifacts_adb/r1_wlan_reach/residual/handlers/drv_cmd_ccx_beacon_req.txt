@@ -1,0 +1,350 @@
+# drv_cmd_ccx_beacon_req @0x3ebf8 size=1396
+03ebf8  sub        sp, sp, #0x140
+03ebfc  stp        x29, x30, [sp, #0xe0]
+03ec00  add        x29, sp, #0xe0
+03ec04  stp        x28, x27, [sp, #0xf0]
+03ec08  stp        x26, x25, [sp, #0x100]
+03ec0c  stp        x24, x23, [sp, #0x110]
+03ec10  stp        x22, x21, [sp, #0x120]
+03ec14  stp        x20, x19, [sp, #0x130]
+03ec18  mov        x8, #0   ; abs __stack_chk_guard
+03ec1c  mov        x19, x0
+03ec20  movk       x8, #0, lsl #16   ; abs __stack_chk_guard
+03ec24  movk       x8, #0, lsl #32   ; abs __stack_chk_guard
+03ec28  movk       x8, #0, lsl #48   ; abs __stack_chk_guard
+03ec2c  ldr        x8, [x8]
+03ec30  stur       x8, [x29, #-0x10]
+03ec34  stp        xzr, xzr, [sp, #0x98]
+03ec38  stp        xzr, xzr, [sp, #0x88]
+03ec3c  stp        xzr, xzr, [sp, #0x78]
+03ec40  stp        xzr, xzr, [sp, #0x68]
+03ec44  ldr        w0, [x0, #0xa8]
+03ec48  str        wzr, [sp, #0xa8]
+03ec4c  stp        xzr, xzr, [sp, #0x58]
+03ec50  stp        xzr, xzr, [sp, #0x48]
+03ec54  cbz        w0, #0x3ec9c
+03ec58  bl         #0x3ec58   ; qdf_opmode_str
+03ec5c  mov        x2, #0   ; abs .rodata.str1.1+0x11507  '%s: %d: Unsupported in mode %s(%d)'
+03ec60  mov        x3, #0   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03ec64  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x11507  '%s: %d: Unsupported in mode %s(%d)'
+03ec68  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03ec6c  ldr        w6, [x19, #0xa8]
+03ec70  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x11507  '%s: %d: Unsupported in mode %s(%d)'
+03ec74  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03ec78  mov        x5, x0
+03ec7c  mov        w0, #0x33
+03ec80  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x11507  '%s: %d: Unsupported in mode %s(%d)'
+03ec84  mov        w4, #0x1748
+03ec88  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03ec8c  mov        w1, #3
+03ec90  bl         #0x3ec90   ; qdf_trace_msg
+03ec94  mov        w21, #-0x16
+03ec98  b          #0x3f124
+03ec9c  ldr        x23, [x1, #8]
+03eca0  mov        x0, x2
+03eca4  mov        x21, x2
+03eca8  mov        x20, x1
+03ecac  strb       wzr, [sp, #0x44]
+03ecb0  str        wzr, [sp, #0x40]
+03ecb4  bl         #0x3ecb4   ; strlen
+03ecb8  mov        x1, x0
+03ecbc  mov        x0, x21
+03ecc0  mov        w2, #0x20
+03ecc4  bl         #0x3ecc4   ; strnchr
+03ecc8  cbz        x0, #0x3f0ec
+03eccc  ldrb       w8, [x0]
+03ecd0  mov        x24, x0
+03ecd4  cmp        w8, #0x20
+03ecd8  b.ne       #0x3f0ec
+03ecdc  and        w8, w8, #0xff
+03ece0  cmp        w8, #0x20
+03ece4  b.ne       #0x3ecf0
+03ece8  ldrb       w8, [x24, #1]!
+03ecec  b          #0x3ecdc
+03ecf0  cbz        w8, #0x3f0ec
+03ecf4  mov        x25, #0   ; abs .rodata.str1.1+0x12a09  '%31s '
+03ecf8  sub        x2, x29, #0x30
+03ecfc  movk       x25, #0, lsl #16   ; abs .rodata.str1.1+0x12a09  '%31s '
+03ed00  mov        x0, x24
+03ed04  movk       x25, #0, lsl #32   ; abs .rodata.str1.1+0x12a09  '%31s '
+03ed08  movk       x25, #0, lsl #48   ; abs .rodata.str1.1+0x12a09  '%31s '
+03ed0c  mov        x1, x25
+03ed10  bl         #0x3ed10   ; sscanf
+03ed14  cmp        w0, #1
+03ed18  b.ne       #0x3f0ec
+03ed1c  mov        w1, #0xa
+03ed20  sub        x0, x29, #0x30
+03ed24  add        x2, sp, #0x44
+03ed28  bl         #0x3ed28   ; kstrtou8
+03ed2c  tbnz       w0, #0x1f, #0x3f0ec
+03ed30  ldrb       w8, [sp, #0x44]
+03ed34  mov        x22, #0   ; abs .rodata.str1.1+0x14302  'hdd_parse_ese_beacon_req'
+03ed38  mov        x2, #0   ; abs .rodata.str1.1+0x142da  '%s: %d: Number of Bcn Req Ie fields: %d'
+03ed3c  movk       x22, #0, lsl #16   ; abs .rodata.str1.1+0x14302  'hdd_parse_ese_beacon_req'
+03ed40  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x142da  '%s: %d: Number of Bcn Req Ie fields: %d'
+03ed44  movk       x22, #0, lsl #32   ; abs .rodata.str1.1+0x14302  'hdd_parse_ese_beacon_req'
+03ed48  mov        w9, #8
+03ed4c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x142da  '%s: %d: Number of Bcn Req Ie fields: %d'
+03ed50  cmp        w8, #8
+03ed54  movk       x22, #0, lsl #48   ; abs .rodata.str1.1+0x14302  'hdd_parse_ese_beacon_req'
+03ed58  csel       w5, w8, w9, lo
+03ed5c  mov        w0, #0x33
+03ed60  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x142da  '%s: %d: Number of Bcn Req Ie fields: %d'
+03ed64  mov        w4, #0xc3e
+03ed68  mov        w1, #8
+03ed6c  mov        x3, x22
+03ed70  strb       w5, [sp, #0x44]
+03ed74  strb       w5, [sp, #0x48]
+03ed78  bl         #0x3ed78   ; qdf_trace_msg
+03ed7c  ldrb       w8, [sp, #0x48]
+03ed80  cbz        w8, #0x3ef68
+03ed84  mov        x26, #0   ; abs .rodata.str1.1+0x12a48  ' '
+03ed88  mov        x27, #0   ; abs .rodata+0x2b91
+03ed8c  movk       x26, #0, lsl #16   ; abs .rodata.str1.1+0x12a48  ' '
+03ed90  movk       x27, #0, lsl #16   ; abs .rodata+0x2b91
+03ed94  movk       x26, #0, lsl #32   ; abs .rodata.str1.1+0x12a48  ' '
+03ed98  movk       x27, #0, lsl #32   ; abs .rodata+0x2b91
+03ed9c  movk       x26, #0, lsl #48   ; abs .rodata.str1.1+0x12a48  ' '
+03eda0  mov        w21, #-0x16
+03eda4  movk       x27, #0, lsl #48   ; abs .rodata+0x2b91
+03eda8  str        xzr, [sp, #0x38]
+03edac  mov        x0, x24
+03edb0  mov        x1, x26
+03edb4  bl         #0x3edb4   ; strpbrk
+03edb8  cbz        x0, #0x3f0f0
+03edbc  ldr        x8, [sp, #0x38]
+03edc0  mov        w9, #0xc
+03edc4  add        x10, sp, #0x48
+03edc8  mov        x24, x0
+03edcc  mov        w28, wzr
+03edd0  madd       x8, x8, x9, x10
+03edd4  add        x9, x8, #0xc
+03edd8  str        x9, [sp, #0x30]
+03eddc  add        x9, x8, #4
+03ede0  str        x9, [sp, #0x28]
+03ede4  add        x9, x8, #0xe
+03ede8  add        x8, x8, #8
+03edec  stp        x9, x8, [sp, #0x18]
+03edf0  b          #0x3edf8
+03edf4  add        x24, x24, #1
+03edf8  ldrb       w8, [x24]
+03edfc  cmp        w8, #0x20
+03ee00  b.eq       #0x3edf4
+03ee04  cbz        w8, #0x3f0ec
+03ee08  sub        x2, x29, #0x30
+03ee0c  mov        x0, x24
+03ee10  mov        x1, x25
+03ee14  bl         #0x3ee14   ; sscanf
+03ee18  cmp        w0, #1
+03ee1c  b.ne       #0x3f0f0
+03ee20  sub        x0, x29, #0x30
+03ee24  add        x2, sp, #0x40
+03ee28  mov        w1, #0xa
+03ee2c  bl         #0x3ee2c   ; kstrtouint
+03ee30  tbnz       w0, #0x1f, #0x3f0f0
+03ee34  cmp        w28, #3
+03ee38  b.hi       #0x3eea0
+03ee3c  mov        w8, w28
+03ee40  adr        x9, #0x3ee50
+03ee44  ldrb       w10, [x27, x8]
+03ee48  add        x9, x9, x10, lsl #2
+03ee4c  br         x9
+03ee50  ldr        w8, [sp, #0x40]
+03ee54  cbz        w8, #0x3f068
+03ee58  ldr        x9, [sp, #0x28]
+03ee5c  strh       w8, [x9]
+03ee60  b          #0x3eea0
+03ee64  ldr        w5, [sp, #0x40]
+03ee68  sub        w8, w5, #1
+03ee6c  cmp        w8, #0xad
+03ee70  b.hs       #0x3f090
+03ee74  mov        x0, x23
+03ee78  mov        w1, w5
+03ee7c  bl         #0x3ee7c   ; wlan_reg_chan_to_freq
+03ee80  ldr        x8, [sp, #0x20]
+03ee84  str        w0, [x8]
+03ee88  b          #0x3eea0
+03ee8c  ldr        w5, [sp, #0x40]
+03ee90  cmp        w5, #3
+03ee94  b.hs       #0x3f0ac
+03ee98  ldr        x8, [sp, #0x30]
+03ee9c  strb       w5, [x8]
+03eea0  mov        x0, x24
+03eea4  mov        x1, x26
+03eea8  add        w28, w28, #1
+03eeac  bl         #0x3eeac   ; strpbrk
+03eeb0  mov        x24, x0
+03eeb4  cbnz       x0, #0x3edf8
+03eeb8  b          #0x3f0f0
+03eebc  ldr        w5, [sp, #0x40]
+03eec0  cbz        w5, #0x3f0c8
+03eec4  ldr        x8, [sp, #0x30]
+03eec8  ldrb       w8, [x8]
+03eecc  cmp        w8, #2
+03eed0  b.eq       #0x3f0c8
+03eed4  ldr        x9, [sp, #0x38]
+03eed8  ldrb       w8, [sp, #0x48]
+03eedc  add        x9, x9, #1
+03eee0  cmp        x9, x8
+03eee4  str        x9, [sp, #0x38]
+03eee8  ldr        x9, [sp, #0x18]
+03eeec  strh       w5, [x9]
+03eef0  b.lo       #0x3edac
+03eef4  cbz        w8, #0x3ef68
+03eef8  mov        x24, #0   ; abs .rodata.str1.1+0x143bb  '%s: %d: Index: %d Measurement Token: %u ch_freq: %u Scan Mode: %u Measurement Duration: %u'
+03eefc  add        x8, sp, #0x48
+03ef00  movk       x24, #0, lsl #16   ; abs .rodata.str1.1+0x143bb  '%s: %d: Index: %d Measurement Token: %u ch_freq: %u Scan Mode: %u Measurement Duration: %u'
+03ef04  mov        x23, xzr
+03ef08  movk       x24, #0, lsl #32   ; abs .rodata.str1.1+0x143bb  '%s: %d: Index: %d Measurement Token: %u ch_freq: %u Scan Mode: %u Measurement Duration: %u'
+03ef0c  add        x27, x8, #0xe
+03ef10  movk       x24, #0, lsl #48   ; abs .rodata.str1.1+0x143bb  '%s: %d: Index: %d Measurement Token: %u ch_freq: %u Scan Mode: %u Measurement Duration: %u'
+03ef14  mov        w25, #0x33
+03ef18  mov        w26, #0xc97
+03ef1c  ldurh      w6, [x27, #-0xa]
+03ef20  mov        w0, w25
+03ef24  ldur       w7, [x27, #-6]
+03ef28  mov        w1, #8
+03ef2c  ldurb      w8, [x27, #-2]
+03ef30  mov        x2, x24
+03ef34  mov        x3, x22
+03ef38  mov        w4, w26
+03ef3c  mov        w5, w23
+03ef40  ldrh       w9, [x27], #0xc
+03ef44  str        w9, [sp, #8]
+03ef48  str        w8, [sp]
+03ef4c  bl         #0x3ef4c   ; qdf_trace_msg
+03ef50  ldrb       w8, [sp, #0x48]
+03ef54  mov        w21, wzr
+03ef58  add        x23, x23, #1
+03ef5c  cmp        x23, x8
+03ef60  b.lo       #0x3ef1c
+03ef64  b          #0x3f0f0
+03ef68  mov        w21, wzr
+03ef6c  cbnz       w21, #0x3f0f4
+03ef70  mov        w8, #0x9bf0
+03ef74  add        x0, x19, x8
+03ef78  bl         #0x3ef78   ; hdd_conn_is_connected
+03ef7c  tbz        w0, #0, #0x3efdc
+03ef80  ldr        x0, [x20, #0x10]
+03ef84  add        x2, sp, #0x48
+03ef88  ldrb       w1, [x19, #0x98]
+03ef8c  bl         #0x3ef8c   ; sme_set_ese_beacon_request
+03ef90  mov        w21, w0
+03ef94  cbz        w0, #0x3f124
+03ef98  cmp        w21, #1
+03ef9c  b.ne       #0x3f030
+03efa0  mov        x2, #0   ; abs .rodata.str1.1+0x1425d  '%s: %d: sme_set_ese_beacon_request failed (%d), a request already in progress'
+03efa4  mov        x3, #0   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efa8  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1425d  '%s: %d: sme_set_ese_beacon_request failed (%d), a request already in progress'
+03efac  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efb0  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1425d  '%s: %d: sme_set_ese_beacon_request failed (%d), a request already in progress'
+03efb4  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efb8  mov        w0, #0x33
+03efbc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1425d  '%s: %d: sme_set_ese_beacon_request failed (%d), a request already in progress'
+03efc0  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efc4  mov        w4, #0x1765
+03efc8  mov        w1, #2
+03efcc  mov        w5, #1
+03efd0  bl         #0x3efd0   ; qdf_trace_msg
+03efd4  mov        w21, #-0x10
+03efd8  b          #0x3f124
+03efdc  mov        x2, #0   ; abs .rodata.str1.1+0x1152a  '%s: %d: Not associated'
+03efe0  mov        x3, #0   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efe4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1152a  '%s: %d: Not associated'
+03efe8  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03efec  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1152a  '%s: %d: Not associated'
+03eff0  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03eff4  mov        w0, #0x33
+03eff8  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1152a  '%s: %d: Not associated'
+03effc  mov        w4, #0x1753
+03f000  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f004  mov        w1, #8
+03f008  bl         #0x3f008   ; qdf_trace_msg
+03f00c  ldrb       w8, [sp, #0x48]
+03f010  cbz        w8, #0x3ec94
+03f014  ldrh       w1, [sp, #0x4c]
+03f018  mov        x0, x19
+03f01c  mov        w2, #1
+03f020  mov        w3, wzr
+03f024  bl         #0x3f024   ; hdd_indicate_ese_bcn_report_no_results
+03f028  mov        w21, wzr
+03f02c  b          #0x3f124
+03f030  mov        x2, #0   ; abs .rodata.str1.1+0x142ab  '%s: %d: sme_set_ese_beacon_request failed (%d)'
+03f034  mov        x3, #0   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f038  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x142ab  '%s: %d: sme_set_ese_beacon_request failed (%d)'
+03f03c  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f040  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x142ab  '%s: %d: sme_set_ese_beacon_request failed (%d)'
+03f044  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f048  mov        w0, #0x33
+03f04c  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x142ab  '%s: %d: sme_set_ese_beacon_request failed (%d)'
+03f050  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f054  mov        w4, #0x176a
+03f058  mov        w1, #2
+03f05c  mov        w5, w21
+03f060  bl         #0x3f060   ; qdf_trace_msg
+03f064  b          #0x3ec94
+03f068  mov        x2, #0   ; abs .rodata.str1.1+0x1431b  '%s: %d: Invalid Measurement Token: %u'
+03f06c  mov        w0, #0x33
+03f070  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1431b  '%s: %d: Invalid Measurement Token: %u'
+03f074  mov        w4, #0xc63
+03f078  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1431b  '%s: %d: Invalid Measurement Token: %u'
+03f07c  mov        w1, #2
+03f080  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1431b  '%s: %d: Invalid Measurement Token: %u'
+03f084  mov        x3, x22
+03f088  mov        w5, wzr
+03f08c  b          #0x3f0e8
+03f090  mov        x2, #0   ; abs .rodata.str1.1+0x14341  '%s: %d: Invalid Channel Number: %u'
+03f094  mov        w0, #0x33
+03f098  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14341  '%s: %d: Invalid Channel Number: %u'
+03f09c  mov        w4, #0xc6f
+03f0a0  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14341  '%s: %d: Invalid Channel Number: %u'
+03f0a4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14341  '%s: %d: Invalid Channel Number: %u'
+03f0a8  b          #0x3f0e0
+03f0ac  mov        x2, #0   ; abs .rodata.str1.1+0x14364  '%s: %d: Invalid Scan Mode: %u Expected{0|1|2}'
+03f0b0  mov        w0, #0x33
+03f0b4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14364  '%s: %d: Invalid Scan Mode: %u Expected{0|1|2}'
+03f0b8  mov        w4, #0xc7a
+03f0bc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14364  '%s: %d: Invalid Scan Mode: %u Expected{0|1|2}'
+03f0c0  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14364  '%s: %d: Invalid Scan Mode: %u Expected{0|1|2}'
+03f0c4  b          #0x3f0e0
+03f0c8  mov        x2, #0   ; abs .rodata.str1.1+0x14392  '%s: %d: Invalid Measurement Duration: %u'
+03f0cc  mov        w0, #0x33
+03f0d0  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14392  '%s: %d: Invalid Measurement Duration: %u'
+03f0d4  mov        w4, #0xc87
+03f0d8  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14392  '%s: %d: Invalid Measurement Duration: %u'
+03f0dc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14392  '%s: %d: Invalid Measurement Duration: %u'
+03f0e0  mov        w1, #2
+03f0e4  mov        x3, x22
+03f0e8  bl         #0x3f0e8   ; qdf_trace_msg
+03f0ec  mov        w21, #-0x16
+03f0f0  cbz        w21, #0x3ef70
+03f0f4  mov        x2, #0   ; abs .rodata.str1.1+0x14236  '%s: %d: Failed to parse ese beacon req'
+03f0f8  mov        x3, #0   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f0fc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14236  '%s: %d: Failed to parse ese beacon req'
+03f100  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f104  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14236  '%s: %d: Failed to parse ese beacon req'
+03f108  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f10c  mov        w0, #0x33
+03f110  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14236  '%s: %d: Failed to parse ese beacon req'
+03f114  mov        w4, #0x174e
+03f118  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x1421f  'drv_cmd_ccx_beacon_req'
+03f11c  mov        w1, #2
+03f120  bl         #0x3f120   ; qdf_trace_msg
+03f124  mov        x9, #0   ; abs __stack_chk_guard
+03f128  ldur       x8, [x29, #-0x10]
+03f12c  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+03f130  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+03f134  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+03f138  ldr        x9, [x9]
+03f13c  cmp        x9, x8
+03f140  b.ne       #0x3f168
+03f144  mov        w0, w21
+03f148  ldp        x20, x19, [sp, #0x130]
+03f14c  ldp        x22, x21, [sp, #0x120]
+03f150  ldp        x24, x23, [sp, #0x110]
+03f154  ldp        x26, x25, [sp, #0x100]
+03f158  ldp        x28, x27, [sp, #0xf0]
+03f15c  ldp        x29, x30, [sp, #0xe0]
+03f160  add        sp, sp, #0x140
+03f164  ret        
+03f168  bl         #0x3f168   ; __stack_chk_fail

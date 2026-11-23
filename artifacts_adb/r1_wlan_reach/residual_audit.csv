@@ -1,0 +1,73 @@
+group,item,object,addr,evidence,verdict,level,note
+A,A1 MAXTXPOWER (#74),drv_cmd_max_tx_power,0x3fad0,"kstrtoint@0x3fb8c -> [sp+0x14]; ldr x20; add x8,x20,#0x64; cmp x8,#0xc8 @0x3fb98; b.ls -> 0x3fc14",有界,指令级,ret gate=None; slot preinit=NO
+A,A2 drv_cmd_ccx_beacon_req,drv_cmd_ccx_beacon_req,0x3ed10,"sscanf x1 <- x25@0x3ed0c load@0x3ed08(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_beacon_req,drv_cmd_ccx_beacon_req,0x3ee14,"sscanf x1 <- x25@0x3ee10 load@0x3ed08(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f230,"sscanf x1 <- x22@0x3f22c load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f29c,"sscanf x1 <- x22@0x3f298 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f328,"sscanf x1 <- x22@0x3f324 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f400,"sscanf x1 <- x22@0x3f3fc load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f480,"sscanf x1 <- x22@0x3f47c load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f504,"sscanf x1 <- x22@0x3f500 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f588,"sscanf x1 <- x22@0x3f584 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f60c,"sscanf x1 <- x22@0x3f608 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f694,"sscanf x1 <- x22@0x3f690 load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f720,"sscanf x1 <- x22@0x3f71c load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_ccx_plm_req,drv_cmd_ccx_plm_req,0x3f7d0,"sscanf x1 <- x22@0x3f7cc load@0x3f228(.rodata.str1.1+0x12a09) ""%31s """,有界,指令级,fmt=%31s  need=32
+A,A2 drv_cmd_set_disable_chan_list,drv_cmd_set_disable_chan_list,0x41304,"sscanf x1 <- x23@0x41300 load@0x412fc(.rodata.str1.1+0x14f4d) ""%d """,有界,指令级,fmt=%d  need=4
+A,A2 drv_cmd_set_disable_chan_list,drv_cmd_set_disable_chan_list,0x4153c,"sscanf x1 <- x23@0x41538 load@0x412fc(.rodata.str1.1+0x14f4d) ""%d """,有界,指令级,fmt=%d  need=4
+A,A2 drv_cmd_get_ani_level,drv_cmd_get_ani_level,0x41cb4,"sscanf x1 <- x25@0x41cb0 load@0x41cac(.rodata.str1.1+0x14f4d) ""%d """,有界,指令级,fmt=%d  need=4
+A,A2 drv_cmd_get_ani_level,drv_cmd_get_ani_level,0x41df0,"sscanf x1 <- x25@0x41dec load@0x41cac(.rodata.str1.1+0x14f4d) ""%d """,有界,指令级,fmt=%d  need=4
+B,B0 HAL 导入面,vendor.oplus.hardware.wifi@1.1-service,-,PLT 导入 89 个；身份/权限类命中 0 个,无方法级权限门,指令级,build-id 0400000010000000
+B,B2 code1,changeConnectionMode(int32) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20changeConnectionModeEj),0x90a0,entry=0x90a0 size=536; perm-calls=none; priv-calls=stat@0x9238,无权限门（空权限直通）,指令级,blr=0
+B,B3 code2,"catchSnifferLog(uint32,uint32) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService15catchSnifferLogEjj)",0xad20,"entry=0xad20 size=1484; perm-calls=none; priv-calls=stat@0xb0fc,chown@0xb13c,_ZN7android4base11SetPropertyERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEES9_@0xb230",无权限门（空权限直通）,指令级,blr=0
+B,B4 code3,resetConnectionMode() (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService19resetConnectionModeEv),0x9684,entry=0x9684 size=76; perm-calls=none; priv-calls=none,无权限门（空权限直通）,指令级,blr=0
+B,B5 code4,executeDriverCommand(string) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService20executeDriverCommandERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE),0x992c,"entry=0x992c size=1592; perm-calls=none; priv-calls=stat@0x9a70,stat@0x9b8c",无权限门（空权限直通）,指令级,blr=6
+B,B6 code5,setupFTMdaemon() (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14setupFTMdaemonEv),0xa0dc,entry=0xa0dc size=692; perm-calls=none; priv-calls=stat@0xa1ac,无权限门（空权限直通）,指令级,blr=0
+B,B7 code6,sendSupplicantCommand(string) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService21sendSupplicantCommandERKN7android8hardware11hidl_stringE),0xa568,entry=0xa568 size=816; perm-calls=none; priv-calls=stat@0xa5c8,无权限门（空权限直通）,指令级,blr=0
+B,B8 code7,"runWiFiScript(string,string) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService13runWiFiScriptERKN7android8hardware11hidl_stringESA_)",0xa898,entry=0xa898 size=1160; perm-calls=none; priv-calls=none,无权限门（空权限直通）,指令级,blr=0
+B,B9 code8,sendIniContent(string) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService14sendIniContentERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE),0xb2ec,entry=0xb2ec size=796; perm-calls=none; priv-calls=fopen@0xb474,无权限门（空权限直通）,指令级,blr=5
+B,B10 code9,getIniVersion(string) (_ZN6vendor5oplus8hardware4wifi4V1_114implementation15OppoWifiService13getIniVersionERKN7android8hardware11hidl_stringENSt3__18functionIFvNS3_22OplusWifiServiceStatusESA_EEE),0xb65c,entry=0xb65c size=1112; perm-calls=none; priv-calls=fopen@0xb7dc,无权限门（空权限直通）,指令级,blr=6
+C,C0 通道判定,myftm,-,"DT_NEEDED=libcutils.so,libz.so,libnl.so,libc++.so,libc.so,libm.so,libdl.so; ioctl_import=False; ioctl_calls=0; netlink=bind,genl_connect,nl_send_auto_complete,nl_socket_add_membership,nl_socket_alloc,socket; libnl=libnl.so",netlink,指令级,89fd/89f1 literal hits=0
+C,C0 通道判定,ftmdaemon,-,"DT_NEEDED=libnl.so,libbt-hidlclient.so,libdiag.so,libcutils.so,liblog.so,libhardware.so,libbtnv.so,libc++.so,libc.so,libm.so,libdl.so; ioctl_import=True; ioctl_calls=32; netlink=genl_connect,nl_send_auto_complete,nl_socket_add_membership,nl_socket_alloc; libnl=libnl.so",chardev+ioctl,指令级,89fd/89f1 literal hits=0
+C,C1 ioctl 调用点,ftmdaemon,0xd4fc,request=0x707 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xd5a4,request=0x707 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xdf30,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xdf78,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xdfb8,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xe858,request=0x4004e909 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xe9a8,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xfb9c,request=reg fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0xfd50,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x10088,request=0x4004e901 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x10540,request=reg fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x10568,request=0x4004ea01 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x10578,request=reg fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x109d0,request=reg fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x10c00,request=0x4004e902 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x12600,request=0xbfac fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x174f4,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x1751c,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17548,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x1758c,request=0xc0205648 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17664,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17750,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17770,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17788,request=0xc0205648 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x1784c,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17eb0,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17f10,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17f4c,request=0xc054561d fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x17fd4,request=0x402c5639 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x185d0,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x18668,request=0xc008561c fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,ftmdaemon,0x188e8,request=0xc0205648 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C0 通道判定,ftmtest,-,"DT_NEEDED=libnl.so,libaoa.so,libc++.so,libc.so,libm.so,libdl.so; ioctl_import=False; ioctl_calls=0; netlink=genl_connect,nl_send_auto_complete,nl_socket_get_fd; libnl=libnl.so",netlink,指令级,89fd/89f1 literal hits=0
+C,C0 通道判定,iwpriv,-,"DT_NEEDED=libc++.so,libc.so,libm.so,libdl.so; ioctl_import=True; ioctl_calls=8; netlink=socket; libnl=-",chardev+ioctl,指令级,89fd/89f1 literal hits=0
+C,C1 ioctl 调用点,iwpriv,0x2a24,request=reg fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x2f38,request=0x8912 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x325c,request=0x8b01 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x3298,request=0x8b0b fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x33c0,request=0x8b0d fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x3600,request=0x8927 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x36b4,request=0x8915 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立
+C,C1 ioctl 调用点,iwpriv,0x3a24,request=0x8954 fd=reg,非 0x89fd,指令级,WEXT 私有码不成立

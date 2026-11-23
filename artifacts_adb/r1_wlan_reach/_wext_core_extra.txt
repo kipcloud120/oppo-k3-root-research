@@ -1,0 +1,24 @@
+== 父项（cmd in 0x8BE0..0x8BFF）：方向由 cmd 奇偶决定，与 set/get 声明无关 ==
+[  0] 0x8BE0 SET set=0x4801 get=0x0000 name=''               core_extra_size=0
+[ 93] 0x8BE1 GET set=0x0000 get=0x4801 name=''               core_extra_size=0
+[144] 0x8BE3 GET set=0x2200 get=0x0000 name=''               core_extra_size=0
+[149] 0x8BE4 SET set=0x4803 get=0x0000 name=''               core_extra_size=0
+[153] 0x8BEF GET set=0x0000 get=0x4803 name=''               core_extra_size=0
+[156] 0x8BE5 GET set=0x0000 get=0x27FF name=''               core_extra_size=2047
+[174] 0x8BE6 SET set=0x0000 get=0x0000 name=''               core_extra_size=0
+[179] 0x8BE7 GET set=0x400B get=0x0000 name=''               core_extra_size=0
+[195] 0x8BE8 SET set=0x17FF get=0x17FF name='fips_test'      core_extra_size=2047
+[196] 0x8BE9 GET set=0x4813 get=0x4801 name='addTspec'       core_extra_size=0
+[197] 0x8BEB GET set=0x4801 get=0x4801 name='delTspec'       core_extra_size=0
+[198] 0x8BED GET set=0x4801 get=0x4801 name='getTspec'       core_extra_size=0
+[199] 0x8BF2 SET set=0x1018 get=0x0000 name='setHostOffload' core_extra_size=24
+[200] 0x8BF5 GET set=0x0000 get=0x17FF name='getWlanStats'   core_extra_size=2047
+[201] 0x8BF6 SET set=0x1820 get=0x0000 name='setKeepAlive'   core_extra_size=32
+[202] 0x8BF7 GET set=0x1067 get=0x0000 name='setPktFilter'   core_extra_size=0
+[203] 0x8BF8 SET set=0x27FF get=0x0000 name='setpno'         core_extra_size=2047
+[204] 0x8BF9 GET set=0x4801 get=0x0000 name='SETBAND'        core_extra_size=0
+[205] 0x8BFA SET set=0x0000 get=0x0000 name='setMCBCFilter'  core_extra_size=0
+[206] 0x8BFF GET set=0x2012 get=0x2005 name='getLinkSpeed'   core_extra_size=5
+[207] 0x8BFC SET set=0x4802 get=0x0000 name=''               core_extra_size=0
+[209] 0x8BFE SET set=0x10D0 get=0x0000 name='set_dot11p'     core_extra_size=208
+[222] 0x8BF4 SET set=0x2180 get=0x0000 name='set_ft_ies'     core_extra_size=384

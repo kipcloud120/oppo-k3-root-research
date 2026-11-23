@@ -1,0 +1,314 @@
+== hdd_add_wowl_ptrn @0x84930 size=0x4e4 ==
+0x084930  sub      sp, sp, #0x1d0
+0x084934  stp      x29, x30, [sp, #0x170]
+0x084938  add      x29, sp, #0x170
+0x08493c  stp      x28, x27, [sp, #0x180]
+0x084940  stp      x26, x25, [sp, #0x190]
+0x084944  stp      x24, x23, [sp, #0x1a0]
+0x084948  stp      x22, x21, [sp, #0x1b0]
+0x08494c  stp      x20, x19, [sp, #0x1c0]
+0x084950  mov      x8, #0        ; = SHN_UNDEF+0x0
+0x084954  mov      x19, x0
+0x084958  movk     x8, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x08495c  mov      x27, x1
+0x084960  movk     x8, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x084964  mov      w1, #5
+0x084968  movk     x8, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x08496c  ldr      x8, [x8]
+0x084970  stur     x8, [x29, #-0x10]
+0x084974  ldr      x20, [x0, #0x18]
+0x084978  ldr      x21, [x20]
+0x08497c  mov      x0, x21
+0x084980  bl       #0x84980        ; -> wlan_objmgr_psoc_try_get_ref
+0x084984  cbz      w0, #0x84990
+0x084988  mov      w0, wzr
+0x08498c  b        #0x84d70
+0x084990  ldr      x0, [x20]
+0x084994  bl       #0x84994        ; -> ucfg_pmo_get_num_wow_filters
+0x084998  mov      w20, w0
+0x08499c  mov      w1, #5
+0x0849a0  mov      x0, x21
+0x0849a4  bl       #0x849a4        ; -> wlan_objmgr_psoc_release_ref
+0x0849a8  mov      x8, xzr
+0x0849ac  ldrb     w9, [x27, x8]
+0x0849b0  cbz      w9, #0x849c8
+0x0849b4  cmp      w9, #0x3b
+0x0849b8  b.eq     #0x849c8
+0x0849bc  add      x8, x8, #1
+0x0849c0  ldrb     w9, [x27, x8]
+0x0849c4  cbnz     w9, #0x849b4
+0x0849c8  cmp      w8, #0xb
+0x0849cc  b.lt     #0x84d60
+0x0849d0  and      w9, w20, #0xff
+0x0849d4  mov      x10, #0        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x0849d8  str      x19, [sp, #0x10]
+0x0849dc  str      x10, [sp, #0x20]
+0x0849e0  str      w9, [sp, #0x2c]
+0x0849e4  cbz      w9, #0x84db0
+0x0849e8  ldr      w9, [sp, #0x2c]
+0x0849ec  mov      x20, #0        ; = .bss+0xed8
+0x0849f0  ldr      x22, [sp, #0x20]
+0x0849f4  movk     x20, #0, lsl #16        ; = .bss+0xed8
+0x0849f8  movk     x20, #0, lsl #32        ; = .bss+0xed8
+0x0849fc  movk     x20, #0, lsl #48        ; = .bss+0xed8
+0x084a00  sub      w9, w9, #1
+0x084a04  movk     x22, #0, lsl #16        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084a08  movk     x22, #0, lsl #32        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084a0c  stp      w9, wzr, [sp, #0x30]
+0x084a10  add      x9, sp, #0x38
+0x084a14  orr      x24, x9, #3
+0x084a18  add      x19, x9, #0x96
+0x084a1c  mov      x9, #0        ; = .rodata.str1.1+0x27c87   ; "%s: %d: Invalid length specified. Skip!"
+0x084a20  movk     x22, #0, lsl #48        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084a24  movk     x9, #0, lsl #16        ; = .rodata.str1.1+0x27c87   ; "%s: %d: Invalid length specified. Skip!"
+0x084a28  movk     x9, #0, lsl #32        ; = .rodata.str1.1+0x27c87   ; "%s: %d: Invalid length specified. Skip!"
+0x084a2c  movk     x9, #0, lsl #48        ; = .rodata.str1.1+0x27c87   ; "%s: %d: Invalid length specified. Skip!"
+0x084a30  str      x9, [sp, #0x18]
+0x084a34  b        #0x84a40
+0x084a38  cmp      w8, #0xa
+0x084a3c  b.le     #0x84d64
+0x084a40  mov      w25, w8
+0x084a44  mov      w8, #-1
+0x084a48  ldr      w23, [sp, #0x30]
+0x084a4c  mov      w21, w8
+0x084a50  b        #0x84a60
+0x084a54  mov      w21, w26
+0x084a58  subs     w23, w23, #1
+0x084a5c  b.mi     #0x84ac8
+0x084a60  ldr      x0, [x20, w23, uxtw #3]
+0x084a64  mov      w26, w21
+0x084a68  mov      w21, w23
+0x084a6c  cbz      x0, #0x84a58
+0x084a70  bl       #0x84a70        ; -> strlen
+0x084a74  cmp      x0, x25
+0x084a78  b.ne     #0x84a54
+0x084a7c  mov      w28, w23
+0x084a80  mov      x0, x27
+0x084a84  mov      x2, x25
+0x084a88  ldr      x1, [x20, x28, lsl #3]        ; fnptr-table @.bss+0xed8
+0x084a8c  bl       #0x84a8c        ; -> memcmp
+0x084a90  mov      w21, w26
+0x084a94  cbnz     w0, #0x84a58
+0x084a98  mov      x2, #0        ; = .rodata.str1.1+0x27bfa   ; "%s: %d: WoWL pattern '%s' already configured"
+0x084a9c  ldr      x5, [x20, x28, lsl #3]        ; fnptr-table @.bss+0xed8
+0x084aa0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27bfa   ; "%s: %d: WoWL pattern '%s' already configured"
+0x084aa4  mov      w0, #0x33
+0x084aa8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27bfa   ; "%s: %d: WoWL pattern '%s' already configured"
+0x084aac  mov      w1, #2
+0x084ab0  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27bfa   ; "%s: %d: WoWL pattern '%s' already configured"
+0x084ab4  mov      x3, x22
+0x084ab8  mov      w4, #0x84
+0x084abc  bl       #0x84abc        ; -> qdf_trace_msg
+0x084ac0  add      x23, x27, x25
+0x084ac4  b        #0x84b88
+0x084ac8  cmn      w21, #1
+0x084acc  b.eq     #0x84db0
+0x084ad0  ldrb     w8, [x27, #2]
+0x084ad4  cmp      w8, #0x3a
+0x084ad8  b.ne     #0x84b58
+0x084adc  ldrb     w8, [x27, #5]
+0x084ae0  cmp      w8, #0x3a
+0x084ae4  b.ne     #0x84b58
+0x084ae8  ldrb     w0, [x27]
+0x084aec  bl       #0x84aec        ; -> hex_to_bin
+0x084af0  ldrb     w8, [x27, #1]
+0x084af4  mov      w28, w0
+0x084af8  mov      w0, w8
+0x084afc  bl       #0x84afc        ; -> hex_to_bin
+0x084b00  add      w8, w0, w28, lsl #4
+0x084b04  strb     w8, [sp, #0x3a]
+0x084b08  ldrb     w0, [x27, #3]
+0x084b0c  bl       #0x84b0c        ; -> hex_to_bin
+0x084b10  ldrb     w8, [x27, #4]
+0x084b14  mov      w28, w0
+0x084b18  mov      w0, w8
+0x084b1c  bl       #0x84b1c        ; -> hex_to_bin
+0x084b20  ldrb     w9, [sp, #0x3a]
+0x084b24  add      w8, w0, w28, lsl #4
+0x084b28  strb     w8, [sp, #0xcd]
+0x084b2c  cmp      w9, #0x92
+0x084b30  b.hi     #0x84b40
+0x084b34  and      w10, w8, #0xff
+0x084b38  cmp      w10, #0x14
+0x084b3c  b.lo     #0x84bbc
+0x084b40  ldr      x2, [sp, #0x18]
+0x084b44  mov      w0, #0x33
+0x084b48  mov      w1, #2
+0x084b4c  mov      x3, x22
+0x084b50  mov      w4, #0xa5
+0x084b54  b        #0x84b78
+0x084b58  mov      x2, #0        ; = .rodata.str1.1+0x27c5f   ; "%s: %d: Malformed pattern string. Skip!"
+0x084b5c  mov      w0, #0x33
+0x084b60  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27c5f   ; "%s: %d: Malformed pattern string. Skip!"
+0x084b64  mov      w1, #2
+0x084b68  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27c5f   ; "%s: %d: Malformed pattern string. Skip!"
+0x084b6c  mov      x3, x22
+0x084b70  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27c5f   ; "%s: %d: Malformed pattern string. Skip!"
+0x084b74  mov      w4, #0x94
+0x084b78  bl       #0x84b78        ; -> qdf_trace_msg
+0x084b7c  mov      w8, #1
+0x084b80  add      x23, x27, w25, sxtw
+0x084b84  str      w8, [sp, #0x34]
+0x084b88  ldrb     w8, [x23]
+0x084b8c  cmp      w8, #0x3b
+0x084b90  b.ne     #0x84d64
+0x084b94  mov      x8, xzr
+0x084b98  add      x27, x23, #1
+0x084b9c  ldrb     w9, [x27, x8]
+0x084ba0  cbz      w9, #0x84a38
+0x084ba4  cmp      w9, #0x3b
+0x084ba8  b.eq     #0x84a38
+0x084bac  add      x8, x8, #1
+0x084bb0  ldrb     w9, [x27, x8]
+0x084bb4  cbnz     w9, #0x84ba4
+0x084bb8  b        #0x84a38
+0x084bbc  lsl      x11, x9, #1
+0x084bc0  add      x11, x11, #6
+0x084bc4  cmp      w11, w25
+0x084bc8  b.ge     #0x84d18
+0x084bcc  ldrb     w12, [x27, x11]
+0x084bd0  cmp      w12, #0x3a
+0x084bd4  b.ne     #0x84d18
+0x084bd8  add      w10, w11, w10, lsl #1
+0x084bdc  orr      w10, w10, #1
+0x084be0  cmp      w10, w25
+0x084be4  b.ne     #0x84d3c
+0x084be8  add      x23, x27, #6
+0x084bec  cbz      w9, #0x84c34
+0x084bf0  mov      x26, xzr
+0x084bf4  str      x24, [sp, #8]
+0x084bf8  ldrb     w0, [x23]
+0x084bfc  bl       #0x84bfc        ; -> hex_to_bin
+0x084c00  ldrb     w8, [x23, #1]
+0x084c04  mov      w28, w0
+0x084c08  mov      w0, w8
+0x084c0c  bl       #0x84c0c        ; -> hex_to_bin
+0x084c10  ldr      x10, [sp, #8]
+0x084c14  add      w8, w0, w28, lsl #4
+0x084c18  ldrb     w9, [sp, #0x3a]
+0x084c1c  add      x23, x23, #2
+0x084c20  strb     w8, [x10, x26]
+0x084c24  add      x26, x26, #1
+0x084c28  cmp      x26, x9
+0x084c2c  b.lo     #0x84bf8
+0x084c30  ldrb     w8, [sp, #0xcd]
+0x084c34  add      x23, x23, #1
+0x084c38  tst      w8, #0xff
+0x084c3c  b.eq     #0x84c80
+0x084c40  mov      x26, xzr
+0x084c44  str      x19, [sp, #8]
+0x084c48  ldrb     w0, [x23]
+0x084c4c  bl       #0x84c4c        ; -> hex_to_bin
+0x084c50  ldrb     w8, [x23, #1]
+0x084c54  mov      w28, w0
+0x084c58  mov      w0, w8
+0x084c5c  bl       #0x84c5c        ; -> hex_to_bin
+0x084c60  ldr      x10, [sp, #8]
+0x084c64  add      w8, w0, w28, lsl #4
+0x084c68  ldrb     w9, [sp, #0xcd]
+0x084c6c  add      x23, x23, #2
+0x084c70  strb     w8, [x10, x26]
+0x084c74  add      x26, x26, #1
+0x084c78  cmp      x26, x9
+0x084c7c  b.lo     #0x84c48
+0x084c80  add      w8, w25, #1
+0x084c84  mov      x1, x22
+0x084c88  mov      w2, #0xd8
+0x084c8c  sxtw     x0, w8
+0x084c90  bl       #0x84c90        ; -> __qdf_mem_malloc
+0x084c94  str      x0, [x20, w21, sxtw #3]
+0x084c98  cbz      x0, #0x84de8
+0x084c9c  sxtw     x25, w25
+0x084ca0  mov      x1, x27
+0x084ca4  mov      x2, x25
+0x084ca8  sxtw     x28, w21
+0x084cac  bl       #0x84cac        ; -> memcpy
+0x084cb0  ldr      x8, [x20, x28, lsl #3]        ; fnptr-table @.bss+0xed8
+0x084cb4  add      x1, sp, #0x38
+0x084cb8  strb     wzr, [x8, x25]
+0x084cbc  ldr      x8, [sp, #0x10]
+0x084cc0  strb     w21, [sp, #0x38]
+0x084cc4  strb     wzr, [sp, #0x39]
+0x084cc8  ldr      x0, [x8, #0x20]
+0x084ccc  bl       #0x84ccc        ; -> ucfg_pmo_add_wow_user_pattern
+0x084cd0  cbz      w0, #0x84d0c
+0x084cd4  mov      x2, #0        ; = .rodata.str1.1+0x27d22   ; "%s: %d: sme_wowl_add_bcast_pattern failed with error code (%"
+0x084cd8  mov      w5, w0
+0x084cdc  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27d22   ; "%s: %d: sme_wowl_add_bcast_pattern failed with error code (%"
+0x084ce0  mov      w0, #0x33
+0x084ce4  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27d22   ; "%s: %d: sme_wowl_add_bcast_pattern failed with error code (%"
+0x084ce8  mov      w1, #2
+0x084cec  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27d22   ; "%s: %d: sme_wowl_add_bcast_pattern failed with error code (%"
+0x084cf0  mov      x3, x22
+0x084cf4  mov      w4, #0xe9
+0x084cf8  bl       #0x84cf8        ; -> qdf_trace_msg
+0x084cfc  lsl      x21, x28, #3
+0x084d00  ldr      x0, [x20, x21]
+0x084d04  bl       #0x84d04        ; -> __qdf_mem_free
+0x084d08  str      xzr, [x20, x21]
+0x084d0c  add      x0, sp, #0x38
+0x084d10  bl       #0x84e18
+0x084d14  b        #0x84b88
+0x084d18  mov      x2, #0        ; = .rodata.str1.1+0x27caf   ; "%s: %d: Malformed pattern string..skip!"
+0x084d1c  mov      w0, #0x33
+0x084d20  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27caf   ; "%s: %d: Malformed pattern string..skip!"
+0x084d24  mov      w1, #2
+0x084d28  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27caf   ; "%s: %d: Malformed pattern string..skip!"
+0x084d2c  mov      x3, x22
+0x084d30  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27caf   ; "%s: %d: Malformed pattern string..skip!"
+0x084d34  mov      w4, #0xaf
+0x084d38  b        #0x84b78
+0x084d3c  mov      x2, #0        ; = .rodata.str1.1+0x27cd7   ; "%s: %d: Malformed pattern string...skip!"
+0x084d40  mov      w0, #0x33
+0x084d44  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27cd7   ; "%s: %d: Malformed pattern string...skip!"
+0x084d48  mov      w1, #2
+0x084d4c  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27cd7   ; "%s: %d: Malformed pattern string...skip!"
+0x084d50  mov      x3, x22
+0x084d54  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27cd7   ; "%s: %d: Malformed pattern string...skip!"
+0x084d58  mov      w4, #0xb9
+0x084d5c  b        #0x84b78
+0x084d60  str      wzr, [sp, #0x34]
+0x084d64  ldr      w8, [sp, #0x34]
+0x084d68  tst      w8, #1
+0x084d6c  cset     w0, eq
+0x084d70  mov      x9, #0        ; = SHN_UNDEF+0x0
+0x084d74  ldur     x8, [x29, #-0x10]
+0x084d78  movk     x9, #0, lsl #16        ; = SHN_UNDEF+0x0
+0x084d7c  movk     x9, #0, lsl #32        ; = SHN_UNDEF+0x0
+0x084d80  movk     x9, #0, lsl #48        ; = SHN_UNDEF+0x0
+0x084d84  ldr      x9, [x9]
+0x084d88  cmp      x9, x8
+0x084d8c  b.ne     #0x84e10
+0x084d90  ldp      x20, x19, [sp, #0x1c0]
+0x084d94  ldp      x22, x21, [sp, #0x1b0]
+0x084d98  ldp      x24, x23, [sp, #0x1a0]
+0x084d9c  ldp      x26, x25, [sp, #0x190]
+0x084da0  ldp      x28, x27, [sp, #0x180]
+0x084da4  ldp      x29, x30, [sp, #0x170]
+0x084da8  add      sp, sp, #0x1d0
+0x084dac  ret      
+0x084db0  ldr      x3, [sp, #0x20]
+0x084db4  mov      x2, #0        ; = .rodata.str1.1+0x27c39   ; "%s: %d: Max WoW patterns (%u) reached"
+0x084db8  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27c39   ; "%s: %d: Max WoW patterns (%u) reached"
+0x084dbc  ldr      w5, [sp, #0x2c]
+0x084dc0  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27c39   ; "%s: %d: Max WoW patterns (%u) reached"
+0x084dc4  mov      w0, #0x33
+0x084dc8  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27c39   ; "%s: %d: Max WoW patterns (%u) reached"
+0x084dcc  mov      w4, #0x8d
+0x084dd0  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084dd4  mov      w1, #2
+0x084dd8  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084ddc  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x27c27   ; "hdd_add_wowl_ptrn"
+0x084de0  bl       #0x84de0        ; -> qdf_trace_msg
+0x084de4  b        #0x84988
+0x084de8  mov      x2, #0        ; = .rodata.str1.1+0x27d00   ; "%s: %d: memory allocation failure"
+0x084dec  mov      w0, #0x33
+0x084df0  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27d00   ; "%s: %d: memory allocation failure"
+0x084df4  mov      w4, #0xda
+0x084df8  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27d00   ; "%s: %d: memory allocation failure"
+0x084dfc  mov      w1, #2
+0x084e00  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27d00   ; "%s: %d: memory allocation failure"
+0x084e04  mov      x3, x22
+0x084e08  bl       #0x84e08        ; -> qdf_trace_msg
+0x084e0c  b        #0x84988
+0x084e10  bl       #0x84e10        ; -> __stack_chk_fail

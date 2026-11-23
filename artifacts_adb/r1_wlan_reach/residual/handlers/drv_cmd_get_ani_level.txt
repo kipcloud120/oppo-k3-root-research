@@ -1,0 +1,338 @@
+# drv_cmd_get_ani_level @0x41be0 size=1348
+041be0  sub        sp, sp, #0x180
+041be4  stp        x29, x30, [sp, #0x120]
+041be8  add        x29, sp, #0x120
+041bec  stp        x28, x27, [sp, #0x130]
+041bf0  stp        x26, x25, [sp, #0x140]
+041bf4  stp        x24, x23, [sp, #0x150]
+041bf8  stp        x22, x21, [sp, #0x160]
+041bfc  stp        x20, x19, [sp, #0x170]
+041c00  mov        x8, #0   ; abs __stack_chk_guard
+041c04  mov        x19, #0   ; abs .rodata.str1.1+0x151f2  'drv_cmd_get_ani_level'
+041c08  movk       x8, #0, lsl #16   ; abs __stack_chk_guard
+041c0c  mov        x23, x2
+041c10  movk       x8, #0, lsl #32   ; abs __stack_chk_guard
+041c14  mov        x2, #0   ; abs .rodata.str1.1+0x151c8  '%s: %d: Received Command to get ANI level'
+041c18  movk       x8, #0, lsl #48   ; abs __stack_chk_guard
+041c1c  movk       x19, #0, lsl #16   ; abs .rodata.str1.1+0x151f2  'drv_cmd_get_ani_level'
+041c20  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x151c8  '%s: %d: Received Command to get ANI level'
+041c24  movk       x19, #0, lsl #32   ; abs .rodata.str1.1+0x151f2  'drv_cmd_get_ani_level'
+041c28  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x151c8  '%s: %d: Received Command to get ANI level'
+041c2c  movk       x19, #0, lsl #48   ; abs .rodata.str1.1+0x151f2  'drv_cmd_get_ani_level'
+041c30  ldr        x8, [x8]
+041c34  mov        x20, x4
+041c38  mov        x22, x0
+041c3c  mov        w0, #0x33
+041c40  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x151c8  '%s: %d: Received Command to get ANI level'
+041c44  mov        w1, #8
+041c48  mov        x3, x19
+041c4c  stur       x8, [x29, #-0x10]
+041c50  ldrsw      x21, [x4, #0xc]
+041c54  mov        w4, #0x1e2e
+041c58  bl         #0x41c58   ; qdf_trace_msg
+041c5c  mov        x0, x23
+041c60  bl         #0x41c60   ; strlen
+041c64  mov        x1, x0
+041c68  mov        x0, x23
+041c6c  mov        w2, #0x20
+041c70  bl         #0x41c70   ; strnchr
+041c74  cbz        x0, #0x41d0c
+041c78  ldrb       w8, [x0]
+041c7c  mov        x23, x0
+041c80  cmp        w8, #0x20
+041c84  b.ne       #0x41d0c
+041c88  ldrb       w8, [x23, #1]!
+041c8c  cmp        w8, #0x20
+041c90  b.eq       #0x41c88
+041c94  cbz        w8, #0x41d0c
+041c98  mov        x25, #0   ; abs .rodata.str1.1+0x14f4d  '%d '
+041c9c  add        x2, sp, #0x1c
+041ca0  movk       x25, #0, lsl #16   ; abs .rodata.str1.1+0x14f4d  '%d '
+041ca4  mov        x0, x23
+041ca8  movk       x25, #0, lsl #32   ; abs .rodata.str1.1+0x14f4d  '%d '
+041cac  movk       x25, #0, lsl #48   ; abs .rodata.str1.1+0x14f4d  '%d '
+041cb0  mov        x1, x25
+041cb4  bl         #0x41cb4   ; sscanf
+041cb8  cmp        w0, #1
+041cbc  b.ne       #0x41ce8
+041cc0  ldr        w5, [sp, #0x1c]
+041cc4  cmp        w5, #0x15
+041cc8  b.lo       #0x41d54
+041ccc  mov        x2, #0   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041cd0  mov        w0, #0x33
+041cd4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041cd8  mov        w4, #0x1e4b
+041cdc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041ce0  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041ce4  b          #0x41d00
+041ce8  mov        x2, #0   ; abs .rodata.str1.1+0x15208  '%s: %d: Cannot get number of freq from input'
+041cec  mov        w0, #0x33
+041cf0  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15208  '%s: %d: Cannot get number of freq from input'
+041cf4  mov        w4, #0x1e46
+041cf8  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15208  '%s: %d: Cannot get number of freq from input'
+041cfc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15208  '%s: %d: Cannot get number of freq from input'
+041d00  mov        w1, #2
+041d04  mov        x3, x19
+041d08  bl         #0x41d08   ; qdf_trace_msg
+041d0c  mov        w19, #-0x16
+041d10  mov        x9, #0   ; abs __stack_chk_guard
+041d14  ldur       x8, [x29, #-0x10]
+041d18  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+041d1c  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+041d20  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+041d24  ldr        x9, [x9]
+041d28  cmp        x9, x8
+041d2c  b.ne       #0x42120
+041d30  mov        w0, w19
+041d34  ldp        x20, x19, [sp, #0x170]
+041d38  ldp        x22, x21, [sp, #0x160]
+041d3c  ldp        x24, x23, [sp, #0x150]
+041d40  ldp        x26, x25, [sp, #0x140]
+041d44  ldp        x28, x27, [sp, #0x130]
+041d48  ldp        x29, x30, [sp, #0x120]
+041d4c  add        sp, sp, #0x180
+041d50  ret        
+041d54  mov        x2, #0   ; abs .rodata.str1.1+0x15235  '%s: %d: Number of freq to fetch ANI level are: %d'
+041d58  mov        w0, #0x33
+041d5c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15235  '%s: %d: Number of freq to fetch ANI level are: %d'
+041d60  mov        w4, #0x1e4f
+041d64  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15235  '%s: %d: Number of freq to fetch ANI level are: %d'
+041d68  mov        w1, #8
+041d6c  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15235  '%s: %d: Number of freq to fetch ANI level are: %d'
+041d70  mov        x3, x19
+041d74  bl         #0x41d74   ; qdf_trace_msg
+041d78  ldr        w8, [sp, #0x1c]
+041d7c  cbz        w8, #0x41e64
+041d80  mov        x27, #0   ; abs .rodata.str1.1+0x12a48  ' '
+041d84  mov        x0, x23
+041d88  movk       x27, #0, lsl #16   ; abs .rodata.str1.1+0x12a48  ' '
+041d8c  str        x8, [sp, #8]
+041d90  movk       x27, #0, lsl #32   ; abs .rodata.str1.1+0x12a48  ' '
+041d94  and        x24, x8, #0xff
+041d98  movk       x27, #0, lsl #48   ; abs .rodata.str1.1+0x12a48  ' '
+041d9c  mov        x1, x27
+041da0  bl         #0x41da0   ; strpbrk
+041da4  cmp        x0, #0
+041da8  mov        x26, x0
+041dac  cset       w8, ne
+041db0  str        x24, [sp, #0x10]
+041db4  cbz        w24, #0x41e4c
+041db8  mov        x23, #0   ; abs .rodata.str1.1+0x152df  '%s: %d: channel_freq[%d] = %d'
+041dbc  mov        x28, xzr
+041dc0  movk       x23, #0, lsl #16   ; abs .rodata.str1.1+0x152df  '%s: %d: channel_freq[%d] = %d'
+041dc4  sub        x24, x29, #0x60
+041dc8  movk       x23, #0, lsl #32   ; abs .rodata.str1.1+0x152df  '%s: %d: channel_freq[%d] = %d'
+041dcc  movk       x23, #0, lsl #48   ; abs .rodata.str1.1+0x152df  '%s: %d: channel_freq[%d] = %d'
+041dd0  tbz        w8, #0, #0x41ffc
+041dd4  ldrb       w8, [x26, #1]!
+041dd8  cmp        w8, #0x20
+041ddc  b.eq       #0x41dd4
+041de0  cbz        w8, #0x41e6c
+041de4  add        x2, sp, #0x1c
+041de8  mov        x0, x26
+041dec  mov        x1, x25
+041df0  bl         #0x41df0   ; sscanf
+041df4  cmp        w0, #1
+041df8  b.ne       #0x42018
+041dfc  ldr        w6, [sp, #0x1c]
+041e00  mov        w0, #0x33
+041e04  mov        w1, #8
+041e08  mov        x2, x23
+041e0c  mov        x3, x19
+041e10  mov        w4, #0x1e75
+041e14  mov        w5, w28
+041e18  bl         #0x41e18   ; qdf_trace_msg
+041e1c  ldr        w8, [sp, #0x1c]
+041e20  mov        x0, x26
+041e24  mov        x1, x27
+041e28  add        x28, x28, #1
+041e2c  str        w8, [x24], #4
+041e30  bl         #0x41e30   ; strpbrk
+041e34  ldr        x9, [sp, #0x10]
+041e38  cmp        x0, #0
+041e3c  mov        x26, x0
+041e40  cset       w8, ne
+041e44  cmp        x28, x9
+041e48  b.ne       #0x41dd0
+041e4c  cbz        w8, #0x41e8c
+041e50  ldrb       w8, [x26]
+041e54  cmp        w8, #0x20
+041e58  b.ne       #0x41e88
+041e5c  add        x26, x26, #1
+041e60  b          #0x41e50
+041e64  mov        w19, wzr
+041e68  b          #0x41d10
+041e6c  mov        x2, #0   ; abs .rodata.str1.1+0x15297  '%s: %d: No freq is provided in the list'
+041e70  mov        w0, #0x33
+041e74  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15297  '%s: %d: No freq is provided in the list'
+041e78  mov        w4, #0x1e6a
+041e7c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15297  '%s: %d: No freq is provided in the list'
+041e80  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15297  '%s: %d: No freq is provided in the list'
+041e84  b          #0x41d00
+041e88  cbnz       w8, #0x41fb4
+041e8c  mov        w1, #0xa0
+041e90  add        x0, sp, #0x20
+041e94  mov        w2, wzr
+041e98  bl         #0x41e98   ; qdf_mem_set
+041e9c  ldr        x23, [sp, #0x10]
+041ea0  mov        x2, #0   ; abs .rodata.str1.1+0x152fd  '%s: %d: num_freq: %d'
+041ea4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x152fd  '%s: %d: num_freq: %d'
+041ea8  mov        w0, #0x33
+041eac  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x152fd  '%s: %d: num_freq: %d'
+041eb0  mov        w4, #0x1e87
+041eb4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x152fd  '%s: %d: num_freq: %d'
+041eb8  mov        w1, #8
+041ebc  mov        x3, x19
+041ec0  mov        w5, w23
+041ec4  bl         #0x41ec4   ; qdf_trace_msg
+041ec8  add        x1, sp, #0x20
+041ecc  sub        x2, x29, #0x60
+041ed0  mov        x0, x22
+041ed4  ldr        x3, [sp, #8]
+041ed8  bl         #0x41ed8   ; wlan_hdd_get_ani_level
+041edc  cbz        w0, #0x41efc
+041ee0  mov        x2, #0   ; abs .rodata.str1.1+0x15312  '%s: %d: Unable to retrieve ani level'
+041ee4  mov        w0, #0x33
+041ee8  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15312  '%s: %d: Unable to retrieve ani level'
+041eec  mov        w4, #0x1e8b
+041ef0  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15312  '%s: %d: Unable to retrieve ani level'
+041ef4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15312  '%s: %d: Unable to retrieve ani level'
+041ef8  b          #0x41d00
+041efc  mov        w2, #0x1e8f
+041f00  mov        x0, x21
+041f04  mov        x1, x19
+041f08  bl         #0x41f08   ; __qdf_mem_malloc
+041f0c  cbz        x0, #0x41fd0
+041f10  mov        x22, x0
+041f14  cbz        w23, #0x420e4
+041f18  ldr        w8, [sp, #0x20]
+041f1c  cbz        w8, #0x420e4
+041f20  mov        w10, #1
+041f24  add        x9, sp, #0x20
+041f28  mov        w8, w10
+041f2c  cmp        w23, w10, uxtb
+041f30  b.ls       #0x41f48
+041f34  and        x10, x8, #0xff
+041f38  lsl        x10, x10, #3
+041f3c  ldr        w11, [x9, x10]
+041f40  add        w10, w8, #1
+041f44  cbnz       w11, #0x41f28
+041f48  tst        w8, #0xff
+041f4c  b.eq       #0x420e4
+041f50  mov        x23, #0   ; abs .rodata.str1.1+0x15337  '%d:%d\n'
+041f54  and        x26, x8, #0xff
+041f58  movk       x23, #0, lsl #16   ; abs .rodata.str1.1+0x15337  '%d:%d\n'
+041f5c  add        x8, sp, #0x20
+041f60  movk       x23, #0, lsl #32   ; abs .rodata.str1.1+0x15337  '%d:%d\n'
+041f64  mov        w24, wzr
+041f68  mov        x25, xzr
+041f6c  orr        x27, x8, #4
+041f70  movk       x23, #0, lsl #48   ; abs .rodata.str1.1+0x15337  '%d:%d\n'
+041f74  b          #0x41f88
+041f78  add        x25, x25, #1
+041f7c  add        x27, x27, #8
+041f80  cmp        x25, x26
+041f84  b.eq       #0x42034
+041f88  ldr        w4, [x27]
+041f8c  cmp        w4, #9
+041f90  b.hi       #0x41f78
+041f94  ldur       w3, [x27, #-4]
+041f98  sxtw       x8, w24
+041f9c  add        x0, x22, x8
+041fa0  sub        x1, x21, x8
+041fa4  mov        x2, x23
+041fa8  bl         #0x41fa8   ; scnprintf
+041fac  add        w24, w0, w24
+041fb0  b          #0x41f78
+041fb4  mov        x2, #0   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041fb8  mov        w0, #0x33
+041fbc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041fc0  mov        w4, #0x1e80
+041fc4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041fc8  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041fcc  b          #0x41d00
+041fd0  mov        x2, #0   ; abs .rodata.str1.1+0x12e57  '%s: %d: memory allocation failed'
+041fd4  mov        w0, #0x33
+041fd8  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x12e57  '%s: %d: memory allocation failed'
+041fdc  mov        w4, #0x1e91
+041fe0  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x12e57  '%s: %d: memory allocation failed'
+041fe4  mov        w1, #2
+041fe8  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x12e57  '%s: %d: memory allocation failed'
+041fec  mov        x3, x19
+041ff0  bl         #0x41ff0   ; qdf_trace_msg
+041ff4  mov        w19, #-0xc
+041ff8  b          #0x41d10
+041ffc  mov        x2, #0   ; abs .rodata.str1.1+0x15267  '%s: %d: Invalid No of freq provided in the list'
+042000  mov        w0, #0x33
+042004  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15267  '%s: %d: Invalid No of freq provided in the list'
+042008  mov        w4, #0x1e5e
+04200c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15267  '%s: %d: Invalid No of freq provided in the list'
+042010  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15267  '%s: %d: Invalid No of freq provided in the list'
+042014  b          #0x41d00
+042018  mov        x2, #0   ; abs .rodata.str1.1+0x152bf  '%s: %d: Cannot read freq number'
+04201c  mov        w0, #0x33
+042020  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x152bf  '%s: %d: Cannot read freq number'
+042024  mov        w4, #0x1e70
+042028  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x152bf  '%s: %d: Cannot read freq number'
+04202c  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x152bf  '%s: %d: Cannot read freq number'
+042030  b          #0x41d00
+042034  cbz        w24, #0x420e4
+042038  mov        x2, #0   ; abs .rodata.str1.1+0x1535c  '%s: %d: data: %s'
+04203c  mov        w0, #0x33
+042040  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1535c  '%s: %d: data: %s'
+042044  mov        w4, #0x1eaf
+042048  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1535c  '%s: %d: data: %s'
+04204c  mov        w1, #8
+042050  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1535c  '%s: %d: data: %s'
+042054  mov        x3, x19
+042058  mov        x5, x22
+04205c  bl         #0x4205c   ; qdf_trace_msg
+042060  add        w8, w24, #1
+042064  ldr        x21, [x20]
+042068  sxtw       x20, w8
+04206c  mov        x0, x22
+042070  mov        x1, x20
+042074  mov        w2, #1
+042078  bl         #0x42078   ; __check_object_size
+04207c  mrs        x8, sp_el0
+042080  mov        x9, x21
+042084  ldr        x8, [x8, #0x40]
+042088  adds       x9, x9, x20
+04208c  csel       x8, xzr, x8, hi
+042090  csinv      x9, x9, xzr, lo
+042094  sbcs       xzr, x9, x8
+042098  cset       x9, ls
+04209c  cbz        x9, #0x420b4
+0420a0  mov        x0, x21
+0420a4  mov        x1, x22
+0420a8  mov        x2, x20
+0420ac  bl         #0x420ac   ; __arch_copy_to_user
+0420b0  mov        x20, x0
+0420b4  cbz        x20, #0x42118
+0420b8  mov        x2, #0   ; abs .rodata.str1.1+0x1233a  '%s: %d: failed to copy data to user buffer'
+0420bc  mov        w0, #0x33
+0420c0  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1233a  '%s: %d: failed to copy data to user buffer'
+0420c4  mov        w4, #0x1eb2
+0420c8  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1233a  '%s: %d: failed to copy data to user buffer'
+0420cc  mov        w1, #2
+0420d0  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1233a  '%s: %d: failed to copy data to user buffer'
+0420d4  mov        x3, x19
+0420d8  bl         #0x420d8   ; qdf_trace_msg
+0420dc  mov        w19, #-0xe
+0420e0  b          #0x4210c
+0420e4  mov        x2, #0   ; abs .rodata.str1.1+0x1533e  '%s: %d: ANI level not fetched'
+0420e8  mov        w0, #0x33
+0420ec  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1533e  '%s: %d: ANI level not fetched'
+0420f0  mov        w4, #0x1eaa
+0420f4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1533e  '%s: %d: ANI level not fetched'
+0420f8  mov        w1, #2
+0420fc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1533e  '%s: %d: ANI level not fetched'
+042100  mov        x3, x19
+042104  bl         #0x42104   ; qdf_trace_msg
+042108  mov        w19, #-0x16
+04210c  mov        x0, x22
+042110  bl         #0x42110   ; __qdf_mem_free
+042114  b          #0x41d10
+042118  mov        w19, wzr
+04211c  b          #0x4210c
+042120  bl         #0x42120   ; __stack_chk_fail

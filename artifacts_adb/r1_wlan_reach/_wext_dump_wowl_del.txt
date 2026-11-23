@@ -1,0 +1,67 @@
+== hdd_del_wowl_ptrn @0x84f48 size=0x108 ==
+0x084f48  stp      x29, x30, [sp, #-0x40]!
+0x084f4c  str      x23, [sp, #0x10]
+0x084f50  mov      x29, sp
+0x084f54  stp      x22, x21, [sp, #0x20]
+0x084f58  stp      x20, x19, [sp, #0x30]
+0x084f5c  ldr      x22, [x0, #0x18]
+0x084f60  mov      x20, x0
+0x084f64  mov      x21, x1
+0x084f68  mov      w1, #5
+0x084f6c  ldr      x19, [x22]
+0x084f70  mov      x0, x19
+0x084f74  bl       #0x84f74        ; -> wlan_objmgr_psoc_try_get_ref
+0x084f78  cbz      w0, #0x84f94
+0x084f7c  mov      w0, wzr
+0x084f80  ldp      x20, x19, [sp, #0x30]
+0x084f84  ldr      x23, [sp, #0x10]
+0x084f88  ldp      x22, x21, [sp, #0x20]
+0x084f8c  ldp      x29, x30, [sp], #0x40
+0x084f90  ret      
+0x084f94  ldr      x0, [x22]
+0x084f98  bl       #0x84f98        ; -> ucfg_pmo_get_num_wow_filters
+0x084f9c  mov      w22, w0
+0x084fa0  and      w23, w0, #0xff
+0x084fa4  mov      w1, #5
+0x084fa8  mov      x0, x19
+0x084fac  bl       #0x84fac        ; -> wlan_objmgr_psoc_release_ref
+0x084fb0  cbz      w23, #0x84f7c
+0x084fb4  mov      x23, #0        ; = .bss+0xed8
+0x084fb8  mov      x19, xzr
+0x084fbc  movk     x23, #0, lsl #16        ; = .bss+0xed8
+0x084fc0  and      x22, x22, #0xff
+0x084fc4  movk     x23, #0, lsl #32        ; = .bss+0xed8
+0x084fc8  movk     x23, #0, lsl #48        ; = .bss+0xed8
+0x084fcc  b        #0x84fdc
+0x084fd0  add      x19, x19, #1
+0x084fd4  cmp      x19, x22
+0x084fd8  b.eq     #0x84f7c
+0x084fdc  ldr      x1, [x23, x19, lsl #3]        ; fnptr-table @.bss+0xed8
+0x084fe0  cbz      x1, #0x84fd0
+0x084fe4  mov      x0, x21
+0x084fe8  bl       #0x84fe8        ; -> strcmp
+0x084fec  cbnz     w0, #0x84fd0
+0x084ff0  ldr      x0, [x20, #0x20]
+0x084ff4  mov      w1, w19
+0x084ff8  bl       #0x84ff8        ; -> ucfg_pmo_del_wow_user_pattern
+0x084ffc  cbnz     w0, #0x84f7c
+0x085000  lsl      x20, x19, #3
+0x085004  mov      x2, #0        ; = .rodata.str1.1+0x27d61   ; "%s: %d: Deleted pattern with id %d [%s]"
+0x085008  mov      x3, #0        ; = .rodata.str1.1+0x27d89   ; "hdd_del_wowl_ptrn"
+0x08500c  movk     x2, #0, lsl #16        ; = .rodata.str1.1+0x27d61   ; "%s: %d: Deleted pattern with id %d [%s]"
+0x085010  movk     x3, #0, lsl #16        ; = .rodata.str1.1+0x27d89   ; "hdd_del_wowl_ptrn"
+0x085014  ldr      x6, [x23, x20]
+0x085018  movk     x2, #0, lsl #32        ; = .rodata.str1.1+0x27d61   ; "%s: %d: Deleted pattern with id %d [%s]"
+0x08501c  movk     x3, #0, lsl #32        ; = .rodata.str1.1+0x27d89   ; "hdd_del_wowl_ptrn"
+0x085020  mov      w0, #0x33
+0x085024  movk     x2, #0, lsl #48        ; = .rodata.str1.1+0x27d61   ; "%s: %d: Deleted pattern with id %d [%s]"
+0x085028  mov      w4, #0x128
+0x08502c  movk     x3, #0, lsl #48        ; = .rodata.str1.1+0x27d89   ; "hdd_del_wowl_ptrn"
+0x085030  mov      w1, #2
+0x085034  mov      w5, w19
+0x085038  bl       #0x85038        ; -> qdf_trace_msg
+0x08503c  ldr      x0, [x23, x20]
+0x085040  bl       #0x85040        ; -> __qdf_mem_free
+0x085044  mov      w0, #1
+0x085048  str      xzr, [x23, x20]
+0x08504c  b        #0x84f80

@@ -1,0 +1,440 @@
+# drv_cmd_set_disable_chan_list @0x41268 size=1756
+041268  stp        x29, x30, [sp, #-0x60]!
+04126c  stp        x28, x27, [sp, #0x10]
+041270  mov        x29, sp
+041274  stp        x26, x25, [sp, #0x20]
+041278  stp        x24, x23, [sp, #0x30]
+04127c  stp        x22, x21, [sp, #0x40]
+041280  stp        x20, x19, [sp, #0x50]
+041284  sub        sp, sp, #0x1c0
+041288  mov        x8, #0   ; abs __stack_chk_guard
+04128c  movk       x8, #0, lsl #16   ; abs __stack_chk_guard
+041290  movk       x8, #0, lsl #32   ; abs __stack_chk_guard
+041294  movk       x8, #0, lsl #48   ; abs __stack_chk_guard
+041298  ldr        x8, [x8]
+04129c  stur       x8, [x29, #-0x10]
+0412a0  ldr        x19, [x0, #0x18]
+0412a4  cbz        x19, #0x41344
+0412a8  mov        x0, x2
+0412ac  mov        x20, x2
+0412b0  bl         #0x412b0   ; strlen
+0412b4  mov        x1, x0
+0412b8  mov        x0, x20
+0412bc  mov        w2, #0x20
+0412c0  bl         #0x412c0   ; strnchr
+0412c4  cbz        x0, #0x41374
+0412c8  ldrb       w8, [x0]
+0412cc  mov        x24, x0
+0412d0  cmp        w8, #0x20
+0412d4  b.ne       #0x41374
+0412d8  ldrb       w8, [x24, #1]!
+0412dc  cmp        w8, #0x20
+0412e0  b.eq       #0x412d8
+0412e4  cbz        w8, #0x41374
+0412e8  mov        x23, #0   ; abs .rodata.str1.1+0x14f4d  '%d '
+0412ec  add        x2, sp, #0x14
+0412f0  movk       x23, #0, lsl #16   ; abs .rodata.str1.1+0x14f4d  '%d '
+0412f4  mov        x0, x24
+0412f8  movk       x23, #0, lsl #32   ; abs .rodata.str1.1+0x14f4d  '%d '
+0412fc  movk       x23, #0, lsl #48   ; abs .rodata.str1.1+0x14f4d  '%d '
+041300  mov        x1, x23
+041304  bl         #0x41304   ; sscanf
+041308  cmp        w0, #1
+04130c  b.ne       #0x413bc
+041310  ldr        w5, [sp, #0x14]
+041314  cmp        w5, #0x62
+041318  b.lo       #0x413e4
+04131c  mov        x2, #0   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041320  mov        x3, #0   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+041324  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041328  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+04132c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+041330  mov        w0, #0x33
+041334  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+041338  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14f82  '%s: %d: Invalid Number of channel received'
+04133c  mov        w4, #0x1d36
+041340  b          #0x41368
+041344  mov        x2, #0   ; abs .rodata.str1.1+0x14f16  '%s: %d: HDD Context is NULL'
+041348  mov        x3, #0   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+04134c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14f16  '%s: %d: HDD Context is NULL'
+041350  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+041354  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14f16  '%s: %d: HDD Context is NULL'
+041358  mov        w0, #0x33
+04135c  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+041360  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14f16  '%s: %d: HDD Context is NULL'
+041364  mov        w4, #0x1d18
+041368  movk       x3, #0, lsl #48   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+04136c  mov        w1, #2
+041370  bl         #0x41370   ; qdf_trace_msg
+041374  mov        w21, #-0x16
+041378  mov        x9, #0   ; abs __stack_chk_guard
+04137c  ldur       x8, [x29, #-0x10]
+041380  movk       x9, #0, lsl #16   ; abs __stack_chk_guard
+041384  movk       x9, #0, lsl #32   ; abs __stack_chk_guard
+041388  movk       x9, #0, lsl #48   ; abs __stack_chk_guard
+04138c  ldr        x9, [x9]
+041390  cmp        x9, x8
+041394  b.ne       #0x41940
+041398  mov        w0, w21
+04139c  add        sp, sp, #0x1c0
+0413a0  ldp        x20, x19, [sp, #0x50]
+0413a4  ldp        x22, x21, [sp, #0x40]
+0413a8  ldp        x24, x23, [sp, #0x30]
+0413ac  ldp        x26, x25, [sp, #0x20]
+0413b0  ldp        x28, x27, [sp, #0x10]
+0413b4  ldp        x29, x30, [sp], #0x60
+0413b8  ret        
+0413bc  mov        x2, #0   ; abs .rodata.str1.1+0x14f51  '%s: %d: Cannot get number of channels from input'
+0413c0  mov        x3, #0   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413c4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14f51  '%s: %d: Cannot get number of channels from input'
+0413c8  movk       x3, #0, lsl #16   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413cc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14f51  '%s: %d: Cannot get number of channels from input'
+0413d0  mov        w0, #0x33
+0413d4  movk       x3, #0, lsl #32   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413d8  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14f51  '%s: %d: Cannot get number of channels from input'
+0413dc  mov        w4, #0x1d31
+0413e0  b          #0x41368
+0413e4  mov        x20, #0   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413e8  mov        x2, #0   ; abs .rodata.str1.1+0x14fad  '%s: %d: Number of channel to disable are: %d'
+0413ec  movk       x20, #0, lsl #16   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413f0  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14fad  '%s: %d: Number of channel to disable are: %d'
+0413f4  movk       x20, #0, lsl #32   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+0413f8  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14fad  '%s: %d: Number of channel to disable are: %d'
+0413fc  movk       x20, #0, lsl #48   ; abs .rodata.str1.1+0x14f32  'hdd_parse_disable_chan_cmd'
+041400  mov        w0, #0x33
+041404  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14fad  '%s: %d: Number of channel to disable are: %d'
+041408  mov        w4, #0x1d3a
+04140c  mov        w1, #8
+041410  mov        x3, x20
+041414  bl         #0x41414   ; qdf_trace_msg
+041418  ldr        w8, [sp, #0x14]
+04141c  cbz        w8, #0x41450
+041420  add        x21, x19, #0xb80
+041424  mov        x0, x21
+041428  bl         #0x41428   ; qdf_mutex_acquire
+04142c  ldr        x8, [x19, #0xb78]
+041430  cbz        x8, #0x41464
+041434  ldr        w22, [x8]
+041438  ldr        w8, [sp, #0x14]
+04143c  cmp        w22, w8
+041440  b.ne       #0x415c4
+041444  mov        w8, #1
+041448  str        w8, [sp, #4]
+04144c  b          #0x414cc
+041450  mov        x0, x19
+041454  mov        w1, wzr
+041458  bl         #0x41458   ; wlan_hdd_restore_channels
+04145c  mov        w21, wzr
+041460  b          #0x41378
+041464  mov        x22, #0   ; abs .rodata.str1.1+0x150e1  'hdd_alloc_chan_cache'
+041468  ldr        w25, [sp, #0x14]
+04146c  movk       x22, #0, lsl #16   ; abs .rodata.str1.1+0x150e1  'hdd_alloc_chan_cache'
+041470  mov        w2, #0x1ca7
+041474  movk       x22, #0, lsl #32   ; abs .rodata.str1.1+0x150e1  'hdd_alloc_chan_cache'
+041478  mov        w0, #0x10
+04147c  movk       x22, #0, lsl #48   ; abs .rodata.str1.1+0x150e1  'hdd_alloc_chan_cache'
+041480  mov        x1, x22
+041484  bl         #0x41484   ; __qdf_mem_malloc
+041488  str        x0, [x19, #0xb78]
+04148c  cbz        x0, #0x41650
+041490  sxtw       x8, w25
+041494  str        w25, [x0]
+041498  add        x8, x8, x8, lsl #1
+04149c  mov        w2, #0x1caf
+0414a0  lsl        x8, x8, #2
+0414a4  mov        x0, x8
+0414a8  mov        x1, x22
+0414ac  bl         #0x414ac   ; __qdf_mem_malloc
+0414b0  ldr        x8, [x19, #0xb78]
+0414b4  str        x0, [x8, #8]
+0414b8  ldr        x8, [x19, #0xb78]
+0414bc  ldr        x8, [x8, #8]
+0414c0  cbz        x8, #0x416e8
+0414c4  ldr        w22, [sp, #0x14]
+0414c8  str        wzr, [sp, #4]
+0414cc  mov        x25, #0   ; abs .rodata.str1.1+0x12a48  ' '
+0414d0  mov        x0, x24
+0414d4  movk       x25, #0, lsl #16   ; abs .rodata.str1.1+0x12a48  ' '
+0414d8  str        x21, [sp, #8]
+0414dc  movk       x25, #0, lsl #32   ; abs .rodata.str1.1+0x12a48  ' '
+0414e0  movk       x25, #0, lsl #48   ; abs .rodata.str1.1+0x12a48  ' '
+0414e4  mov        x1, x25
+0414e8  bl         #0x414e8   ; strpbrk
+0414ec  cmp        x0, #0
+0414f0  mov        x24, x0
+0414f4  cset       w8, ne
+0414f8  cmp        w22, #1
+0414fc  b.lt       #0x415a8
+041500  mov        x27, #0   ; abs .rodata.str1.1+0x150a6  '%s: %d: channel[%d] = %d'
+041504  mov        x26, xzr
+041508  movk       x27, #0, lsl #16   ; abs .rodata.str1.1+0x150a6  '%s: %d: channel[%d] = %d'
+04150c  mov        w21, w22
+041510  movk       x27, #0, lsl #32   ; abs .rodata.str1.1+0x150a6  '%s: %d: channel[%d] = %d'
+041514  add        x28, sp, #0x2c
+041518  movk       x27, #0, lsl #48   ; abs .rodata.str1.1+0x150a6  '%s: %d: channel[%d] = %d'
+04151c  tbz        w8, #0, #0x418ec
+041520  ldrb       w8, [x24, #1]!
+041524  cmp        w8, #0x20
+041528  b.eq       #0x41520
+04152c  cbz        w8, #0x415ec
+041530  add        x2, sp, #0x14
+041534  mov        x0, x24
+041538  mov        x1, x23
+04153c  bl         #0x4153c   ; sscanf
+041540  cmp        w0, #1
+041544  b.ne       #0x41908
+041548  ldr        w6, [sp, #0x14]
+04154c  cmp        w6, #0xf
+041550  b.lo       #0x41560
+041554  sub        w8, w6, #0x24
+041558  cmp        w8, #0x95
+04155c  b.hs       #0x41924
+041560  mov        w0, #0x33
+041564  mov        w1, #8
+041568  mov        x2, x27
+04156c  mov        x3, x20
+041570  mov        w4, #0x1d7a
+041574  mov        w5, w26
+041578  bl         #0x41578   ; qdf_trace_msg
+04157c  ldr        w8, [sp, #0x14]
+041580  mov        x0, x24
+041584  mov        x1, x25
+041588  add        x26, x26, #1
+04158c  str        w8, [x28], #4
+041590  bl         #0x41590   ; strpbrk
+041594  cmp        x0, #0
+041598  mov        x24, x0
+04159c  cset       w8, ne
+0415a0  cmp        x26, x21
+0415a4  b.ne       #0x4151c
+0415a8  ldr        x21, [sp, #8]
+0415ac  cbz        w8, #0x4167c
+0415b0  ldrb       w8, [x24]
+0415b4  cmp        w8, #0x20
+0415b8  b.ne       #0x41678
+0415bc  add        x24, x24, #1
+0415c0  b          #0x415b0
+0415c4  mov        x2, #0   ; abs .rodata.str1.1+0x14fda  '%s: %d: Invalid Number of channels'
+0415c8  mov        w0, #0x33
+0415cc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14fda  '%s: %d: Invalid Number of channels'
+0415d0  mov        w4, #0x1d4d
+0415d4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14fda  '%s: %d: Invalid Number of channels'
+0415d8  mov        w1, #2
+0415dc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14fda  '%s: %d: Invalid Number of channels'
+0415e0  mov        x3, x20
+0415e4  bl         #0x415e4   ; qdf_trace_msg
+0415e8  b          #0x41624
+0415ec  mov        x2, #0   ; abs .rodata.str1.1+0x15030  '%s: %d: No channel is provided in the list'
+0415f0  mov        w0, #0x33
+0415f4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x15030  '%s: %d: No channel is provided in the list'
+0415f8  mov        w4, #0x1d69
+0415fc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x15030  '%s: %d: No channel is provided in the list'
+041600  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x15030  '%s: %d: No channel is provided in the list'
+041604  mov        w1, #2
+041608  mov        x3, x20
+04160c  bl         #0x4160c   ; qdf_trace_msg
+041610  ldr        w23, [sp, #4]
+041614  ldr        x21, [sp, #8]
+041618  tbnz       w23, #0, #0x41624
+04161c  mov        x0, x19
+041620  bl         #0x41620   ; wlan_hdd_free_cache_channels
+041624  mov        x0, x21
+041628  bl         #0x41628   ; qdf_mutex_release
+04162c  mov        x2, #0   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+041630  mov        w0, #0x33
+041634  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+041638  mov        w4, #0x1dbd
+04163c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+041640  mov        w1, #8
+041644  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+041648  mov        x3, x20
+04164c  b          #0x41370
+041650  mov        x2, #0   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+041654  mov        w0, #0x33
+041658  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+04165c  mov        w4, #0x1ca9
+041660  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+041664  mov        w1, #2
+041668  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+04166c  mov        x3, x22
+041670  bl         #0x41670   ; qdf_trace_msg
+041674  b          #0x41720
+041678  cbnz       w8, #0x4188c
+04167c  ldr        w23, [sp, #4]
+041680  tbz        w23, #0, #0x4182c
+041684  cmp        w22, #0
+041688  b.le       #0x418b8
+04168c  ldr        x9, [x19, #0xb78]
+041690  mov        x8, xzr
+041694  mov        w10, w22
+041698  mov        w11, #0xc
+04169c  ldr        x9, [x9, #8]
+0416a0  mul        x13, x8, x11
+0416a4  mov        x12, xzr
+0416a8  add        x14, sp, #0x2c
+0416ac  ldr        w13, [x9, x13]
+0416b0  ldr        w15, [x14]
+0416b4  cmp        w13, w15
+0416b8  b.eq       #0x416d0
+0416bc  add        x14, x14, #4
+0416c0  add        x12, x12, #1
+0416c4  cmp        x12, x10
+0416c8  b.ne       #0x416b0
+0416cc  b          #0x41618
+0416d0  cmp        w22, w12
+0416d4  b.eq       #0x41618
+0416d8  add        x8, x8, #1
+0416dc  cmp        x8, x10
+0416e0  b.ne       #0x416a0
+0416e4  b          #0x41874
+0416e8  mov        x2, #0   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+0416ec  mov        w0, #0x33
+0416f0  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+0416f4  mov        w4, #0x1cb1
+0416f8  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+0416fc  mov        w1, #2
+041700  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x150f6  '%s: %d: QDF_MALLOC_ERR'
+041704  mov        x3, x22
+041708  bl         #0x41708   ; qdf_trace_msg
+04170c  ldr        x8, [x19, #0xb78]
+041710  str        wzr, [x8]
+041714  ldr        x0, [x19, #0xb78]
+041718  bl         #0x41718   ; __qdf_mem_free
+04171c  str        xzr, [x19, #0xb78]
+041720  mov        x0, x21
+041724  bl         #0x41724   ; qdf_mutex_release
+041728  mov        w8, #-0xc
+04172c  ldr        x9, [x19, #0xb78]
+041730  mov        w21, w8
+041734  cbz        x9, #0x418c4
+041738  mov        x0, x19
+04173c  bl         #0x4173c   ; wlan_hdd_disable_channels
+041740  mov        w21, w0
+041744  cbnz       w0, #0x41378
+041748  mov        w1, #0xfff7
+04174c  mov        x0, x19
+041750  str        xzr, [sp, #0x18]
+041754  bl         #0x41754   ; hdd_check_and_disconnect_sta_on_invalid_channel
+041758  add        x1, sp, #0x20
+04175c  mov        x0, x19
+041760  bl         #0x41760   ; hdd_get_front_adapter
+041764  cbnz       w0, #0x418c0
+041768  ldr        x8, [sp, #0x20]
+04176c  cbz        x8, #0x418c0
+041770  mov        x21, #0   ; abs .rodata.str1.1+0x1510d  'disconnect_sta_and_stop_sap'
+041774  mov        w22, #0xa5b0
+041778  movk       x21, #0, lsl #16   ; abs .rodata.str1.1+0x1510d  'disconnect_sta_and_stop_sap'
+04177c  mov        w23, #0xc
+041780  movk       x21, #0, lsl #32   ; abs .rodata.str1.1+0x1510d  'disconnect_sta_and_stop_sap'
+041784  movk       x21, #0, lsl #48   ; abs .rodata.str1.1+0x1510d  'disconnect_sta_and_stop_sap'
+041788  mov        x0, x8
+04178c  mov        x1, x21
+041790  bl         #0x41790   ; __hdd_validate_adapter
+041794  cbnz       w0, #0x41808
+041798  ldr        x8, [sp, #0x20]
+04179c  ldr        w9, [x8, #0xa8]
+0417a0  cmp        w9, #1
+0417a4  b.ne       #0x41808
+0417a8  ldr        x0, [x19, #8]
+0417ac  ldr        w1, [x8, x22]
+0417b0  bl         #0x417b0   ; wlan_reg_freq_to_chan
+0417b4  ldr        x9, [x19, #0xb78]
+0417b8  cbz        x9, #0x41808
+0417bc  ldr        x8, [x9, #8]
+0417c0  cbz        x8, #0x41808
+0417c4  ldr        w9, [x9]
+0417c8  cbz        w9, #0x41808
+0417cc  and        w10, w0, #0xff
+0417d0  mov        w11, #1
+0417d4  sub        w12, w11, #1
+0417d8  and        x12, x12, #0xff
+0417dc  mul        x12, x12, x23
+0417e0  ldr        w12, [x8, x12]
+0417e4  cmp        w12, w10
+0417e8  b.eq       #0x41800
+0417ec  add        w12, w11, #1
+0417f0  cmp        w9, w11, uxtb
+0417f4  mov        w11, w12
+0417f8  b.hi       #0x417d4
+0417fc  b          #0x41808
+041800  ldr        x0, [sp, #0x20]
+041804  bl         #0x41804   ; wlan_hdd_stop_sap
+041808  ldr        x1, [sp, #0x20]
+04180c  add        x2, sp, #0x18
+041810  mov        x0, x19
+041814  bl         #0x41814   ; hdd_get_next_adapter
+041818  ldr        x8, [sp, #0x18]
+04181c  str        x8, [sp, #0x20]
+041820  cbnz       w0, #0x418c0
+041824  cbnz       x8, #0x41788
+041828  b          #0x418c0
+04182c  cmp        w22, #1
+041830  b.lt       #0x41864
+041834  mov        x8, xzr
+041838  mov        x9, xzr
+04183c  mov        w10, w22
+041840  add        x11, sp, #0x2c
+041844  ldr        w12, [x11], #4
+041848  ldr        x13, [x19, #0xb78]
+04184c  add        x9, x9, #1
+041850  cmp        x9, x10
+041854  ldr        x13, [x13, #8]
+041858  str        w12, [x13, x8]
+04185c  add        x8, x8, #0xc
+041860  b.ne       #0x41844
+041864  ldr        x0, [x19, #8]
+041868  add        x1, sp, #0x2c
+04186c  mov        w2, w22
+041870  bl         #0x41870   ; ucfg_reg_cache_channel_state
+041874  mov        x0, x21
+041878  bl         #0x41878   ; qdf_mutex_release
+04187c  mov        w8, wzr
+041880  mov        w21, wzr
+041884  tbz        w23, #0, #0x4172c
+041888  b          #0x418c4
+04188c  mov        x2, #0   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041890  mov        w0, #0x33
+041894  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+041898  mov        w4, #0x1d85
+04189c  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+0418a0  mov        w1, #2
+0418a4  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x150bf  '%s: %d: Invalid argument received'
+0418a8  mov        x3, x20
+0418ac  bl         #0x418ac   ; qdf_trace_msg
+0418b0  ldr        w23, [sp, #4]
+0418b4  b          #0x41618
+0418b8  mov        x0, x21
+0418bc  bl         #0x418bc   ; qdf_mutex_release
+0418c0  mov        w21, wzr
+0418c4  mov        x2, #0   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+0418c8  mov        w0, #0x33
+0418cc  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+0418d0  mov        w4, #0x1db4
+0418d4  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+0418d8  mov        w1, #8
+0418dc  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x11a98  '%s: %d: exit'
+0418e0  mov        x3, x20
+0418e4  bl         #0x418e4   ; qdf_trace_msg
+0418e8  b          #0x41378
+0418ec  mov        x2, #0   ; abs .rodata.str1.1+0x14ffd  '%s: %d: Invalid No of channel provided in the list'
+0418f0  mov        w0, #0x33
+0418f4  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x14ffd  '%s: %d: Invalid No of channel provided in the list'
+0418f8  mov        w4, #0x1d5d
+0418fc  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x14ffd  '%s: %d: Invalid No of channel provided in the list'
+041900  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x14ffd  '%s: %d: Invalid No of channel provided in the list'
+041904  b          #0x41604
+041908  mov        x2, #0   ; abs .rodata.str1.1+0x1505b  '%s: %d: Cannot read channel number'
+04190c  mov        w0, #0x33
+041910  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1505b  '%s: %d: Cannot read channel number'
+041914  mov        w4, #0x1d6f
+041918  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1505b  '%s: %d: Cannot read channel number'
+04191c  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1505b  '%s: %d: Cannot read channel number'
+041920  b          #0x41604
+041924  mov        x2, #0   ; abs .rodata.str1.1+0x1507e  '%s: %d: Invalid channel number received'
+041928  mov        w0, #0x33
+04192c  movk       x2, #0, lsl #16   ; abs .rodata.str1.1+0x1507e  '%s: %d: Invalid channel number received'
+041930  mov        w4, #0x1d75
+041934  movk       x2, #0, lsl #32   ; abs .rodata.str1.1+0x1507e  '%s: %d: Invalid channel number received'
+041938  movk       x2, #0, lsl #48   ; abs .rodata.str1.1+0x1507e  '%s: %d: Invalid channel number received'
+04193c  b          #0x41604
+041940  bl         #0x41940   ; __stack_chk_fail

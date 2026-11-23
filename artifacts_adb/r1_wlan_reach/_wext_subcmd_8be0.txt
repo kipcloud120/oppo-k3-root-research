@@ -1,0 +1,161 @@
+== .rodata+0x6280, 101 entries (sub_cmd 0..100) ==
+[  0] 0x000000 sz=0     NULL                                   null   
+[  1] 0x08eda0 sz=192   hdd_we_set_11d_state                   calls  
+[  2] 0x000000 sz=0     NULL                                   null   
+[  3] 0x08ee60 sz=240   hdd_we_set_power                       calls  
+[  4] 0x08ef50 sz=112   hdd_we_set_max_assoc                   calls  
+[  5] 0x08efc0 sz=124   hdd_we_set_scan_disable                calls  
+[  6] 0x08f040 sz=32    hdd_we_set_data_inactivity_timeout     calls  
+[  7] 0x08f060 sz=156   hdd_we_set_max_tx_power                calls  
+[  8] 0x000000 sz=0     NULL                                   null   
+[  9] 0x08f100 sz=184   hdd_we_set_tm_level                    calls  
+[ 10] 0x0865f0 sz=1912  wlan_hdd_update_phymode                calls  
+[ 11] 0x08f1b8 sz=232   hdd_we_set_nss                         calls  
+[ 12] 0x085fa0 sz=472   hdd_set_ldpc                           calls  
+[ 13] 0x086228 sz=392   hdd_set_tx_stbc                        calls  
+[ 14] 0x086460 sz=400   hdd_set_rx_stbc                        calls  
+[ 15] 0x086d68 sz=256   hdd_we_set_short_gi                    calls  
+[ 16] 0x08f2a0 sz=556   hdd_we_set_rtscts                      calls  
+        notable: wma_cli_set_command
+[ 17] 0x08f4d0 sz=336   hdd_we_set_ch_width                    calls  
+        notable: wma_cli_set_command
+[ 18] 0x08f620 sz=184   hdd_we_set_ani_en_dis                  calls  
+        notable: wma_cli_set_command
+[ 19] 0x08f6d8 sz=184   hdd_we_set_ani_poll_period             calls  
+        notable: wma_cli_set_command
+[ 20] 0x08f790 sz=184   hdd_we_set_ani_listen_period           calls  
+        notable: wma_cli_set_command
+[ 21] 0x08f848 sz=184   hdd_we_set_ani_ofdm_level              calls  
+        notable: wma_cli_set_command
+[ 22] 0x08f900 sz=184   hdd_we_set_ani_cck_level               calls  
+        notable: wma_cli_set_command
+[ 23] 0x08f9b8 sz=184   hdd_we_set_dynamic_bw                  calls  
+        notable: wma_cli_set_command
+[ 24] 0x08fa70 sz=208   hdd_we_set_tx_chainmask                calls  
+        notable: wma_cli_set_command
+[ 25] 0x08fb40 sz=208   hdd_we_set_rx_chainmask                calls  
+        notable: wma_cli_set_command
+[ 26] 0x08fc10 sz=540   hdd_we_set_11n_rate                    calls  
+        notable: wma_cli_set_command
+[ 27] 0x08fe30 sz=104   hdd_we_set_ampdu                       calls  
+        notable: wma_cli_set_command
+[ 28] 0x08fe98 sz=292   hdd_we_set_amsdu                       calls  
+        notable: wma_cli_set_command
+[ 29] 0x08ffc0 sz=184   hdd_we_set_txpow_2g                    calls  
+        notable: wma_cli_set_command
+[ 30] 0x090078 sz=184   hdd_we_set_txpow_5g                    calls  
+        notable: wma_cli_set_command
+[ 31] 0x090130 sz=184   hdd_we_dbglog_log_level                calls  
+        notable: wma_cli_set_command
+[ 32] 0x0901e8 sz=184   hdd_we_dbglog_vap_enable               calls  
+        notable: wma_cli_set_command
+[ 33] 0x0902a0 sz=184   hdd_we_dbglog_vap_disable              calls  
+        notable: wma_cli_set_command
+[ 34] 0x090358 sz=184   hdd_we_dbglog_module_enable            calls  
+        notable: wma_cli_set_command
+[ 35] 0x090410 sz=184   hdd_we_dbglog_module_disable           calls  
+        notable: wma_cli_set_command
+[ 36] 0x0904c8 sz=184   hdd_we_dbglog_mod_log_level            calls  
+        notable: wma_cli_set_command
+[ 37] 0x090580 sz=184   hdd_we_dbglog_type                     calls  
+        notable: wma_cli_set_command
+[ 38] 0x090638 sz=188   hdd_we_set_txrx_fwstats                calls  
+        notable: wma_cli_set_command
+[ 39] 0x0906f8 sz=296   hdd_we_set_vht_rate                    calls  
+        notable: wma_cli_set_command
+[ 40] 0x090820 sz=184   hdd_we_dbglog_report_enable            calls  
+        notable: wma_cli_set_command
+[ 41] 0x0908d8 sz=188   hdd_we_txrx_fwstats_reset              calls  
+        notable: wma_cli_set_command
+[ 42] 0x090998 sz=164   hdd_we_set_max_tx_power_2_4            calls  
+[ 43] 0x090a40 sz=164   hdd_we_set_max_tx_power_5_0            calls  
+[ 44] 0x000000 sz=0     NULL                                   null   
+[ 45] 0x090ae8 sz=44    hdd_we_pps_paid_match                  leaf   
+[ 46] 0x090b18 sz=44    hdd_we_pps_gid_match                   leaf   
+[ 47] 0x090b48 sz=44    hdd_we_pps_early_tim_clear             leaf   
+[ 48] 0x090b78 sz=44    hdd_we_pps_early_dtim_clear            leaf   
+[ 49] 0x090ba8 sz=44    hdd_we_pps_eof_pad_delim               leaf   
+[ 50] 0x090bd8 sz=44    hdd_we_pps_macaddr_mismatch            leaf   
+[ 51] 0x090c08 sz=44    hdd_we_pps_delim_crc_fail              leaf   
+[ 52] 0x090c38 sz=44    hdd_we_pps_gid_nsts_zero               leaf   
+[ 53] 0x090c68 sz=44    hdd_we_pps_rssi_check                  leaf   
+[ 54] 0x000000 sz=0     NULL                                   null   
+[ 55] 0x090c98 sz=188   hdd_we_set_htsmps                      calls  
+        notable: wma_cli_set_command
+[ 56] 0x090d58 sz=184   hdd_we_set_qpower_max_pspoll_count     calls  
+        notable: wma_cli_set_command
+[ 57] 0x090e10 sz=184   hdd_we_set_qpower_max_tx_before_wake   calls  
+        notable: wma_cli_set_command
+[ 58] 0x090ec8 sz=184   hdd_we_set_qpower_spec_pspoll_wake_interval calls  
+        notable: wma_cli_set_command
+[ 59] 0x090f80 sz=184   hdd_we_set_qpower_spec_max_spec_nodata_pspoll calls  
+        notable: wma_cli_set_command
+[ 60] 0x000000 sz=0     NULL                                   null   
+[ 61] 0x000000 sz=0     NULL                                   null   
+[ 62] 0x091038 sz=184   hdd_we_set_gtx_ht_mcs                  calls  
+        notable: wma_cli_set_command
+[ 63] 0x0910f0 sz=184   hdd_we_set_gtx_vht_mcs                 calls  
+        notable: wma_cli_set_command
+[ 64] 0x0911a8 sz=184   hdd_we_set_gtx_usrcfg                  calls  
+        notable: wma_cli_set_command
+[ 65] 0x091260 sz=184   hdd_we_set_gtx_thre                    calls  
+        notable: wma_cli_set_command
+[ 66] 0x091318 sz=184   hdd_we_set_gtx_margin                  calls  
+        notable: wma_cli_set_command
+[ 67] 0x0913d0 sz=184   hdd_we_set_gtx_step                    calls  
+        notable: wma_cli_set_command
+[ 68] 0x091488 sz=184   hdd_we_set_gtx_mintpc                  calls  
+        notable: wma_cli_set_command
+[ 69] 0x091540 sz=184   hdd_we_set_gtx_bwmask                  calls  
+        notable: wma_cli_set_command
+[ 70] 0x0915f8 sz=100   hdd_we_mcc_config_latency              calls  
+[ 71] 0x091660 sz=96    hdd_we_mcc_config_quota                calls  
+[ 72] 0x0916c0 sz=48    hdd_we_set_debug_log                   calls  
+[ 73] 0x000000 sz=0     NULL                                   null   
+[ 74] 0x0916f0 sz=160   hdd_we_set_tx_power                    calls  
+[ 75] 0x091790 sz=200   hdd_we_set_early_rx_adjust_enable      calls  
+        notable: wma_cli_set_command
+[ 76] 0x091858 sz=188   hdd_we_set_early_rx_tgt_bmiss_num      calls  
+        notable: wma_cli_set_command
+[ 77] 0x091918 sz=184   hdd_we_set_early_rx_bmiss_sample_cycle calls  
+        notable: wma_cli_set_command
+[ 78] 0x0919d0 sz=184   hdd_we_set_early_rx_slop_step          calls  
+        notable: wma_cli_set_command
+[ 79] 0x091a88 sz=184   hdd_we_set_early_rx_init_slop          calls  
+        notable: wma_cli_set_command
+[ 80] 0x091b40 sz=200   hdd_we_set_early_rx_adjust_pause       calls  
+        notable: wma_cli_set_command
+[ 81] 0x0373d8 sz=568   wlan_hdd_set_mc_rate                   calls  
+[ 82] 0x091c08 sz=184   hdd_we_set_early_rx_drift_sample       calls  
+        notable: wma_cli_set_command
+[ 83] 0x091cc0 sz=44    hdd_we_pps_5g_ebt                      leaf   
+[ 84] 0x091cf0 sz=184   hdd_we_set_cts_cbw                     calls  
+        notable: wma_cli_set_command
+[ 85] 0x085b88 sz=872   hdd_wlan_dump_stats                    calls  
+[ 86] 0x091da8 sz=396   hdd_we_clear_stats                     calls  
+[ 87] 0x091f38 sz=184   hdd_we_start_fw_profile                calls  
+        notable: wma_cli_set_command
+[ 88] 0x091ff0 sz=244   hdd_we_set_channel                     calls  
+[ 89] 0x0920e8 sz=112   hdd_we_set_conc_system_pref            calls  
+[ 90] 0x000000 sz=0     NULL                                   null   
+[ 91] 0x092158 sz=24    hdd_we_set_11ax_rate                   calls  
+[ 92] 0x092170 sz=184   hdd_we_set_dcm                         calls  
+        notable: wma_cli_set_command
+[ 93] 0x092228 sz=184   hdd_we_set_range_ext                   calls  
+        notable: wma_cli_set_command
+[ 94] 0x0922e0 sz=188   hdd_we_set_wow_data_inactivity_timeout calls  
+[ 95] 0x0923a0 sz=176   hdd_handle_pdev_reset                  calls  
+        notable: wma_cli_set_command
+[ 96] 0x092450 sz=172   hdd_we_set_modulated_dtim              calls  
+[ 97] 0x000000 sz=0     NULL                                   null   
+[ 98] 0x000000 sz=0     NULL                                   null   
+[ 99] 0x086e68 sz=364   wlan_hdd_set_btcoex_mode               calls  
+[100] 0x086fd8 sz=368   wlan_hdd_set_btcoex_rssi_threshold     calls  
+
+-- 分类计数 --
+   calls    80
+   leaf     10
+   null     11
+-- 唯一目标函数 90 个；被多个 id 复用的: 
+
+===== 可疑项（含可变长拷贝/字符串解析/cap 之外的 长度类调用）=====
